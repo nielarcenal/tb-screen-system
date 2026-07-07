@@ -6,7 +6,7 @@ import type { Translation } from './en';
 
 export const tl: Translation = {
   common: {
-    appName: 'TB-Screen — TB-DOTS Portal',
+    appName: 'TB-Screen Portal',
     loading: 'Naglo-load…',
     refresh: 'I-refresh',
     signOut: 'Mag-sign out',
@@ -103,6 +103,9 @@ export const tl: Translation = {
   },
   login: {
     title: 'Pag-sign in ng TB-DOTS staff',
+    sub: 'Staff ng pasilidad ng TB-DOTS',
+    roleStaff: 'TB-DOTS staff',
+    roleCaptain: 'Kapitan ng Barangay',
     intro:
       'Para sa mga staff ng pasilidad ng TB-DOTS: tumanggap ng mga referral, magtala ng resulta ng laboratoryo, at subaybayan ang pagdalo sa check-up.',
     email: 'Email',

@@ -6,7 +6,7 @@
  */
 export const en = {
   common: {
-    appName: 'TB-Screen — TB-DOTS Portal',
+    appName: 'TB-Screen Portal',
     loading: 'Loading…',
     refresh: 'Refresh',
     signOut: 'Sign out',
@@ -102,6 +102,9 @@ export const en = {
   },
   login: {
     title: 'TB-DOTS staff sign-in',
+    sub: 'TB-DOTS facility staff',
+    roleStaff: 'TB-DOTS staff',
+    roleCaptain: 'Barangay Captain',
     intro:
       'For TB-DOTS facility staff: receive referrals, record laboratory results, and track check-up attendance.',
     email: 'Email',
