@@ -16,6 +16,7 @@ export interface DashboardAppointment {
   appointment_id: string;
   patient_id: string;
   display_code: string;
+  full_name: string | null;
   scheduled_date: string;
   attended_date: string | null;
   status: string;
@@ -25,6 +26,7 @@ export interface DashboardReferral {
   referral_id: string;
   patient_id: string;
   display_code: string;
+  full_name: string | null;
   specimen_id: string | null;
   status: string;
   result: string | null;
@@ -35,7 +37,7 @@ export interface DashboardReferral {
 export async function listUpcomingAppointments(): Promise<DashboardAppointment[]> {
   const db = await getDb();
   return db.getAllAsync<DashboardAppointment>(
-    `SELECT a.appointment_id, a.patient_id, p.display_code,
+    `SELECT a.appointment_id, a.patient_id, p.display_code, p.full_name,
             a.scheduled_date, a.attended_date, a.status
      FROM appointments a JOIN patients p ON p.patient_id = a.patient_id
      WHERE a.status = 'scheduled' AND a.scheduled_date >= ?
@@ -47,7 +49,7 @@ export async function listUpcomingAppointments(): Promise<DashboardAppointment[]
 export async function listMissedAppointments(): Promise<DashboardAppointment[]> {
   const db = await getDb();
   return db.getAllAsync<DashboardAppointment>(
-    `SELECT a.appointment_id, a.patient_id, p.display_code,
+    `SELECT a.appointment_id, a.patient_id, p.display_code, p.full_name,
             a.scheduled_date, a.attended_date, a.status
      FROM appointments a JOIN patients p ON p.patient_id = a.patient_id
      WHERE a.status = 'missed'
@@ -58,8 +60,8 @@ export async function listMissedAppointments(): Promise<DashboardAppointment[]> 
 export async function listNoShowReferrals(): Promise<DashboardReferral[]> {
   const db = await getDb();
   return db.getAllAsync<DashboardReferral>(
-    `SELECT r.referral_id, r.patient_id, p.display_code, r.specimen_id,
-            r.status, r.result, r.result_date, r.presented
+    `SELECT r.referral_id, r.patient_id, p.display_code, p.full_name,
+            r.specimen_id, r.status, r.result, r.result_date, r.presented
      FROM referrals r JOIN patients p ON p.patient_id = r.patient_id
      WHERE r.presented = 0
      ORDER BY r.updated_at DESC`,
@@ -69,8 +71,8 @@ export async function listNoShowReferrals(): Promise<DashboardReferral[]> {
 export async function listResultReferrals(): Promise<DashboardReferral[]> {
   const db = await getDb();
   return db.getAllAsync<DashboardReferral>(
-    `SELECT r.referral_id, r.patient_id, p.display_code, r.specimen_id,
-            r.status, r.result, r.result_date, r.presented
+    `SELECT r.referral_id, r.patient_id, p.display_code, p.full_name,
+            r.specimen_id, r.status, r.result, r.result_date, r.presented
      FROM referrals r JOIN patients p ON p.patient_id = r.patient_id
      WHERE r.result IS NOT NULL
      ORDER BY r.result_date DESC`,

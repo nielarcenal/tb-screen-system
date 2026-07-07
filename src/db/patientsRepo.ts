@@ -14,6 +14,8 @@ interface PatientSqlRow {
   patient_id: string;
   display_code: string;
   enrolled_by: string;
+  full_name: string | null;
+  birthdate: string | null;
   age: number;
   sex: string;
   barangay_code: string;
@@ -31,6 +33,8 @@ function fromSql(r: PatientSqlRow): LocalPatientRow {
     patient_id: r.patient_id,
     display_code: r.display_code,
     enrolled_by: r.enrolled_by,
+    full_name: r.full_name,
+    birthdate: r.birthdate,
     age: r.age,
     sex: r.sex as LocalPatientRow['sex'],
     barangay_code: r.barangay_code,
@@ -56,13 +60,16 @@ export async function insertLocalPatient(
   const ts = nowIso();
   await db.runAsync(
     `INSERT INTO patients
-       (patient_id, display_code, enrolled_by, age, sex, barangay_code, sitio,
-        contact_number, sms_consent, consent_date, created_at, updated_at, sync_status)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?, 'pending')`,
+       (patient_id, display_code, enrolled_by, full_name, birthdate, age, sex,
+        barangay_code, sitio, contact_number, sms_consent, consent_date,
+        created_at, updated_at, sync_status)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending')`,
     [
       p.patient_id,
       p.display_code,
       p.enrolled_by,
+      p.full_name,
+      p.birthdate,
       p.age,
       p.sex,
       p.barangay_code,
@@ -134,12 +141,15 @@ export async function upsertPulledPatient(server: PatientRow): Promise<void> {
 
   await db.runAsync(
     `INSERT INTO patients
-       (patient_id, display_code, enrolled_by, age, sex, barangay_code, sitio,
-        contact_number, sms_consent, consent_date, created_at, updated_at, sync_status)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?, 'synced')
+       (patient_id, display_code, enrolled_by, full_name, birthdate, age, sex,
+        barangay_code, sitio, contact_number, sms_consent, consent_date,
+        created_at, updated_at, sync_status)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'synced')
      ON CONFLICT(patient_id) DO UPDATE SET
        display_code   = excluded.display_code,
        enrolled_by    = excluded.enrolled_by,
+       full_name      = excluded.full_name,
+       birthdate      = excluded.birthdate,
        age            = excluded.age,
        sex            = excluded.sex,
        barangay_code  = excluded.barangay_code,
@@ -154,6 +164,8 @@ export async function upsertPulledPatient(server: PatientRow): Promise<void> {
       server.patient_id,
       server.display_code,
       server.enrolled_by,
+      server.full_name ?? null,
+      server.birthdate ?? null,
       server.age,
       server.sex,
       server.barangay_code,

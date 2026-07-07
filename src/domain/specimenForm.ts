@@ -8,8 +8,9 @@
  *
  * PRIVACY (§4): the paper form travels with the specimen and its QR can be
  * scanned by anyone who handles it — so the payload and HTML NEVER include the
- * patient's contact number. There is no name anywhere in the system by design;
- * the patient is identified by display_code + patient_id.
+ * patient's contact number, and the QR payload also excludes the patient's
+ * name (names collected since 0006): the printed form shows the name for the
+ * receiving facility, but the machine-readable payload stays code-only.
  */
 import { PgisSeverity, Sex, SymptomFlags } from '../db/types';
 import { SYMPTOM_KEYS } from './screeningRules';
@@ -20,6 +21,7 @@ export interface SpecimenData {
   patientId: string;
   specimenId: string | null;
   displayCode: string;
+  patientName: string | null;
   age: number;
   sex: Sex;
   barangayCode: string;
@@ -134,6 +136,7 @@ export function buildSpecimenHtml(d: SpecimenData, qrPngDataUrl: string, t: TFn)
 
   <h2>${esc(t('specimen.patientSection'))}</h2>
   <table class="kv">
+    ${d.patientName ? `<tr><td>${esc(t('enroll.fullNameLabel'))}</td><td><b>${esc(d.patientName)}</b></td></tr>` : ''}
     <tr><td>${esc(t('specimen.patientCode'))}</td><td><b>${esc(d.displayCode)}</b></td></tr>
     <tr><td>${esc(t('patientDetail.ageSex'))}</td>
         <td>${esc(t('patients.itemDescription', { sex: t(`sex.${d.sex}`), age: d.age }))}</td></tr>

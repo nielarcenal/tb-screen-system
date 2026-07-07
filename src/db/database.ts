@@ -142,6 +142,14 @@ const MIGRATIONS: string[] = [
   INSERT OR IGNORE INTO sync_meta (table_name)
     VALUES ('facilities'), ('referrals'), ('appointments');
   `,
+
+  // v5 — design-parity batch (2026-07-07, server migration 0006): patient name
+  // + birthdate. Nullable: pre-0006 rows have neither; the app requires both
+  // for NEW enrollments and keeps writing the derived integer age.
+  `
+  ALTER TABLE patients ADD COLUMN full_name TEXT;
+  ALTER TABLE patients ADD COLUMN birthdate TEXT;  -- date-only, YYYY-MM-DD
+  `,
 ];
 
 // Bundled PSGC dataset — Bukidnon only (documented delimitation, §6). Generated

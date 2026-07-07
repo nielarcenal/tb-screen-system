@@ -19,6 +19,7 @@ import { Appbar, Button, Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import QRCode from 'react-native-qrcode-svg';
 import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 
 import { listAppointmentsForPatient } from '../../src/db/appointmentsRepo';
 import { getFacility } from '../../src/db/facilitiesRepo';
@@ -74,6 +75,7 @@ export default function SpecimenFormScreen() {
         patientId: patient.patient_id,
         specimenId: referral.specimen_id,
         displayCode: patient.display_code,
+        patientName: patient.full_name,
         age: patient.age,
         sex: patient.sex,
         barangayCode: patient.barangay_code,
@@ -100,6 +102,28 @@ export default function SpecimenFormScreen() {
         // User-cancelled print dialogs also reject on some devices; show softly.
         setPrintError(e instanceof Error ? e.message : String(e));
       });
+    });
+  };
+
+  /** Render the form to a PDF file and hand it to the OS share sheet. */
+  const share = () => {
+    if (!data || !qrRef.current) return;
+    setPrintError(null);
+    qrRef.current.toDataURL((base64) => {
+      const html = buildSpecimenHtml(data, `data:image/png;base64,${base64}`, t);
+      void (async () => {
+        try {
+          const { uri } = await Print.printToFileAsync({ html });
+          if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(uri, {
+              mimeType: 'application/pdf',
+              dialogTitle: t('specimen.title'),
+            });
+          }
+        } catch (e) {
+          setPrintError(e instanceof Error ? e.message : String(e));
+        }
+      })();
     });
   };
 
@@ -189,6 +213,9 @@ export default function SpecimenFormScreen() {
                 gap: 2,
               }}
             >
+              {data.patientName
+                ? formRow(t('enroll.fullNameLabel'), data.patientName)
+                : null}
               {formRow(t('specimen.patientCode'), data.displayCode, true)}
               {formRow(
                 t('patientDetail.ageSex'),
@@ -253,7 +280,7 @@ export default function SpecimenFormScreen() {
               {t('specimen.printError', { message: printError })}
             </Text>
           ) : null}
-          <View style={{ paddingBottom: 32 }}>
+          <View style={{ flexDirection: 'row', gap: 12, paddingBottom: 32 }}>
             <Button
               mode="outlined"
               icon="printer"
@@ -261,9 +288,20 @@ export default function SpecimenFormScreen() {
               textColor={palette.teal}
               contentStyle={{ height: 52 }}
               labelStyle={{ fontWeight: '600' }}
-              style={{ borderRadius: 26, borderColor: palette.teal }}
+              style={{ flex: 1, borderRadius: 26, borderColor: palette.teal }}
             >
               {t('specimen.printCta')}
+            </Button>
+            <Button
+              mode="outlined"
+              icon="share-variant"
+              onPress={share}
+              textColor={palette.teal}
+              contentStyle={{ height: 52 }}
+              labelStyle={{ fontWeight: '600' }}
+              style={{ flex: 1, borderRadius: 26, borderColor: palette.teal }}
+            >
+              {t('specimen.shareCta')}
             </Button>
           </View>
         </ScrollView>

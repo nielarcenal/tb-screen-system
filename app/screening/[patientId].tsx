@@ -8,9 +8,9 @@
  *  - The referral recommendation comes ONLY from evaluateReferral()
  *    (src/domain/screeningRules.ts) over the checklist answers. Nothing here
  *    computes, displays, or stores any score.
- *  - PGI-S is collected on its own amber step, labeled patient-reported and
- *    OPTIONAL; its value is recorded on the screening row but is never passed
- *    to evaluateReferral().
+ *  - PGI-S is collected on its own amber step, labeled patient-reported
+ *    ("None" is a valid answer); its value is recorded on the screening row
+ *    but is never passed to evaluateReferral().
  *  - The outcome is worded as "flags for referral (presumptive TB)" with the
  *    rule that fired, plus a standing "this is not a diagnosis" note.
  *
@@ -82,7 +82,9 @@ export default function ScreeningScreen() {
 
   const isPgisStep = step === SYMPTOM_KEYS.length;
   const currentKey = SYMPTOM_KEYS[Math.min(step, SYMPTOM_KEYS.length - 1)];
-  const answered = isPgisStep ? true : flags[currentKey] !== undefined; // PGI-S optional (§5)
+  // PGI-S requires an answer like every other step ("None" is a valid answer);
+  // it stays supplementary — never feeds the referral rule (§5).
+  const answered = isPgisStep ? pgis !== null : flags[currentKey] !== undefined;
   const complete = isChecklistComplete(flags);
   const outcome = complete ? evaluateReferral(flags) : null;
 
@@ -177,7 +179,7 @@ export default function ScreeningScreen() {
     return (
       <Pressable
         key={opt}
-        onPress={() => setPgis(on ? null : opt)} // tap again to clear (optional, §5)
+        onPress={() => setPgis(opt)}
         style={{
           flex: compact ? 1 : undefined,
           minHeight: compact ? 40 : 58,
@@ -410,13 +412,15 @@ export default function ScreeningScreen() {
         >
           <Button
             mode="contained"
-            disabled={!complete}
+            disabled={!complete || pgis === null}
             onPress={() => setPhase('result')}
             contentStyle={{ height: 54 }}
             labelStyle={{ fontSize: 15.5, fontWeight: '600' }}
             style={{ borderRadius: 27 }}
           >
-            {complete ? t('screening.seeRecommendation') : t('screening.answerAll')}
+            {complete && pgis !== null
+              ? t('screening.seeRecommendation')
+              : t('screening.answerAll')}
           </Button>
         </View>
       </View>

@@ -1,8 +1,8 @@
 /**
  * Patients tab (design 1a, screen 4 list): searchable local patient list as
- * white row cards with avatar circle + tonal sync chip. Reads ONLY the local
- * cache — works fully offline. No names anywhere by design (§4); patients are
- * identified by their code.
+ * white row cards with initials avatar + tonal sync chip. Reads ONLY the local
+ * cache — works fully offline. Names collected since 0006 (user sign-off);
+ * pre-0006 rows fall back to the display code.
  */
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
@@ -32,8 +32,24 @@ export default function PatientsScreen() {
 
   const q = search.trim().toLowerCase();
   const visible = q
-    ? patients.filter((p) => p.display_code.toLowerCase().includes(q))
+    ? patients.filter(
+        (p) =>
+          p.display_code.toLowerCase().includes(q) ||
+          (p.full_name ?? '').toLowerCase().includes(q),
+      )
     : patients;
+
+  /** Up to two initials from the name (design avatars); null without a name. */
+  const initials = (name: string | null) =>
+    name
+      ? name
+          .trim()
+          .split(/\s+/)
+          .map((w) => w[0])
+          .slice(0, 2)
+          .join('')
+          .toUpperCase()
+      : null;
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.background }}>
@@ -86,13 +102,23 @@ export default function PatientsScreen() {
                   justifyContent: 'center',
                 }}
               >
-                <MaterialCommunityIcons name="account" size={22} color={palette.tealDark} />
+                {initials(item.full_name) ? (
+                  <Text
+                    variant="titleSmall"
+                    style={{ color: palette.tealDark, fontWeight: '600' }}
+                  >
+                    {initials(item.full_name)}
+                  </Text>
+                ) : (
+                  <MaterialCommunityIcons name="account" size={22} color={palette.tealDark} />
+                )}
               </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <Text variant="titleSmall" style={{ color: palette.ink }}>
-                  {item.display_code}
+                  {item.full_name ?? item.display_code}
                 </Text>
                 <Text variant="bodySmall" style={{ color: palette.muted }}>
+                  {item.display_code} ·{' '}
                   {t('patients.itemDescription', {
                     sex: t(`sex.${item.sex}`),
                     age: item.age,

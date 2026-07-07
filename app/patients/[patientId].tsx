@@ -159,7 +159,7 @@ export default function PatientDetailScreen() {
     <View style={{ flex: 1, backgroundColor: palette.background }}>
       <Appbar.Header style={{ backgroundColor: palette.background }}>
         <Appbar.BackAction onPress={() => router.back()} />
-        <Appbar.Content title={patient?.display_code ?? ''} />
+        <Appbar.Content title={patient?.full_name ?? patient?.display_code ?? ''} />
       </Appbar.Header>
 
       {loaded && !patient ? (
@@ -191,13 +191,26 @@ export default function PatientDetailScreen() {
                 justifyContent: 'center',
               }}
             >
-              <MaterialCommunityIcons name="account" size={26} color={palette.tealDark} />
+              {patient.full_name ? (
+                <Text variant="titleMedium" style={{ color: palette.tealDark, fontWeight: '600' }}>
+                  {patient.full_name
+                    .trim()
+                    .split(/\s+/)
+                    .map((w) => w[0])
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase()}
+                </Text>
+              ) : (
+                <MaterialCommunityIcons name="account" size={26} color={palette.tealDark} />
+              )}
             </View>
             <View style={{ flex: 1, gap: 3 }}>
               <Text variant="titleMedium" style={{ color: palette.ink, fontWeight: '600' }}>
-                {patient.display_code}
+                {patient.full_name ?? patient.display_code}
               </Text>
               <Text variant="bodySmall" style={{ color: palette.muted }}>
+                {patient.display_code} ·{' '}
                 {t('patients.itemDescription', {
                   sex: t(`sex.${patient.sex}`),
                   age: patient.age,

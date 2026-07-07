@@ -60,6 +60,10 @@ export interface PatientRow {
   patient_id: string;
   display_code: string;
   enrolled_by: string;
+  /** Nullable: pre-0006 rows have no name; required for new enrollments. */
+  full_name: string | null;
+  /** Date-only YYYY-MM-DD; nullable for pre-0006 rows. Age is derived from it. */
+  birthdate: string | null;
   age: number;
   sex: Sex;
   barangay_code: string;

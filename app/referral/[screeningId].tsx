@@ -112,7 +112,7 @@ export default function CreateReferralScreen() {
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 8, gap: 14 }}>
         {patient && screening ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text variant="titleMedium">{patient.display_code}</Text>
+            <Text variant="titleMedium">{patient.full_name ?? patient.display_code}</Text>
             <Chip compact mode="outlined">
               {t('referral.screeningSummary', {
                 date: new Date(screening.created_at).toLocaleDateString(),

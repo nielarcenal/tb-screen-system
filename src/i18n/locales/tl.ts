@@ -47,6 +47,12 @@ export const tl: Translation = {
     resultsSection: 'Mga bagong resulta',
     emptySection: 'Wala ritong laman sa ngayon.',
   },
+  // TODO i18n verify
+  followUps: {
+    title: 'Mga follow-up',
+    empty: 'Walang pasyente rito sa ngayon',
+    emptySub: 'Lalabas dito ang mga pasyenteng na-flag ng TB-DOTS facility.',
+  },
   tabs: {
     home: 'Home',
     patients: 'Mga Pasyente',
@@ -130,16 +136,19 @@ export const tl: Translation = {
     title: 'Mga Pasyente',
     empty: 'Wala pang pasyente sa device na ito. Mag-enroll ng pasyente para magsimula.',
     noMatch: 'Walang pasyenteng tumutugma sa code na iyan.',
-    searchPlaceholder: 'Maghanap ng patient code…',
+    searchPlaceholder: 'Maghanap ng pasyente…',
     enrollCta: 'I-enroll ang pasyente',
     itemDescription: '{{sex}}, {{age}} taon',
   },
   enroll: {
     title: 'I-enroll ang pasyente',
     intro:
-      'Awtomatikong bibigyan ng patient code (hal. PAT-XXXX-0001) sa pag-save. Hindi kinokolekta ang pangalan.',
+      'Awtomatikong bibigyan ng patient code (hal. PAT-XXXX-0001) sa pag-save. Ang detalye ng pasyente ay ibinabahagi lamang sa tumatanggap na TB-DOTS facility.',
     requiredHint: 'Kinakailangan ang mga field na may markang *.',
     detailsSection: 'Detalye ng pasyente',
+    // TODO i18n verify
+    fullNameLabel: 'Buong pangalan',
+    birthdateLabel: 'Petsa ng kapanganakan',
     ageLabel: 'Edad',
     ageError: 'Maglagay ng edad mula 0 hanggang 129.',
     sexLabel: 'Kasarian',
@@ -151,7 +160,7 @@ export const tl: Translation = {
     goToSignIn: 'Pumunta sa sign-in',
     saveCta: 'I-enroll ang pasyente',
     missingFields:
-      'Kumpletuhin ang mga kinakailangang field: pahintulot, edad, kasarian, at barangay.',
+      'Kumpletuhin ang mga kinakailangang field: pahintulot, pangalan, petsa ng kapanganakan, kasarian, at barangay.',
   },
   patientDetail: {
     infoSection: 'Impormasyon ng pasyente',
@@ -210,7 +219,8 @@ export const tl: Translation = {
     preparedBy: 'Inihanda ni (lagda ng BHW)',
     generatedAt: 'Nabuo noong {{date}}',
     qrCaption: 'I-scan sa pasilidad ng TB-DOTS para buksan ang referral na ito.',
-    printCta: 'I-print / i-save bilang PDF',
+    printCta: 'I-print',
+    shareCta: 'Ibahagi',
     printError: 'Hindi maka-print: {{message}}',
     notFound: 'Hindi natagpuan ang referral sa device na ito.',
   },
@@ -232,7 +242,7 @@ export const tl: Translation = {
     },
     pgisHeading: 'Tindi ng ubo ayon sa pasyente (PGI-S)',
     pgisIntro:
-      'Opsyonal. Ang pasyente mismo ang magra-rate ng tindi ng kanyang ubo. Karagdagang impormasyon lamang — hindi ito nakakaapekto sa rekomendasyon para sa referral.',
+      'Hilingin sa pasyenteng sumagot sa sarili niyang salita — sariling sagot ito ng pasyente, hindi sa iyo. Karagdagang impormasyon lamang — hindi ito nakakaapekto sa rekomendasyon para sa referral.',
     pgisClear: 'Burahin ang sagot',
     pgisOptions: {
       none: 'Wala',

@@ -47,6 +47,12 @@ export const ceb: Translation = {
     resultsSection: 'Mga bag-ong resulta',
     emptySection: 'Wala pay sulod dinhi karon.',
   },
+  // TODO i18n verify
+  followUps: {
+    title: 'Mga follow-up',
+    empty: 'Walay pasyente dinhi karon',
+    emptySub: 'Mogawas dinhi ang mga pasyenteng gi-flag sa TB-DOTS facility.',
+  },
   tabs: {
     home: 'Home',
     patients: 'Mga Pasyente',
@@ -130,16 +136,19 @@ export const ceb: Translation = {
     title: 'Mga Pasyente',
     empty: 'Wala pay pasyente niining device. Pag-enroll og pasyente aron magsugod.',
     noMatch: 'Walay pasyenteng motukma nianang code.',
-    searchPlaceholder: 'Pangitaa ang patient code…',
+    searchPlaceholder: 'Pangitaa ang pasyente…',
     enrollCta: 'I-enroll ang pasyente',
     itemDescription: '{{sex}}, {{age}} ka tuig',
   },
   enroll: {
     title: 'I-enroll ang pasyente',
     intro:
-      'Awtomatikong hatagan og patient code (pananglitan PAT-XXXX-0001) inig-save. Wala ginakolekta ang ngalan.',
+      'Awtomatikong hatagan og patient code (pananglitan PAT-XXXX-0001) inig-save. Ang detalye sa pasyente ipaambit lamang sa nagadawat nga TB-DOTS facility.',
     requiredHint: 'Gikinahanglan ang mga field nga adunay markang *.',
     detailsSection: 'Detalye sa pasyente',
+    // TODO i18n verify
+    fullNameLabel: 'Tibuok nga ngalan',
+    birthdateLabel: 'Petsa sa pagkatawo',
     ageLabel: 'Edad',
     ageError: 'Pagbutang og edad gikan 0 hangtod 129.',
     sexLabel: 'Sekso',
@@ -151,7 +160,7 @@ export const ceb: Translation = {
     goToSignIn: 'Adto sa sign-in',
     saveCta: 'I-enroll ang pasyente',
     missingFields:
-      'Kompletoha ang gikinahanglang mga field: pagtugot, edad, sekso, ug barangay.',
+      'Kompletoha ang gikinahanglang mga field: pagtugot, ngalan, petsa sa pagkatawo, sekso, ug barangay.',
   },
   patientDetail: {
     infoSection: 'Impormasyon sa pasyente',
@@ -210,7 +219,8 @@ export const ceb: Translation = {
     preparedBy: 'Giandam ni (pirma sa BHW)',
     generatedAt: 'Nahimo niadtong {{date}}',
     qrCaption: 'I-scan sa pasilidad sa TB-DOTS aron maablihan kining referral.',
-    printCta: 'I-print / i-save isip PDF',
+    printCta: 'I-print',
+    shareCta: 'Ipaambit',
     printError: 'Dili maka-print: {{message}}',
     notFound: 'Wala makit-an ang referral niining device.',
   },
@@ -232,7 +242,7 @@ export const ceb: Translation = {
     },
     pgisHeading: 'Kabug-at sa ubo sumala sa pasyente (PGI-S)',
     pgisIntro:
-      'Opsyonal. Ang pasyente mismo ang mo-rate sa kabug-at sa iyang ubo. Dugang impormasyon lamang — dili gyud kini makaapekto sa rekomendasyon alang sa referral.',
+      'Hangyoa ang pasyente nga motubag sa iyang kaugalingong pulong — kaugalingong tubag kini sa pasyente, dili imoha. Dugang impormasyon lamang — dili gyud kini makaapekto sa rekomendasyon alang sa referral.',
     pgisClear: 'Papasa ang tubag',
     pgisOptions: {
       none: 'Wala',

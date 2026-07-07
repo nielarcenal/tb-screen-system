@@ -3,7 +3,7 @@
  *   1. sync state as a calm tonal chip in the header (teal = synced,
  *      amber = pending/syncing, neutral = offline — never red, §7);
  *   2. a "needs attention" row of tonal stat cards (upcoming / missed /
- *      no-show) with big counts; tap a card to list its items below;
+ *      no-show) with big counts; tap a card to open the filtered follow-up list;
  *   3. one primary action — "Enroll & screen a patient" — as a large pill;
  *   4. new lab results.
  *
@@ -12,7 +12,7 @@
  */
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import { Redirect, useFocusEffect, useRouter } from 'expo-router';
+import { Href, Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { Banner, Button, Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -34,12 +34,6 @@ import { palette } from '../../src/ui/tokens';
 
 type TileKey = 'upcoming' | 'missed' | 'noShow';
 
-const TILE_ICONS: Record<TileKey, string> = {
-  upcoming: 'calendar-clock',
-  missed: 'calendar-remove',
-  noShow: 'account-off',
-};
-
 /** Tonal card colors per tile (design: teal / red / amber containers). */
 const TILE_COLORS: Record<TileKey, { bg: string; num: string; label: string }> = {
   upcoming: { bg: palette.tealContainer, num: palette.tealDark, label: palette.tealDeep },
@@ -60,7 +54,6 @@ export default function HomeScreen() {
   const [missed, setMissed] = useState<DashboardAppointment[]>([]);
   const [noShows, setNoShows] = useState<DashboardReferral[]>([]);
   const [results, setResults] = useState<DashboardReferral[]>([]);
-  const [selectedTile, setSelectedTile] = useState<TileKey | null>(null);
 
   const reload = useCallback(async () => {
     const [u, m, n, r] = await Promise.all([
@@ -92,11 +85,6 @@ export default function HomeScreen() {
     noShow: noShows.length,
   };
   const allClear = counts.upcoming + counts.missed + counts.noShow === 0;
-  // Auto-select the first tile that has items when nothing (valid) is selected.
-  const activeTile: TileKey | null =
-    selectedTile && counts[selectedTile] > 0
-      ? selectedTile
-      : ((['upcoming', 'missed', 'noShow'] as TileKey[]).find((k) => counts[k] > 0) ?? null);
 
   // Calm sync chip (design: teal = synced, amber = pending, neutral = offline).
   const syncChip = () => {
@@ -178,23 +166,6 @@ export default function HomeScreen() {
       <MaterialCommunityIcons name="chevron-right" size={22} color={palette.muted} />
     </Pressable>
   );
-
-  const tileItems = (key: TileKey) =>
-    key === 'noShow'
-      ? noShows.map((r) =>
-          rowCard(
-            r.referral_id,
-            r.display_code,
-            r.specimen_id ?? undefined,
-            TILE_ICONS.noShow,
-            () => openPatient(r.patient_id),
-          ),
-        )
-      : (key === 'upcoming' ? upcoming : missed).map((a) =>
-          rowCard(a.appointment_id, a.display_code, a.scheduled_date, TILE_ICONS[key], () =>
-            openPatient(a.patient_id),
-          ),
-        );
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.background }}>
@@ -279,47 +250,43 @@ export default function HomeScreen() {
             </Text>
           </View>
         ) : (
-          <>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              {(['upcoming', 'missed', 'noShow'] as TileKey[]).map((key) => {
-                const selected = activeTile === key;
-                const colors = TILE_COLORS[key];
-                return (
-                  <Pressable
-                    key={key}
-                    style={{ flex: 1 }}
-                    disabled={counts[key] === 0}
-                    onPress={() => setSelectedTile(key)}
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            {(['upcoming', 'missed', 'noShow'] as TileKey[]).map((key) => {
+              const colors = TILE_COLORS[key];
+              return (
+                <Pressable
+                  key={key}
+                  style={{ flex: 1 }}
+                  disabled={counts[key] === 0}
+                  // Cast: expo-router's generated route types only refresh on
+                  // the next `expo start`, which doesn't know /follow-ups yet.
+                  onPress={() => router.push(`/follow-ups?filter=${key}` as Href)}
+                >
+                  <View
+                    style={{
+                      borderRadius: 16,
+                      paddingHorizontal: 12,
+                      paddingVertical: 14,
+                      minHeight: 96,
+                      gap: 4,
+                      backgroundColor: colors.bg,
+                      opacity: counts[key] === 0 ? 0.45 : 1,
+                    }}
                   >
-                    <View
-                      style={{
-                        borderRadius: 16,
-                        paddingHorizontal: 12,
-                        paddingVertical: 14,
-                        minHeight: 96,
-                        gap: 4,
-                        backgroundColor: colors.bg,
-                        borderWidth: 2,
-                        borderColor: selected ? colors.num : 'transparent',
-                        opacity: counts[key] === 0 ? 0.45 : 1,
-                      }}
+                    <Text style={{ fontSize: 30, fontWeight: '700', color: colors.num }}>
+                      {counts[key]}
+                    </Text>
+                    <Text
+                      variant="bodySmall"
+                      style={{ color: colors.label, fontWeight: '500', lineHeight: 16 }}
                     >
-                      <Text style={{ fontSize: 30, fontWeight: '700', color: colors.num }}>
-                        {counts[key]}
-                      </Text>
-                      <Text
-                        variant="bodySmall"
-                        style={{ color: colors.label, fontWeight: '500', lineHeight: 16 }}
-                      >
-                        {t(`home.tiles.${key}`)}
-                      </Text>
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
-            {activeTile ? <View style={{ gap: 8 }}>{tileItems(activeTile)}</View> : null}
-          </>
+                      {t(`home.tiles.${key}`)}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
         )}
 
         {/* Primary action — the BHW's main job. */}
@@ -359,7 +326,7 @@ export default function HomeScreen() {
             {results.map((r) =>
               rowCard(
                 r.referral_id,
-                r.display_code,
+                r.full_name ?? r.display_code,
                 r.result_date
                   ? `${new Date(r.result_date).toLocaleDateString()} — ${r.result ?? ''}`
                   : (r.result ?? undefined),

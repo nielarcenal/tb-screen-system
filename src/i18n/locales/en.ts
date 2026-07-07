@@ -45,6 +45,11 @@ export const en = {
     resultsSection: 'New results',
     emptySection: 'Nothing here right now.',
   },
+  followUps: {
+    title: 'Follow-ups',
+    empty: 'No patients here right now',
+    emptySub: 'Patients flagged by the TB-DOTS facility will appear in this list.',
+  },
   tabs: {
     home: 'Home',
     patients: 'Patients',
@@ -125,16 +130,18 @@ export const en = {
     title: 'Patients',
     empty: 'No patients on this device yet. Enroll a patient to start.',
     noMatch: 'No patient matches that code.',
-    searchPlaceholder: 'Search patient code…',
+    searchPlaceholder: 'Search patients…',
     enrollCta: 'Enroll patient',
     itemDescription: '{{sex}}, {{age}} yrs',
   },
   enroll: {
     title: 'Enroll patient',
     intro:
-      'A patient code (e.g. PAT-XXXX-0001) is assigned automatically on save. Names are not collected.',
+      'A patient code (e.g. PAT-XXXX-0001) is assigned automatically on save. Patient details are shared only with the receiving TB-DOTS facility.',
     requiredHint: 'Fields marked * are required.',
     detailsSection: 'Patient details',
+    fullNameLabel: 'Full name',
+    birthdateLabel: 'Birthdate',
     ageLabel: 'Age',
     ageError: 'Enter an age between 0 and 129.',
     sexLabel: 'Sex',
@@ -145,7 +152,7 @@ export const en = {
       'Sign in before enrolling — each record must carry the enrolling BHW’s account. (Sign-in is on the developer sync-test screen for now.)',
     goToSignIn: 'Go to sign-in',
     saveCta: 'Enroll patient',
-    missingFields: 'Complete the required fields: consent, age, sex, and barangay.',
+    missingFields: 'Complete the required fields: consent, name, birthdate, sex, and barangay.',
   },
   patientDetail: {
     infoSection: 'Patient information',
@@ -203,7 +210,8 @@ export const en = {
     preparedBy: 'Prepared by (BHW signature)',
     generatedAt: 'Generated {{date}}',
     qrCaption: 'Scan at the TB-DOTS facility to load this referral.',
-    printCta: 'Print / save PDF',
+    printCta: 'Print',
+    shareCta: 'Share',
     printError: 'Could not print: {{message}}',
     notFound: 'Referral not found on this device.',
   },
@@ -225,7 +233,7 @@ export const en = {
     },
     pgisHeading: 'Patient-rated cough severity (PGI-S)',
     pgisIntro:
-      'Optional. The patient rates their own cough severity. Supplementary information only — it never affects the referral recommendation.',
+      'Ask the patient to answer in their own words — this is the patient’s own rating, not yours. Supplementary information only — it never affects the referral recommendation.',
     pgisClear: 'Clear answer',
     pgisOptions: {
       none: 'None',
