@@ -60,3 +60,25 @@ on conflict (facility_id) do nothing;
 --   ('<PASTE_CAPTAIN_AUTH_UID>', 'captain', 'Test Barangay Captain',
 --    '00000000-0000-0000-0000-0000000000b1', '101312012')
 -- on conflict (user_id) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- 0006 backfill: demo names for the TEST patients. Patients enrolled before
+-- migration 0006 have full_name = null (the UI falls back to the display
+-- code); this gives the seeded demo rows the design's names so the portal
+-- and app show names during testing. Safe to re-run: only touches rows whose
+-- name is still null, matched by display_code. Real enrollments are never
+-- affected. (Birthdate is left null — the stored age was not derived from
+-- one, and the UI handles a missing birthdate.)
+-- ---------------------------------------------------------------------------
+update public.patients p
+set full_name = v.name
+from (values
+  ('PAT-TEST-0001', 'Maria Santos'),
+  ('PAT-TEST-0002', 'Jose Ramirez'),
+  ('PAT-TEST-0003', 'Elena Cruz'),
+  ('PAT-TEST-0004', 'Ricardo Dela Peña'),
+  ('PAT-TEST-0005', 'Luzviminda Ocampo'),
+  ('PAT-TEST-0006', 'Antonio Villanueva')
+) as v(code, name)
+where p.display_code = v.code
+  and p.full_name is null;
