@@ -91,9 +91,9 @@ export const tl: Translation = {
     title: 'Mga hotspot ng barangay',
     intro:
       'Bilang ng mga presumptive case ayon sa barangay — mga pasyenteng na-flag para sa referral ng DOH-NTP checklist sa napiling panahon, isang beses binibilang bawat isa, mula sa lahat ng BHW. Bilang lamang; buod para sa surveillance, hindi contact tracing.',
-    from: 'Mula',
-    to: 'Hanggang',
-    apply: 'I-apply',
+    rangeLast: 'Huling {{days}} araw',
+    countsNote:
+      'Ang mga bilang ay mga presumptive referral lamang — hindi kumpirmadong kaso, hindi diagnosis.',
     colRank: '#',
     colBarangay: 'Barangay',
     colCity: 'Lungsod / Munisipalidad',
@@ -125,6 +125,8 @@ export const tl: Translation = {
     presentedYes: 'Oo',
     presentedNo: 'No-show',
     loadError: 'Hindi ma-load ang mga referral: {{message}}',
+    count: '{{count}} referral',
+    selectPrompt: 'Pumili ng referral upang makita ang detalye',
   },
   status: {
     submitted: 'Naisumite',
@@ -146,7 +148,13 @@ export const tl: Translation = {
     pgisLine: 'Tindi ng ubo ayon sa pasyente (PGI-S, karagdagan lamang): {{value}}',
     pgisNotRecorded: 'Tindi ng ubo ayon sa pasyente (PGI-S, karagdagan lamang): hindi naitala',
     referralSection: 'Pamamahala ng referral',
+    screeningSummary: 'Buod ng screening',
+    actionsSection: 'Mga aksyon',
+    patientReportedTag: 'sagot ng pasyente',
     markReceived: 'Markahang natanggap',
+    receivedDone: '✓ Natanggap — pindutin para i-undo',
+    dnpNote:
+      'Ang pag-flag ng "no-show" ay nag-a-update sa follow-up list ng nag-refer na BHW. Walang resulta na ipinapakita sa mga BHW — progreso lamang ng referral.',
     outcomeLabel: 'Resulta ng laboratoryo (itinatala ng TB-DOTS staff — hindi kinukuwenta ng sistema)',
     outcomePositive: 'Positibo',
     outcomeNegative: 'Negatibo',

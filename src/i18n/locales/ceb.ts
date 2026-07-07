@@ -91,9 +91,9 @@ export const ceb: Translation = {
     title: 'Mga hotspot sa barangay',
     intro:
       'Ihap sa mga presumptive case matag barangay — mga pasyenteng gi-flag alang sa referral sa DOH-NTP checklist sulod sa gipili nga panahon, kausa ra giihap ang matag usa, gikan sa tanang BHW. Ihap lamang; katingbanan alang sa surveillance, dili contact tracing.',
-    from: 'Gikan',
-    to: 'Hangtod',
-    apply: 'I-apply',
+    rangeLast: 'Miaging {{days}} ka adlaw',
+    countsNote:
+      'Ang mga ihap mga presumptive referral lamang — dili kumpirmadong kaso, dili diagnosis.',
     colRank: '#',
     colBarangay: 'Barangay',
     colCity: 'Siyudad / Munisipyo',
@@ -125,6 +125,8 @@ export const ceb: Translation = {
     presentedYes: 'Oo',
     presentedNo: 'No-show',
     loadError: 'Dili ma-load ang mga referral: {{message}}',
+    count: '{{count}} ka referral',
+    selectPrompt: 'Pagpili og referral aron makita ang detalye',
   },
   status: {
     submitted: 'Gisumite',
@@ -146,7 +148,13 @@ export const ceb: Translation = {
     pgisLine: 'Kabug-at sa ubo sumala sa pasyente (PGI-S, dugang lamang): {{value}}',
     pgisNotRecorded: 'Kabug-at sa ubo sumala sa pasyente (PGI-S, dugang lamang): wala natala',
     referralSection: 'Pagdumala sa referral',
+    screeningSummary: 'Katingbanan sa screening',
+    actionsSection: 'Mga aksyon',
+    patientReportedTag: 'tubag sa pasyente',
     markReceived: 'Markahi nga nadawat',
+    receivedDone: '✓ Nadawat — pisliton aron i-undo',
+    dnpNote:
+      'Ang pag-flag og "no-show" mag-update sa follow-up list sa nag-refer nga BHW. Walay resulta nga gipakita sa mga BHW — progreso lamang sa referral.',
     outcomeLabel: 'Resulta sa laboratoryo (itala sa TB-DOTS staff — dili kwentahon sa sistema)',
     outcomePositive: 'Positibo',
     outcomeNegative: 'Negatibo',

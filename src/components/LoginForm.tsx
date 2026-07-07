@@ -25,8 +25,13 @@ export default function LoginForm() {
 
   return (
     <div className="card login">
-      <h2>{t('login.title')}</h2>
-      <p className="mutedline">{t('login.intro')}</p>
+      <div className="loginhead">
+        <span className="mark">+</span>
+        <div>
+          <h2>{t('login.title')}</h2>
+          <div className="sub">{t('login.intro')}</div>
+        </div>
+      </div>
       <form onSubmit={(e) => void submit(e)}>
         <label htmlFor="email">{t('login.email')}</label>
         <input

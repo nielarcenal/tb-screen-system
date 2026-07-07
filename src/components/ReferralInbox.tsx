@@ -1,8 +1,10 @@
 /**
- * Referral inbox (Feature 7): every referral addressed to the signed-in staff's
- * facility — the RLS policy (referrals_tbdots_read) does the scoping; the query
- * itself has no facility filter. Client-side status filter + text search only
- * (volumes are small; §2 keep it minimal).
+ * Referral inbox (design 1b): the master list of the master-detail split —
+ * PATIENT / BARANGAY / DATE / STATUS rows; clicking a row opens it in the
+ * side panel (selected row stays highlighted). Every referral addressed to
+ * the signed-in staff's facility — the RLS policy (referrals_tbdots_read)
+ * does the scoping; the query itself has no facility filter. Client-side
+ * status filter + text search only (volumes are small; §2 keep it minimal).
  */
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,9 +16,10 @@ const STATUSES: ReferralStatus[] = ['submitted', 'received', 'tested', 'closed']
 
 interface Props {
   onOpen: (referralId: string) => void;
+  selectedId: string | null;
 }
 
-export default function ReferralInbox({ onOpen }: Props) {
+export default function ReferralInbox({ onOpen, selectedId }: Props) {
   const { t } = useTranslation();
   const [rows, setRows] = useState<ReferralJoined[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,18 +57,20 @@ export default function ReferralInbox({ onOpen }: Props) {
     );
   });
 
-  const presentedCell = (r: ReferralJoined) =>
-    r.presented === null ? (
-      '—'
-    ) : r.presented ? (
-      t('inbox.presentedYes')
-    ) : (
+  /** No-show wins the chip; otherwise the referral status (design chips). */
+  const statusChip = (r: ReferralJoined) =>
+    r.presented === false ? (
       <span className="chip noshow">{t('inbox.presentedNo')}</span>
+    ) : (
+      <span className={`chip ${r.status}`}>{t(`status.${r.status}`)}</span>
     );
 
   return (
     <div className="card">
-      <h2>{t('inbox.title')}</h2>
+      <h2 style={{ marginBottom: 2 }}>{t('inbox.title')}</h2>
+      <p className="mutedline" style={{ marginTop: 0 }}>
+        {t('inbox.count', { count: visible.length })}
+      </p>
 
       <div className="toolbar">
         <input
@@ -100,19 +105,19 @@ export default function ReferralInbox({ onOpen }: Props) {
         <table>
           <thead>
             <tr>
-              <th>{t('inbox.colSpecimen')}</th>
               <th>{t('inbox.colPatient')}</th>
               <th>{t('inbox.colBarangay')}</th>
               <th>{t('inbox.colReferredOn')}</th>
               <th>{t('inbox.colStatus')}</th>
-              <th>{t('inbox.colPresented')}</th>
-              <th>{t('inbox.colResult')}</th>
             </tr>
           </thead>
           <tbody>
             {visible.map((r) => (
-              <tr key={r.referral_id} className="rowlink" onClick={() => onOpen(r.referral_id)}>
-                <td>{r.specimen_id ?? '—'}</td>
+              <tr
+                key={r.referral_id}
+                className={`rowlink${r.referral_id === selectedId ? ' selected' : ''}`}
+                onClick={() => onOpen(r.referral_id)}
+              >
                 <td>
                   {r.patients.full_name ? (
                     <>
@@ -120,16 +125,12 @@ export default function ReferralInbox({ onOpen }: Props) {
                       <div className="mutedline">{r.patients.display_code}</div>
                     </>
                   ) : (
-                    r.patients.display_code
+                    <b>{r.patients.display_code}</b>
                   )}
                 </td>
                 <td>{r.patients.ref_barangays?.name ?? r.patients.barangay_code}</td>
                 <td>{new Date(r.created_at).toLocaleDateString()}</td>
-                <td>
-                  <span className={`chip ${r.status}`}>{t(`status.${r.status}`)}</span>
-                </td>
-                <td>{presentedCell(r)}</td>
-                <td>{r.result ?? '—'}</td>
+                <td>{statusChip(r)}</td>
               </tr>
             ))}
           </tbody>

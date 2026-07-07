@@ -1,13 +1,15 @@
 /**
- * Barangay Hotspot View (Feature 10, brief §6): ranked presumptive-case counts
- * by barangay over a date range, from the hotspot_counts() SECURITY DEFINER
- * function (counts only — the portal never sees the rows behind them).
+ * Barangay Hotspot View (design 1b): ranked presumptive-case counts by
+ * barangay with "Last 30 / 60 / 90 days" range pills, from the
+ * hotspot_counts() SECURITY DEFINER function (counts only — the portal never
+ * sees the rows behind them). Bar color by rank: 1 deep teal, 2–3 seafoam,
+ * the rest light teal.
  *
  * SURVEILLANCE, NOT CONTACT TRACING: no household/sitio/per-patient drill-down
- * exists here by design. The "heat" bar is just the count relative to the
- * period's maximum.
+ * exists here by design. The bar is just the count relative to the period's
+ * maximum.
  */
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
@@ -21,21 +23,22 @@ interface HotspotRow {
 }
 
 const DAY_MS = 86_400_000;
+const RANGES = [30, 60, 90] as const;
+type RangeDays = (typeof RANGES)[number];
 
 export default function HotspotView() {
   const { t } = useTranslation();
-  const [from, setFrom] = useState(toDateOnly(new Date(Date.now() - 29 * DAY_MS)));
-  const [to, setTo] = useState(toDateOnly(new Date()));
+  const [days, setDays] = useState<RangeDays>(30);
   const [rows, setRows] = useState<HotspotRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (fromDate: string, toDate: string) => {
+  const load = useCallback(async (rangeDays: RangeDays) => {
     setLoading(true);
     setError(null);
     const { data, error: err } = await supabase.rpc('hotspot_counts', {
-      from_date: fromDate,
-      to_date: toDate,
+      from_date: toDateOnly(new Date(Date.now() - (rangeDays - 1) * DAY_MS)),
+      to_date: toDateOnly(new Date()),
     });
     if (err) setError(err.message);
     else setRows((data ?? []) as HotspotRow[]);
@@ -43,33 +46,29 @@ export default function HotspotView() {
   }, []);
 
   useEffect(() => {
-    void load(from, to);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // initial load only; afterwards via the Apply button
-
-  const apply = (e: FormEvent) => {
-    e.preventDefault();
-    void load(from, to);
-  };
+    void load(days);
+  }, [load, days]);
 
   const max = rows.reduce((m, r) => Math.max(m, r.presumptive_count), 0);
+  const barColor = (i: number) =>
+    i === 0 ? 'var(--teal)' : i < 3 ? 'var(--seafoam)' : 'var(--teal-border)';
 
   return (
     <div className="card">
       <h2>{t('hotspot.title')}</h2>
       <p className="mutedline">{t('hotspot.intro')}</p>
 
-      <form className="toolbar" onSubmit={apply}>
-        <label style={{ margin: 0 }} htmlFor="from">
-          {t('hotspot.from')}
-        </label>
-        <input id="from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-        <label style={{ margin: 0 }} htmlFor="to">
-          {t('hotspot.to')}
-        </label>
-        <input id="to" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-        <button type="submit">{t('hotspot.apply')}</button>
-      </form>
+      <div className="pillrow">
+        {RANGES.map((r) => (
+          <button
+            key={r}
+            className={days === r ? '' : 'secondary'}
+            onClick={() => setDays(r)}
+          >
+            {t('hotspot.rangeLast', { days: r })}
+          </button>
+        ))}
+      </div>
 
       {error ? <p className="error">{t('hotspot.loadError', { message: error })}</p> : null}
       {loading ? (
@@ -77,33 +76,31 @@ export default function HotspotView() {
       ) : rows.length === 0 ? (
         <p className="mutedline">{t('hotspot.empty')}</p>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th style={{ width: 40 }}>{t('hotspot.colRank')}</th>
-              <th>{t('hotspot.colBarangay')}</th>
-              <th>{t('hotspot.colCity')}</th>
-              <th style={{ width: 140 }}>{t('hotspot.colCount')}</th>
-              <th style={{ width: '30%' }} aria-hidden />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r, i) => (
-              <tr key={r.barangay_code}>
-                <td>{i + 1}</td>
-                <td>{r.barangay_name}</td>
-                <td>{r.city_name}</td>
-                <td>{r.presumptive_count}</td>
-                <td>
-                  <div
-                    className="heatbar"
-                    style={{ width: max ? `${(r.presumptive_count / max) * 100}%` : 0 }}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="hotlist">
+          {rows.map((r, i) => (
+            <div key={r.barangay_code} className="hotrow">
+              <span className="rank">{String(i + 1).padStart(2, '0')}</span>
+              <span className="name">
+                {r.barangay_name}
+                <div className="city">{r.city_name}</div>
+              </span>
+              <span className="track">
+                <span
+                  className="heatbar"
+                  style={{
+                    display: 'block',
+                    width: max ? `${(r.presumptive_count / max) * 100}%` : 0,
+                    background: barColor(i),
+                  }}
+                />
+              </span>
+              <span className="count">{r.presumptive_count}</span>
+            </div>
+          ))}
+          <p className="mutedline" style={{ borderTop: '1px solid #f0ede7', paddingTop: 10, margin: 0 }}>
+            {t('hotspot.countsNote')}
+          </p>
+        </div>
       )}
     </div>
   );

@@ -82,6 +82,13 @@ body {
   font-weight: 700;
 }
 .topbar .who { font-size: 13px; color: var(--ink-soft); }
+.topbar .org {
+  font-size: 12px;
+  color: var(--muted);
+  border-left: 1px solid var(--line);
+  padding-left: 12px;
+  font-weight: 400;
+}
 .topbar select {
   padding: 6px 8px;
   border: 1.5px solid var(--outline);
@@ -89,6 +96,21 @@ body {
   background: var(--paper);
   color: var(--ink);
 }
+/* avatar initials circle */
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--teal-container);
+  color: var(--teal-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+/* tabs live INSIDE the topbar (design 1b) */
+.topbar .tabs { margin: 0 0 0 16px; flex: 1; }
 
 main { max-width: 1100px; margin: 0 auto; padding: 20px 24px; }
 
@@ -230,6 +252,122 @@ label { display: block; margin: 10px 0 4px; color: var(--ink-mid); font-weight: 
 tbody tr:nth-child(-n + 3) .heatbar { background: var(--seafoam); }
 tbody tr:first-child .heatbar { background: var(--teal); }
 
+/* ---------- master-detail split (design 1b: inbox + side panel) ---------- */
+.split {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.split > .master { flex: 1 1 480px; min-width: 0; }
+.split > .detailpanel {
+  flex: 0 0 400px;
+  max-width: 100%;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+.detailpanel .placeholder {
+  padding: 100px 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+tbody tr.rowlink.selected { background: #f0f7f7; }
+
+/* compact screening-summary box in the detail panel */
+.summarybox {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.summarybox .row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+}
+.summarybox .row .q { color: var(--ink-mid); }
+.summarybox .row .v { font-weight: 600; }
+.summarybox .row .v.yes { color: var(--teal-dark); }
+.summarybox .row .v.unsure { color: var(--amber); }
+.summarybox .row .v.no { color: var(--muted); }
+.summarybox .pgis {
+  border-top: 1px dashed var(--line);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+.tag-patient {
+  font-size: 10.5px;
+  color: var(--amber);
+  background: var(--amber-container);
+  border-radius: 8px;
+  padding: 1px 7px;
+  font-weight: 600;
+}
+
+/* stacked full-width action pills */
+.actionstack { display: flex; flex-direction: column; gap: 8px; }
+.actionstack .pair { display: flex; gap: 8px; }
+.actionstack .pair > button { flex: 1; margin: 0; }
+.actionstack > button { width: 100%; margin: 0; }
+button.done {
+  background: var(--teal-container);
+  color: var(--teal-dark);
+  border: none;
+}
+button.done:hover { background: var(--teal-container); }
+button.amber {
+  background: transparent;
+  color: var(--amber-ink);
+  border: 1.5px solid var(--amber-border);
+}
+button.amber.on { background: var(--amber-container); }
+button.amber:hover { background: var(--amber-container); }
+.notebox {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+/* ---------- hotspot ranked bars (design 1b) ---------- */
+.pillrow { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.pillrow button.secondary { border-color: var(--outline); }
+.hotlist {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 760px;
+}
+.hotrow {
+  display: grid;
+  grid-template-columns: 24px minmax(120px, 180px) 1fr 40px;
+  gap: 12px;
+  align-items: center;
+}
+.hotrow .rank {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  font-family: ui-monospace, Menlo, monospace;
+}
+.hotrow .name { font-size: 13.5px; font-weight: 500; color: var(--ink); }
+.hotrow .name .city { font-size: 11px; color: var(--muted); font-weight: 400; }
+.hotrow .track {
+  height: 22px;
+  border-radius: 6px;
+  background: var(--tonal);
+  overflow: hidden;
+}
+.hotrow .count { font-size: 14px; font-weight: 700; color: var(--ink); text-align: right; }
+
 /* ---------- dashboard stat cards (design 1b) ---------- */
 .statgrid {
   display: grid;
@@ -268,3 +406,19 @@ tbody tr:first-child .heatbar { background: var(--teal); }
 }
 .login input { width: 100%; }
 .login button { width: 100%; margin-top: 16px; padding: 12px 18px; font-size: 14px; }
+.loginhead { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.loginhead .mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--teal);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.loginhead h2 { margin: 0; font-size: 17px; }
+.loginhead .sub { font-size: 12px; color: var(--muted); }
