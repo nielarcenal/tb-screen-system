@@ -10,13 +10,18 @@
  * own facility_id (the captain can only manage BHWs of their facility).
  *
  * Actions (POST JSON { action, ... }):
- *   create     { full_name, barangay_code }
- *                → creates the auth user (auto email firstname.lastname.N@tbscreen.ph,
- *                  temp password), inserts the users row (role bhw, captain's
- *                  facility), returns { email, temp_password }.
- *   update     { user_id, full_name, barangay_code }
+ *   create     { first_name, last_name, barangay_code }
+ *                → creates the auth user (auto email firstname.lastname@tbscreen.ph,
+ *                  .2/.3… suffix on clash; temp password), inserts the users
+ *                  row (role bhw, captain's facility, full_name = "First Last"),
+ *                  returns { email, temp_password }.
+ *   update     { user_id, first_name, last_name, barangay_code }
  *   deactivate { user_id }  → users.active=false + auth ban (blocks sign-in).
  *   reactivate { user_id }  → users.active=true  + ban lifted.
+ *
+ * Browser calls: supabase.functions.invoke sends a CORS preflight — every
+ * response (including OPTIONS) must carry the CORS headers or the browser
+ * reports "Failed to send a request to the Edge Function".
  *
  * PRIVACY: this function reads/writes ONLY facilities/users/auth — no patient
  * data ever passes through it. Captains have no patient policies at all.
@@ -26,26 +31,30 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 interface Body {
   action: 'create' | 'update' | 'deactivate' | 'reactivate';
   user_id?: string;
-  full_name?: string;
+  first_name?: string;
+  last_name?: string;
   barangay_code?: string;
 }
+
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...CORS },
   });
 
-/** firstname.lastname slug, ASCII letters only (mirrors the design's format). */
-function emailSlug(name: string): string {
+/** One name part → lowercase ASCII letters, inner spaces dropped ("Dela Cruz" → "delacruz"). */
+function slugPart(name: string): string {
   return name
     .toLowerCase()
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z\s]/g, '')
-    .trim()
-    .split(/\s+/)
-    .join('.');
+    .replace(/[^a-z]/g, '');
 }
 
 /** Random temp password like TBS-4829-kfmq (letters avoid ambiguous chars). */
@@ -59,6 +68,7 @@ function tempPassword(): string {
 }
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json(405, { error: 'POST only' });
 
   const admin = createClient(
@@ -105,13 +115,15 @@ Deno.serve(async (req) => {
   try {
     switch (body.action) {
       case 'create': {
-        const name = (body.full_name ?? '').trim();
-        if (!name || !body.barangay_code) {
-          return json(400, { error: 'full_name and barangay_code required' });
+        const first = (body.first_name ?? '').trim();
+        const last = (body.last_name ?? '').trim();
+        if (!first || !last || !body.barangay_code) {
+          return json(400, { error: 'first_name, last_name and barangay_code required' });
         }
+        const name = `${first} ${last}`;
         // Unique email: firstname.lastname@tbscreen.ph, then .2, .3, … on clash.
-        const slug = emailSlug(name);
-        if (!slug) return json(400, { error: 'name must contain letters' });
+        const slug = `${slugPart(first)}.${slugPart(last)}`;
+        if (slug === '.') return json(400, { error: 'name must contain letters' });
         let email = `${slug}@tbscreen.ph`;
         const password = tempPassword();
         for (let n = 2; n < 50; n++) {
@@ -146,7 +158,9 @@ Deno.serve(async (req) => {
         const target = await loadTarget(body.user_id);
         if (!target) return json(404, { error: 'BHW not found in your facility' });
         const fields: Record<string, unknown> = {};
-        if (body.full_name?.trim()) fields.full_name = body.full_name.trim();
+        const first = (body.first_name ?? '').trim();
+        const last = (body.last_name ?? '').trim();
+        if (first && last) fields.full_name = `${first} ${last}`;
         if (body.barangay_code) fields.assigned_barangay_code = body.barangay_code;
         if (Object.keys(fields).length === 0) return json(400, { error: 'nothing to update' });
         const { error } = await admin.from('users').update(fields).eq('user_id', target.user_id);
