@@ -1,0 +1,8 @@
+# Supabase CLI local state
+.branches/
+.temp/
+
+# local env files — keep real keys out of git
+.env
+.env*.local
+*.key
