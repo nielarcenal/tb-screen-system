@@ -1,0 +1,131 @@
+/**
+ * English strings — source of truth for keys (brief §9: no hardcoded UI text).
+ * POSITIONING (§1): the portal is where TB-DOTS staff RECORD laboratory results;
+ * screening data shown here is pre-screening information, never a diagnosis
+ * made by the system. Copy must never imply the system detects TB.
+ */
+export const en = {
+  common: {
+    appName: 'TB-Screen — TB-DOTS Portal',
+    loading: 'Loading…',
+    refresh: 'Refresh',
+    signOut: 'Sign out',
+    yes: 'Yes',
+    no: 'No',
+    unsure: 'Unsure',
+    back: '← Back to inbox',
+    all: 'All',
+    nonDiagnostic:
+      'Screening answers shown here are pre-screening information gathered by a BHW — not a diagnosis. Diagnosis happens at the TB-DOTS facility through laboratory testing.',
+  },
+  languages: {
+    en: 'English',
+    tl: 'Tagalog',
+    ceb: 'Cebuano',
+  },
+  nav: {
+    inbox: 'Referral inbox',
+    hotspot: 'Barangay hotspots',
+  },
+  hotspot: {
+    title: 'Barangay hotspots',
+    intro:
+      'Presumptive case counts by barangay — patients flagged for referral by the DOH-NTP checklist in the chosen period, counted once each, across all BHWs. Counts only; surveillance summary, not contact tracing.',
+    from: 'From',
+    to: 'To',
+    apply: 'Apply',
+    colRank: '#',
+    colBarangay: 'Barangay',
+    colCity: 'City / Municipality',
+    colCount: 'Presumptive cases',
+    empty: 'No presumptive cases in this period.',
+    loadError: 'Could not load counts: {{message}}',
+  },
+  login: {
+    title: 'TB-DOTS staff sign-in',
+    intro:
+      'For TB-DOTS facility staff: receive referrals, record laboratory results, and track check-up attendance.',
+    email: 'Email',
+    password: 'Password',
+    cta: 'Sign in',
+    error: 'Sign-in failed: {{message}}',
+  },
+  inbox: {
+    title: 'Referral inbox',
+    empty: 'No referrals for your facility yet.',
+    searchPlaceholder: 'Search patient or specimen code…',
+    statusFilter: 'Status',
+    colSpecimen: 'Specimen ID',
+    colPatient: 'Patient code',
+    colBarangay: 'Barangay',
+    colReferredOn: 'Referred on',
+    colStatus: 'Status',
+    colPresented: 'Presented',
+    colResult: 'Result',
+    presentedYes: 'Yes',
+    presentedNo: 'No-show',
+    loadError: 'Could not load referrals: {{message}}',
+  },
+  status: {
+    submitted: 'Submitted',
+    received: 'Received',
+    tested: 'Tested',
+    closed: 'Closed',
+  },
+  sex: {
+    male: 'Male',
+    female: 'Female',
+  },
+  detail: {
+    patientSection: 'Patient',
+    ageSex: 'Age / sex',
+    barangay: 'Barangay',
+    sitio: 'Sitio',
+    screeningSection: 'Screening (DOH-NTP checklist)',
+    screeningDate: 'Screening date',
+    pgisLine: 'Patient-rated cough severity (PGI-S, supplementary): {{value}}',
+    pgisNotRecorded: 'Patient-rated cough severity (PGI-S, supplementary): not recorded',
+    referralSection: 'Referral handling',
+    markReceived: 'Mark received',
+    resultLabel: 'Laboratory result (free text, recorded by TB-DOTS staff)',
+    resultPlaceholder: 'e.g. GeneXpert: MTB not detected',
+    saveResult: 'Save result (marks as tested)',
+    resultSavedOn: 'Result recorded {{date}}',
+    presentedLabel: 'Did the patient present at the facility?',
+    markPresented: 'Presented',
+    markNoShow: 'No-show',
+    closeReferral: 'Close referral',
+    appointmentsSection: 'Check-up appointments',
+    noAppointments: 'No appointments recorded for this patient.',
+    colScheduled: 'Scheduled',
+    colAttended: 'Attended',
+    colStatus: 'Status',
+    apptScheduled: 'Scheduled',
+    apptAttended: 'Attended',
+    apptMissed: 'Missed',
+    markAttended: 'Mark attended (today)',
+    markMissed: 'Mark missed',
+    updateError: 'Update failed: {{message}}',
+    notFound: 'Referral not found (or not addressed to your facility).',
+  },
+  symptoms: {
+    cough_2wks: 'Cough for 2 weeks or more',
+    weight_loss: 'Unexplained weight loss',
+    night_sweats: 'Night sweats',
+    fever: 'Unexplained fever',
+    hemoptysis: 'Coughing up blood (hemoptysis)',
+    chest_pain: 'Chest pain',
+    fatigue: 'Fatigue / tiredness',
+    loss_of_appetite: 'Loss of appetite',
+    tb_contact: 'Close contact with a person known to have TB',
+  },
+  pgis: {
+    none: 'None',
+    mild: 'Mild',
+    moderate: 'Moderate',
+    severe: 'Severe',
+  },
+};
+
+// Full translation shape; tl/ceb must supply every key (compile error if not).
+export type Translation = typeof en;
