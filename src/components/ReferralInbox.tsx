@@ -49,7 +49,8 @@ export default function ReferralInbox({ onOpen }: Props) {
     if (!q) return true;
     return (
       (r.specimen_id ?? '').toLowerCase().includes(q) ||
-      r.patients.display_code.toLowerCase().includes(q)
+      r.patients.display_code.toLowerCase().includes(q) ||
+      (r.patients.full_name ?? '').toLowerCase().includes(q)
     );
   });
 
@@ -112,7 +113,16 @@ export default function ReferralInbox({ onOpen }: Props) {
             {visible.map((r) => (
               <tr key={r.referral_id} className="rowlink" onClick={() => onOpen(r.referral_id)}>
                 <td>{r.specimen_id ?? '—'}</td>
-                <td>{r.patients.display_code}</td>
+                <td>
+                  {r.patients.full_name ? (
+                    <>
+                      <b>{r.patients.full_name}</b>
+                      <div className="mutedline">{r.patients.display_code}</div>
+                    </>
+                  ) : (
+                    r.patients.display_code
+                  )}
+                </td>
                 <td>{r.patients.ref_barangays?.name ?? r.patients.barangay_code}</td>
                 <td>{new Date(r.created_at).toLocaleDateString()}</td>
                 <td>

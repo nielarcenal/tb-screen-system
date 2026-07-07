@@ -35,10 +35,25 @@ export const SYMPTOM_KEYS = [
   'tb_contact',
 ] as const;
 
+export type UserRole = 'bhw' | 'tb_dots' | 'captain';
+export type ResultOutcome = 'positive' | 'negative';
+
+/** The signed-in account's own users row (role drives which portal shows). */
+export interface PortalUser {
+  user_id: string;
+  role: UserRole;
+  full_name: string;
+  facility_id: string;
+  active: boolean;
+}
+
 export interface PatientRow {
   patient_id: string;
   display_code: string;
   enrolled_by: string;
+  /** Nullable: pre-0006 rows have no name (0006 design-parity migration). */
+  full_name: string | null;
+  birthdate: string | null;
   age: number;
   sex: Sex;
   barangay_code: string;
@@ -68,10 +83,34 @@ export interface ReferralRow {
   specimen_id: string | null;
   status: ReferralStatus;
   result: string | null;
+  /** Structured lab outcome recorded by staff (0006). Never computed (§1). */
+  result_outcome: ResultOutcome | null;
   result_date: string | null;
   presented: boolean | null;
   created_at: string;
   updated_at: string;
+}
+
+/** One row of the dashboard_counts() RPC (0006). */
+export interface DashboardCounts {
+  screened_today: number;
+  referred_today: number;
+  positive_today: number;
+  negative_today: number;
+  attended_today: number;
+  missed_today: number;
+  scheduled_today: number;
+}
+
+/** One row of the bhw_activity() RPC (0006) — accounts + counts, no patients. */
+export interface BhwActivityRow {
+  user_id: string;
+  full_name: string;
+  barangay_code: string | null;
+  barangay_name: string | null;
+  active: boolean;
+  screenings_n: number;
+  referrals_n: number;
 }
 
 export interface AppointmentRow {

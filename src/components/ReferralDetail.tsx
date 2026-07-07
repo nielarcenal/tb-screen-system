@@ -30,6 +30,7 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resultText, setResultText] = useState('');
+  const [outcome, setOutcome] = useState<'positive' | 'negative' | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -47,6 +48,7 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
     const r = (data ?? null) as unknown as ReferralJoined | null;
     setReferral(r);
     setResultText(r?.result ?? '');
+    setOutcome(r?.result_outcome ?? null);
     if (r) {
       const { data: appts, error: aErr } = await supabase
         .from('appointments')
@@ -109,6 +111,7 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
 
       <div className="card">
         <h2>
+          {p.full_name ? `${p.full_name} · ` : ''}
           {p.display_code} — {referral.specimen_id ?? '—'}{' '}
           <span className={`chip ${referral.status}`}>{t(`status.${referral.status}`)}</span>
         </h2>
@@ -191,6 +194,26 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
           </button>
         </p>
 
+        {/* Structured outcome (0006) — RECORDED by staff, never computed (§1).
+            Visible only at the facility; BHWs see referral progress alone. */}
+        <p className="mutedline">{t('detail.outcomeLabel')}</p>
+        <p>
+          <button
+            className={outcome === 'positive' ? '' : 'secondary'}
+            disabled={busy}
+            onClick={() => setOutcome('positive')}
+          >
+            {t('detail.outcomePositive')}
+          </button>
+          <button
+            className={outcome === 'negative' ? '' : 'secondary'}
+            disabled={busy}
+            onClick={() => setOutcome('negative')}
+          >
+            {t('detail.outcomeNegative')}
+          </button>
+        </p>
+
         <label htmlFor="result">{t('detail.resultLabel')}</label>
         <textarea
           id="result"
@@ -202,10 +225,11 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
         />
         <p>
           <button
-            disabled={busy || resultText.trim() === ''}
+            disabled={busy || outcome === null}
             onClick={() =>
               void updateReferral({
-                result: resultText.trim(),
+                result_outcome: outcome,
+                result: resultText.trim() || null,
                 result_date: new Date().toISOString(),
                 status: 'tested',
               })

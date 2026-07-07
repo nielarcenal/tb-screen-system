@@ -230,6 +230,36 @@ label { display: block; margin: 10px 0 4px; color: var(--ink-mid); font-weight: 
 tbody tr:nth-child(-n + 3) .heatbar { background: var(--seafoam); }
 tbody tr:first-child .heatbar { background: var(--teal); }
 
+/* ---------- dashboard stat cards (design 1b) ---------- */
+.statgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  max-width: 1120px;
+}
+.statcard {
+  border-radius: 14px;
+  padding: 18px 16px;
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid transparent;
+}
+.statcard .n { font-size: 34px; font-weight: 700; line-height: 1; }
+.statcard .label { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.statcard .sub { font-size: 11.5px; line-height: 1.4; opacity: 0.85; }
+.statcard.teal { background: var(--teal-container); color: var(--teal-deep); }
+.statcard.teal .n { color: var(--teal-dark); }
+.statcard.red { background: var(--red-container); color: #7a2b24; }
+.statcard.red .n { color: var(--red); }
+.statcard.neutral { background: var(--subtle); color: var(--ink-soft); }
+.statcard.neutral .n { color: var(--ink-mid); }
+.statcard.plain { background: var(--paper); border-color: var(--line); color: var(--muted); }
+.statcard.plain .n { color: var(--teal-dark); }
+.statcard.plain .label { color: var(--ink-mid); }
+.statcard.plain.red-n .n { color: var(--red); }
+
 /* ---------- login ---------- */
 .login {
   max-width: 380px;
