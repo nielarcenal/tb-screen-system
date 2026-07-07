@@ -69,6 +69,8 @@ export const en = {
     addTitle: 'Add BHW',
     editTitle: 'Edit BHW',
     nameLabel: 'Full name',
+    firstNameLabel: 'First name',
+    lastNameLabel: 'Last name',
     barangayLabel: 'Assigned barangay',
     emailNote:
       'The email is auto-generated (firstname.lastname@tbscreen.ph) and shown with a temporary password after creation — share both with the BHW in person.',
@@ -180,6 +182,12 @@ export const en = {
     markMissed: 'Mark missed',
     updateError: 'Update failed: {{message}}',
     notFound: 'Referral not found (or not addressed to your facility).',
+  },
+  address: {
+    region: 'Region',
+    province: 'Province',
+    city: 'City / Municipality',
+    barangay: 'Barangay',
   },
   symptoms: {
     cough_2wks: 'Cough for 2 weeks or more',

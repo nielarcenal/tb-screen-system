@@ -69,6 +69,8 @@ export const tl: Translation = {
     addTitle: 'Magdagdag ng BHW',
     editTitle: 'Baguhin ang BHW',
     nameLabel: 'Buong pangalan',
+    firstNameLabel: 'Pangalan',
+    lastNameLabel: 'Apelyido',
     barangayLabel: 'Nakatalagang barangay',
     emailNote:
       'Awtomatikong nabubuo ang email (pangalan.apelyido@tbscreen.ph) at ipapakita kasama ng pansamantalang password pagkatapos gawin — personal na ibahagi ang dalawa sa BHW.',
@@ -181,6 +183,12 @@ export const tl: Translation = {
     markMissed: 'Markahang hindi dumalo',
     updateError: 'Nabigo ang pag-update: {{message}}',
     notFound: 'Hindi natagpuan ang referral (o hindi ito para sa inyong pasilidad).',
+  },
+  address: {
+    region: 'Rehiyon',
+    province: 'Probinsya',
+    city: 'Lungsod / Munisipalidad',
+    barangay: 'Barangay',
   },
   symptoms: {
     cough_2wks: 'Ubo nang 2 linggo o higit pa',

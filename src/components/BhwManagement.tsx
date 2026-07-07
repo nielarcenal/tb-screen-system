@@ -13,11 +13,7 @@ import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
 import { BhwActivityRow } from '../lib/types';
-
-interface BarangayOption {
-  barangay_code: string;
-  name: string;
-}
+import AddressCascadeWeb from './AddressCascadeWeb';
 
 type View =
   | { kind: 'list' }
@@ -28,25 +24,20 @@ type View =
 export default function BhwManagement() {
   const { t } = useTranslation();
   const [rows, setRows] = useState<BhwActivityRow[]>([]);
-  const [barangays, setBarangays] = useState<BarangayOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<View>({ kind: 'list' });
-  const [formName, setFormName] = useState('');
-  const [formBrgy, setFormBrgy] = useState('');
+  const [formFirst, setFormFirst] = useState('');
+  const [formLast, setFormLast] = useState('');
+  const [formBrgy, setFormBrgy] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [{ data, error: err }, { data: brgys, error: bErr }] = await Promise.all([
-      supabase.rpc('bhw_activity', { days_back: 30 }),
-      supabase.from('ref_barangays').select('barangay_code, name').order('name'),
-    ]);
+    const { data, error: err } = await supabase.rpc('bhw_activity', { days_back: 30 });
     if (err) setError(err.message);
     else setRows((data ?? []) as BhwActivityRow[]);
-    if (bErr) setError(bErr.message);
-    else setBarangays((brgys ?? []) as BarangayOption[]);
     setLoading(false);
   }, []);
 
@@ -64,14 +55,18 @@ export default function BhwManagement() {
   };
 
   const openAdd = () => {
-    setFormName('');
-    setFormBrgy(barangays[0]?.barangay_code ?? '');
+    setFormFirst('');
+    setFormLast('');
+    setFormBrgy(null);
     setView({ kind: 'form', editing: null });
   };
 
   const openEdit = (row: BhwActivityRow) => {
-    setFormName(row.full_name);
-    setFormBrgy(row.barangay_code ?? barangays[0]?.barangay_code ?? '');
+    // full_name was stored as "First Last…" — first word is the first name.
+    const [first, ...rest] = row.full_name.trim().split(/\s+/);
+    setFormFirst(first ?? '');
+    setFormLast(rest.join(' '));
+    setFormBrgy(row.barangay_code);
     setView({ kind: 'form', editing: row });
   };
 
@@ -83,21 +78,23 @@ export default function BhwManagement() {
         await invoke({
           action: 'update',
           user_id: editing.user_id,
-          full_name: formName,
+          first_name: formFirst,
+          last_name: formLast,
           barangay_code: formBrgy,
         });
         setView({ kind: 'list' });
       } else {
         const res = await invoke({
           action: 'create',
-          full_name: formName,
+          first_name: formFirst,
+          last_name: formLast,
           barangay_code: formBrgy,
         });
         setView({
           kind: 'created',
           email: String(res.email ?? ''),
           tempPassword: String(res.temp_password ?? ''),
-          name: formName,
+          name: `${formFirst.trim()} ${formLast.trim()}`,
         });
       }
       await load();
@@ -155,26 +152,27 @@ export default function BhwManagement() {
       <div className="card" style={{ maxWidth: 480 }}>
         <h2>{editing ? t('bhw.editTitle') : t('bhw.addTitle')}</h2>
         {error ? <p className="error">{t('bhw.actionError', { message: error })}</p> : null}
-        <label htmlFor="bhw-name">{t('bhw.nameLabel')}</label>
-        <input
-          id="bhw-name"
-          value={formName}
-          onChange={(e) => setFormName(e.target.value)}
-          style={{ width: '100%' }}
-        />
-        <label htmlFor="bhw-brgy">{t('bhw.barangayLabel')}</label>
-        <select
-          id="bhw-brgy"
-          value={formBrgy}
-          onChange={(e) => setFormBrgy(e.target.value)}
-          style={{ width: '100%' }}
-        >
-          {barangays.map((b) => (
-            <option key={b.barangay_code} value={b.barangay_code}>
-              {b.name}
-            </option>
-          ))}
-        </select>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 10px' }}>
+          <div>
+            <label htmlFor="bhw-first">{t('bhw.firstNameLabel')}</label>
+            <input
+              id="bhw-first"
+              value={formFirst}
+              onChange={(e) => setFormFirst(e.target.value)}
+              style={{ width: '100%' }}
+            />
+          </div>
+          <div>
+            <label htmlFor="bhw-last">{t('bhw.lastNameLabel')}</label>
+            <input
+              id="bhw-last"
+              value={formLast}
+              onChange={(e) => setFormLast(e.target.value)}
+              style={{ width: '100%' }}
+            />
+          </div>
+        </div>
+        <AddressCascadeWeb value={formBrgy} onChange={setFormBrgy} />
         {!editing ? (
           <p className="mutedline" style={{ marginTop: 10 }}>
             {t('bhw.emailNote')}
@@ -182,7 +180,7 @@ export default function BhwManagement() {
         ) : null}
         <p>
           <button
-            disabled={busy || !formName.trim() || !formBrgy}
+            disabled={busy || !formFirst.trim() || !formLast.trim() || !formBrgy}
             onClick={() => void submitForm(editing)}
           >
             {editing ? t('bhw.save') : t('bhw.create')}

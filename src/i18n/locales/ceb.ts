@@ -69,6 +69,8 @@ export const ceb: Translation = {
     addTitle: 'Pagdugang og BHW',
     editTitle: 'Usba ang BHW',
     nameLabel: 'Tibuok nga ngalan',
+    firstNameLabel: 'Ngalan',
+    lastNameLabel: 'Apelyido',
     barangayLabel: 'Gitahas nga barangay',
     emailNote:
       'Awtomatikong mabuo ang email (ngalan.apelyido@tbscreen.ph) ug ipakita uban sa temporaryo nga password human mabuhat — personal nga ipaambit ang duha sa BHW.',
@@ -181,6 +183,12 @@ export const ceb: Translation = {
     markMissed: 'Markahi nga wala mitambong',
     updateError: 'Napakyas ang pag-update: {{message}}',
     notFound: 'Wala makit-an ang referral (o dili kini alang sa inyong pasilidad).',
+  },
+  address: {
+    region: 'Rehiyon',
+    province: 'Probinsya',
+    city: 'Siyudad / Munisipyo',
+    barangay: 'Barangay',
   },
   symptoms: {
     cough_2wks: 'Ubo nga 2 ka semana o labaw pa',
