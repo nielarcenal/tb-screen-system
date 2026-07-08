@@ -47,6 +47,7 @@ export const en = {
     editTitle: 'Edit staff',
     facilityLabel: 'Facility',
     colFacility: 'Facility',
+    filterLabel: 'Facility',
     createdTitle: 'Staff account created',
     scopeNote:
       'The account only sees referrals addressed to the facility chosen here — it defines their whole portal.',

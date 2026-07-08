@@ -39,6 +39,9 @@ export default function StaffManagement() {
   const [formFirst, setFormFirst] = useState('');
   const [formLast, setFormLast] = useState('');
   const [formFacility, setFormFacility] = useState('');
+  // List navigation: show one facility's accounts (facilities can have many
+  // staff) or all of them.
+  const [facilityFilter, setFacilityFilter] = useState<'all' | string>('all');
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -80,7 +83,10 @@ export default function StaffManagement() {
   const openAdd = () => {
     setFormFirst('');
     setFormLast('');
-    setFormFacility(facilities[0]?.facility_id ?? '');
+    // When the list is filtered to one facility, new accounts default to it.
+    setFormFacility(
+      facilityFilter !== 'all' ? facilityFilter : (facilities[0]?.facility_id ?? ''),
+    );
     setView({ kind: 'form', editing: null });
   };
 
@@ -261,14 +267,32 @@ export default function StaffManagement() {
     );
   }
 
+  const visible =
+    facilityFilter === 'all' ? rows : rows.filter((r) => r.facility_id === facilityFilter);
+
   return (
     <div className="card">
       <div className="toolbar">
         <div>
           <h2 style={{ marginBottom: 2 }}>{t('staff.title')}</h2>
-          <span className="mutedline">{t('staff.subtitle', { count: rows.length })}</span>
+          <span className="mutedline">{t('staff.subtitle', { count: visible.length })}</span>
         </div>
         <span style={{ flex: 1 }} />
+        <label htmlFor="st-filter" style={{ margin: 0 }}>
+          {t('staff.filterLabel')}
+        </label>
+        <select
+          id="st-filter"
+          value={facilityFilter}
+          onChange={(e) => setFacilityFilter(e.target.value)}
+        >
+          <option value="all">{t('common.all')}</option>
+          {facilities.map((f) => (
+            <option key={f.facility_id} value={f.facility_id}>
+              {f.name} ({rows.filter((r) => r.facility_id === f.facility_id).length})
+            </option>
+          ))}
+        </select>
         <button onClick={openAdd}>{t('staff.addCta')}</button>
       </div>
 
@@ -276,7 +300,7 @@ export default function StaffManagement() {
 
       {loading ? (
         <p>{t('common.loading')}</p>
-      ) : rows.length === 0 ? (
+      ) : visible.length === 0 ? (
         <p className="mutedline">{t('staff.empty')}</p>
       ) : (
         <table>
@@ -289,7 +313,7 @@ export default function StaffManagement() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
+            {visible.map((r) => (
               <tr key={r.user_id} style={{ opacity: r.active ? 1 : 0.6 }}>
                 <td>
                   <b>{r.full_name}</b>

@@ -47,6 +47,7 @@ export const ceb: Translation = {
     editTitle: 'Usba ang staff',
     facilityLabel: 'Pasilidad',
     colFacility: 'Pasilidad',
+    filterLabel: 'Pasilidad',
     createdTitle: 'Nabuhat ang staff account',
     scopeNote:
       'Makita lamang sa account ang mga referral nga gipadala sa pasilidad nga gipili dinhi — mao kini ang sakop sa tibuok nilang portal.',

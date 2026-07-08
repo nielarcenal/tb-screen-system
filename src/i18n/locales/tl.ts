@@ -47,6 +47,7 @@ export const tl: Translation = {
     editTitle: 'Baguhin ang staff',
     facilityLabel: 'Pasilidad',
     colFacility: 'Pasilidad',
+    filterLabel: 'Pasilidad',
     createdTitle: 'Nagawa ang staff account',
     scopeNote:
       'Makikita lamang ng account ang mga referral na ipinadala sa pasilidad na pinili rito — ito ang saklaw ng buong portal nila.',
