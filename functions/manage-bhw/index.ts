@@ -18,6 +18,8 @@
  *   update     { user_id, first_name, last_name, barangay_code }
  *   deactivate { user_id }  → users.active=false + auth ban (blocks sign-in).
  *   reactivate { user_id }  → users.active=true  + ban lifted.
+ *   reset_password { user_id } → sets a fresh temp password and returns it
+ *                (passwords are hashed — they can never be viewed, only reset).
  *
  * Browser calls: supabase.functions.invoke sends a CORS preflight — every
  * response (including OPTIONS) must carry the CORS headers or the browser
@@ -29,7 +31,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 interface Body {
-  action: 'create' | 'update' | 'deactivate' | 'reactivate';
+  action: 'create' | 'update' | 'deactivate' | 'reactivate' | 'reset_password';
   user_id?: string;
   first_name?: string;
   last_name?: string;
@@ -166,6 +168,19 @@ Deno.serve(async (req) => {
         const { error } = await admin.from('users').update(fields).eq('user_id', target.user_id);
         if (error) return json(500, { error: error.message });
         return json(200, { ok: true });
+      }
+
+      case 'reset_password': {
+        if (!body.user_id) return json(400, { error: 'user_id required' });
+        const target = await loadTarget(body.user_id);
+        if (!target) return json(404, { error: 'BHW not found in your facility' });
+        const password = tempPassword();
+        const { data: authUser, error: pwErr } = await admin.auth.admin.updateUserById(
+          target.user_id,
+          { password },
+        );
+        if (pwErr) return json(500, { error: pwErr.message });
+        return json(200, { email: authUser?.user?.email ?? null, temp_password: password });
       }
 
       case 'deactivate':
