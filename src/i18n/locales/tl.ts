@@ -29,6 +29,20 @@ export const tl: Translation = {
     hotspot: 'Mga hotspot ng barangay',
     bhw: 'Pamamahala ng BHW',
     captains: 'Pamamahala ng kapitan',
+    staff: 'Pamamahala ng staff',
+  },
+  staff: {
+    title: 'Mga account ng TB-DOTS staff',
+    subtitle: '{{count}} staff account',
+    addCta: 'Magdagdag ng staff',
+    addTitle: 'Magdagdag ng TB-DOTS staff',
+    editTitle: 'Baguhin ang staff',
+    facilityLabel: 'Pasilidad',
+    colFacility: 'Pasilidad',
+    createdTitle: 'Nagawa ang staff account',
+    scopeNote:
+      'Makikita lamang ng account ang mga referral na ipinadala sa pasilidad na pinili rito — ito ang saklaw ng buong portal nila.',
+    empty: 'Wala pang staff account.',
   },
   captains: {
     title: 'Mga account ng Kapitan ng Barangay',

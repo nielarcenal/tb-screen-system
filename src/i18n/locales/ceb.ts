@@ -29,6 +29,20 @@ export const ceb: Translation = {
     hotspot: 'Mga hotspot sa barangay',
     bhw: 'Pagdumala sa BHW',
     captains: 'Pagdumala sa kapitan',
+    staff: 'Pagdumala sa staff',
+  },
+  staff: {
+    title: 'Mga account sa TB-DOTS staff',
+    subtitle: '{{count}} ka staff account',
+    addCta: 'Pagdugang og staff',
+    addTitle: 'Pagdugang og TB-DOTS staff',
+    editTitle: 'Usba ang staff',
+    facilityLabel: 'Pasilidad',
+    colFacility: 'Pasilidad',
+    createdTitle: 'Nabuhat ang staff account',
+    scopeNote:
+      'Makita lamang sa account ang mga referral nga gipadala sa pasilidad nga gipili dinhi — mao kini ang sakop sa tibuok nilang portal.',
+    empty: 'Wala pay staff account.',
   },
   captains: {
     title: 'Mga account sa Kapitan sa Barangay',

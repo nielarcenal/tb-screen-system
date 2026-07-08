@@ -22,8 +22,9 @@ import ReferralDetail from './components/ReferralDetail';
 import HotspotView from './components/HotspotView';
 import BhwManagement from './components/BhwManagement';
 import CaptainManagement from './components/CaptainManagement';
+import StaffManagement from './components/StaffManagement';
 
-type Page = 'dashboard' | 'inbox' | 'hotspot' | 'bhw' | 'captains';
+type Page = 'dashboard' | 'inbox' | 'hotspot' | 'bhw' | 'captains' | 'staff';
 
 /** Up to two initials for the account chip. */
 function initials(name: string | null | undefined): string {
@@ -113,7 +114,10 @@ export default function App() {
         {session && me ? (
           <nav className="tabs">
             {isAdmin ? (
-              tab('captains', t('nav.captains'))
+              <>
+                {tab('captains', t('nav.captains'))}
+                {tab('staff', t('nav.staff'))}
+              </>
             ) : isCaptain ? (
               tab('bhw', t('nav.bhw'))
             ) : (
@@ -156,7 +160,11 @@ export default function App() {
         ) : !session ? (
           <LoginForm />
         ) : isAdmin ? (
-          <CaptainManagement />
+          page === 'staff' ? (
+            <StaffManagement />
+          ) : (
+            <CaptainManagement />
+          )
         ) : isCaptain ? (
           <BhwManagement />
         ) : page === 'dashboard' ? (

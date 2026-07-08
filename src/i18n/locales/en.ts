@@ -29,6 +29,20 @@ export const en = {
     hotspot: 'Barangay hotspots',
     bhw: 'BHW management',
     captains: 'Captain management',
+    staff: 'Staff management',
+  },
+  staff: {
+    title: 'TB-DOTS staff accounts',
+    subtitle: '{{count}} staff accounts',
+    addCta: 'Add staff',
+    addTitle: 'Add TB-DOTS staff',
+    editTitle: 'Edit staff',
+    facilityLabel: 'Facility',
+    colFacility: 'Facility',
+    createdTitle: 'Staff account created',
+    scopeNote:
+      'The account only sees referrals addressed to the facility chosen here — it defines their whole portal.',
+    empty: 'No staff accounts yet.',
   },
   captains: {
     title: 'Barangay Captain accounts',
