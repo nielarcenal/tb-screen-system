@@ -33,6 +33,8 @@ export interface SpecimenData {
   facilityName: string;
   facilityAddress: string | null;
   appointmentDate: string | null; // YYYY-MM-DD
+  /** Signed-in BHW's name (form preparer); null when unknown (e.g. offline launch). */
+  bhwName: string | null;
   generatedAt: string; // ISO timestamp
 }
 
@@ -161,6 +163,7 @@ export function buildSpecimenHtml(d: SpecimenData, qrPngDataUrl: string, t: TFn)
   </table>
 
   <div class="sig">
+    ${d.bhwName ? `<div><b>${esc(d.bhwName)}</b> (BHW)</div>` : ''}
     <div class="line">${esc(t('specimen.preparedBy'))}</div>
   </div>
 

@@ -13,6 +13,7 @@ export const ceb: Translation = {
     back: 'Balik',
     save: 'I-save',
     close: 'Sirad-i',
+    cancel: 'Kanselahon',
     continue: 'Padayon',
     done: 'Humana',
     yes: 'Oo',
@@ -187,6 +188,9 @@ export const ceb: Translation = {
       attended: 'Mitambong',
       missed: 'Wala natuman',
     },
+    editDetails: 'Usba ang detalye',
+    saveChanges: 'I-save ang mga kausaban',
+    enrolledBy: 'Gi-enroll ni {{name}} (BHW)',
   },
   referral: {
     title: 'Paghimo og referral',

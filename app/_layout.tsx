@@ -99,16 +99,30 @@ export default function RootLayout() {
   // offline — Supabase caches the session in AsyncStorage) and keep it in step
   // with later sign-ins/outs. Feature 8: this replaces the sync-test bootstrap.
   useEffect(() => {
+    // Best-effort: the BHW's own name for form attribution. Fails silently
+    // offline; retried on the next auth event.
+    const fetchOwnName = (userId: string) => {
+      void supabase
+        .from('users')
+        .select('full_name')
+        .eq('user_id', userId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.full_name) useSessionStore.getState().setFullName(data.full_name);
+        });
+    };
     void supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         useSessionStore
           .getState()
           .setSession(data.session.user.id, data.session.user.email ?? null);
+        fetchOwnName(data.session.user.id);
       }
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
         useSessionStore.getState().setSession(session.user.id, session.user.email ?? null);
+        if (!useSessionStore.getState().fullName) fetchOwnName(session.user.id);
       } else {
         useSessionStore.getState().clearSession();
       }

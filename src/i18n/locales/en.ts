@@ -12,6 +12,7 @@ export const en = {
     back: 'Back',
     save: 'Save',
     close: 'Close',
+    cancel: 'Cancel',
     continue: 'Continue',
     done: 'Done',
     yes: 'Yes',
@@ -178,6 +179,9 @@ export const en = {
       attended: 'Attended',
       missed: 'Missed',
     },
+    editDetails: 'Edit details',
+    saveChanges: 'Save changes',
+    enrolledBy: 'Enrolled by {{name}} (BHW)',
   },
   referral: {
     title: 'Create referral',

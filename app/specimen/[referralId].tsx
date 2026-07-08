@@ -33,6 +33,7 @@ import {
   SpecimenData,
 } from '../../src/domain/specimenForm';
 import { nowIso } from '../../src/lib/uuid';
+import { useSessionStore } from '../../src/store/sessionStore';
 import { palette } from '../../src/ui/tokens';
 
 /** The subset of the react-native-qrcode-svg ref we use. */
@@ -44,6 +45,7 @@ export default function SpecimenFormScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { referralId } = useLocalSearchParams<{ referralId: string }>();
+  const bhwName = useSessionStore((s) => s.fullName);
 
   const [data, setData] = useState<SpecimenData | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -87,11 +89,12 @@ export default function SpecimenFormScreen() {
         facilityName: facility?.name ?? referral.facility_id,
         facilityAddress: facility?.address ?? null,
         appointmentDate: nextScheduled?.scheduled_date ?? null,
+        bhwName,
         generatedAt: nowIso(),
       });
       setLoaded(true);
     })();
-  }, [referralId]);
+  }, [referralId, bhwName]);
 
   const print = () => {
     if (!data || !qrRef.current) return;

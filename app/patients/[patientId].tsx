@@ -11,16 +11,20 @@
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { Appbar, Button, Text } from 'react-native-paper';
+import { Appbar, Button, Text, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { DatePickerModal } from 'react-native-paper-dates';
 
-import { getLocalPatient } from '../../src/db/patientsRepo';
+import { getLocalPatient, updateLocalPatientDetails } from '../../src/db/patientsRepo';
 import { listScreeningsForPatient, LocalScreeningRow } from '../../src/db/screeningsRepo';
 import { getReferralForScreening, LocalReferralRow } from '../../src/db/referralsRepo';
 import { listAppointmentsForPatient } from '../../src/db/appointmentsRepo';
 import { barangayLabel } from '../../src/db/psgcRepo';
-import { AppointmentRow, LocalPatientRow, ReferralStatus } from '../../src/db/types';
+import { AppointmentRow, LocalPatientRow, ReferralStatus, Sex } from '../../src/db/types';
+import { ageFromBirthdate, toDateOnly } from '../../src/lib/dates';
+import { useSessionStore } from '../../src/store/sessionStore';
+import { triggerSync } from '../../src/sync/syncManager';
 import { palette, followUpChip, statusChip } from '../../src/ui/tokens';
 
 const STATUS_ORDER: ReferralStatus[] = ['submitted', 'received', 'tested', 'closed'];
@@ -57,11 +61,20 @@ function SectionLabel({ children }: { children: string }) {
 }
 
 export default function PatientDetailScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { patientId } = useLocalSearchParams<{ patientId: string }>();
+  const userId = useSessionStore((s) => s.userId);
+  const bhwName = useSessionStore((s) => s.fullName);
 
   const [patient, setPatient] = useState<LocalPatientRow | null>(null);
+  // Edit-details card (design screen 9): name / birthdate / sex.
+  const [editing, setEditing] = useState(false);
+  const [edName, setEdName] = useState('');
+  const [edBirthdate, setEdBirthdate] = useState<Date | undefined>(undefined);
+  const [edSex, setEdSex] = useState<Sex>('female');
+  const [edPickerOpen, setEdPickerOpen] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
   const [screenings, setScreenings] = useState<LocalScreeningRow[]>([]);
   // Referral (if any) per screening_id — drives the per-screening action button.
   const [referrals, setReferrals] = useState<Record<string, LocalReferralRow | null>>({});
@@ -87,6 +100,37 @@ export default function PatientDetailScreen() {
       })();
     }, [patientId]),
   );
+
+  const openEdit = () => {
+    if (!patient) return;
+    setEdName(patient.full_name ?? '');
+    setEdBirthdate(patient.birthdate ? new Date(`${patient.birthdate}T00:00:00`) : undefined);
+    setEdSex(patient.sex);
+    setEditing(true);
+  };
+
+  const edBirthdateStr = edBirthdate ? toDateOnly(edBirthdate) : null;
+  // Pre-0006 rows may have no birthdate: keep the stored age unless one is picked.
+  const edAge = edBirthdateStr ? ageFromBirthdate(edBirthdateStr) : (patient?.age ?? null);
+  const edValid = edName.trim().length > 0 && edAge !== null;
+
+  const saveEdit = async () => {
+    if (!patient || !edValid || edAge === null || savingEdit) return;
+    setSavingEdit(true);
+    try {
+      await updateLocalPatientDetails(patient.patient_id, {
+        full_name: edName.trim(),
+        birthdate: edBirthdateStr ?? patient.birthdate,
+        age: edAge,
+        sex: edSex,
+      });
+      void triggerSync(); // best-effort; row stays queued if offline
+      setPatient(await getLocalPatient(patient.patient_id));
+      setEditing(false);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
 
   /** 4-step referral timeline (design: teal dots for done stages). */
   const timeline = (referral: LocalReferralRow) => {
@@ -160,6 +204,19 @@ export default function PatientDetailScreen() {
       <Appbar.Header style={{ backgroundColor: palette.background }}>
         <Appbar.BackAction onPress={() => router.back()} />
         <Appbar.Content title={patient?.full_name ?? patient?.display_code ?? ''} />
+        {patient && !editing ? (
+          <Button
+            mode="outlined"
+            icon="pencil"
+            compact
+            onPress={openEdit}
+            textColor={palette.teal}
+            labelStyle={{ fontSize: 13, fontWeight: '600' }}
+            style={{ borderColor: palette.teal, borderRadius: 20, marginRight: 8 }}
+          >
+            {t('patientDetail.editDetails')}
+          </Button>
+        ) : null}
       </Appbar.Header>
 
       {loaded && !patient ? (
@@ -168,7 +225,138 @@ export default function PatientDetailScreen() {
         </Text>
       ) : patient ? (
         <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 6, paddingBottom: 32, gap: 16 }}>
-          {/* Identity card. */}
+          {/* Edit-details card (design screen 9) replaces the identity card. */}
+          {editing ? (
+            <View
+              style={{
+                backgroundColor: palette.paper,
+                borderWidth: 1.5,
+                borderColor: palette.teal,
+                borderRadius: 16,
+                padding: 18,
+                gap: 14,
+              }}
+            >
+              <Text
+                variant="labelSmall"
+                style={{ color: palette.tealDark, fontWeight: '700', letterSpacing: 0.7 }}
+              >
+                {t('patientDetail.editDetails').toUpperCase()} · {patient.display_code}
+              </Text>
+              <TextInput
+                label={t('enroll.fullNameLabel')}
+                value={edName}
+                onChangeText={setEdName}
+                mode="outlined"
+                autoCapitalize="words"
+                style={{ backgroundColor: palette.paper }}
+              />
+              <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+                <View style={{ flex: 1 }}>
+                  <Pressable onPress={() => setEdPickerOpen(true)}>
+                    <View pointerEvents="none">
+                      <TextInput
+                        label={t('enroll.birthdateLabel')}
+                        value={edBirthdateStr ?? (patient.birthdate ?? '')}
+                        editable={false}
+                        mode="outlined"
+                        style={{ backgroundColor: palette.paper }}
+                        right={<TextInput.Icon icon="calendar" />}
+                      />
+                    </View>
+                  </Pressable>
+                </View>
+                <View
+                  style={{
+                    minWidth: 96,
+                    height: 52,
+                    borderRadius: 12,
+                    backgroundColor: palette.surfaceVariant,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 1,
+                  }}
+                >
+                  <Text variant="labelSmall" style={{ color: palette.muted }}>
+                    {t('enroll.ageLabel')}
+                  </Text>
+                  <Text
+                    variant="titleMedium"
+                    style={{
+                      fontWeight: '700',
+                      color: edAge !== null ? palette.tealDark : palette.outline,
+                    }}
+                  >
+                    {edAge !== null ? String(edAge) : '—'}
+                  </Text>
+                </View>
+              </View>
+              <DatePickerModal
+                locale={i18n.language}
+                mode="single"
+                visible={edPickerOpen}
+                date={edBirthdate}
+                validRange={{ endDate: new Date() }}
+                onDismiss={() => setEdPickerOpen(false)}
+                onConfirm={({ date: picked }) => {
+                  setEdPickerOpen(false);
+                  if (picked) setEdBirthdate(picked);
+                }}
+              />
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {(['male', 'female'] as Sex[]).map((sx) => {
+                  const on = edSex === sx;
+                  return (
+                    <Pressable
+                      key={sx}
+                      onPress={() => setEdSex(sx)}
+                      style={{
+                        flex: 1,
+                        height: 48,
+                        borderRadius: 24,
+                        borderWidth: on ? 0 : 1.5,
+                        borderColor: palette.outline,
+                        backgroundColor: on ? palette.teal : palette.paper,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text
+                        variant="titleSmall"
+                        style={{ color: on ? '#FFFFFF' : palette.inkMid, fontWeight: '600' }}
+                      >
+                        {t(`sex.${sx}`)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <Button
+                  mode="outlined"
+                  disabled={savingEdit}
+                  onPress={() => setEditing(false)}
+                  textColor={palette.inkMid}
+                  contentStyle={{ height: 48 }}
+                  labelStyle={{ fontWeight: '600' }}
+                  style={{ flex: 1, borderRadius: 24, borderColor: palette.outline }}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  mode="contained"
+                  disabled={!edValid || savingEdit}
+                  loading={savingEdit}
+                  onPress={() => void saveEdit()}
+                  contentStyle={{ height: 48 }}
+                  labelStyle={{ fontWeight: '600' }}
+                  style={{ flex: 1.5, borderRadius: 24 }}
+                >
+                  {t('patientDetail.saveChanges')}
+                </Button>
+              </View>
+            </View>
+          ) : (
           <View
             style={{
               backgroundColor: palette.paper,
@@ -225,6 +413,11 @@ export default function PatientDetailScreen() {
                   ? t('patientDetail.smsOptedIn', { number: patient.contact_number ?? '' })
                   : t('patientDetail.smsDeclined')}
               </Text>
+              {patient.enrolled_by === userId && bhwName ? (
+                <Text variant="bodySmall" style={{ color: palette.muted }}>
+                  {t('patientDetail.enrolledBy', { name: bhwName })}
+                </Text>
+              ) : null}
               <TonalChip
                 label={
                   patient.sync_status === 'synced'
@@ -236,6 +429,7 @@ export default function PatientDetailScreen() {
               />
             </View>
           </View>
+          )}
 
           {/* Screening history. */}
           <View>

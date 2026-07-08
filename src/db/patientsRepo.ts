@@ -83,6 +83,25 @@ export async function insertLocalPatient(
   );
 }
 
+/**
+ * Update the editable identity fields (design screen 9 "Edit details"). Marks
+ * the row pending and bumps updated_at so the change pushes on the next sync
+ * (server RLS: patients_bhw_update).
+ */
+export async function updateLocalPatientDetails(
+  patientId: string,
+  fields: { full_name: string; birthdate: string | null; age: number; sex: string },
+): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE patients
+     SET full_name = ?, birthdate = ?, age = ?, sex = ?,
+         updated_at = ?, sync_status = 'pending'
+     WHERE patient_id = ?`,
+    [fields.full_name, fields.birthdate, fields.age, fields.sex, nowIso(), patientId],
+  );
+}
+
 /** One locally-cached patient, or null if the id is unknown on this device. */
 export async function getLocalPatient(patientId: string): Promise<LocalPatientRow | null> {
   const db = await getDb();

@@ -13,6 +13,7 @@ export const tl: Translation = {
     back: 'Bumalik',
     save: 'I-save',
     close: 'Isara',
+    cancel: 'Kanselahin',
     continue: 'Magpatuloy',
     done: 'Tapos na',
     yes: 'Oo',
@@ -187,6 +188,9 @@ export const tl: Translation = {
       attended: 'Dumalo',
       missed: 'Hindi natupad',
     },
+    editDetails: 'Baguhin ang detalye',
+    saveChanges: 'I-save ang mga pagbabago',
+    enrolledBy: 'In-enroll ni {{name}} (BHW)',
   },
   referral: {
     title: 'Gumawa ng referral',
