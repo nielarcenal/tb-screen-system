@@ -131,10 +131,12 @@ export default function EnrollScreen() {
         sex,
         barangay_code: address.barangayCode,
         sitio: sitio.trim() || null,
-        // Privacy §4: number stored only with SMS consent.
+        // Privacy §4 (patients_sms_consent_gate CHECK): number AND consent_date
+        // exist only with SMS consent — consent_date documents the SMS opt-in,
+        // not the general pre-screening consent (which gates saving at all).
         contact_number: consent.smsOptIn ? consent.contactNumber.trim() : null,
         sms_consent: consent.smsOptIn,
-        consent_date: nowIso(),
+        consent_date: consent.smsOptIn ? nowIso() : null,
       });
       void triggerSync(); // best-effort; row stays queued if offline
       router.replace(`/patients/${patientId}`);
