@@ -97,6 +97,10 @@ export const ceb: Translation = {
     accountSection: 'Account',
     signIn: 'Pag-sign in',
     signOut: 'Pag-sign out',
+    // TODO i18n verify
+    signOutConfirmTitle: 'Pag-sign out?',
+    signOutConfirmBody:
+      'Papason ang mga offline nga rekord niining telepono aron dili makita sa sunod nga account. Kung online ka, iduso una ang wala pa ma-sync — kung dili, mawala kini.',
     languageSection: 'Pinulongan',
     legalSection: 'Legal',
     viewTerms: 'Tan-awa ang mga termino ug disclaimer',

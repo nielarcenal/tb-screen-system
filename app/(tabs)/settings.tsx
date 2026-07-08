@@ -7,7 +7,7 @@
  * BHW's own users row on the next sync (users_update_self RLS policy).
  */
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, HelperText, Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +23,7 @@ import AddressCascade, {
   emptyAddress,
 } from '../../src/components/AddressCascade';
 import { cascadeForBarangay } from '../../src/db/psgcRepo';
+import { clearSyncableCache } from '../../src/db/database';
 import { triggerSync } from '../../src/sync/syncManager';
 import { palette } from '../../src/ui/tokens';
 
@@ -66,6 +67,34 @@ export default function SettingsScreen() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /**
+   * Sign out = end this BHW's session AND wipe the offline cache, so another
+   * account on the same phone can never read the previous account's patients
+   * (the server scopes each pull; the cache must not outlive the session).
+   * Best-effort final sync first so pending work isn't lost when online.
+   */
+  const confirmSignOut = () => {
+    Alert.alert(t('settings.signOutConfirmTitle'), t('settings.signOutConfirmBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('settings.signOut'),
+        style: 'destructive',
+        onPress: () => {
+          void (async () => {
+            try {
+              await triggerSync(); // push pending rows if we're online
+            } catch {
+              // offline / failed — proceed; the user was warned in the dialog
+            }
+            await supabase.auth.signOut(); // _layout's auth listener clears the store too
+            clearSession();
+            await clearSyncableCache();
+          })();
+        },
+      },
+    ]);
+  };
 
   const onAddressChange = (next: AddressSelection) => {
     setAddress(next);
@@ -181,10 +210,7 @@ export default function SettingsScreen() {
                 mode="outlined"
                 icon="logout"
                 textColor={palette.red}
-                onPress={() => {
-                  void supabase.auth.signOut(); // _layout's auth listener clears the store too
-                  clearSession();
-                }}
+                onPress={confirmSignOut}
                 contentStyle={{ height: 52 }}
                 labelStyle={{ fontWeight: '600' }}
                 style={{ marginTop: 12, borderRadius: 26, borderColor: palette.outline }}

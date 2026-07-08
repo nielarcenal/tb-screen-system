@@ -222,6 +222,26 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
   }
 }
 
+/**
+ * Wipe all synced/syncable rows and reset the pull cursors — called on
+ * sign-out so the next account starts from its own RLS-scoped pull instead of
+ * inheriting the previous BHW's patient cache (privacy: the server scopes
+ * what each account may see, but this cache would otherwise outlive the
+ * session that fetched it). PSGC reference data is kept — it is non-personal
+ * and bundled with the app anyway.
+ */
+export async function clearSyncableCache(): Promise<void> {
+  const db = await getDb();
+  await db.execAsync(`
+    DELETE FROM appointments;
+    DELETE FROM referrals;
+    DELETE FROM screenings;
+    DELETE FROM patients;
+    DELETE FROM facilities;
+    UPDATE sync_meta SET last_pull_at = '1970-01-01T00:00:00.000Z';
+  `);
+}
+
 /** Opens (once) and migrates the local database, returning the shared handle. */
 export function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (!dbPromise) {

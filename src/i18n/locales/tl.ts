@@ -97,6 +97,10 @@ export const tl: Translation = {
     accountSection: 'Account',
     signIn: 'Mag-sign in',
     signOut: 'Mag-sign out',
+    // TODO i18n verify
+    signOutConfirmTitle: 'Mag-sign out?',
+    signOutConfirmBody:
+      'Buburahin ang mga offline na tala sa teleponong ito upang hindi makita ng susunod na account. Kung online ka, itutulak muna ang mga hindi pa nai-sync — kung hindi, mawawala ang mga ito.',
     languageSection: 'Wika',
     legalSection: 'Legal',
     viewTerms: 'Tingnan ang mga tuntunin at disclaimer',

@@ -92,6 +92,9 @@ export const en = {
     accountSection: 'Account',
     signIn: 'Sign in',
     signOut: 'Sign out',
+    signOutConfirmTitle: 'Sign out?',
+    signOutConfirmBody:
+      'Offline records on this phone will be cleared so the next account cannot see them. Anything not yet synced will be pushed first if you are online — otherwise it will be lost.',
     languageSection: 'Language',
     legalSection: 'Legal',
     viewTerms: 'View terms and disclaimer',
