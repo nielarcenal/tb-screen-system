@@ -13,7 +13,10 @@
  *
  * Actions (POST JSON { action, ... }):
  *   create         captain: { first_name, last_name }
- *                  admin:   { first_name, last_name, barangay_code, facility_id }
+ *                  admin:   { first_name, last_name, barangay_code } — the
+ *                  facility is derived from the barangay's LGU default DOTS
+ *                  center (ref_cities.default_facility_id, 0009); an explicit
+ *                  facility_id in the body overrides it.
  *                  → creates the auth user (auto email firstname.lastname@tbscreen.ph,
  *                    .2/.3… suffix on clash; temp password), inserts the users
  *                    row, returns { email, temp_password }.
@@ -135,11 +138,26 @@ Deno.serve(async (req) => {
           return json(400, { error: 'first_name and last_name required' });
         }
         // Scope: captains always create into their own barangay/facility;
-        // admins say where the new captain belongs.
+        // admins say which barangay the new captain gets.
         const barangay = isAdmin ? body.barangay_code : caller.assigned_barangay_code;
-        const facility = isAdmin ? body.facility_id : caller.facility_id;
-        if (!barangay || !facility) {
-          return json(400, { error: 'barangay_code and facility_id required' });
+        if (!barangay) return json(400, { error: 'barangay_code required' });
+        let facility = isAdmin ? body.facility_id : caller.facility_id;
+        if (isAdmin && !facility) {
+          // Derive from the barangay's LGU: its nearest DOTS center (0009).
+          const { data: mapped, error: mapErr } = await admin
+            .from('ref_barangays')
+            .select('ref_cities(default_facility_id)')
+            .eq('barangay_code', barangay)
+            .maybeSingle();
+          if (mapErr) return json(500, { error: mapErr.message });
+          facility =
+            (mapped as { ref_cities: { default_facility_id: string | null } | null } | null)
+              ?.ref_cities?.default_facility_id ?? undefined;
+        }
+        if (!facility) {
+          return json(400, {
+            error: 'no default facility mapped for this barangay (apply migration 0009)',
+          });
         }
         const name = `${first} ${last}`;
         // Unique email: firstname.lastname@tbscreen.ph, then .2, .3, … on clash.
