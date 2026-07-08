@@ -62,6 +62,17 @@ on conflict (facility_id) do nothing;
 -- on conflict (user_id) do nothing;
 
 -- ---------------------------------------------------------------------------
+-- Admin (developer) account (0008). Same flow: create the auth user first
+-- (admin@test.local / Test1234!), paste the UID, run. Admins provision
+-- captain accounts from the portal; they can read no patient data. The
+-- facility is only an FK requirement — any facility works.
+-- ---------------------------------------------------------------------------
+-- insert into public.users (user_id, role, full_name, facility_id, assigned_barangay_code) values
+--   ('<PASTE_ADMIN_AUTH_UID>', 'admin', 'Developer Admin',
+--    '00000000-0000-0000-0000-0000000000d1', null)
+-- on conflict (user_id) do nothing;
+
+-- ---------------------------------------------------------------------------
 -- 0006 backfill: demo names for the TEST patients. Patients enrolled before
 -- migration 0006 have full_name = null (the UI falls back to the display
 -- code); this gives the seeded demo rows the design's names so the portal

@@ -1,32 +1,34 @@
 /**
- * manage-bhw — Supabase Edge Function (design-parity batch, 2026-07-07).
+ * manage-bhw — Supabase Edge Function (account management).
  *
- * Barangay-Captain account management: creating, editing, deactivating and
- * reactivating BHW accounts requires the auth admin API (service role), which
- * must never reach the browser — so the portal calls this function instead.
+ * Two caller roles, one function (auth admin API needs the service role,
+ * which must never reach the browser):
  *
- * Auth: the caller's JWT is verified against public.users — role must be
- * 'captain' and the account active. Every action is scoped to the captain's
- * own facility_id (the captain can only manage BHWs of their facility).
+ *   captain → manages BHW accounts of THEIR OWN ASSIGNED BARANGAY only
+ *             (0008: captains from other barangays cannot touch BHWs outside
+ *             their area; new BHWs are always assigned the captain's barangay).
+ *   admin   → manages CAPTAIN accounts (the developer/provisioning role):
+ *             create takes facility_id + barangay_code; other actions target
+ *             any captain.
  *
  * Actions (POST JSON { action, ... }):
- *   create     { first_name, last_name, barangay_code }
- *                → creates the auth user (auto email firstname.lastname@tbscreen.ph,
- *                  .2/.3… suffix on clash; temp password), inserts the users
- *                  row (role bhw, captain's facility, full_name = "First Last"),
- *                  returns { email, temp_password }.
- *   update     { user_id, first_name, last_name, barangay_code }
- *   deactivate { user_id }  → users.active=false + auth ban (blocks sign-in).
- *   reactivate { user_id }  → users.active=true  + ban lifted.
+ *   create         captain: { first_name, last_name }
+ *                  admin:   { first_name, last_name, barangay_code, facility_id }
+ *                  → creates the auth user (auto email firstname.lastname@tbscreen.ph,
+ *                    .2/.3… suffix on clash; temp password), inserts the users
+ *                    row, returns { email, temp_password }.
+ *   update         { user_id, first_name, last_name } (admin may also send
+ *                  barangay_code to reassign a captain)
+ *   deactivate     { user_id } → users.active=false + auth ban (blocks sign-in).
+ *   reactivate     { user_id } → users.active=true  + ban lifted.
  *   reset_password { user_id } → sets a fresh temp password and returns it
- *                (passwords are hashed — they can never be viewed, only reset).
+ *                  (passwords are hashed — they can never be viewed, only reset).
  *
  * Browser calls: supabase.functions.invoke sends a CORS preflight — every
- * response (including OPTIONS) must carry the CORS headers or the browser
- * reports "Failed to send a request to the Edge Function".
+ * response (including OPTIONS) must carry the CORS headers.
  *
  * PRIVACY: this function reads/writes ONLY facilities/users/auth — no patient
- * data ever passes through it. Captains have no patient policies at all.
+ * data ever passes through it. Captains and admins have no patient policies.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -36,6 +38,7 @@ interface Body {
   first_name?: string;
   last_name?: string;
   barangay_code?: string;
+  facility_id?: string;
 }
 
 const CORS = {
@@ -78,19 +81,24 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, // service role: server-side only
   );
 
-  // --- caller must be an ACTIVE captain; scope = their facility ---
+  // --- caller must be an ACTIVE captain (manages BHWs) or admin (captains) ---
   const jwt = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
-  const { data: caller, error: authErr } = await admin.auth.getUser(jwt);
-  if (authErr || !caller?.user) return json(401, { error: 'unauthorized' });
+  const { data: callerAuth, error: authErr } = await admin.auth.getUser(jwt);
+  if (authErr || !callerAuth?.user) return json(401, { error: 'unauthorized' });
 
-  const { data: captain, error: capErr } = await admin
+  const { data: caller, error: callerErr } = await admin
     .from('users')
-    .select('role, facility_id, active')
-    .eq('user_id', caller.user.id)
+    .select('role, facility_id, assigned_barangay_code, active')
+    .eq('user_id', callerAuth.user.id)
     .maybeSingle();
-  if (capErr) return json(500, { error: capErr.message });
-  if (!captain || captain.role !== 'captain' || !captain.active) {
-    return json(403, { error: 'captain role required' });
+  if (callerErr) return json(500, { error: callerErr.message });
+  if (!caller || !caller.active || (caller.role !== 'captain' && caller.role !== 'admin')) {
+    return json(403, { error: 'captain or admin role required' });
+  }
+  const isAdmin = caller.role === 'admin';
+  const managedRole = isAdmin ? 'captain' : 'bhw';
+  if (!isAdmin && !caller.assigned_barangay_code) {
+    return json(403, { error: 'captain has no assigned barangay' });
   }
 
   let body: Body;
@@ -100,27 +108,38 @@ Deno.serve(async (req) => {
     return json(400, { error: 'invalid JSON body' });
   }
 
-  // --- helper: load a target BHW and verify facility scope ---
+  // --- helper: load a target account and verify role + scope ---
   const loadTarget = async (userId: string) => {
     const { data: target, error } = await admin
       .from('users')
-      .select('user_id, role, facility_id')
+      .select('user_id, role, assigned_barangay_code')
       .eq('user_id', userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!target || target.role !== 'bhw' || target.facility_id !== captain.facility_id) {
-      return null; // not found / not a BHW / not this captain's facility
+    if (!target || target.role !== managedRole) return null;
+    // Captains only reach BHWs of their own barangay (0008).
+    if (!isAdmin && target.assigned_barangay_code !== caller.assigned_barangay_code) {
+      return null;
     }
     return target;
   };
+  const notFound = () =>
+    json(404, { error: isAdmin ? 'captain not found' : 'BHW not found in your barangay' });
 
   try {
     switch (body.action) {
       case 'create': {
         const first = (body.first_name ?? '').trim();
         const last = (body.last_name ?? '').trim();
-        if (!first || !last || !body.barangay_code) {
-          return json(400, { error: 'first_name, last_name and barangay_code required' });
+        if (!first || !last) {
+          return json(400, { error: 'first_name and last_name required' });
+        }
+        // Scope: captains always create into their own barangay/facility;
+        // admins say where the new captain belongs.
+        const barangay = isAdmin ? body.barangay_code : caller.assigned_barangay_code;
+        const facility = isAdmin ? body.facility_id : caller.facility_id;
+        if (!barangay || !facility) {
+          return json(400, { error: 'barangay_code and facility_id required' });
         }
         const name = `${first} ${last}`;
         // Unique email: firstname.lastname@tbscreen.ph, then .2, .3, … on clash.
@@ -137,10 +156,10 @@ Deno.serve(async (req) => {
           if (!createErr && created?.user) {
             const { error: rowErr } = await admin.from('users').insert({
               user_id: created.user.id,
-              role: 'bhw',
+              role: managedRole,
               full_name: name,
-              facility_id: captain.facility_id,
-              assigned_barangay_code: body.barangay_code,
+              facility_id: facility,
+              assigned_barangay_code: barangay,
             });
             if (rowErr) {
               // Roll back the orphan auth account so a retry can reuse the email.
@@ -158,12 +177,14 @@ Deno.serve(async (req) => {
       case 'update': {
         if (!body.user_id) return json(400, { error: 'user_id required' });
         const target = await loadTarget(body.user_id);
-        if (!target) return json(404, { error: 'BHW not found in your facility' });
+        if (!target) return notFound();
         const fields: Record<string, unknown> = {};
         const first = (body.first_name ?? '').trim();
         const last = (body.last_name ?? '').trim();
         if (first && last) fields.full_name = `${first} ${last}`;
-        if (body.barangay_code) fields.assigned_barangay_code = body.barangay_code;
+        // Only admins may move an account between barangays; a captain's BHWs
+        // stay in the captain's barangay by definition.
+        if (isAdmin && body.barangay_code) fields.assigned_barangay_code = body.barangay_code;
         if (Object.keys(fields).length === 0) return json(400, { error: 'nothing to update' });
         const { error } = await admin.from('users').update(fields).eq('user_id', target.user_id);
         if (error) return json(500, { error: error.message });
@@ -173,7 +194,7 @@ Deno.serve(async (req) => {
       case 'reset_password': {
         if (!body.user_id) return json(400, { error: 'user_id required' });
         const target = await loadTarget(body.user_id);
-        if (!target) return json(404, { error: 'BHW not found in your facility' });
+        if (!target) return notFound();
         const password = tempPassword();
         const { data: authUser, error: pwErr } = await admin.auth.admin.updateUserById(
           target.user_id,
@@ -187,7 +208,7 @@ Deno.serve(async (req) => {
       case 'reactivate': {
         if (!body.user_id) return json(400, { error: 'user_id required' });
         const target = await loadTarget(body.user_id);
-        if (!target) return json(404, { error: 'BHW not found in your facility' });
+        if (!target) return notFound();
         const activate = body.action === 'reactivate';
         // Auth ban is what actually blocks sign-in; users.active drives the UI.
         const { error: banErr } = await admin.auth.admin.updateUserById(target.user_id, {
