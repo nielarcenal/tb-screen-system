@@ -7,9 +7,10 @@
  *   captain → manages BHW accounts of THEIR OWN ASSIGNED BARANGAY only
  *             (0008: captains from other barangays cannot touch BHWs outside
  *             their area; new BHWs are always assigned the captain's barangay).
- *   admin   → manages CAPTAIN accounts (the developer/provisioning role):
- *             create takes facility_id + barangay_code; other actions target
- *             any captain.
+ *   admin   → manages CAPTAIN accounts (default) or TB-DOTS STAFF accounts
+ *             (body.target_role = 'tb_dots'): staff belong to a facility and
+ *             have no barangay; captains get a barangay and derive their
+ *             facility from it.
  *
  * Actions (POST JSON { action, ... }):
  *   create         captain: { first_name, last_name }
@@ -37,6 +38,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 
 interface Body {
   action: 'create' | 'update' | 'deactivate' | 'reactivate' | 'reset_password';
+  /** Admin callers only: which account type they are managing (default captain). */
+  target_role?: 'captain' | 'tb_dots';
   user_id?: string;
   first_name?: string;
   last_name?: string;
@@ -99,7 +102,6 @@ Deno.serve(async (req) => {
     return json(403, { error: 'captain or admin role required' });
   }
   const isAdmin = caller.role === 'admin';
-  const managedRole = isAdmin ? 'captain' : 'bhw';
   if (!isAdmin && !caller.assigned_barangay_code) {
     return json(403, { error: 'captain has no assigned barangay' });
   }
@@ -110,6 +112,10 @@ Deno.serve(async (req) => {
   } catch {
     return json(400, { error: 'invalid JSON body' });
   }
+
+  // Admins choose what they manage (captains by default, or tb_dots staff);
+  // captains always manage BHWs.
+  const managedRole = isAdmin ? (body.target_role === 'tb_dots' ? 'tb_dots' : 'captain') : 'bhw';
 
   // --- helper: load a target account and verify role + scope ---
   const loadTarget = async (userId: string) => {
@@ -127,7 +133,9 @@ Deno.serve(async (req) => {
     return target;
   };
   const notFound = () =>
-    json(404, { error: isAdmin ? 'captain not found' : 'BHW not found in your barangay' });
+    json(404, {
+      error: isAdmin ? `${managedRole} account not found` : 'BHW not found in your barangay',
+    });
 
   try {
     switch (body.action) {
@@ -137,6 +145,39 @@ Deno.serve(async (req) => {
         if (!first || !last) {
           return json(400, { error: 'first_name and last_name required' });
         }
+        // TB-DOTS staff (admin only): a facility, no barangay.
+        if (managedRole === 'tb_dots') {
+          if (!body.facility_id) return json(400, { error: 'facility_id required' });
+          const name = `${first} ${last}`;
+          const slug = `${slugPart(first)}.${slugPart(last)}`;
+          if (slug === '.') return json(400, { error: 'name must contain letters' });
+          let email = `${slug}@tbscreen.ph`;
+          const password = tempPassword();
+          for (let n = 2; n < 50; n++) {
+            const { data: created, error: createErr } = await admin.auth.admin.createUser({
+              email,
+              password,
+              email_confirm: true,
+            });
+            if (!createErr && created?.user) {
+              const { error: rowErr } = await admin.from('users').insert({
+                user_id: created.user.id,
+                role: 'tb_dots',
+                full_name: name,
+                facility_id: body.facility_id,
+                assigned_barangay_code: null,
+              });
+              if (rowErr) {
+                await admin.auth.admin.deleteUser(created.user.id);
+                return json(500, { error: rowErr.message });
+              }
+              return json(200, { email, temp_password: password });
+            }
+            email = `${slug}.${n}@tbscreen.ph`;
+          }
+          return json(409, { error: 'could not allocate a unique email' });
+        }
+
         // Scope: captains always create into their own barangay/facility;
         // admins say which barangay the new captain gets.
         const barangay = isAdmin ? body.barangay_code : caller.assigned_barangay_code;
@@ -202,7 +243,13 @@ Deno.serve(async (req) => {
         if (first && last) fields.full_name = `${first} ${last}`;
         // Only admins may move an account between barangays; a captain's BHWs
         // stay in the captain's barangay by definition.
-        if (isAdmin && body.barangay_code) fields.assigned_barangay_code = body.barangay_code;
+        if (isAdmin && managedRole !== 'tb_dots' && body.barangay_code) {
+          fields.assigned_barangay_code = body.barangay_code;
+        }
+        // Staff can be moved between facilities.
+        if (isAdmin && managedRole === 'tb_dots' && body.facility_id) {
+          fields.facility_id = body.facility_id;
+        }
         if (Object.keys(fields).length === 0) return json(400, { error: 'nothing to update' });
         const { error } = await admin.from('users').update(fields).eq('user_id', target.user_id);
         if (error) return json(500, { error: error.message });
