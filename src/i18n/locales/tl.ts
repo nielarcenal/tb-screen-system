@@ -78,6 +78,8 @@ export const tl: Translation = {
     create: 'Gumawa ng account',
     save: 'I-save ang mga pagbabago',
     createdTitle: 'Nagawa ang BHW account',
+    resetPw: 'I-reset ang password',
+    resetDoneTitle: 'Na-reset ang password',
     emailLabel: 'Email',
     tempPwLabel: 'Pansamantalang password',
     createdNote:

@@ -78,6 +78,8 @@ export const ceb: Translation = {
     create: 'Paghimo og account',
     save: 'I-save ang mga kausaban',
     createdTitle: 'Nabuhat ang BHW account',
+    resetPw: 'I-reset ang password',
+    resetDoneTitle: 'Na-reset ang password',
     emailLabel: 'Email',
     tempPwLabel: 'Temporaryo nga password',
     createdNote:

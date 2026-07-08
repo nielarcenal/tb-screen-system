@@ -18,7 +18,7 @@ import AddressCascadeWeb from './AddressCascadeWeb';
 type View =
   | { kind: 'list' }
   | { kind: 'form'; editing: BhwActivityRow | null }
-  | { kind: 'created'; email: string; tempPassword: string; name: string }
+  | { kind: 'created'; email: string; tempPassword: string; name: string; reset?: boolean }
   | { kind: 'confirmDeactivate'; target: BhwActivityRow };
 
 export default function BhwManagement() {
@@ -105,6 +105,26 @@ export default function BhwManagement() {
     }
   };
 
+  /** Passwords are hashed — never viewable, only replaceable. */
+  const resetPassword = async (row: BhwActivityRow) => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await invoke({ action: 'reset_password', user_id: row.user_id });
+      setView({
+        kind: 'created',
+        reset: true,
+        email: String(res.email ?? ''),
+        tempPassword: String(res.temp_password ?? ''),
+        name: row.full_name,
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const setActive = async (row: BhwActivityRow, active: boolean) => {
     setBusy(true);
     setError(null);
@@ -122,7 +142,7 @@ export default function BhwManagement() {
   if (view.kind === 'created') {
     return (
       <div className="card" style={{ maxWidth: 480 }}>
-        <h2>{t('bhw.createdTitle')}</h2>
+        <h2>{view.reset ? t('bhw.resetDoneTitle') : t('bhw.createdTitle')}</h2>
         <p>{view.name}</p>
         <table className="kv">
           <tbody>
@@ -260,6 +280,13 @@ export default function BhwManagement() {
                 <td>
                   <button className="secondary" disabled={busy} onClick={() => openEdit(r)}>
                     {t('bhw.edit')}
+                  </button>
+                  <button
+                    className="secondary"
+                    disabled={busy}
+                    onClick={() => void resetPassword(r)}
+                  >
+                    {t('bhw.resetPw')}
                   </button>
                   {r.active ? (
                     <button

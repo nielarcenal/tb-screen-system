@@ -78,6 +78,8 @@ export const en = {
     create: 'Create account',
     save: 'Save changes',
     createdTitle: 'BHW account created',
+    resetPw: 'Reset password',
+    resetDoneTitle: 'Password reset',
     emailLabel: 'Email',
     tempPwLabel: 'Temporary password',
     createdNote:
