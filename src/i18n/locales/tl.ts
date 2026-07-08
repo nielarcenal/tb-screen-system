@@ -156,6 +156,7 @@ export const tl: Translation = {
     screeningSummary: 'Buod ng screening',
     actionsSection: 'Mga aksyon',
     patientReportedTag: 'sagot ng pasyente',
+    screenedBy: 'Sinuri ni {{name}} (BHW)',
     markReceived: 'Markahang natanggap',
     receivedDone: '✓ Natanggap — pindutin para i-undo',
     dnpNote:

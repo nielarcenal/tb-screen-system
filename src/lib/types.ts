@@ -129,7 +129,12 @@ export interface AppointmentRow {
  * guarantees these are only rows referred to the signed-in staff's facility.
  */
 export interface ReferralJoined extends ReferralRow {
-  patients: PatientRow & { ref_barangays: { name: string } | null };
+  patients: PatientRow & {
+    ref_barangays: { name: string } | null;
+    /** Enrolling BHW (embedded via patients_enrolled_by_fkey; 0007 grants
+     *  tb_dots read on BHW users rows). Null if the row predates that. */
+    users: { full_name: string } | null;
+  };
   screenings: ScreeningRow;
 }
 

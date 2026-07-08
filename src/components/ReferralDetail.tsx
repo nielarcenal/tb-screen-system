@@ -39,7 +39,9 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
     setError(null);
     const { data, error: err } = await supabase
       .from('referrals')
-      .select('*, patients(*, ref_barangays(name)), screenings(*)')
+      .select(
+        '*, patients(*, ref_barangays(name), users!patients_enrolled_by_fkey(full_name)), screenings(*)',
+      )
       .eq('referral_id', referralId)
       .maybeSingle();
     if (err) {
@@ -116,6 +118,11 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
             {p.ref_barangays?.name ?? p.barangay_code}
             {p.sitio ? ` · ${p.sitio}` : ''}
           </div>
+          {p.users?.full_name ? (
+            <div className="mutedline" style={{ marginTop: 2 }}>
+              {t('detail.screenedBy', { name: p.users.full_name })}
+            </div>
+          ) : null}
           <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             <span className={`chip ${referral.status}`}>{t(`status.${referral.status}`)}</span>
             {referral.presented === false ? (

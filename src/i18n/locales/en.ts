@@ -155,6 +155,7 @@ export const en = {
     screeningSummary: 'Screening summary',
     actionsSection: 'Actions',
     patientReportedTag: 'patient-reported',
+    screenedBy: 'Screened by {{name}} (BHW)',
     markReceived: 'Mark received',
     receivedDone: '✓ Received — tap to undo',
     dnpNote:

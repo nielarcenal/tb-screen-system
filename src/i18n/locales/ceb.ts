@@ -156,6 +156,7 @@ export const ceb: Translation = {
     screeningSummary: 'Katingbanan sa screening',
     actionsSection: 'Mga aksyon',
     patientReportedTag: 'tubag sa pasyente',
+    screenedBy: 'Gisusi ni {{name}} (BHW)',
     markReceived: 'Markahi nga nadawat',
     receivedDone: '✓ Nadawat — pisliton aron i-undo',
     dnpNote:
