@@ -31,6 +31,14 @@ export const en = {
     captains: 'Captain management',
     staff: 'Staff management',
   },
+  admin: {
+    portalTitle: 'TB-Screen Developer Portal',
+    sub: 'Account provisioning — developer access only',
+    notAdmin: 'This account is not a developer account.',
+    goMain: 'Go to the facility portal',
+    footnote:
+      'Provisioning only: no patient names, records, or results are accessible from this portal.',
+  },
   staff: {
     title: 'TB-DOTS staff accounts',
     subtitle: '{{count}} staff accounts',

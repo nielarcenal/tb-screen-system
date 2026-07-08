@@ -21,10 +21,8 @@ import ReferralInbox from './components/ReferralInbox';
 import ReferralDetail from './components/ReferralDetail';
 import HotspotView from './components/HotspotView';
 import BhwManagement from './components/BhwManagement';
-import CaptainManagement from './components/CaptainManagement';
-import StaffManagement from './components/StaffManagement';
 
-type Page = 'dashboard' | 'inbox' | 'hotspot' | 'bhw' | 'captains' | 'staff';
+type Page = 'dashboard' | 'inbox' | 'hotspot' | 'bhw';
 
 /** Up to two initials for the account chip. */
 function initials(name: string | null | undefined): string {
@@ -73,10 +71,13 @@ export default function App() {
       .maybeSingle()
       .then(async ({ data }) => {
         const user = (data ?? null) as PortalUser | null;
+        // Admin accounts live in the separate developer portal.
+        if (user?.role === 'admin') {
+          window.location.replace('/admin.html');
+          return;
+        }
         setMe(user);
-        setPage(
-          user?.role === 'captain' ? 'bhw' : user?.role === 'admin' ? 'captains' : 'dashboard',
-        );
+        setPage(user?.role === 'captain' ? 'bhw' : 'dashboard');
         if (user) {
           const { data: fac } = await supabase
             .from('facilities')
@@ -89,7 +90,6 @@ export default function App() {
   }, [session]);
 
   const isCaptain = me?.role === 'captain';
-  const isAdmin = me?.role === 'admin';
 
   const tab = (key: Page, label: string) => (
     <button
@@ -113,12 +113,7 @@ export default function App() {
 
         {session && me ? (
           <nav className="tabs">
-            {isAdmin ? (
-              <>
-                {tab('captains', t('nav.captains'))}
-                {tab('staff', t('nav.staff'))}
-              </>
-            ) : isCaptain ? (
+            {isCaptain ? (
               tab('bhw', t('nav.bhw'))
             ) : (
               <>
@@ -159,12 +154,6 @@ export default function App() {
           <p>{t('common.loading')}</p>
         ) : !session ? (
           <LoginForm />
-        ) : isAdmin ? (
-          page === 'staff' ? (
-            <StaffManagement />
-          ) : (
-            <CaptainManagement />
-          )
         ) : isCaptain ? (
           <BhwManagement />
         ) : page === 'dashboard' ? (

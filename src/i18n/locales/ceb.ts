@@ -31,6 +31,14 @@ export const ceb: Translation = {
     captains: 'Pagdumala sa kapitan',
     staff: 'Pagdumala sa staff',
   },
+  admin: {
+    portalTitle: 'TB-Screen Developer Portal',
+    sub: 'Paghimo og mga account — alang lamang sa developer',
+    notAdmin: 'Kini nga account dili developer account.',
+    goMain: 'Adto sa portal sa pasilidad',
+    footnote:
+      'Paghimo og account lamang: walay ngalan sa pasyente, rekord, o resulta nga ma-access gikan niini nga portal.',
+  },
   staff: {
     title: 'Mga account sa TB-DOTS staff',
     subtitle: '{{count}} ka staff account',

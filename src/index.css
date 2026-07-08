@@ -129,6 +129,9 @@ main { max-width: 1100px; margin: 0 auto; padding: 20px 24px; }
   padding: 18px 22px;
   margin-bottom: 16px;
 }
+/* Small standalone cards (forms, one-time password panels, confirm dialogs)
+   sit centered in the page instead of hugging the left edge. */
+.card.centered { margin-left: auto; margin-right: auto; }
 
 h2 { font-size: 17px; margin: 0 0 12px; font-weight: 600; }
 h3 {

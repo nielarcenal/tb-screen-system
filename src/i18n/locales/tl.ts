@@ -31,6 +31,14 @@ export const tl: Translation = {
     captains: 'Pamamahala ng kapitan',
     staff: 'Pamamahala ng staff',
   },
+  admin: {
+    portalTitle: 'TB-Screen Developer Portal',
+    sub: 'Paggawa ng mga account — para lamang sa developer',
+    notAdmin: 'Ang account na ito ay hindi developer account.',
+    goMain: 'Pumunta sa portal ng pasilidad',
+    footnote:
+      'Paggawa ng account lamang: walang pangalan ng pasyente, rekord, o resulta na maa-access mula sa portal na ito.',
+  },
   staff: {
     title: 'Mga account ng TB-DOTS staff',
     subtitle: '{{count}} staff account',

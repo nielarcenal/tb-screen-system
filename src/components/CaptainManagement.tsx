@@ -172,7 +172,7 @@ export default function CaptainManagement() {
 
   if (view.kind === 'created') {
     return (
-      <div className="card" style={{ maxWidth: 480 }}>
+      <div className="card centered" style={{ maxWidth: 480 }}>
         <h2>{view.reset ? t('bhw.resetDoneTitle') : t('captains.createdTitle')}</h2>
         <p>{view.name}</p>
         <table className="kv">
@@ -200,7 +200,7 @@ export default function CaptainManagement() {
   if (view.kind === 'form') {
     const editing = view.editing;
     return (
-      <div className="card" style={{ maxWidth: 480 }}>
+      <div className="card centered" style={{ maxWidth: 480 }}>
         <h2>{editing ? t('captains.editTitle') : t('captains.addTitle')}</h2>
         {error ? <p className="error">{t('bhw.actionError', { message: error })}</p> : null}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 10px' }}>
@@ -258,7 +258,7 @@ export default function CaptainManagement() {
 
   if (view.kind === 'confirmDeactivate') {
     return (
-      <div className="card" style={{ maxWidth: 420 }}>
+      <div className="card centered" style={{ maxWidth: 420 }}>
         <p>{t('bhw.confirmDeactivate', { name: view.target.full_name })}</p>
         <p>
           <button disabled={busy} onClick={() => void setActive(view.target, false)}>
