@@ -84,21 +84,44 @@ export async function insertLocalPatient(
 }
 
 /**
- * Update the editable identity fields (design screen 9 "Edit details"). Marks
- * the row pending and bumps updated_at so the change pushes on the next sync
- * (server RLS: patients_bhw_update).
+ * Update the editable fields (design screen 9 "Edit details" + SMS opt-in).
+ * Marks the row pending and bumps updated_at so the change pushes on the next
+ * sync (server RLS: patients_bhw_update).
+ *
+ * PRIVACY (§4, patients_sms_consent_gate CHECK): contact_number and
+ * consent_date exist ONLY while sms_consent is true — callers pass them
+ * already normalized (null/null when opting out).
  */
 export async function updateLocalPatientDetails(
   patientId: string,
-  fields: { full_name: string; birthdate: string | null; age: number; sex: string },
+  fields: {
+    full_name: string;
+    birthdate: string | null;
+    age: number;
+    sex: string;
+    sms_consent: boolean;
+    contact_number: string | null;
+    consent_date: string | null;
+  },
 ): Promise<void> {
   const db = await getDb();
   await db.runAsync(
     `UPDATE patients
      SET full_name = ?, birthdate = ?, age = ?, sex = ?,
+         sms_consent = ?, contact_number = ?, consent_date = ?,
          updated_at = ?, sync_status = 'pending'
      WHERE patient_id = ?`,
-    [fields.full_name, fields.birthdate, fields.age, fields.sex, nowIso(), patientId],
+    [
+      fields.full_name,
+      fields.birthdate,
+      fields.age,
+      fields.sex,
+      fields.sms_consent ? 1 : 0,
+      fields.contact_number,
+      fields.consent_date,
+      nowIso(),
+      patientId,
+    ],
   );
 }
 

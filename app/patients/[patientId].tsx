@@ -11,18 +11,20 @@
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { Appbar, Button, Text, TextInput } from 'react-native-paper';
+import { Appbar, Button, HelperText, Switch, Text, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { DatePickerModal } from 'react-native-paper-dates';
 
 import { getLocalPatient, updateLocalPatientDetails } from '../../src/db/patientsRepo';
+import { isValidPhMobile } from '../../src/components/ConsentFields';
 import { listScreeningsForPatient, LocalScreeningRow } from '../../src/db/screeningsRepo';
 import { getReferralForScreening, LocalReferralRow } from '../../src/db/referralsRepo';
 import { listAppointmentsForPatient } from '../../src/db/appointmentsRepo';
 import { barangayLabel } from '../../src/db/psgcRepo';
 import { AppointmentRow, LocalPatientRow, ReferralStatus, Sex } from '../../src/db/types';
 import { ageFromBirthdate, toDateOnly } from '../../src/lib/dates';
+import { nowIso } from '../../src/lib/uuid';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { triggerSync } from '../../src/sync/syncManager';
 import { palette, followUpChip, statusChip } from '../../src/ui/tokens';
@@ -73,6 +75,8 @@ export default function PatientDetailScreen() {
   const [edName, setEdName] = useState('');
   const [edBirthdate, setEdBirthdate] = useState<Date | undefined>(undefined);
   const [edSex, setEdSex] = useState<Sex>('female');
+  const [edSms, setEdSms] = useState(false);
+  const [edPhone, setEdPhone] = useState('');
   const [edPickerOpen, setEdPickerOpen] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [screenings, setScreenings] = useState<LocalScreeningRow[]>([]);
@@ -106,13 +110,16 @@ export default function PatientDetailScreen() {
     setEdName(patient.full_name ?? '');
     setEdBirthdate(patient.birthdate ? new Date(`${patient.birthdate}T00:00:00`) : undefined);
     setEdSex(patient.sex);
+    setEdSms(patient.sms_consent);
+    setEdPhone(patient.contact_number ?? '');
     setEditing(true);
   };
 
   const edBirthdateStr = edBirthdate ? toDateOnly(edBirthdate) : null;
   // Pre-0006 rows may have no birthdate: keep the stored age unless one is picked.
   const edAge = edBirthdateStr ? ageFromBirthdate(edBirthdateStr) : (patient?.age ?? null);
-  const edValid = edName.trim().length > 0 && edAge !== null;
+  const edPhoneValid = !edSms || isValidPhMobile(edPhone);
+  const edValid = edName.trim().length > 0 && edAge !== null && edPhoneValid;
 
   const saveEdit = async () => {
     if (!patient || !edValid || edAge === null || savingEdit) return;
@@ -123,6 +130,12 @@ export default function PatientDetailScreen() {
         birthdate: edBirthdateStr ?? patient.birthdate,
         age: edAge,
         sex: edSex,
+        // Privacy §4: number + consent date exist only while opted in. Keep
+        // the original consent_date when SMS was already on; stamp now when
+        // the BHW enables it here.
+        sms_consent: edSms,
+        contact_number: edSms ? edPhone.trim() : null,
+        consent_date: edSms ? (patient.consent_date ?? nowIso()) : null,
       });
       void triggerSync(); // best-effort; row stays queued if offline
       setPatient(await getLocalPatient(patient.patient_id));
@@ -331,6 +344,49 @@ export default function PatientDetailScreen() {
                   );
                 })}
               </View>
+              {/* SMS opt-in — editable after enrollment (privacy gate applies:
+                  number + consent date exist only while opted in). */}
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderColor: palette.border,
+                  borderRadius: 14,
+                  padding: 14,
+                  gap: 10,
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <Switch value={edSms} onValueChange={setEdSms} color={palette.teal} />
+                  <Text
+                    variant="bodyMedium"
+                    style={{ color: palette.ink, fontWeight: '600', flex: 1 }}
+                  >
+                    {t('consent.smsOptInLabel')}
+                  </Text>
+                </View>
+                {edSms ? (
+                  <>
+                    <TextInput
+                      label={t('consent.contactNumberLabel')}
+                      placeholder={t('consent.contactNumberPlaceholder')}
+                      value={edPhone}
+                      onChangeText={setEdPhone}
+                      keyboardType="phone-pad"
+                      mode="outlined"
+                      error={edPhone.length > 0 && !edPhoneValid}
+                      style={{ backgroundColor: palette.paper }}
+                    />
+                    <HelperText
+                      type="error"
+                      visible={edPhone.length > 0 && !edPhoneValid}
+                      style={{ paddingHorizontal: 0 }}
+                    >
+                      {t('consent.contactNumberError')}
+                    </HelperText>
+                  </>
+                ) : null}
+              </View>
+
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <Button
                   mode="outlined"
