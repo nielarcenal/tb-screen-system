@@ -28,6 +28,21 @@ export const tl: Translation = {
     inbox: 'Inbox ng mga referral',
     hotspot: 'Mga hotspot ng barangay',
     bhw: 'Pamamahala ng BHW',
+    captains: 'Pamamahala ng kapitan',
+  },
+  captains: {
+    title: 'Mga account ng Kapitan ng Barangay',
+    subtitle: '{{count}} kapitan',
+    privacyNote:
+      'Ang admin ay gumagawa lamang ng mga account ng kapitan. Walang pangalan ng pasyente, rekord, o resulta na lalabas saanman sa view na ito.',
+    addCta: 'Magdagdag ng kapitan',
+    addTitle: 'Magdagdag ng Kapitan ng Barangay',
+    editTitle: 'Baguhin ang kapitan',
+    facilityLabel: 'Pasilidad',
+    createdTitle: 'Nagawa ang account ng kapitan',
+    scopeNote:
+      'Ang kapitan ay makakapagdagdag at makakapamahala lamang ng mga BHW account para sa barangay na itinakda rito.',
+    empty: 'Wala pang account ng kapitan.',
   },
   dashboard: {
     title: 'Dashboard',
@@ -72,6 +87,7 @@ export const tl: Translation = {
     firstNameLabel: 'Pangalan',
     lastNameLabel: 'Apelyido',
     barangayLabel: 'Nakatalagang barangay',
+    ownBarangayNote: 'Ang bagong BHW account ay itatalaga sa iyong barangay.',
     emailNote:
       'Awtomatikong nabubuo ang email (pangalan.apelyido@tbscreen.ph) at ipapakita kasama ng pansamantalang password pagkatapos gawin — personal na ibahagi ang dalawa sa BHW.',
     cancel: 'Kanselahin',

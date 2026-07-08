@@ -1,41 +1,66 @@
 /**
- * Barangay-Captain view (design 1b): BHW ACCOUNTS ONLY — list with 30-day
- * activity counts (bhw_activity() RPC, captain role required server-side),
- * add/edit form, deactivate/reactivate with confirmation.
+ * Admin (developer) view: provision Barangay-Captain accounts. Each captain is
+ * assigned ONE barangay — the manage-bhw function then confines that captain
+ * to adding/managing BHWs of that barangay only (0008).
  *
- * PRIVACY: captains can read no patient data of any kind — the RLS policies on
- * patients/screenings/referrals all gate on role in ('bhw','tb_dots'). All
- * account WRITES go through the manage-bhw Edge Function (auth admin needs the
- * service role, which never reaches the browser).
+ * List reads users rows directly (users_admin_read policy); all writes go
+ * through the manage-bhw Edge Function (auth admin needs the service role).
+ * Admins, like captains, can read no patient data of any kind.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
-import { BhwActivityRow } from '../lib/types';
+import AddressCascadeWeb from './AddressCascadeWeb';
+
+interface CaptainRow {
+  user_id: string;
+  full_name: string;
+  facility_id: string;
+  assigned_barangay_code: string | null;
+  active: boolean;
+  ref_barangays: { name: string } | null;
+}
+
+interface FacilityOption {
+  facility_id: string;
+  name: string;
+}
 
 type View =
   | { kind: 'list' }
-  | { kind: 'form'; editing: BhwActivityRow | null }
+  | { kind: 'form'; editing: CaptainRow | null }
   | { kind: 'created'; email: string; tempPassword: string; name: string; reset?: boolean }
-  | { kind: 'confirmDeactivate'; target: BhwActivityRow };
+  | { kind: 'confirmDeactivate'; target: CaptainRow };
 
-export default function BhwManagement() {
+export default function CaptainManagement() {
   const { t } = useTranslation();
-  const [rows, setRows] = useState<BhwActivityRow[]>([]);
+  const [rows, setRows] = useState<CaptainRow[]>([]);
+  const [facilities, setFacilities] = useState<FacilityOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<View>({ kind: 'list' });
   const [formFirst, setFormFirst] = useState('');
   const [formLast, setFormLast] = useState('');
+  const [formBrgy, setFormBrgy] = useState<string | null>(null);
+  const [formFacility, setFormFacility] = useState('');
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const { data, error: err } = await supabase.rpc('bhw_activity', { days_back: 30 });
+    const [{ data, error: err }, { data: fac, error: fErr }] = await Promise.all([
+      supabase
+        .from('users')
+        .select('user_id, full_name, facility_id, assigned_barangay_code, active, ref_barangays(name)')
+        .eq('role', 'captain')
+        .order('full_name'),
+      supabase.from('facilities').select('facility_id, name').order('name'),
+    ]);
     if (err) setError(err.message);
-    else setRows((data ?? []) as BhwActivityRow[]);
+    else setRows((data ?? []) as unknown as CaptainRow[]);
+    if (fErr) setError(fErr.message);
+    else setFacilities((fac ?? []) as FacilityOption[]);
     setLoading(false);
   }, []);
 
@@ -43,7 +68,6 @@ export default function BhwManagement() {
     void load();
   }, [load]);
 
-  /** Call the manage-bhw Edge Function; returns the parsed body or throws. */
   const invoke = async (body: Record<string, unknown>): Promise<Record<string, unknown>> => {
     const { data, error: err } = await supabase.functions.invoke('manage-bhw', { body });
     if (err) throw new Error(err.message);
@@ -55,18 +79,21 @@ export default function BhwManagement() {
   const openAdd = () => {
     setFormFirst('');
     setFormLast('');
+    setFormBrgy(null);
+    setFormFacility(facilities[0]?.facility_id ?? '');
     setView({ kind: 'form', editing: null });
   };
 
-  const openEdit = (row: BhwActivityRow) => {
-    // full_name was stored as "First Last…" — first word is the first name.
+  const openEdit = (row: CaptainRow) => {
     const [first, ...rest] = row.full_name.trim().split(/\s+/);
     setFormFirst(first ?? '');
     setFormLast(rest.join(' '));
+    setFormBrgy(row.assigned_barangay_code);
+    setFormFacility(row.facility_id);
     setView({ kind: 'form', editing: row });
   };
 
-  const submitForm = async (editing: BhwActivityRow | null) => {
+  const submitForm = async (editing: CaptainRow | null) => {
     setBusy(true);
     setError(null);
     try {
@@ -76,14 +103,16 @@ export default function BhwManagement() {
           user_id: editing.user_id,
           first_name: formFirst,
           last_name: formLast,
+          barangay_code: formBrgy,
         });
         setView({ kind: 'list' });
       } else {
-        // The function assigns the captain's own barangay + facility (0008).
         const res = await invoke({
           action: 'create',
           first_name: formFirst,
           last_name: formLast,
+          barangay_code: formBrgy,
+          facility_id: formFacility,
         });
         setView({
           kind: 'created',
@@ -100,8 +129,7 @@ export default function BhwManagement() {
     }
   };
 
-  /** Passwords are hashed — never viewable, only replaceable. */
-  const resetPassword = async (row: BhwActivityRow) => {
+  const resetPassword = async (row: CaptainRow) => {
     setBusy(true);
     setError(null);
     try {
@@ -120,7 +148,7 @@ export default function BhwManagement() {
     }
   };
 
-  const setActive = async (row: BhwActivityRow, active: boolean) => {
+  const setActive = async (row: CaptainRow, active: boolean) => {
     setBusy(true);
     setError(null);
     try {
@@ -137,7 +165,7 @@ export default function BhwManagement() {
   if (view.kind === 'created') {
     return (
       <div className="card" style={{ maxWidth: 480 }}>
-        <h2>{view.reset ? t('bhw.resetDoneTitle') : t('bhw.createdTitle')}</h2>
+        <h2>{view.reset ? t('bhw.resetDoneTitle') : t('captains.createdTitle')}</h2>
         <p>{view.name}</p>
         <table className="kv">
           <tbody>
@@ -165,22 +193,22 @@ export default function BhwManagement() {
     const editing = view.editing;
     return (
       <div className="card" style={{ maxWidth: 480 }}>
-        <h2>{editing ? t('bhw.editTitle') : t('bhw.addTitle')}</h2>
+        <h2>{editing ? t('captains.editTitle') : t('captains.addTitle')}</h2>
         {error ? <p className="error">{t('bhw.actionError', { message: error })}</p> : null}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 10px' }}>
           <div>
-            <label htmlFor="bhw-first">{t('bhw.firstNameLabel')}</label>
+            <label htmlFor="cap-first">{t('bhw.firstNameLabel')}</label>
             <input
-              id="bhw-first"
+              id="cap-first"
               value={formFirst}
               onChange={(e) => setFormFirst(e.target.value)}
               style={{ width: '100%' }}
             />
           </div>
           <div>
-            <label htmlFor="bhw-last">{t('bhw.lastNameLabel')}</label>
+            <label htmlFor="cap-last">{t('bhw.lastNameLabel')}</label>
             <input
-              id="bhw-last"
+              id="cap-last"
               value={formLast}
               onChange={(e) => setFormLast(e.target.value)}
               style={{ width: '100%' }}
@@ -189,15 +217,36 @@ export default function BhwManagement() {
         </div>
         {!editing ? (
           <>
-            <p className="mutedline" style={{ marginTop: 10 }}>
-              {t('bhw.ownBarangayNote')}
-            </p>
-            <p className="mutedline">{t('bhw.emailNote')}</p>
+            <label htmlFor="cap-fac">{t('captains.facilityLabel')}</label>
+            <select
+              id="cap-fac"
+              value={formFacility}
+              onChange={(e) => setFormFacility(e.target.value)}
+              style={{ width: '100%' }}
+            >
+              {facilities.map((f) => (
+                <option key={f.facility_id} value={f.facility_id}>
+                  {f.name}
+                </option>
+              ))}
+            </select>
           </>
+        ) : null}
+        <AddressCascadeWeb value={formBrgy} onChange={setFormBrgy} />
+        {!editing ? (
+          <p className="mutedline" style={{ marginTop: 10 }}>
+            {t('captains.scopeNote')}
+          </p>
         ) : null}
         <p>
           <button
-            disabled={busy || !formFirst.trim() || !formLast.trim()}
+            disabled={
+              busy ||
+              !formFirst.trim() ||
+              !formLast.trim() ||
+              !formBrgy ||
+              (!editing && !formFacility)
+            }
             onClick={() => void submitForm(editing)}
           >
             {editing ? t('bhw.save') : t('bhw.create')}
@@ -231,27 +280,26 @@ export default function BhwManagement() {
     <div className="card">
       <div className="toolbar">
         <div>
-          <h2 style={{ marginBottom: 2 }}>{t('bhw.title')}</h2>
-          <span className="mutedline">{t('bhw.subtitle', { count: rows.length })}</span>
+          <h2 style={{ marginBottom: 2 }}>{t('captains.title')}</h2>
+          <span className="mutedline">{t('captains.subtitle', { count: rows.length })}</span>
         </div>
         <span style={{ flex: 1 }} />
-        <button onClick={openAdd}>{t('bhw.addCta')}</button>
+        <button onClick={openAdd}>{t('captains.addCta')}</button>
       </div>
 
-      <p className="mutedline">{t('bhw.privacyNote')}</p>
+      <p className="mutedline">{t('captains.privacyNote')}</p>
       {error ? <p className="error">{t('bhw.loadError', { message: error })}</p> : null}
 
       {loading ? (
         <p>{t('common.loading')}</p>
       ) : rows.length === 0 ? (
-        <p className="mutedline">{t('bhw.empty')}</p>
+        <p className="mutedline">{t('captains.empty')}</p>
       ) : (
         <table>
           <thead>
             <tr>
               <th>{t('bhw.colName')}</th>
               <th>{t('bhw.colBarangay')}</th>
-              <th>{t('bhw.colActivity')}</th>
               <th>{t('bhw.colStatus')}</th>
               <th>{t('bhw.colActions')}</th>
             </tr>
@@ -262,13 +310,7 @@ export default function BhwManagement() {
                 <td>
                   <b>{r.full_name}</b>
                 </td>
-                <td>{r.barangay_name ?? r.barangay_code ?? '—'}</td>
-                <td>
-                  {t('bhw.activityLine', {
-                    screenings: r.screenings_n,
-                    referrals: r.referrals_n,
-                  })}
-                </td>
+                <td>{r.ref_barangays?.name ?? r.assigned_barangay_code ?? '—'}</td>
                 <td>
                   <span className={`chip ${r.active ? 'tested' : ''}`}>
                     {r.active ? t('bhw.active') : t('bhw.deactivated')}

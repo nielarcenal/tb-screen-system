@@ -28,6 +28,21 @@ export const en = {
     inbox: 'Referral inbox',
     hotspot: 'Barangay hotspots',
     bhw: 'BHW management',
+    captains: 'Captain management',
+  },
+  captains: {
+    title: 'Barangay Captain accounts',
+    subtitle: '{{count}} captains',
+    privacyNote:
+      'Admins provision captain accounts only. No patient names, records, or results appear anywhere in this view.',
+    addCta: 'Add captain',
+    addTitle: 'Add Barangay Captain',
+    editTitle: 'Edit captain',
+    facilityLabel: 'Facility',
+    createdTitle: 'Captain account created',
+    scopeNote:
+      'The captain will only be able to add and manage BHW accounts for the barangay assigned here.',
+    empty: 'No captain accounts yet.',
   },
   dashboard: {
     title: 'Dashboard',
@@ -72,6 +87,7 @@ export const en = {
     firstNameLabel: 'First name',
     lastNameLabel: 'Last name',
     barangayLabel: 'Assigned barangay',
+    ownBarangayNote: 'The new BHW account will be assigned to your barangay.',
     emailNote:
       'The email is auto-generated (firstname.lastname@tbscreen.ph) and shown with a temporary password after creation — share both with the BHW in person.',
     cancel: 'Cancel',

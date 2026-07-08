@@ -28,6 +28,21 @@ export const ceb: Translation = {
     inbox: 'Inbox sa mga referral',
     hotspot: 'Mga hotspot sa barangay',
     bhw: 'Pagdumala sa BHW',
+    captains: 'Pagdumala sa kapitan',
+  },
+  captains: {
+    title: 'Mga account sa Kapitan sa Barangay',
+    subtitle: '{{count}} ka kapitan',
+    privacyNote:
+      'Ang admin maghimo lamang og mga account sa kapitan. Walay ngalan sa pasyente, rekord, o resulta nga mogawas bisan asa niini nga view.',
+    addCta: 'Pagdugang og kapitan',
+    addTitle: 'Pagdugang og Kapitan sa Barangay',
+    editTitle: 'Usba ang kapitan',
+    facilityLabel: 'Pasilidad',
+    createdTitle: 'Nabuhat ang account sa kapitan',
+    scopeNote:
+      'Ang kapitan makadugang ug makadumala lamang og mga BHW account alang sa barangay nga gitakda dinhi.',
+    empty: 'Wala pay account sa kapitan.',
   },
   dashboard: {
     title: 'Dashboard',
@@ -72,6 +87,7 @@ export const ceb: Translation = {
     firstNameLabel: 'Ngalan',
     lastNameLabel: 'Apelyido',
     barangayLabel: 'Gitahas nga barangay',
+    ownBarangayNote: 'Ang bag-ong BHW account itahas sa imong barangay.',
     emailNote:
       'Awtomatikong mabuo ang email (ngalan.apelyido@tbscreen.ph) ug ipakita uban sa temporaryo nga password human mabuhat — personal nga ipaambit ang duha sa BHW.',
     cancel: 'Kanselahon',
