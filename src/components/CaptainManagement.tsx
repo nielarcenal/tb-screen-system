@@ -22,11 +22,6 @@ interface CaptainRow {
   ref_barangays: { name: string } | null;
 }
 
-interface FacilityOption {
-  facility_id: string;
-  name: string;
-}
-
 type View =
   | { kind: 'list' }
   | { kind: 'form'; editing: CaptainRow | null }
@@ -36,37 +31,52 @@ type View =
 export default function CaptainManagement() {
   const { t } = useTranslation();
   const [rows, setRows] = useState<CaptainRow[]>([]);
-  const [facilities, setFacilities] = useState<FacilityOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<View>({ kind: 'list' });
   const [formFirst, setFormFirst] = useState('');
   const [formLast, setFormLast] = useState('');
   const [formBrgy, setFormBrgy] = useState<string | null>(null);
-  const [formFacility, setFormFacility] = useState('');
+  // Facility is DERIVED from the barangay (nearest DOTS center, 0009) — shown
+  // read-only; the Edge Function does the same lookup server-side.
+  const [mappedFacility, setMappedFacility] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [{ data, error: err }, { data: fac, error: fErr }] = await Promise.all([
-      supabase
-        .from('users')
-        .select('user_id, full_name, facility_id, assigned_barangay_code, active, ref_barangays(name)')
-        .eq('role', 'captain')
-        .order('full_name'),
-      supabase.from('facilities').select('facility_id, name').order('name'),
-    ]);
+    const { data, error: err } = await supabase
+      .from('users')
+      .select('user_id, full_name, facility_id, assigned_barangay_code, active, ref_barangays(name)')
+      .eq('role', 'captain')
+      .order('full_name');
     if (err) setError(err.message);
     else setRows((data ?? []) as unknown as CaptainRow[]);
-    if (fErr) setError(fErr.message);
-    else setFacilities((fac ?? []) as FacilityOption[]);
     setLoading(false);
   }, []);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Look up the barangay's nearest DOTS center for display.
+  useEffect(() => {
+    if (!formBrgy) {
+      setMappedFacility(null);
+      return;
+    }
+    void supabase
+      .from('ref_barangays')
+      .select('ref_cities(default_facility_id, facilities(name))')
+      .eq('barangay_code', formBrgy)
+      .maybeSingle()
+      .then(({ data }) => {
+        const name =
+          (data as { ref_cities: { facilities: { name: string } | null } | null } | null)
+            ?.ref_cities?.facilities?.name ?? null;
+        setMappedFacility(name);
+      });
+  }, [formBrgy]);
 
   const invoke = async (body: Record<string, unknown>): Promise<Record<string, unknown>> => {
     const { data, error: err } = await supabase.functions.invoke('manage-bhw', { body });
@@ -80,7 +90,6 @@ export default function CaptainManagement() {
     setFormFirst('');
     setFormLast('');
     setFormBrgy(null);
-    setFormFacility(facilities[0]?.facility_id ?? '');
     setView({ kind: 'form', editing: null });
   };
 
@@ -89,7 +98,6 @@ export default function CaptainManagement() {
     setFormFirst(first ?? '');
     setFormLast(rest.join(' '));
     setFormBrgy(row.assigned_barangay_code);
-    setFormFacility(row.facility_id);
     setView({ kind: 'form', editing: row });
   };
 
@@ -107,12 +115,12 @@ export default function CaptainManagement() {
         });
         setView({ kind: 'list' });
       } else {
+        // No facility_id: the function derives the nearest DOTS center (0009).
         const res = await invoke({
           action: 'create',
           first_name: formFirst,
           last_name: formLast,
           barangay_code: formBrgy,
-          facility_id: formFacility,
         });
         setView({
           kind: 'created',
@@ -215,24 +223,13 @@ export default function CaptainManagement() {
             />
           </div>
         </div>
-        {!editing ? (
-          <>
-            <label htmlFor="cap-fac">{t('captains.facilityLabel')}</label>
-            <select
-              id="cap-fac"
-              value={formFacility}
-              onChange={(e) => setFormFacility(e.target.value)}
-              style={{ width: '100%' }}
-            >
-              {facilities.map((f) => (
-                <option key={f.facility_id} value={f.facility_id}>
-                  {f.name}
-                </option>
-              ))}
-            </select>
-          </>
-        ) : null}
         <AddressCascadeWeb value={formBrgy} onChange={setFormBrgy} />
+        {!editing && formBrgy ? (
+          <p className="mutedline" style={{ marginTop: 10 }}>
+            <b>{t('captains.facilityLabel')}:</b>{' '}
+            {mappedFacility ?? t('captains.noFacilityMapped')}
+          </p>
+        ) : null}
         {!editing ? (
           <p className="mutedline" style={{ marginTop: 10 }}>
             {t('captains.scopeNote')}
@@ -245,7 +242,7 @@ export default function CaptainManagement() {
               !formFirst.trim() ||
               !formLast.trim() ||
               !formBrgy ||
-              (!editing && !formFacility)
+              (!editing && !mappedFacility)
             }
             onClick={() => void submitForm(editing)}
           >

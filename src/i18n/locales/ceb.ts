@@ -38,7 +38,8 @@ export const ceb: Translation = {
     addCta: 'Pagdugang og kapitan',
     addTitle: 'Pagdugang og Kapitan sa Barangay',
     editTitle: 'Usba ang kapitan',
-    facilityLabel: 'Pasilidad',
+    facilityLabel: 'Pasilidad (pinakaduol nga TB-DOTS center)',
+    noFacilityMapped: 'walay DOTS center nga natakda alang niini nga barangay — i-apply ang migration 0009',
     createdTitle: 'Nabuhat ang account sa kapitan',
     scopeNote:
       'Ang kapitan makadugang ug makadumala lamang og mga BHW account alang sa barangay nga gitakda dinhi.',

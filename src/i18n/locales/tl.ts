@@ -38,7 +38,8 @@ export const tl: Translation = {
     addCta: 'Magdagdag ng kapitan',
     addTitle: 'Magdagdag ng Kapitan ng Barangay',
     editTitle: 'Baguhin ang kapitan',
-    facilityLabel: 'Pasilidad',
+    facilityLabel: 'Pasilidad (pinakamalapit na TB-DOTS center)',
+    noFacilityMapped: 'walang DOTS center na nakatakda para sa barangay na ito — i-apply ang migration 0009',
     createdTitle: 'Nagawa ang account ng kapitan',
     scopeNote:
       'Ang kapitan ay makakapagdagdag at makakapamahala lamang ng mga BHW account para sa barangay na itinakda rito.',

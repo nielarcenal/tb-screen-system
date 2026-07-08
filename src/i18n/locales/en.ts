@@ -38,7 +38,8 @@ export const en = {
     addCta: 'Add captain',
     addTitle: 'Add Barangay Captain',
     editTitle: 'Edit captain',
-    facilityLabel: 'Facility',
+    facilityLabel: 'Facility (nearest TB-DOTS center)',
+    noFacilityMapped: 'no DOTS center mapped for this barangay — apply migration 0009',
     createdTitle: 'Captain account created',
     scopeNote:
       'The captain will only be able to add and manage BHW accounts for the barangay assigned here.',
