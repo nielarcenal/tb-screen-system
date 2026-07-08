@@ -42,6 +42,23 @@ export async function listBarangays(cityCode: string): Promise<PsgcOption[]> {
   );
 }
 
+/**
+ * The default (nearest) TB-DOTS facility for a barangay: its municipality's
+ * assigned center (server migration 0009, pulled at sync). Null when the
+ * mapping hasn't been pulled yet — the referral form then just shows no
+ * pre-selection. A DEFAULT only; the BHW can always pick a different facility.
+ */
+export async function defaultFacilityForBarangay(barangayCode: string): Promise<string | null> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ fid: string | null }>(
+    `SELECT c.default_facility_id AS fid
+     FROM ref_barangays b JOIN ref_cities c ON c.city_code = b.city_code
+     WHERE b.barangay_code = ?`,
+    [barangayCode],
+  );
+  return row?.fid ?? null;
+}
+
 /** Human-readable "Barangay, City" label for a stored barangay_code. */
 export async function barangayLabel(barangayCode: string): Promise<string | null> {
   const db = await getDb();

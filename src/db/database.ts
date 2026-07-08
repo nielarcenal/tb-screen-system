@@ -150,6 +150,13 @@ const MIGRATIONS: string[] = [
   ALTER TABLE patients ADD COLUMN full_name TEXT;
   ALTER TABLE patients ADD COLUMN birthdate TEXT;  -- date-only, YYYY-MM-DD
   `,
+
+  // v6 — nearest-DOTS default per LGU (server migration 0009): pulled from the
+  // server's ref_cities.default_facility_id at sync; the referral form
+  // pre-selects it for the patient's barangay (editable).
+  `
+  ALTER TABLE ref_cities ADD COLUMN default_facility_id TEXT;
+  `,
 ];
 
 // Bundled PSGC dataset — Bukidnon only (documented delimitation, §6). Generated

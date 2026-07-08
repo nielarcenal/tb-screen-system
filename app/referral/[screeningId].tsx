@@ -27,6 +27,7 @@ import { insertLocalAppointment } from '../../src/db/appointmentsRepo';
 import { listTbDotsFacilities } from '../../src/db/facilitiesRepo';
 import { getLocalPatient } from '../../src/db/patientsRepo';
 import { getReferralForScreening, insertLocalReferral } from '../../src/db/referralsRepo';
+import { defaultFacilityForBarangay } from '../../src/db/psgcRepo';
 import { getScreening, LocalScreeningRow } from '../../src/db/screeningsRepo';
 import { FacilityRow, LocalPatientRow } from '../../src/db/types';
 import { toDateOnly } from '../../src/lib/dates';
@@ -62,7 +63,15 @@ export default function CreateReferralScreen() {
       setExistingReferralId(existing?.referral_id ?? null);
       const f = await listTbDotsFacilities();
       setFacilities(f);
-      if (f.length === 1) setFacilityId(f[0].facility_id); // only one choice
+      if (f.length === 1) {
+        setFacilityId(f[0].facility_id); // only one choice
+      } else if (s) {
+        // Pre-select the nearest center for the patient's barangay (0009) —
+        // a default only, freely changeable below.
+        const p = await getLocalPatient(s.patient_id);
+        const def = p ? await defaultFacilityForBarangay(p.barangay_code) : null;
+        if (def && f.some((fac) => fac.facility_id === def)) setFacilityId(def);
+      }
       setLoaded(true);
     })();
   }, [screeningId]);

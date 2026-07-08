@@ -190,6 +190,30 @@ async function pullFacilities(): Promise<number> {
   return rows.length;
 }
 
+/**
+ * Nearest-DOTS defaults (0009): ref_cities.default_facility_id lives on the
+ * server (the bundled PSGC JSON predates it). Tiny table (22 LGUs) — pulled in
+ * full every sync, no cursor.
+ */
+async function pullCityFacilityDefaults(): Promise<number> {
+  const { data, error } = await supabase
+    .from('ref_cities')
+    .select('city_code, default_facility_id')
+    .not('default_facility_id', 'is', null);
+
+  if (error) throw new Error(`Pull failed (city defaults): ${error.message}`);
+
+  const rows = (data ?? []) as { city_code: string; default_facility_id: string }[];
+  const db = await getDb();
+  for (const row of rows) {
+    await db.runAsync('UPDATE ref_cities SET default_facility_id = ? WHERE city_code = ?', [
+      row.default_facility_id,
+      row.city_code,
+    ]);
+  }
+  return rows.length;
+}
+
 // ---------------------------------------------------------------------------
 // referrals (Feature 6) — same pattern as patients.
 // ---------------------------------------------------------------------------
@@ -280,6 +304,7 @@ async function pullAppointments(): Promise<number> {
  */
 export async function syncAll(): Promise<SyncResult> {
   const fPulled = await pullFacilities();
+  await pullCityFacilityDefaults(); // tiny; not counted in pushed/pulled
   const p = await syncPatients();
   const sPushed = await pushScreenings();
   const sPulled = await pullScreenings();
