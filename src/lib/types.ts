@@ -51,8 +51,16 @@ export interface PatientRow {
   patient_id: string;
   display_code: string;
   enrolled_by: string;
-  /** Nullable: pre-0006 rows have no name (0006 design-parity migration). */
+  /**
+   * Composed display string "First Middle Last", written by the mobile app from
+   * the parts below (0010). The portal displays this. Nullable: pre-0006 rows
+   * have no name at all.
+   */
   full_name: string | null;
+  /** Name parts (0010). Null on rows enrolled before the split. */
+  first_name: string | null;
+  middle_name: string | null;
+  last_name: string | null;
   birthdate: string | null;
   age: number;
   sex: Sex;
