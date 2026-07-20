@@ -38,6 +38,7 @@ import { insertLocalPatient } from '../../src/db/patientsRepo';
 import { cascadeForBarangay } from '../../src/db/psgcRepo';
 import { Sex } from '../../src/db/types';
 import { ageFromBirthdate, toDateOnly } from '../../src/lib/dates';
+import { composeFullName } from '../../src/lib/names';
 import { nowIso, uuid } from '../../src/lib/uuid';
 import { useAppStore } from '../../src/store/appStore';
 import { useSessionStore } from '../../src/store/sessionStore';
@@ -85,7 +86,9 @@ export default function EnrollScreen() {
   const assignedBarangayCode = useAppStore((s) => s.assignedBarangayCode);
   const allocateDisplayCode = useAppStore((s) => s.allocateDisplayCode);
 
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [birthdate, setBirthdate] = useState<Date | undefined>(undefined);
   const [birthPickerOpen, setBirthPickerOpen] = useState(false);
   const [sex, setSex] = useState<Sex | null>(null);
@@ -104,7 +107,8 @@ export default function EnrollScreen() {
 
   const birthdateStr = birthdate ? toDateOnly(birthdate) : null;
   const ageNum = ageFromBirthdate(birthdateStr);
-  const nameValid = fullName.trim().length > 0;
+  // Middle name is optional — not every patient has one.
+  const nameValid = firstName.trim().length > 0 && lastName.trim().length > 0;
   const contactValid = !consent.smsOptIn || isValidPhMobile(consent.contactNumber);
   const canSave =
     !!userId &&
@@ -125,7 +129,10 @@ export default function EnrollScreen() {
         patient_id: patientId,
         display_code: allocateDisplayCode(),
         enrolled_by: userId,
-        full_name: fullName.trim(),
+        full_name: composeFullName(firstName, middleName, lastName),
+        first_name: firstName.trim(),
+        middle_name: middleName.trim() || null,
+        last_name: lastName.trim(),
         birthdate: birthdateStr,
         age: ageNum, // derived from birthdate; kept for compatibility + the DB CHECK
         sex,
@@ -171,9 +178,25 @@ export default function EnrollScreen() {
         {/* Patient details. */}
         <View style={{ gap: 12 }}>
           <TextInput
-            label={`${t('enroll.fullNameLabel')} *`}
-            value={fullName}
-            onChangeText={setFullName}
+            label={`${t('enroll.firstNameLabel')} *`}
+            value={firstName}
+            onChangeText={setFirstName}
+            mode="outlined"
+            autoCapitalize="words"
+            style={{ backgroundColor: palette.paper }}
+          />
+          <TextInput
+            label={t('enroll.middleNameLabel')}
+            value={middleName}
+            onChangeText={setMiddleName}
+            mode="outlined"
+            autoCapitalize="words"
+            style={{ backgroundColor: palette.paper }}
+          />
+          <TextInput
+            label={`${t('enroll.lastNameLabel')} *`}
+            value={lastName}
+            onChangeText={setLastName}
             mode="outlined"
             autoCapitalize="words"
             style={{ backgroundColor: palette.paper }}

@@ -153,6 +153,9 @@ export const tl: Translation = {
     detailsSection: 'Detalye ng pasyente',
     // TODO i18n verify
     fullNameLabel: 'Buong pangalan',
+    firstNameLabel: 'Pangalan',
+    middleNameLabel: 'Gitnang pangalan',
+    lastNameLabel: 'Apelyido',
     birthdateLabel: 'Petsa ng kapanganakan',
     ageLabel: 'Edad',
     ageError: 'Maglagay ng edad mula 0 hanggang 129.',

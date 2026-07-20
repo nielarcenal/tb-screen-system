@@ -60,8 +60,18 @@ export interface PatientRow {
   patient_id: string;
   display_code: string;
   enrolled_by: string;
-  /** Nullable: pre-0006 rows have no name; required for new enrollments. */
+  /**
+   * Composed display string "First Middle Last", written by the app from the
+   * parts below. Kept because every reader (lists, referral slip, web portal)
+   * consumes it. Nullable: pre-0006 rows have no name.
+   */
   full_name: string | null;
+  /** Given name. Required for new enrollments; null on pre-0010 rows. */
+  first_name: string | null;
+  /** Optional — not every patient has one. */
+  middle_name: string | null;
+  /** Family name. Required for new enrollments; null on pre-0010 rows. */
+  last_name: string | null;
   /** Date-only YYYY-MM-DD; nullable for pre-0006 rows. Age is derived from it. */
   birthdate: string | null;
   age: number;

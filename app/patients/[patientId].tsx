@@ -24,6 +24,7 @@ import { listAppointmentsForPatient } from '../../src/db/appointmentsRepo';
 import { barangayLabel } from '../../src/db/psgcRepo';
 import { AppointmentRow, LocalPatientRow, ReferralStatus, Sex } from '../../src/db/types';
 import { ageFromBirthdate, toDateOnly } from '../../src/lib/dates';
+import { composeFullName, nameInitials, splitFullName } from '../../src/lib/names';
 import { nowIso } from '../../src/lib/uuid';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { triggerSync } from '../../src/sync/syncManager';
@@ -72,7 +73,9 @@ export default function PatientDetailScreen() {
   const [patient, setPatient] = useState<LocalPatientRow | null>(null);
   // Edit-details card (design screen 9): name / birthdate / sex.
   const [editing, setEditing] = useState(false);
-  const [edName, setEdName] = useState('');
+  const [edFirst, setEdFirst] = useState('');
+  const [edMiddle, setEdMiddle] = useState('');
+  const [edLast, setEdLast] = useState('');
   const [edBirthdate, setEdBirthdate] = useState<Date | undefined>(undefined);
   const [edSex, setEdSex] = useState<Sex>('female');
   const [edSms, setEdSms] = useState(false);
@@ -107,7 +110,11 @@ export default function PatientDetailScreen() {
 
   const openEdit = () => {
     if (!patient) return;
-    setEdName(patient.full_name ?? '');
+    // Pre-0010 rows carry only full_name — split it so the fields aren't blank.
+    const legacy = splitFullName(patient.full_name);
+    setEdFirst(patient.first_name ?? legacy.first);
+    setEdMiddle(patient.middle_name ?? legacy.middle);
+    setEdLast(patient.last_name ?? legacy.last);
     setEdBirthdate(patient.birthdate ? new Date(`${patient.birthdate}T00:00:00`) : undefined);
     setEdSex(patient.sex);
     setEdSms(patient.sms_consent);
@@ -119,14 +126,19 @@ export default function PatientDetailScreen() {
   // Pre-0006 rows may have no birthdate: keep the stored age unless one is picked.
   const edAge = edBirthdateStr ? ageFromBirthdate(edBirthdateStr) : (patient?.age ?? null);
   const edPhoneValid = !edSms || isValidPhMobile(edPhone);
-  const edValid = edName.trim().length > 0 && edAge !== null && edPhoneValid;
+  // Middle name is optional — not every patient has one.
+  const edNameValid = edFirst.trim().length > 0 && edLast.trim().length > 0;
+  const edValid = edNameValid && edAge !== null && edPhoneValid;
 
   const saveEdit = async () => {
     if (!patient || !edValid || edAge === null || savingEdit) return;
     setSavingEdit(true);
     try {
       await updateLocalPatientDetails(patient.patient_id, {
-        full_name: edName.trim(),
+        full_name: composeFullName(edFirst, edMiddle, edLast),
+        first_name: edFirst.trim(),
+        middle_name: edMiddle.trim() || null,
+        last_name: edLast.trim(),
         birthdate: edBirthdateStr ?? patient.birthdate,
         age: edAge,
         sex: edSex,
@@ -257,9 +269,25 @@ export default function PatientDetailScreen() {
                 {t('patientDetail.editDetails').toUpperCase()} · {patient.display_code}
               </Text>
               <TextInput
-                label={t('enroll.fullNameLabel')}
-                value={edName}
-                onChangeText={setEdName}
+                label={`${t('enroll.firstNameLabel')} *`}
+                value={edFirst}
+                onChangeText={setEdFirst}
+                mode="outlined"
+                autoCapitalize="words"
+                style={{ backgroundColor: palette.paper }}
+              />
+              <TextInput
+                label={t('enroll.middleNameLabel')}
+                value={edMiddle}
+                onChangeText={setEdMiddle}
+                mode="outlined"
+                autoCapitalize="words"
+                style={{ backgroundColor: palette.paper }}
+              />
+              <TextInput
+                label={`${t('enroll.lastNameLabel')} *`}
+                value={edLast}
+                onChangeText={setEdLast}
                 mode="outlined"
                 autoCapitalize="words"
                 style={{ backgroundColor: palette.paper }}
@@ -450,13 +478,7 @@ export default function PatientDetailScreen() {
             >
               {patient.full_name ? (
                 <Text variant="titleMedium" style={{ color: palette.tealDark, fontWeight: '600' }}>
-                  {patient.full_name
-                    .trim()
-                    .split(/\s+/)
-                    .map((w) => w[0])
-                    .slice(0, 2)
-                    .join('')
-                    .toUpperCase()}
+                  {nameInitials(patient.full_name)}
                 </Text>
               ) : (
                 <MaterialCommunityIcons name="account" size={26} color={palette.tealDark} />

@@ -15,6 +15,9 @@ interface PatientSqlRow {
   display_code: string;
   enrolled_by: string;
   full_name: string | null;
+  first_name: string | null;
+  middle_name: string | null;
+  last_name: string | null;
   birthdate: string | null;
   age: number;
   sex: string;
@@ -34,6 +37,9 @@ function fromSql(r: PatientSqlRow): LocalPatientRow {
     display_code: r.display_code,
     enrolled_by: r.enrolled_by,
     full_name: r.full_name,
+    first_name: r.first_name,
+    middle_name: r.middle_name,
+    last_name: r.last_name,
     birthdate: r.birthdate,
     age: r.age,
     sex: r.sex as LocalPatientRow['sex'],
@@ -60,15 +66,19 @@ export async function insertLocalPatient(
   const ts = nowIso();
   await db.runAsync(
     `INSERT INTO patients
-       (patient_id, display_code, enrolled_by, full_name, birthdate, age, sex,
+       (patient_id, display_code, enrolled_by, full_name, first_name, middle_name,
+        last_name, birthdate, age, sex,
         barangay_code, sitio, contact_number, sms_consent, consent_date,
         created_at, updated_at, sync_status)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending')`,
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending')`,
     [
       p.patient_id,
       p.display_code,
       p.enrolled_by,
       p.full_name,
+      p.first_name,
+      p.middle_name,
+      p.last_name,
       p.birthdate,
       p.age,
       p.sex,
@@ -96,6 +106,9 @@ export async function updateLocalPatientDetails(
   patientId: string,
   fields: {
     full_name: string;
+    first_name: string;
+    middle_name: string | null;
+    last_name: string;
     birthdate: string | null;
     age: number;
     sex: string;
@@ -107,12 +120,16 @@ export async function updateLocalPatientDetails(
   const db = await getDb();
   await db.runAsync(
     `UPDATE patients
-     SET full_name = ?, birthdate = ?, age = ?, sex = ?,
+     SET full_name = ?, first_name = ?, middle_name = ?, last_name = ?,
+         birthdate = ?, age = ?, sex = ?,
          sms_consent = ?, contact_number = ?, consent_date = ?,
          updated_at = ?, sync_status = 'pending'
      WHERE patient_id = ?`,
     [
       fields.full_name,
+      fields.first_name,
+      fields.middle_name,
+      fields.last_name,
       fields.birthdate,
       fields.age,
       fields.sex,
@@ -183,14 +200,18 @@ export async function upsertPulledPatient(server: PatientRow): Promise<void> {
 
   await db.runAsync(
     `INSERT INTO patients
-       (patient_id, display_code, enrolled_by, full_name, birthdate, age, sex,
+       (patient_id, display_code, enrolled_by, full_name, first_name, middle_name,
+        last_name, birthdate, age, sex,
         barangay_code, sitio, contact_number, sms_consent, consent_date,
         created_at, updated_at, sync_status)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'synced')
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'synced')
      ON CONFLICT(patient_id) DO UPDATE SET
        display_code   = excluded.display_code,
        enrolled_by    = excluded.enrolled_by,
        full_name      = excluded.full_name,
+       first_name     = excluded.first_name,
+       middle_name    = excluded.middle_name,
+       last_name      = excluded.last_name,
        birthdate      = excluded.birthdate,
        age            = excluded.age,
        sex            = excluded.sex,
@@ -207,6 +228,9 @@ export async function upsertPulledPatient(server: PatientRow): Promise<void> {
       server.display_code,
       server.enrolled_by,
       server.full_name ?? null,
+      server.first_name ?? null,
+      server.middle_name ?? null,
+      server.last_name ?? null,
       server.birthdate ?? null,
       server.age,
       server.sex,

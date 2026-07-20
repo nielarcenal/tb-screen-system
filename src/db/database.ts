@@ -157,6 +157,16 @@ const MIGRATIONS: string[] = [
   `
   ALTER TABLE ref_cities ADD COLUMN default_facility_id TEXT;
   `,
+
+  // v7 — patient name split into parts (server migration 0010). full_name stays
+  // as the composed display string every reader uses; the app writes all four
+  // together. Nullable: rows enrolled before this have parts only after the
+  // server backfill reaches them via pull.
+  `
+  ALTER TABLE patients ADD COLUMN first_name TEXT;
+  ALTER TABLE patients ADD COLUMN middle_name TEXT;
+  ALTER TABLE patients ADD COLUMN last_name TEXT;
+  `,
 ];
 
 // Bundled PSGC dataset — Bukidnon only (documented delimitation, §6). Generated

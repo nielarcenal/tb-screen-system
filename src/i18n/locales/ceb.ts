@@ -153,6 +153,9 @@ export const ceb: Translation = {
     detailsSection: 'Detalye sa pasyente',
     // TODO i18n verify
     fullNameLabel: 'Tibuok nga ngalan',
+    firstNameLabel: 'Ngalan',
+    middleNameLabel: 'Tunga nga ngalan',
+    lastNameLabel: 'Apelyido',
     birthdateLabel: 'Petsa sa pagkatawo',
     ageLabel: 'Edad',
     ageError: 'Pagbutang og edad gikan 0 hangtod 129.',
