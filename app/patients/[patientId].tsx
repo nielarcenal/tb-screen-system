@@ -355,15 +355,28 @@ export default function PatientDetailScreen() {
                   gap: 10,
                 }}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <Switch value={edSms} onValueChange={setEdSms} color={palette.teal} />
+                <Pressable
+                  onPress={() => setEdSms((on) => !on)}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: edSms }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                    minHeight: 52,
+                  }}
+                >
+                  {/* Visual only — the row owns the press (see ConsentFields). */}
+                  <View pointerEvents="none">
+                    <Switch value={edSms} color={palette.teal} />
+                  </View>
                   <Text
                     variant="bodyMedium"
                     style={{ color: palette.ink, fontWeight: '600', flex: 1 }}
                   >
                     {t('consent.smsOptInLabel')}
                   </Text>
-                </View>
+                </Pressable>
                 {edSms ? (
                   <>
                     <TextInput

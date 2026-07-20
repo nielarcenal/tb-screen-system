@@ -84,6 +84,8 @@ export default function ConsentFields({ value, onChange }: Props) {
         </Text>
         <Pressable
           onPress={() => onChange({ ...value, consentGiven: !value.consentGiven })}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: value.consentGiven }}
           style={{
             marginTop: 14,
             flexDirection: 'row',
@@ -96,11 +98,11 @@ export default function ConsentFields({ value, onChange }: Props) {
             backgroundColor: palette.paper,
           }}
         >
-          <Switch
-            value={value.consentGiven}
-            onValueChange={(consentGiven) => onChange({ ...value, consentGiven })}
-            color={palette.teal}
-          />
+          {/* Visual only: the row owns the press, so tapping the switch itself
+              can't fire a second toggle that cancels the row's. */}
+          <View pointerEvents="none">
+            <Switch value={value.consentGiven} color={palette.teal} />
+          </View>
           <Text
             variant="bodyMedium"
             style={{ color: palette.ink, fontWeight: '600', flex: 1 }}
@@ -120,8 +122,15 @@ export default function ConsentFields({ value, onChange }: Props) {
           padding: 18,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Switch value={value.smsOptIn} onValueChange={toggleSms} color={palette.teal} />
+        <Pressable
+          onPress={() => toggleSms(!value.smsOptIn)}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: value.smsOptIn }}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52 }}
+        >
+          <View pointerEvents="none">
+            <Switch value={value.smsOptIn} color={palette.teal} />
+          </View>
           <View style={{ flex: 1, gap: 2 }}>
             <Text variant="bodyLarge" style={{ color: palette.ink, fontWeight: '600' }}>
               {t('consent.smsOptInLabel')}
@@ -130,7 +139,7 @@ export default function ConsentFields({ value, onChange }: Props) {
               {t('consent.smsHint')}
             </Text>
           </View>
-        </View>
+        </Pressable>
 
         {/* Contact number field appears ONLY on SMS opt-in (privacy §4). */}
         {value.smsOptIn ? (
