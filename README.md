@@ -51,7 +51,22 @@ Useful scripts: `web` — `npm run dev`, `npm run build`, `npm run typecheck`. `
 
 ## Repository history
 
-`mobile/`, `web/`, and `supabase/` were originally three separate Git repositories. Their full histories are preserved in this monorepo via subtree merges, so `git log --follow` works across the split.
+`mobile/`, `web/`, and `supabase/` were originally three separate Git repositories. Their full histories are preserved here via subtree merges — every original commit is reachable, and `git log` shows all of them.
+
+One caveat: because the pre-merge commits recorded paths *without* the `mobile/`, `web/`, `supabase/` prefix, a path-filtered log stops at the merge:
+
+```bash
+git log -- mobile/          # only shows the merge commit onward
+```
+
+To read a component's history from before the merge, walk the merge commit's second parent:
+
+```bash
+git log <merge-commit>^2                 # full pre-merge history of that component
+git log <merge-commit>^2 -- app.json     # a single file, using its original path
+```
+
+The merge commits are titled *"Merge the &lt;component&gt; repository into &lt;component&gt;/"*.
 
 ## Localization
 
