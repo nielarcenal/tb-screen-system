@@ -1,0 +1,436 @@
+/* TB-Screen portal styling — matches the approved design canvas
+   ("TB-Screen BHW.dc.html", section 1b): deep teal primary, warm off-white
+   surfaces, pill buttons and tonal status chips. The portal stays tables and
+   forms (§2) — this is presentation only. */
+:root {
+  --teal: #028090;
+  --teal-dark: #016575;
+  --teal-deep: #014b57;
+  --teal-container: #d9eeef;
+  --teal-border: #7cbec6;
+  --seafoam: #00a896;
+
+  --bg: #f7f5f1;
+  --paper: #ffffff;
+  --subtle: #f3f0ea;
+  --tonal: #ede8e0;
+  --line: #e3ded6;
+  --outline: #c9c2b6;
+
+  --ink: #20302e;
+  --ink-mid: #4a5754;
+  --ink-soft: #5a6b68;
+  --muted: #8a968f;
+
+  --red: #96362e;
+  --red-container: #fbe7e5;
+  --amber: #8a5e00;
+  --amber-container: #f7ecd8;
+  --amber-ink: #6f4c00;
+  --amber-border: #e0c98f;
+
+  /* legacy aliases used by components */
+  --brand: var(--teal);
+  --brand-ink: #ffffff;
+  --accent: var(--subtle);
+  --danger: var(--red);
+  --ok: var(--teal-dark);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Roboto, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+/* ---------- top bar ---------- */
+.topbar {
+  background: var(--paper);
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 24px;
+  min-height: 56px;
+}
+.topbar h1 {
+  font-size: 15px;
+  margin: 0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* teal app mark before the title (Material Symbols ligature) */
+.topbar h1::before {
+  content: 'health_and_safety';
+  font-family: 'Material Symbols Outlined';
+  font-weight: 400;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--teal);
+  color: #fff;
+  font-size: 18px;
+}
+.msym {
+  font-family: 'Material Symbols Outlined';
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1;
+  display: inline-block;
+}
+.topbar .who { font-size: 13px; color: var(--ink-soft); }
+.topbar .org {
+  font-size: 12px;
+  color: var(--muted);
+  border-left: 1px solid var(--line);
+  padding-left: 12px;
+  font-weight: 400;
+}
+.topbar select {
+  padding: 6px 8px;
+  border: 1.5px solid var(--outline);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+}
+/* avatar initials circle */
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--teal-container);
+  color: var(--teal-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+/* tabs live INSIDE the topbar (design 1b) */
+.topbar .tabs { margin: 0 0 0 16px; flex: 1; }
+
+main { max-width: 1100px; margin: 0 auto; padding: 20px 24px; }
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px 22px;
+  margin-bottom: 16px;
+}
+/* Small standalone cards (forms, one-time password panels, confirm dialogs)
+   sit centered in the page instead of hugging the left edge. */
+.card.centered { margin-left: auto; margin-right: auto; }
+
+h2 { font-size: 17px; margin: 0 0 12px; font-weight: 600; }
+h3 {
+  font-size: 11.5px;
+  margin: 18px 0 8px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---------- tables ---------- */
+table { border-collapse: collapse; width: 100%; }
+th, td { border: none; padding: 10px 12px; text-align: left; }
+thead th {
+  background: var(--subtle);
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+thead th:first-child { border-radius: 8px 0 0 8px; }
+thead th:last-child { border-radius: 0 8px 8px 0; }
+tbody td { border-top: 1px solid #f0ede7; }
+tbody tr.rowlink { cursor: pointer; }
+tbody tr.rowlink:hover { background: #f0f7f7; }
+
+/* ---------- chips ---------- */
+.chip {
+  display: inline-block;
+  border: none;
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: var(--tonal);
+  color: var(--ink-mid);
+  white-space: nowrap;
+}
+.chip.submitted { background: var(--amber-container); color: var(--amber-ink); }
+.chip.received  { background: var(--tonal); color: var(--ink-mid); }
+.chip.tested    { background: var(--teal-container); color: var(--teal-dark); }
+.chip.closed    { background: var(--teal); color: #ffffff; }
+.chip.noshow    { background: var(--red-container); color: var(--red); }
+
+/* ---------- buttons: pills ---------- */
+button {
+  font: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 9px 18px;
+  border: none;
+  border-radius: 999px;
+  background: var(--teal);
+  color: #ffffff;
+  cursor: pointer;
+}
+button:hover { background: var(--teal-dark); }
+button.secondary {
+  background: transparent;
+  color: var(--ink-mid);
+  border: 1.5px solid var(--outline);
+}
+button.secondary:hover { background: var(--subtle); }
+button:disabled {
+  background: var(--line);
+  color: #9c948a;
+  border-color: transparent;
+  cursor: default;
+}
+button + button { margin-left: 8px; }
+
+/* ---------- inputs ---------- */
+input, select, textarea {
+  font: inherit;
+  padding: 9px 12px;
+  border: 1.5px solid var(--outline);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+}
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+}
+label { display: block; margin: 10px 0 4px; color: var(--ink-mid); font-weight: 500; font-size: 12.5px; }
+
+.toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.toolbar input[type='search'] { flex: 1; min-width: 220px; border-radius: 999px; }
+
+.kv { border: none; }
+.kv td { border: none; padding: 3px 16px 3px 0; }
+.kv td:first-child { color: var(--muted); white-space: nowrap; }
+
+.error { color: var(--danger); margin: 8px 0; }
+.mutedline { color: var(--muted); font-size: 12px; }
+.footnote {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px 24px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* ---------- tabs: pills, teal-container when active ---------- */
+.tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+.tabs button {
+  background: var(--teal-container);
+  color: var(--teal-deep);
+}
+.tabs button:hover { background: var(--teal-container); }
+.tabs button.secondary {
+  background: transparent;
+  color: var(--ink-soft);
+  border: none;
+}
+.tabs button.secondary:hover { background: var(--subtle); }
+
+/* ---------- hotspot bars ---------- */
+/* design: rank 1 deep teal, ranks 2–3 seafoam, the rest light teal */
+.heatbar {
+  height: 22px;
+  min-width: 2px;
+  background: var(--teal-border);
+  border-radius: 6px;
+  opacity: 1;
+}
+tbody tr:nth-child(-n + 3) .heatbar { background: var(--seafoam); }
+tbody tr:first-child .heatbar { background: var(--teal); }
+
+/* ---------- master-detail split (design 1b: inbox + side panel) ---------- */
+.split {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.split > .master { flex: 1 1 480px; min-width: 0; }
+.split > .detailpanel {
+  flex: 0 0 400px;
+  max-width: 100%;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+.detailpanel .placeholder {
+  padding: 100px 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+tbody tr.rowlink.selected { background: #f0f7f7; }
+
+/* compact screening-summary box in the detail panel */
+.summarybox {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.summarybox .row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+}
+.summarybox .row .q { color: var(--ink-mid); }
+.summarybox .row .v { font-weight: 600; }
+.summarybox .row .v.yes { color: var(--teal-dark); }
+.summarybox .row .v.unsure { color: var(--amber); }
+.summarybox .row .v.no { color: var(--muted); }
+.summarybox .pgis {
+  border-top: 1px dashed var(--line);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+.tag-patient {
+  font-size: 10.5px;
+  color: var(--amber);
+  background: var(--amber-container);
+  border-radius: 8px;
+  padding: 1px 7px;
+  font-weight: 600;
+}
+
+/* stacked full-width action pills */
+.actionstack { display: flex; flex-direction: column; gap: 8px; }
+.actionstack .pair { display: flex; gap: 8px; }
+.actionstack .pair > button { flex: 1; margin: 0; }
+.actionstack > button { width: 100%; margin: 0; }
+button.done {
+  background: var(--teal-container);
+  color: var(--teal-dark);
+  border: none;
+}
+button.done:hover { background: var(--teal-container); }
+button.amber {
+  background: transparent;
+  color: var(--amber-ink);
+  border: 1.5px solid var(--amber-border);
+}
+button.amber.on { background: var(--amber-container); }
+button.amber:hover { background: var(--amber-container); }
+.notebox {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+/* ---------- hotspot ranked bars (design 1b) ---------- */
+.pillrow { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.pillrow button.secondary { border-color: var(--outline); }
+.hotlist {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 760px;
+}
+.hotrow {
+  display: grid;
+  grid-template-columns: 24px minmax(120px, 180px) 1fr 40px;
+  gap: 12px;
+  align-items: center;
+}
+.hotrow .rank {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  font-family: ui-monospace, Menlo, monospace;
+}
+.hotrow .name { font-size: 13.5px; font-weight: 500; color: var(--ink); }
+.hotrow .name .city { font-size: 11px; color: var(--muted); font-weight: 400; }
+.hotrow .track {
+  height: 22px;
+  border-radius: 6px;
+  background: var(--tonal);
+  overflow: hidden;
+}
+.hotrow .count { font-size: 14px; font-weight: 700; color: var(--ink); text-align: right; }
+
+/* ---------- dashboard stat cards (design 1b) ---------- */
+.statgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  max-width: 1120px;
+}
+.statcard {
+  border-radius: 14px;
+  padding: 18px 16px;
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid transparent;
+}
+.statcard .n { font-size: 34px; font-weight: 700; line-height: 1; }
+.statcard .label { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.statcard .sub { font-size: 11.5px; line-height: 1.4; opacity: 0.85; }
+.statcard.teal { background: var(--teal-container); color: var(--teal-deep); }
+.statcard.teal .n { color: var(--teal-dark); }
+.statcard.red { background: var(--red-container); color: #7a2b24; }
+.statcard.red .n { color: var(--red); }
+.statcard.neutral { background: var(--subtle); color: var(--ink-soft); }
+.statcard.neutral .n { color: var(--ink-mid); }
+.statcard.plain { background: var(--paper); border-color: var(--line); color: var(--muted); }
+.statcard.plain .n { color: var(--teal-dark); }
+.statcard.plain .label { color: var(--ink-mid); }
+.statcard.plain.red-n .n { color: var(--red); }
+
+/* ---------- login ---------- */
+.login {
+  max-width: 380px;
+  margin: 60px auto;
+  padding: 32px;
+}
+.login input { width: 100%; }
+.login button { width: 100%; margin-top: 16px; padding: 12px 18px; font-size: 14px; }
+.loginhead { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.loginhead .mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--teal);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.login .rolepair { display: flex; gap: 8px; margin-bottom: 4px; }
+.login .rolepair button { flex: 1; width: auto; margin: 0; padding: 10px 8px; }
+.loginhead h2 { margin: 0; font-size: 17px; }
+.loginhead .sub { font-size: 12px; color: var(--muted); }
