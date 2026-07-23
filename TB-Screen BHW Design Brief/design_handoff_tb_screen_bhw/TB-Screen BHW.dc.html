@@ -1,0 +1,1974 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#ECE9E2;font-family:Roboto,system-ui,sans-serif;}
+a{color:#028090;} a:hover{color:#016575;}
+input,select,button,textarea{font-family:Roboto,system-ui,sans-serif;}
+input:focus,select:focus{outline:2px solid #028090;outline-offset:1px;}
+</style>
+</helmet>
+
+<!-- ============ HEADER ============ -->
+<section style="padding:36px 44px 8px;">
+  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+    <span style="font-size:11px;font-weight:700;letter-spacing:0.08em;background:#028090;color:#FFFFFF;padding:4px 9px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;">TB-SCREEN BHW</span>
+    <span style="font-size:20px;font-weight:600;color:#20302E;">Hi-fi clickable prototype — BHW mobile app + TB-DOTS portal</span>
+  </div>
+  <div style="margin-top:10px;max-width:920px;font-size:13px;line-height:1.6;color:#5A6B68;">
+    Material 3 / React Native Paper conventions · deep teal <span style="font-family:ui-monospace,Menlo,monospace;">#028090</span> primary, seafoam <span style="font-family:ui-monospace,Menlo,monospace;">#00A896</span> accent, warm off-white surfaces · large touch targets (≥52px) · pre-screening language only, no scores · offline is a calm, normal state. Phone (<a href="#1a">1a</a>) and portal (<a href="#1b">1b</a>) are live — click through them. Also: trilingual enrollment (<a href="#1c">1c</a>), printed specimen form (<a href="#1d">1d</a>), component sheet (<a href="#1e">1e</a>).
+  </div>
+</section>
+
+<!-- ============ 1a MOBILE APP ============ -->
+<section id="1a" style="padding:28px 44px 40px;display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;">
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;align-items:baseline;gap:8px;">
+      <a href="#1a" style="font-size:10.5px;font-weight:600;font-family:ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,0.08);color:#1a1a1a;border-radius:5px;text-decoration:none;">1a</a>
+      <span style="font-size:12px;color:#5A6B68;">BHW mobile app — live, tap through it</span>
+    </div>
+    <x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" hint-size="412px,892px">
+      <div style="display:flex;flex-direction:column;min-height:100%;background:#FBF9F6;">
+
+        <!-- 1. LANGUAGE PICKER -->
+        <sc-if value="{{ isLang }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;min-height:812px;padding:32px 24px 28px;box-sizing:border-box;">
+            <div style="margin-top:40px;display:flex;flex-direction:column;align-items:center;gap:14px;">
+              <div style="width:72px;height:72px;border-radius:22px;background:#028090;display:flex;align-items:center;justify-content:center;">
+                <span style="font-family:'Material Symbols Outlined';font-size:38px;color:#FFFFFF;">health_and_safety</span>
+              </div>
+              <div style="font-size:24px;font-weight:600;color:#20302E;">TB-Screen BHW</div>
+              <div style="font-size:14px;color:#5A6B68;text-align:center;line-height:1.5;">Pre-screening support tool for<br>Barangay Health Workers</div>
+            </div>
+            <div style="margin-top:44px;display:flex;flex-direction:column;gap:14px;">
+              <sc-for list="{{ langOpts }}" as="L" hint-placeholder-count="3">
+                <button onClick="{{ L.onPick }}" style="display:flex;align-items:center;gap:16px;min-height:72px;padding:12px 20px;border-radius:16px;border:{{ L.border }};background:{{ L.bg }};cursor:pointer;text-align:left;">
+                  <span style="font-size:26px;">{{ L.flag }}</span>
+                  <span style="display:flex;flex-direction:column;gap:2px;">
+                    <span style="font-size:18px;font-weight:600;color:#20302E;">{{ L.native }}</span>
+                    <span style="font-size:13px;color:#5A6B68;">{{ L.sub }}</span>
+                  </span>
+                  <span style="margin-left:auto;font-family:'Material Symbols Outlined';font-size:24px;color:{{ L.checkColor }};">check_circle</span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="flex:1;"></div>
+            <button onClick="{{ langContinue }}" style="height:56px;border-radius:28px;border:none;background:#028090;color:#FFFFFF;font-size:17px;font-weight:600;cursor:pointer;">{{ t.continueBtn }}</button>
+            <div style="margin-top:12px;text-align:center;font-size:12.5px;color:#8A968F;">{{ t.langSub }}</div>
+          </div>
+        </sc-if>
+
+        <!-- 2. TERMS + DISCLAIMER -->
+        <sc-if value="{{ isTerms }}">
+          <div style="display:flex;flex-direction:column;min-height:812px;box-sizing:border-box;">
+            <div style="padding:20px 24px 12px;">
+              <div style="font-size:23px;font-weight:600;color:#20302E;">{{ t.termsTitle }}</div>
+            </div>
+            <div style="flex:1;overflow:auto;padding:4px 24px 12px;display:flex;flex-direction:column;gap:16px;">
+              <div style="background:#D9EEEF;border:1.5px solid #028090;border-radius:16px;padding:18px;display:flex;gap:14px;">
+                <span style="font-family:'Material Symbols Outlined';font-size:28px;color:#016575;">info</span>
+                <div>
+                  <div style="font-size:16px;font-weight:700;color:#014B57;line-height:1.35;">{{ t.discTitle }}</div>
+                  <div style="margin-top:6px;font-size:14px;line-height:1.55;color:#014B57;">{{ t.discBody }}</div>
+                </div>
+              </div>
+              <div style="background:#FFFFFF;border:1px solid #E3DED6;border-radius:16px;padding:18px;font-size:13.5px;line-height:1.65;color:#4A5754;">
+                <div style="font-weight:600;color:#20302E;margin-bottom:6px;">1. {{ t.tc1h }}</div>
+                <div>{{ t.tc1b }}</div>
+                <div style="font-weight:600;color:#20302E;margin:14px 0 6px;">2. {{ t.tc2h }}</div>
+                <div>{{ t.tc2b }}</div>
+                <div style="font-weight:600;color:#20302E;margin:14px 0 6px;">3. {{ t.tc3h }}</div>
+                <div>{{ t.tc3b }}</div>
+              </div>
+            </div>
+            <div style="padding:14px 24px 24px;background:#FBF9F6;border-top:1px solid #EDE8E0;">
+              <button onClick="{{ acceptTerms }}" style="width:100%;height:56px;border-radius:28px;border:none;background:#028090;color:#FFFFFF;font-size:17px;font-weight:600;cursor:pointer;">{{ t.termsAccept }}</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- 3. LOGIN -->
+        <sc-if value="{{ isLogin }}">
+          <div style="display:flex;flex-direction:column;min-height:812px;padding:32px 24px;box-sizing:border-box;">
+            <div style="margin-top:56px;display:flex;flex-direction:column;align-items:center;gap:12px;">
+              <div style="width:60px;height:60px;border-radius:18px;background:#028090;display:flex;align-items:center;justify-content:center;">
+                <span style="font-family:'Material Symbols Outlined';font-size:32px;color:#FFFFFF;">health_and_safety</span>
+              </div>
+              <div style="font-size:22px;font-weight:600;color:#20302E;">{{ t.signIn }}</div>
+              <div style="font-size:13px;color:#8A968F;">{{ t.loginHint }}</div>
+            </div>
+            <div style="margin-top:36px;display:flex;flex-direction:column;gap:16px;">
+              <label style="display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:13px;font-weight:500;color:#4A5754;">{{ t.email }}</span>
+                <input type="email" value="{{ email }}" onChange="{{ setEmail }}" placeholder="rosario.bhw@rhu-argao.ph" style="height:56px;border-radius:12px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 16px;font-size:16px;color:#20302E;box-sizing:border-box;">
+              </label>
+              <label style="display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:13px;font-weight:500;color:#4A5754;">{{ t.password }}</span>
+                <input type="password" value="{{ pw }}" onChange="{{ setPw }}" placeholder="••••••••" style="height:56px;border-radius:12px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 16px;font-size:16px;color:#20302E;box-sizing:border-box;">
+              </label>
+            </div>
+            <button onClick="{{ doLogin }}" style="margin-top:28px;height:56px;border-radius:28px;border:none;background:#028090;color:#FFFFFF;font-size:17px;font-weight:600;cursor:pointer;">{{ t.loginBtn }}</button>
+            <div style="flex:1;"></div>
+            <div style="text-align:center;font-size:12px;color:#8A968F;line-height:1.5;">TB-Screen BHW · v1.0<br>{{ t.discTitle }}</div>
+          </div>
+        </sc-if>
+
+        <!-- 4. HOME -->
+        <sc-if value="{{ isHome }}">
+          <div style="display:flex;flex-direction:column;min-height:812px;box-sizing:border-box;">
+            <div style="padding:16px 20px 6px;display:flex;align-items:center;gap:10px;">
+              <div style="display:flex;flex-direction:column;">
+                <span style="font-size:13px;color:#8A968F;">{{ t.hello }}</span>
+                <span style="font-size:21px;font-weight:600;color:#20302E;">Rosario D.</span>
+              </div>
+              <div style="flex:1;"></div>
+              <button onClick="{{ cycleSync }}" title="Tap to preview sync states" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:17px;border:1px solid {{ syncBd }};background:{{ syncBg }};color:{{ syncFg }};font-size:12.5px;font-weight:600;cursor:pointer;">
+                <span style="font-family:'Material Symbols Outlined';font-size:17px;">{{ syncIcon }}</span>{{ syncLabel }}
+              </button>
+              <button onClick="{{ toSettings }}" style="width:44px;height:44px;border-radius:22px;border:none;background:#EDE8E0;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                <span style="font-family:'Material Symbols Outlined';font-size:23px;color:#4A5754;">settings</span>
+              </button>
+            </div>
+            <sc-if value="{{ syncBanner }}">
+              <div style="margin:8px 20px 0;padding:10px 14px;border-radius:12px;background:#F3F0EA;display:flex;align-items:center;gap:10px;font-size:12.5px;color:#5A6B68;line-height:1.4;">
+                <span style="font-family:'Material Symbols Outlined';font-size:18px;color:#8A968F;">cloud_off</span>{{ t.offlineNote }}
+              </div>
+            </sc-if>
+            <div style="padding:14px 20px 0;">
+              <div style="font-size:13px;font-weight:600;color:#8A968F;letter-spacing:0.06em;">{{ t.todayTitle }} · Jul 7, 2026</div>
+              <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+                <button onClick="{{ toFollowUpcoming }}" style="border:none;background:#D9EEEF;border-radius:16px;padding:14px 12px;display:flex;flex-direction:column;gap:4px;cursor:pointer;text-align:left;min-height:96px;">
+                  <span style="font-size:30px;font-weight:700;color:#016575;">{{ statUpcoming }}</span>
+                  <span style="font-size:12.5px;font-weight:500;color:#014B57;line-height:1.3;">{{ t.upcoming }}</span>
+                </button>
+                <button onClick="{{ toFollowMissed }}" style="border:none;background:#FBE7E5;border-radius:16px;padding:14px 12px;display:flex;flex-direction:column;gap:4px;cursor:pointer;text-align:left;min-height:96px;">
+                  <span style="font-size:30px;font-weight:700;color:#96362E;">{{ statMissed }}</span>
+                  <span style="font-size:12.5px;font-weight:500;color:#7A2B24;line-height:1.3;">{{ t.missed }}</span>
+                </button>
+                <button onClick="{{ toFollowDnp }}" style="border:none;background:#F7ECD8;border-radius:16px;padding:14px 12px;display:flex;flex-direction:column;gap:4px;cursor:pointer;text-align:left;min-height:96px;">
+                  <span style="font-size:30px;font-weight:700;color:#8A5E00;">{{ statDnp }}</span>
+                  <span style="font-size:12.5px;font-weight:500;color:#6F4C00;line-height:1.3;">{{ t.dnp }}</span>
+                </button>
+              </div>
+            </div>
+            <div style="padding:18px 20px 0;">
+              <button onClick="{{ toEnroll }}" style="width:100%;height:64px;border-radius:20px;border:none;background:#028090;color:#FFFFFF;font-size:18px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+                <span style="font-family:'Material Symbols Outlined';font-size:26px;">add_circle</span>{{ t.newScreening }}
+              </button>
+            </div>
+            <div style="padding:18px 20px 8px;">
+              <div style="display:flex;align-items:center;gap:10px;height:52px;border-radius:26px;background:#EDE8E0;padding:0 18px;">
+                <span style="font-family:'Material Symbols Outlined';font-size:22px;color:#8A968F;">search</span>
+                <input value="{{ search }}" onChange="{{ setSearch }}" placeholder="{{ t.searchPh }}" style="flex:1;border:none;background:transparent;font-size:15px;color:#20302E;outline:none;">
+              </div>
+            </div>
+            <div style="flex:1;padding:4px 20px 20px;display:flex;flex-direction:column;gap:8px;">
+              <sc-for list="{{ patientRows }}" as="p" hint-placeholder-count="4">
+                <button onClick="{{ p.onOpen }}" style="display:flex;align-items:center;gap:14px;min-height:64px;padding:10px 14px;border-radius:14px;border:1px solid #EDE8E0;background:#FFFFFF;cursor:pointer;text-align:left;">
+                  <span style="width:42px;height:42px;border-radius:21px;background:#D9EEEF;color:#016575;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;flex-shrink:0;">{{ p.initials }}</span>
+                  <span style="display:flex;flex-direction:column;gap:2px;min-width:0;">
+                    <span style="font-size:15.5px;font-weight:500;color:#20302E;">{{ p.name }}</span>
+                    <span style="font-size:12.5px;color:#8A968F;">{{ p.code }} · {{ p.brgy }}</span>
+                  </span>
+                  <span style="margin-left:auto;font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:12px;background:{{ p.chipBg }};color:{{ p.chipFg }};white-space:nowrap;">{{ p.chip }}</span>
+                </button>
+              </sc-for>
+              <sc-if value="{{ searchEmpty }}">
+                <div style="padding:28px 16px;text-align:center;color:#8A968F;font-size:14px;line-height:1.5;">
+                  <span style="font-family:'Material Symbols Outlined';font-size:34px;color:#C9C2B6;">person_search</span>
+                  <div style="margin-top:8px;">{{ t.noResults }}</div>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- 5. SETTINGS -->
+        <sc-if value="{{ isSettings }}">
+          <div style="display:flex;flex-direction:column;min-height:812px;box-sizing:border-box;">
+            <div style="padding:14px 12px 6px;display:flex;align-items:center;gap:4px;">
+              <button onClick="{{ toHome }}" style="width:48px;height:48px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <span style="font-family:'Material Symbols Outlined';font-size:24px;color:#20302E;">arrow_back</span>
+              </button>
+              <span style="font-size:22px;font-weight:500;color:#20302E;">{{ t.settings }}</span>
+            </div>
+            <div style="padding:10px 20px 24px;display:flex;flex-direction:column;gap:20px;">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#8A968F;letter-spacing:0.06em;margin-bottom:10px;">{{ t.language }}</div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  <sc-for list="{{ langOpts }}" as="L" hint-placeholder-count="3">
+                    <button onClick="{{ L.onPick }}" style="display:flex;align-items:center;gap:14px;min-height:56px;padding:8px 16px;border-radius:14px;border:{{ L.border }};background:{{ L.bg }};cursor:pointer;text-align:left;">
+                      <span style="font-size:20px;">{{ L.flag }}</span>
+                      <span style="font-size:16px;font-weight:500;color:#20302E;">{{ L.native }}</span>
+                      <span style="margin-left:auto;font-family:'Material Symbols Outlined';font-size:22px;color:{{ L.checkColor }};">check_circle</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#8A968F;letter-spacing:0.06em;margin-bottom:4px;">{{ t.assignedBrgy }}</div>
+                <div style="font-size:12.5px;color:#8A968F;margin-bottom:10px;">{{ t.assignedNote }}</div>
+                <div style="background:#FFFFFF;border:1px solid #E3DED6;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;">
+                  <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;color:#8A968F;">{{ t.region }}</span>
+                    <select value="{{ myRegion }}" onChange="{{ setMyRegion }}" style="height:48px;border-radius:10px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 10px;font-size:15px;color:#20302E;">
+                      <sc-for list="{{ regionOpts }}" as="o" hint-placeholder-count="1"><option value="{{ o }}">{{ o }}</option></sc-for>
+                    </select></label>
+                  <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;color:#8A968F;">{{ t.province }}</span>
+                    <select value="{{ myProv }}" onChange="{{ setMyProv }}" style="height:48px;border-radius:10px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 10px;font-size:15px;color:#20302E;">
+                      <sc-for list="{{ provOpts }}" as="o" hint-placeholder-count="1"><option value="{{ o }}">{{ o }}</option></sc-for>
+                    </select></label>
+                  <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;color:#8A968F;">{{ t.cityMun }}</span>
+                    <select value="{{ myCity }}" onChange="{{ setMyCity }}" style="height:48px;border-radius:10px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 10px;font-size:15px;color:#20302E;">
+                      <sc-for list="{{ cityOpts }}" as="o" hint-placeholder-count="1"><option value="{{ o }}">{{ o }}</option></sc-for>
+                    </select></label>
+                  <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;color:#8A968F;">{{ t.barangay }}</span>
+                    <select value="{{ myBrgy }}" onChange="{{ setMyBrgy }}" style="height:48px;border-radius:10px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 10px;font-size:15px;color:#20302E;">
+                      <sc-for list="{{ brgyOpts }}" as="o" hint-placeholder-count="1"><option value="{{ o }}">{{ o }}</option></sc-for>
+                    </select></label>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#8A968F;letter-spacing:0.06em;margin-bottom:10px;">{{ t.account }}</div>
+                <div style="background:#FFFFFF;border:1px solid #E3DED6;border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px;">
+                  <span style="width:44px;height:44px;border-radius:22px;background:#028090;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;">RD</span>
+                  <span style="display:flex;flex-direction:column;gap:2px;">
+                    <span style="font-size:15px;font-weight:500;color:#20302E;">Rosario Dizon</span>
+                    <span style="font-size:12.5px;color:#8A968F;">rosario.bhw@rhu-argao.ph</span>
+                  </span>
+                </div>
+                <button onClick="{{ signOut }}" style="margin-top:12px;width:100%;height:52px;border-radius:26px;border:1.5px solid #C9C2B6;background:transparent;color:#96362E;font-size:15px;font-weight:600;cursor:pointer;">{{ t.signOut }}</button>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- 6. ENROLLMENT -->
+        <sc-if value="{{ isEnroll }}">
+          <div style="display:flex;flex-direction:column;min-height:812px;box-sizing:border-box;">
+            <div style="padding:14px 12px 6px;display:flex;align-items:center;gap:4px;">
+              <button onClick="{{ toHome }}" style="width:48px;height:48px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <span style="font-family:'Material Symbols Outlined';font-size:24px;color:#20302E;">arrow_back</span>
+              </button>
+              <span style="font-size:22px;font-weight:500;color:#20302E;">{{ t.enrollTitle }}</span>
+            </div>
+            <sc-if value="{{ enrollForm }}" hint-placeholder-val="{{ true }}">
+              <div style="padding:8px 20px 28px;display:flex;flex-direction:column;gap:18px;">
+                <label style="display:flex;flex-direction:column;gap:6px;">
+                  <span style="font-size:13px;font-weight:500;color:#4A5754;">{{ t.fullName }} <span style="color:#96362E;">*</span></span>
+                  <input value="{{ enName }}" onChange="{{ setEnName }}" placeholder="Juan Dela Cruz" style="height:56px;border-radius:12px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 16px;font-size:16px;color:#20302E;box-sizing:border-box;">
+                </label>
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#4A5754;margin-bottom:6px;">{{ t.sex }}</div>
+                  <div style="display:flex;gap:10px;">
+                    <button onClick="{{ pickMale }}" style="flex:1;height:52px;border-radius:26px;border:{{ maleBd }};background:{{ maleBg }};color:{{ maleFg }};font-size:15px;font-weight:600;cursor:pointer;">{{ t.male }}</button>
+                    <button onClick="{{ pickFemale }}" style="flex:1;height:52px;border-radius:26px;border:{{ femaleBd }};background:{{ femaleBg }};color:{{ femaleFg }};font-size:15px;font-weight:600;cursor:pointer;">{{ t.female }}</button>
+                  </div>
+                </div>
+                <div style="display:flex;gap:12px;align-items:flex-end;">
+                  <label style="flex:1;display:flex;flex-direction:column;gap:6px;">
+                    <span style="font-size:13px;font-weight:500;color:#4A5754;">{{ t.birthdate }} <span style="color:#96362E;">*</span></span>
+                    <input type="date" value="{{ enDob }}" onChange="{{ setDob }}" style="height:56px;border-radius:12px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 14px;font-size:16px;color:#20302E;box-sizing:border-box;">
+                  </label>
+                  <div style="min-width:104px;height:56px;border-radius:12px;background:#EDE8E0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;">
+                    <span style="font-size:11px;color:#8A968F;">{{ t.agePrefix }}</span>
+                    <span style="font-size:19px;font-weight:700;color:{{ ageColor }};">{{ ageDisplay }}</span>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:#8A968F;letter-spacing:0.06em;margin:4px 0 8px;">{{ t.address }}</div>
+                  <div style="background:#FFFFFF;border:1px solid #E3DED6;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;">
+                    <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#016575;background:#D9EEEF;border-radius:10px;padding:8px 12px;">
+                      <span style="font-family:'Material Symbols Outlined';font-size:17px;">pin_drop</span>{{ t.prefillNote }}
+                    </div>
+                    <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;color:#8A968F;">{{ t.region }}</span>
+                      <select value="{{ enRegion }}" onChange="{{ setEnRegion }}" style="height:48px;border-radius:10px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 10px;font-size:15px;color:#20302E;">
+                        <sc-for list="{{ regionOpts }}" as="o" hint-placeholder-count="1"><option value="{{ o }}">{{ o }}</option></sc-for>
+                      </select></label>
+                    <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;color:#8A968F;">{{ t.province }}</span>
+                      <select value="{{ enProv }}" onChange="{{ setEnProv }}" style="height:48px;border-radius:10px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 10px;font-size:15px;color:#20302E;">
+                        <sc-for list="{{ provOpts }}" as="o" hint-placeholder-count="1"><option value="{{ o }}">{{ o }}</option></sc-for>
+                      </select></label>
+                    <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;color:#8A968F;">{{ t.cityMun }}</span>
+                      <select value="{{ enCity }}" onChange="{{ setEnCity }}" style="height:48px;border-radius:10px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 10px;font-size:15px;color:#20302E;">
+                        <sc-for list="{{ cityOpts }}" as="o" hint-placeholder-count="1"><option value="{{ o }}">{{ o }}</option></sc-for>
+                      </select></label>
+                    <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;color:#8A968F;">{{ t.barangay }}</span>
+                      <select value="{{ enBrgy }}" onChange="{{ setEnBrgy }}" style="height:48px;border-radius:10px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 10px;font-size:15px;color:#20302E;">
+                        <sc-for list="{{ brgyOpts }}" as="o" hint-placeholder-count="1"><option value="{{ o }}">{{ o }}</option></sc-for>
+                      </select></label>
+                    <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;color:#8A968F;">{{ t.sitio }}</span>
+                      <input value="{{ enSitio }}" onChange="{{ setSitio }}" placeholder="Sitio Ubos" style="height:48px;border-radius:10px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 14px;font-size:15px;color:#20302E;box-sizing:border-box;"></label>
+                  </div>
+                </div>
+                <div style="background:#D9EEEF;border:1.5px solid #7CBEC6;border-radius:16px;padding:18px;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-family:'Material Symbols Outlined';font-size:24px;color:#016575;">handshake</span>
+                    <span style="font-size:16px;font-weight:700;color:#014B57;">{{ t.consentTitle }}</span>
+                  </div>
+                  <div style="margin-top:8px;font-size:14px;line-height:1.6;color:#014B57;">{{ t.consentBody }}</div>
+                  <button onClick="{{ toggleConsent }}" style="margin-top:14px;width:100%;display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 14px;border-radius:14px;border:none;background:#FFFFFF;cursor:pointer;text-align:left;">
+                    <span style="width:52px;height:30px;border-radius:15px;background:{{ consentTrackBg }};position:relative;display:inline-block;flex-shrink:0;transition:background 0.15s;">
+                      <span style="position:absolute;top:3px;left:{{ consentKnobLeft }};width:24px;height:24px;border-radius:12px;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:left 0.15s;"></span>
+                    </span>
+                    <span style="font-size:14.5px;font-weight:600;color:#20302E;">{{ t.consentToggle }}</span>
+                  </button>
+                </div>
+                <div style="background:#FFFFFF;border:1px solid #E3DED6;border-radius:16px;padding:18px;">
+                  <button onClick="{{ toggleSms }}" style="width:100%;display:flex;align-items:center;gap:12px;border:none;background:transparent;cursor:pointer;text-align:left;padding:0;min-height:44px;">
+                    <span style="width:52px;height:30px;border-radius:15px;background:{{ smsTrackBg }};position:relative;display:inline-block;flex-shrink:0;transition:background 0.15s;">
+                      <span style="position:absolute;top:3px;left:{{ smsKnobLeft }};width:24px;height:24px;border-radius:12px;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:left 0.15s;"></span>
+                    </span>
+                    <span style="display:flex;flex-direction:column;gap:2px;">
+                      <span style="font-size:15px;font-weight:600;color:#20302E;">{{ t.smsTitle }}</span>
+                      <span style="font-size:12.5px;color:#8A968F;line-height:1.4;">{{ t.smsBody }}</span>
+                    </span>
+                  </button>
+                  <sc-if value="{{ smsOn }}">
+                    <label style="margin-top:14px;display:flex;flex-direction:column;gap:6px;">
+                      <span style="font-size:13px;font-weight:500;color:#4A5754;">{{ t.phone }}</span>
+                      <input type="tel" value="{{ enPhone }}" onChange="{{ setPhone }}" placeholder="0917 123 4567" style="height:56px;border-radius:12px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 16px;font-size:16px;color:#20302E;box-sizing:border-box;">
+                    </label>
+                  </sc-if>
+                </div>
+                <button onClick="{{ submitEnroll }}" style="height:56px;border-radius:28px;border:none;background:{{ enrollBtnBg }};color:{{ enrollBtnFg }};font-size:17px;font-weight:600;cursor:pointer;">{{ t.enrollBtn }}</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ enrollDone }}">
+              <div style="padding:40px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;">
+                <span style="font-family:'Material Symbols Outlined';font-size:64px;color:#028090;">check_circle</span>
+                <div style="font-size:22px;font-weight:600;color:#20302E;">{{ t.enrolledTitle }}</div>
+                <div style="font-size:15px;color:#5A6B68;">{{ enNameDone }}</div>
+                <div style="font-size:26px;font-weight:700;letter-spacing:0.08em;color:#016575;background:#D9EEEF;border-radius:14px;padding:12px 24px;font-family:ui-monospace,Menlo,monospace;">{{ newCode }}</div>
+                <button onClick="{{ editEnrollment }}" style="display:flex;align-items:center;gap:6px;border:none;background:transparent;color:#028090;font-size:14px;font-weight:600;cursor:pointer;padding:8px 12px;">
+                  <span style="font-family:'Material Symbols Outlined';font-size:18px;">edit</span>{{ t.editDetails }}
+                </button>
+                <button onClick="{{ startScreening }}" style="margin-top:14px;width:100%;height:56px;border-radius:28px;border:none;background:#028090;color:#FFFFFF;font-size:17px;font-weight:600;cursor:pointer;">{{ t.startScreening }}</button>
+                <button onClick="{{ toHome }}" style="width:100%;height:52px;border-radius:26px;border:1.5px solid #C9C2B6;background:transparent;color:#4A5754;font-size:15px;font-weight:600;cursor:pointer;">{{ t.backHome }}</button>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <!-- 7. SCREENING -->
+        <sc-if value="{{ isScreening }}">
+          <div style="display:flex;flex-direction:column;min-height:812px;box-sizing:border-box;">
+            <div style="padding:14px 12px 0;display:flex;align-items:center;gap:4px;">
+              <button onClick="{{ screeningBack }}" style="width:48px;height:48px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <span style="font-family:'Material Symbols Outlined';font-size:24px;color:#20302E;">arrow_back</span>
+              </button>
+              <span style="display:flex;flex-direction:column;">
+                <span style="font-size:19px;font-weight:500;color:#20302E;">{{ t.screeningTitle }}</span>
+                <span style="font-size:12.5px;color:#8A968F;">{{ screeningPatient }}</span>
+              </span>
+            </div>
+            <div style="padding:14px 24px 0;">
+              <div style="height:6px;border-radius:3px;background:#EDE8E0;overflow:hidden;">
+                <div style="height:6px;border-radius:3px;background:#00A896;width:{{ progressPct }};transition:width 0.2s;"></div>
+              </div>
+              <div style="margin-top:8px;font-size:13px;font-weight:600;color:#8A968F;">{{ stepLabel }}</div>
+            </div>
+            <sc-if value="{{ isChecklist }}" hint-placeholder-val="{{ true }}">
+              <div style="flex:1;padding:22px 24px;display:flex;flex-direction:column;">
+                <div style="background:#FFFFFF;border:1px solid #E3DED6;border-radius:20px;padding:28px 22px;box-shadow:0 2px 8px rgba(32,48,46,0.05);">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;color:#00A896;">{{ t.checklistTag }}</div>
+                  <div style="margin-top:10px;font-size:23px;font-weight:600;line-height:1.35;color:#20302E;">{{ qText }}</div>
+                  <div style="margin-top:26px;display:flex;flex-direction:column;gap:12px;">
+                    <sc-for list="{{ triOpts }}" as="o" hint-placeholder-count="3">
+                      <button onClick="{{ o.onPick }}" style="display:flex;align-items:center;gap:12px;min-height:58px;padding:8px 18px;border-radius:29px;border:{{ o.border }};background:{{ o.bg }};color:{{ o.fg }};font-size:17px;font-weight:600;cursor:pointer;">
+                        <span style="font-family:'Material Symbols Outlined';font-size:23px;">{{ o.icon }}</span>{{ o.label }}
+                      </button>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isPgis }}">
+              <div style="flex:1;padding:22px 24px;display:flex;flex-direction:column;">
+                <div style="background:#FFF9EE;border:1.5px solid #E0C98F;border-radius:20px;padding:28px 22px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-family:'Material Symbols Outlined';font-size:19px;color:#8A5E00;">record_voice_over</span>
+                    <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;color:#8A5E00;">{{ t.pgisChip }}</span>
+                  </div>
+                  <div style="margin-top:10px;font-size:23px;font-weight:600;line-height:1.35;color:#20302E;">{{ t.pgisTitle }}</div>
+                  <div style="margin-top:8px;font-size:13.5px;line-height:1.5;color:#6F5B33;">{{ t.pgisNote }}</div>
+                  <div style="margin-top:24px;display:flex;flex-direction:column;gap:12px;">
+                    <sc-for list="{{ pgisOpts }}" as="o" hint-placeholder-count="4">
+                      <button onClick="{{ o.onPick }}" style="display:flex;align-items:center;justify-content:space-between;min-height:58px;padding:8px 20px;border-radius:29px;border:{{ o.border }};background:{{ o.bg }};color:{{ o.fg }};font-size:17px;font-weight:600;cursor:pointer;">
+                        {{ o.label }}<span style="font-family:'Material Symbols Outlined';font-size:22px;color:{{ o.checkColor }};">check_circle</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+            <div style="padding:14px 24px 26px;display:flex;gap:12px;background:#FBF9F6;border-top:1px solid #EDE8E0;">
+              <button onClick="{{ screeningBack }}" style="flex:1;height:54px;border-radius:27px;border:1.5px solid #C9C2B6;background:transparent;color:#4A5754;font-size:15.5px;font-weight:600;cursor:pointer;">{{ t.back }}</button>
+              <button onClick="{{ goNext }}" style="flex:2;height:54px;border-radius:27px;border:none;background:{{ nextBg }};color:{{ nextFg }};font-size:15.5px;font-weight:600;cursor:pointer;">{{ nextLabel }}</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- 7b. REVIEW ANSWERS -->
+        <sc-if value="{{ isReview }}">
+          <div style="display:flex;flex-direction:column;min-height:812px;box-sizing:border-box;">
+            <div style="padding:14px 12px 4px;display:flex;align-items:center;gap:4px;">
+              <button onClick="{{ backToPgis }}" style="width:48px;height:48px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <span style="font-family:'Material Symbols Outlined';font-size:24px;color:#20302E;">arrow_back</span>
+              </button>
+              <span style="display:flex;flex-direction:column;">
+                <span style="font-size:20px;font-weight:500;color:#20302E;">{{ t.reviewTitle }}</span>
+                <span style="font-size:12.5px;color:#8A968F;">{{ screeningPatient }}</span>
+              </span>
+            </div>
+            <div style="padding:4px 20px 8px;font-size:13px;color:#5A6B68;">{{ t.reviewHint }}</div>
+            <div style="flex:1;padding:6px 20px 12px;display:flex;flex-direction:column;gap:8px;">
+              <sc-for list="{{ reviewRows }}" as="rr" hint-placeholder-count="4">
+                <div style="background:#FFFFFF;border:1px solid #E3DED6;border-radius:14px;padding:12px 14px;">
+                  <div style="font-size:14px;font-weight:500;color:#20302E;line-height:1.4;">{{ rr.q }}</div>
+                  <div style="display:flex;gap:8px;margin-top:9px;">
+                    <sc-for list="{{ rr.opts }}" as="o" hint-placeholder-count="3">
+                      <button onClick="{{ o.onPick }}" style="flex:1;height:40px;border-radius:20px;border:{{ o.border }};background:{{ o.bg }};color:{{ o.fg }};font-size:13px;font-weight:600;cursor:pointer;">{{ o.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+              <div style="background:#FFF9EE;border:1.5px solid #E0C98F;border-radius:14px;padding:12px 14px;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span style="font-family:'Material Symbols Outlined';font-size:16px;color:#8A5E00;">record_voice_over</span>
+                  <span style="font-size:11px;font-weight:700;letter-spacing:0.07em;color:#8A5E00;">{{ t.pgisChip }}</span>
+                </div>
+                <div style="font-size:14px;font-weight:500;color:#20302E;line-height:1.4;margin-top:5px;">{{ t.pgisTitle }}</div>
+                <div style="display:flex;gap:6px;margin-top:9px;">
+                  <sc-for list="{{ reviewPgis }}" as="o" hint-placeholder-count="4">
+                    <button onClick="{{ o.onPick }}" style="flex:1;height:40px;border-radius:20px;border:{{ o.border }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+            <div style="padding:14px 24px 26px;background:#FBF9F6;border-top:1px solid #EDE8E0;">
+              <button onClick="{{ seeRecommendation }}" style="width:100%;height:54px;border-radius:27px;border:none;background:{{ reviewBtnBg }};color:{{ reviewBtnFg }};font-size:15.5px;font-weight:600;cursor:pointer;">{{ t.finish }}</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- 7c. RESULT -->
+        <sc-if value="{{ isResult }}">
+          <div style="display:flex;flex-direction:column;min-height:812px;padding:28px 24px;box-sizing:border-box;">
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:0;">
+              <div style="background:{{ resBg }};border:1.5px solid {{ resBd }};border-radius:24px;padding:32px 24px;text-align:center;">
+                <span style="font-family:'Material Symbols Outlined';font-size:56px;color:{{ resIconColor }};">{{ resIcon }}</span>
+                <div style="margin-top:14px;font-size:24px;font-weight:700;line-height:1.3;color:{{ resFg }};">{{ resTitle }}</div>
+                <div style="margin-top:10px;font-size:16px;line-height:1.5;color:{{ resFg }};">{{ resBody }}</div>
+              </div>
+              <div style="margin-top:16px;padding:14px 16px;border-radius:14px;background:#F3F0EA;display:flex;gap:10px;font-size:12.5px;line-height:1.55;color:#5A6B68;">
+                <span style="font-family:'Material Symbols Outlined';font-size:19px;color:#8A968F;flex-shrink:0;">info</span>{{ t.resultNote }}
+              </div>
+            </div>
+            <sc-if value="{{ resMeets }}">
+              <button onClick="{{ toReferral }}" style="height:56px;border-radius:28px;border:none;background:#028090;color:#FFFFFF;font-size:17px;font-weight:600;cursor:pointer;">{{ t.createReferral }}</button>
+            </sc-if>
+            <button onClick="{{ editAnswers }}" style="margin-top:12px;height:52px;border-radius:26px;border:1.5px solid #028090;background:transparent;color:#028090;font-size:15px;font-weight:600;cursor:pointer;">{{ t.editAnswers }}</button>
+            <button onClick="{{ toHome }}" style="margin-top:12px;height:52px;border-radius:26px;border:1.5px solid #C9C2B6;background:transparent;color:#4A5754;font-size:15px;font-weight:600;cursor:pointer;">{{ t.done }}</button>
+          </div>
+        </sc-if>
+
+        <!-- 8. REFERRAL + SPECIMEN FORM -->
+        <sc-if value="{{ isReferral }}">
+          <div style="display:flex;flex-direction:column;min-height:812px;box-sizing:border-box;">
+            <div style="padding:14px 12px 6px;display:flex;align-items:center;gap:4px;">
+              <button onClick="{{ toHome }}" style="width:48px;height:48px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <span style="font-family:'Material Symbols Outlined';font-size:24px;color:#20302E;">arrow_back</span>
+              </button>
+              <span style="font-size:20px;font-weight:500;color:#20302E;">{{ t.refTitle }}</span>
+            </div>
+            <div style="flex:1;padding:8px 20px 20px;display:flex;flex-direction:column;gap:14px;">
+              <div style="background:#FFFFFF;border:1px solid #E3DED6;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:12.5px;color:#8A968F;">{{ t.facility }}</span>
+                  <span style="font-size:14.5px;font-weight:600;color:#20302E;">Argao RHU TB-DOTS</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:12.5px;color:#8A968F;">{{ t.appt }}</span>
+                  <span style="font-size:14.5px;font-weight:600;color:#20302E;">Jul 10, 2026 · 8:00 AM</span>
+                </div>
+              </div>
+              <sc-if value="{{ refPending }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ confirmReferral }}" style="height:56px;border-radius:28px;border:none;background:#028090;color:#FFFFFF;font-size:16.5px;font-weight:600;cursor:pointer;">{{ t.confirmRef }}</button>
+              </sc-if>
+              <sc-if value="{{ refConfirmed }}">
+                <button onClick="{{ undoReferral }}" style="display:flex;align-items:center;gap:10px;padding:14px 16px;border:1.5px solid #7CBEC6;border-radius:28px;background:#D9EEEF;color:#014B57;font-size:14.5px;font-weight:600;cursor:pointer;width:100%;box-sizing:border-box;justify-content:center;min-height:56px;">
+                  <span style="font-family:'Material Symbols Outlined';font-size:22px;color:#016575;">check_circle</span>{{ t.confirmed }} · {{ syncLabel }}
+                </button>
+              </sc-if>
+              <div style="font-size:13px;font-weight:600;color:#8A968F;letter-spacing:0.06em;margin-top:4px;">{{ t.formPreview }}</div>
+              <div style="background:#FFFFFF;border:1px solid #C9C2B6;border-radius:8px;padding:18px 16px;box-shadow:0 3px 10px rgba(32,48,46,0.08);font-size:11.5px;color:#20302E;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #20302E;padding-bottom:8px;">
+                  <div>
+                    <div style="font-size:13px;font-weight:700;">TB-DOTS REFERRAL &amp; SPUTUM SPECIMEN FORM</div>
+                    <div style="color:#5A6B68;margin-top:2px;">Argao RHU TB-DOTS · Cebu · Region VII</div>
+                  </div>
+                  <div style="text-align:right;color:#5A6B68;">REF-2026-0412<br>Jul 7, 2026</div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;padding:10px 0;border-bottom:1px solid #E3DED6;">
+                  <div><span style="color:#8A968F;">Patient:</span> <b>{{ refPatientName }}</b></div>
+                  <div><span style="color:#8A968F;">Code:</span> <b>{{ refPatientCode }}</b></div>
+                  <div><span style="color:#8A968F;">Sex / Age:</span> {{ refPatientMeta }}</div>
+                  <div><span style="color:#8A968F;">Barangay:</span> {{ refPatientBrgy }}</div>
+                </div>
+                <div style="padding:8px 0;border-bottom:1px solid #E3DED6;">
+                  <div style="font-weight:700;margin-bottom:4px;">Symptom checklist (DOH-NTP)</div>
+                  <sc-for list="{{ refAnswers }}" as="a" hint-placeholder-count="4">
+                    <div style="display:flex;justify-content:space-between;padding:1.5px 0;"><span style="color:#4A5754;">{{ a.q }}</span><b>{{ a.v }}</b></div>
+                  </sc-for>
+                  <div style="display:flex;justify-content:space-between;padding:4px 0 0;margin-top:4px;border-top:1px dashed #C9C2B6;"><span style="color:#4A5754;">PGI-S — cough severity (patient-reported)</span><b>{{ refPgis }}</b></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;">
+                  <div style="line-height:1.6;color:#4A5754;">
+                    Appointment: <b>Jul 10, 2026 · 8:00 AM</b><br>
+                    Referred by: Rosario Dizon (BHW, Brgy. Lamacan)<br>
+                    <span style="font-size:10px;color:#8A968F;">Pre-screening support only — not a diagnosis.</span>
+                  </div>
+                  <div style="text-align:center;">
+                    <div style="width:64px;height:64px;border:2px solid #20302E;padding:4px;box-sizing:border-box;">
+                      <div style="width:100%;height:100%;background:repeating-linear-gradient(90deg,#20302E 0 5px,transparent 5px 10px),repeating-linear-gradient(0deg,#20302E 0 5px,transparent 5px 10px);"></div>
+                    </div>
+                    <div style="font-size:9px;font-family:ui-monospace,Menlo,monospace;margin-top:3px;">{{ refPatientCode }}</div>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;gap:12px;">
+                <button onClick="{{ noop }}" style="flex:1;height:52px;border-radius:26px;border:1.5px solid #028090;background:transparent;color:#028090;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+                  <span style="font-family:'Material Symbols Outlined';font-size:21px;">print</span>{{ t.print }}
+                </button>
+                <button onClick="{{ noop }}" style="flex:1;height:52px;border-radius:26px;border:1.5px solid #028090;background:transparent;color:#028090;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+                  <span style="font-family:'Material Symbols Outlined';font-size:21px;">share</span>{{ t.share }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- 9. PATIENT RECORD -->
+        <sc-if value="{{ isRecord }}">
+          <div style="display:flex;flex-direction:column;min-height:812px;box-sizing:border-box;">
+            <div style="padding:14px 12px 6px;display:flex;align-items:center;gap:4px;">
+              <button onClick="{{ recordBack }}" style="width:48px;height:48px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <span style="font-family:'Material Symbols Outlined';font-size:24px;color:#20302E;">arrow_back</span>
+              </button>
+              <span style="font-size:22px;font-weight:500;color:#20302E;">{{ t.recTitle }}</span>
+              <span style="flex:1;"></span>
+              <sc-if value="{{ recViewing }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ openRecEdit }}" style="display:flex;align-items:center;gap:6px;height:40px;padding:0 14px;margin-right:8px;border-radius:20px;border:1.5px solid #028090;background:transparent;color:#028090;font-size:13px;font-weight:600;cursor:pointer;">
+                  <span style="font-family:'Material Symbols Outlined';font-size:18px;">edit</span>{{ t.editDetails }}
+                </button>
+              </sc-if>
+            </div>
+            <div style="padding:6px 20px 24px;display:flex;flex-direction:column;gap:16px;">
+              <sc-if value="{{ recViewing }}" hint-placeholder-val="{{ true }}">
+                <div style="background:#FFFFFF;border:1px solid #E3DED6;border-radius:16px;padding:18px;display:flex;align-items:center;gap:14px;">
+                  <span style="width:52px;height:52px;border-radius:26px;background:#D9EEEF;color:#016575;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;">{{ recInitials }}</span>
+                  <span style="display:flex;flex-direction:column;gap:3px;">
+                    <span style="font-size:18px;font-weight:600;color:#20302E;">{{ recName }}</span>
+                    <span style="font-size:13px;color:#8A968F;">{{ recCode }} · {{ recMeta }}</span>
+                    <span style="font-size:13px;color:#8A968F;">{{ recAddress }}</span>
+                  </span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ recIsEditing }}">
+                <div style="background:#FFFFFF;border:1.5px solid #028090;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px;">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.06em;color:#016575;">{{ t.editDetails }} · {{ recCode }}</div>
+                  <label style="display:flex;flex-direction:column;gap:6px;">
+                    <span style="font-size:13px;font-weight:500;color:#4A5754;">{{ t.fullName }}</span>
+                    <input value="{{ edName }}" onChange="{{ setEdName }}" style="height:52px;border-radius:12px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 16px;font-size:16px;color:#20302E;box-sizing:border-box;">
+                  </label>
+                  <div>
+                    <div style="font-size:13px;font-weight:500;color:#4A5754;margin-bottom:6px;">{{ t.sex }}</div>
+                    <div style="display:flex;gap:10px;">
+                      <button onClick="{{ pickEdMale }}" style="flex:1;height:48px;border-radius:24px;border:{{ edMaleBd }};background:{{ edMaleBg }};color:{{ edMaleFg }};font-size:14.5px;font-weight:600;cursor:pointer;">{{ t.male }}</button>
+                      <button onClick="{{ pickEdFemale }}" style="flex:1;height:48px;border-radius:24px;border:{{ edFemaleBd }};background:{{ edFemaleBg }};color:{{ edFemaleFg }};font-size:14.5px;font-weight:600;cursor:pointer;">{{ t.female }}</button>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:12px;align-items:flex-end;">
+                    <label style="flex:1;display:flex;flex-direction:column;gap:6px;">
+                      <span style="font-size:13px;font-weight:500;color:#4A5754;">{{ t.birthdate }}</span>
+                      <input type="date" value="{{ edDob }}" onChange="{{ setEdDob }}" style="height:52px;border-radius:12px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 14px;font-size:15px;color:#20302E;box-sizing:border-box;">
+                    </label>
+                    <div style="min-width:96px;height:52px;border-radius:12px;background:#EDE8E0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;">
+                      <span style="font-size:11px;color:#8A968F;">{{ t.agePrefix }}</span>
+                      <span style="font-size:18px;font-weight:700;color:{{ edAgeColor }};">{{ edAgeDisplay }}</span>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:10px;">
+                    <button onClick="{{ cancelRecEdit }}" style="flex:1;height:50px;border-radius:25px;border:1.5px solid #C9C2B6;background:transparent;color:#4A5754;font-size:14.5px;font-weight:600;cursor:pointer;">{{ t.cancel }}</button>
+                    <button onClick="{{ saveRecEdit }}" style="flex:1.5;height:50px;border-radius:25px;border:none;background:{{ edSaveBg }};color:{{ edSaveFg }};font-size:14.5px;font-weight:600;cursor:pointer;">{{ t.saveChanges }}</button>
+                  </div>
+                </div>
+              </sc-if>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#8A968F;letter-spacing:0.06em;margin-bottom:8px;">{{ t.refStatus }}</div>
+                <div style="background:#FFFFFF;border:1px solid #E3DED6;border-radius:16px;padding:18px 18px 10px;">
+                  <sc-for list="{{ recTimeline }}" as="s" hint-placeholder-count="4">
+                    <div style="display:flex;gap:14px;">
+                      <div style="display:flex;flex-direction:column;align-items:center;">
+                        <span style="width:26px;height:26px;border-radius:13px;background:{{ s.dotBg }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                          <span style="font-family:'Material Symbols Outlined';font-size:15px;color:{{ s.dotFg }};">{{ s.icon }}</span>
+                        </span>
+                        <span style="width:2px;flex:1;min-height:16px;background:{{ s.lineBg }};"></span>
+                      </div>
+                      <div style="padding-bottom:16px;">
+                        <div style="font-size:14.5px;font-weight:600;color:{{ s.labelColor }};">{{ s.label }}</div>
+                        <div style="font-size:12.5px;color:#8A968F;margin-top:1px;">{{ s.date }}</div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#8A968F;letter-spacing:0.06em;margin-bottom:8px;">{{ t.history }}</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <sc-for list="{{ recHistory }}" as="h" hint-placeholder-count="2">
+                    <div style="background:#FFFFFF;border:1px solid #E3DED6;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+                      <span style="font-family:'Material Symbols Outlined';font-size:22px;color:#8A968F;">assignment</span>
+                      <span style="display:flex;flex-direction:column;gap:2px;">
+                        <span style="font-size:14px;font-weight:500;color:#20302E;">{{ h.date }}</span>
+                        <span style="font-size:12.5px;color:#8A968F;">PGI-S: {{ h.pgis }}</span>
+                      </span>
+                      <span style="margin-left:auto;font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:12px;background:{{ h.chipBg }};color:{{ h.chipFg }};">{{ h.chip }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#8A968F;letter-spacing:0.06em;margin-bottom:8px;">{{ t.appts }}</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <sc-for list="{{ recAppts }}" as="a" hint-placeholder-count="2">
+                    <div style="background:#FFFFFF;border:1px solid #E3DED6;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+                      <span style="font-family:'Material Symbols Outlined';font-size:22px;color:#8A968F;">event</span>
+                      <span style="font-size:14px;font-weight:500;color:#20302E;">{{ a.date }}</span>
+                      <span style="margin-left:auto;font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:12px;background:{{ a.chipBg }};color:{{ a.chipFg }};">{{ a.chip }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <button onClick="{{ screenFromRecord }}" style="height:54px;border-radius:27px;border:none;background:#028090;color:#FFFFFF;font-size:16px;font-weight:600;cursor:pointer;">{{ t.newScreening }}</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- 10. FOLLOW-UP LIST -->
+        <sc-if value="{{ isFollowup }}">
+          <div style="display:flex;flex-direction:column;min-height:812px;box-sizing:border-box;">
+            <div style="padding:14px 12px 6px;display:flex;align-items:center;gap:4px;">
+              <button onClick="{{ toHome }}" style="width:48px;height:48px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <span style="font-family:'Material Symbols Outlined';font-size:24px;color:#20302E;">arrow_back</span>
+              </button>
+              <span style="font-size:22px;font-weight:500;color:#20302E;">{{ t.fuTitle }}</span>
+            </div>
+            <div style="padding:8px 20px 0;display:flex;gap:8px;">
+              <sc-for list="{{ fuFilters }}" as="f" hint-placeholder-count="3">
+                <button onClick="{{ f.onPick }}" style="flex:1;height:44px;border-radius:22px;border:{{ f.border }};background:{{ f.bg }};color:{{ f.fg }};font-size:13.5px;font-weight:600;cursor:pointer;">{{ f.label }}</button>
+              </sc-for>
+            </div>
+            <div style="flex:1;padding:16px 20px 24px;display:flex;flex-direction:column;gap:8px;">
+              <sc-for list="{{ fuRows }}" as="r" hint-placeholder-count="3">
+                <button onClick="{{ r.onOpen }}" style="display:flex;align-items:center;gap:14px;min-height:68px;padding:10px 14px;border-radius:14px;border:1px solid #EDE8E0;background:#FFFFFF;cursor:pointer;text-align:left;">
+                  <span style="width:42px;height:42px;border-radius:21px;background:#D9EEEF;color:#016575;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;flex-shrink:0;">{{ r.initials }}</span>
+                  <span style="display:flex;flex-direction:column;gap:2px;">
+                    <span style="font-size:15.5px;font-weight:500;color:#20302E;">{{ r.name }}</span>
+                    <span style="font-size:12.5px;color:#8A968F;">{{ r.brgy }} · {{ r.date }}</span>
+                  </span>
+                  <span style="margin-left:auto;font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:12px;background:{{ r.chipBg }};color:{{ r.chipFg }};white-space:nowrap;">{{ r.chip }}</span>
+                </button>
+              </sc-for>
+              <sc-if value="{{ fuEmpty }}">
+                <div style="padding:48px 24px;text-align:center;">
+                  <span style="font-family:'Material Symbols Outlined';font-size:44px;color:#C9C2B6;">task_alt</span>
+                  <div style="margin-top:12px;font-size:16px;font-weight:600;color:#4A5754;">{{ t.fuEmpty }}</div>
+                  <div style="margin-top:6px;font-size:13.5px;color:#8A968F;line-height:1.5;">{{ t.fuEmptySub }}</div>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+    </x-import>
+  </div>
+
+  <!-- Jump strip -->
+  <sc-if value="{{ showJump }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:6px;padding-top:34px;min-width:200px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.07em;color:#8A968F;margin-bottom:4px;">JUMP TO SCREEN</div>
+      <sc-for list="{{ jumpItems }}" as="j" hint-placeholder-count="6">
+        <button onClick="{{ j.onGo }}" style="display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:8px;border:1px solid {{ j.bd }};background:{{ j.bg }};color:{{ j.fg }};font-size:12.5px;font-weight:500;cursor:pointer;text-align:left;">
+        <span style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:#8A968F;width:16px;">{{ j.n }}</span>{{ j.label }}</button>
+      </sc-for>
+      <div style="margin-top:8px;font-size:11.5px;color:#8A968F;line-height:1.5;max-width:200px;">Tap the sync chip on Home to preview synced / pending / offline. Language switch is live app-wide.</div>
+    </div>
+  </sc-if>
+</section>
+
+<!-- ============ 1b WEB PORTAL ============ -->
+<section id="1b" style="padding:12px 44px 44px;display:flex;flex-direction:column;gap:10px;">
+  <div style="display:flex;align-items:baseline;gap:8px;">
+    <a href="#1b" style="font-size:10.5px;font-weight:600;font-family:ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,0.08);color:#1a1a1a;border-radius:5px;text-decoration:none;">1b</a>
+    <span style="font-size:12px;color:#5A6B68;">TB-DOTS facility portal — live: sign in, open a referral, record actions, view hotspots</span>
+  </div>
+  <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" url="portal.tbscreen.ph/referrals" width="{{ portalW }}" height="{{ portalH }}" hint-size="1200px,760px">
+    <div style="min-height:680px;background:#F7F5F1;font-family:Roboto,system-ui,sans-serif;display:flex;flex-direction:column;">
+
+      <!-- PORTAL LOGIN -->
+      <sc-if value="{{ pIsLogin }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:60px 0;">
+          <div style="width:380px;background:#FFFFFF;border:1px solid #E3DED6;border-radius:16px;padding:36px 32px;display:flex;flex-direction:column;gap:18px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:44px;height:44px;border-radius:12px;background:#028090;display:flex;align-items:center;justify-content:center;">
+                <span style="font-family:'Material Symbols Outlined';font-size:24px;color:#FFFFFF;">health_and_safety</span>
+              </div>
+              <div>
+                <div style="font-size:17px;font-weight:600;color:#20302E;">TB-Screen Portal</div>
+                <div style="font-size:12px;color:#8A968F;">TB-DOTS facility staff</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button onClick="{{ pickRoleStaff }}" style="flex:1;height:44px;border-radius:22px;border:{{ roleStaffBd }};background:{{ roleStaffBg }};color:{{ roleStaffFg }};font-size:13px;font-weight:600;cursor:pointer;">TB-DOTS staff</button>
+              <button onClick="{{ pickRoleCaptain }}" style="flex:1;height:44px;border-radius:22px;border:{{ roleCapBd }};background:{{ roleCapBg }};color:{{ roleCapFg }};font-size:13px;font-weight:600;cursor:pointer;">Barangay Captain</button>
+            </div>
+            <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;font-weight:500;color:#4A5754;">Email</span>
+              <input placeholder="staff@rhu-argao.ph" style="height:44px;border-radius:10px;border:1.5px solid #C9C2B6;padding:0 12px;font-size:14px;color:#20302E;box-sizing:border-box;"></label>
+            <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;font-weight:500;color:#4A5754;">Password</span>
+              <input type="password" placeholder="••••••••" style="height:44px;border-radius:10px;border:1.5px solid #C9C2B6;padding:0 12px;font-size:14px;color:#20302E;box-sizing:border-box;"></label>
+            <button onClick="{{ pLogin }}" style="height:46px;border-radius:23px;border:none;background:#028090;color:#FFFFFF;font-size:15px;font-weight:600;cursor:pointer;">Sign in</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- PORTAL SHELL -->
+      <sc-if value="{{ pIsApp }}">
+        <div style="height:56px;background:#FFFFFF;border-bottom:1px solid #E3DED6;display:flex;align-items:center;gap:20px;padding:0 24px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:30px;height:30px;border-radius:8px;background:#028090;display:flex;align-items:center;justify-content:center;">
+              <span style="font-family:'Material Symbols Outlined';font-size:18px;color:#FFFFFF;">health_and_safety</span>
+            </div>
+            <span style="font-size:15px;font-weight:600;color:#20302E;">TB-Screen Portal</span>
+            <span style="font-size:12px;color:#8A968F;border-left:1px solid #E3DED6;padding-left:12px;">{{ portalOrg }}</span>
+          </div>
+          <div style="display:flex;gap:4px;margin-left:16px;">
+            <sc-if value="{{ pIsStaff }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ pTabDash }}" style="height:36px;padding:0 16px;border-radius:18px;border:none;background:{{ tabDashBg }};color:{{ tabDashFg }};font-size:13.5px;font-weight:600;cursor:pointer;">Dashboard</button>
+              <button onClick="{{ pTabInbox }}" style="height:36px;padding:0 16px;border-radius:18px;border:none;background:{{ tabInboxBg }};color:{{ tabInboxFg }};font-size:13.5px;font-weight:600;cursor:pointer;">Referral inbox</button>
+              <button onClick="{{ pTabHotspot }}" style="height:36px;padding:0 16px;border-radius:18px;border:none;background:{{ tabHotBg }};color:{{ tabHotFg }};font-size:13.5px;font-weight:600;cursor:pointer;">Barangay hotspots</button>
+            </sc-if>
+            <sc-if value="{{ pIsCaptain }}">
+              <button style="height:36px;padding:0 16px;border-radius:18px;border:none;background:#D9EEEF;color:#014B57;font-size:13.5px;font-weight:600;cursor:default;">BHW management</button>
+            </sc-if>
+          </div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:13px;color:#5A6B68;">{{ portalUser }}</span>
+            <span style="width:32px;height:32px;border-radius:16px;background:#D9EEEF;color:#016575;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;">{{ portalInit }}</span>
+            <button onClick="{{ pSignOut }}" title="Sign out" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:17px;border:1.5px solid #C9C2B6;background:transparent;color:#4A5754;font-size:12.5px;font-weight:600;cursor:pointer;">
+              <span style="font-family:'Material Symbols Outlined';font-size:17px;">logout</span>Sign out
+            </button>
+          </div>
+        </div><div style="flex:1;padding:20px 24px;position:relative;">
+
+            <sc-if value="{{ cIsList }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span style="display:flex;flex-direction:column;gap:2px;">
+                  <span style="font-size:18px;font-weight:600;color:#20302E;">BHW accounts</span>
+                  <span style="font-size:12.5px;color:#8A968F;">{{ bhwCount }} Barangay Health Workers · Argao catchment</span>
+                </span>
+                <span style="flex:1;"></span>
+                <button onClick="{{ openAddBhw }}" style="display:flex;align-items:center;gap:8px;height:42px;padding:0 20px;border-radius:21px;border:none;background:#028090;color:#FFFFFF;font-size:13.5px;font-weight:600;cursor:pointer;">
+                  <span style="font-family:'Material Symbols Outlined';font-size:20px;">person_add</span>Add BHW
+                </button>
+              </div>
+              <div style="margin-top:14px;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:#F3F0EA;font-size:12px;color:#5A6B68;max-width:1120px;">
+                <span style="font-family:'Material Symbols Outlined';font-size:18px;color:#8A968F;">visibility_off</span>
+                Captains see accounts and activity counts only. No patient names, records, or results appear anywhere in this view.
+              </div>
+              <div style="margin-top:14px;background:#FFFFFF;border:1px solid #E3DED6;border-radius:12px;overflow:hidden;max-width:1120px;">
+                <div style="display:grid;grid-template-columns:1.5fr 2fr 1fr 1.6fr 1fr 1.3fr;gap:8px;padding:10px 16px;background:#F3F0EA;font-size:11.5px;font-weight:700;letter-spacing:0.05em;color:#8A968F;">
+                  <span>NAME</span><span>EMAIL</span><span>BARANGAY</span><span>30-DAY ACTIVITY</span><span>STATUS</span><span>ACTIONS</span>
+                </div>
+                <sc-for list="{{ bhwRows }}" as="b" hint-placeholder-count="5">
+                  <div style="display:grid;grid-template-columns:1.5fr 2fr 1fr 1.6fr 1fr 1.3fr;gap:8px;padding:12px 16px;border-top:1px solid #F0EDE7;align-items:center;">
+                    <span style="font-size:13.5px;font-weight:600;color:{{ b.nameColor }};">{{ b.name }}</span>
+                    <span style="font-size:11.5px;color:#5A6B68;font-family:ui-monospace,Menlo,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ b.email }}</span>
+                    <span style="font-size:13px;color:#4A5754;">{{ b.brgy }}</span>
+                    <span style="font-size:12.5px;color:#4A5754;">{{ b.activity }}</span>
+                    <span><span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:11px;background:{{ b.chipBg }};color:{{ b.chipFg }};white-space:nowrap;">{{ b.chip }}</span></span>
+                    <span style="display:flex;gap:6px;">
+                      <button onClick="{{ b.onEdit }}" style="height:32px;padding:0 12px;border-radius:16px;border:1.5px solid #C9C2B6;background:transparent;color:#4A5754;font-size:12px;font-weight:600;cursor:pointer;">Edit</button>
+                      <button onClick="{{ b.onToggle }}" style="height:32px;padding:0 12px;border-radius:16px;border:1.5px solid {{ b.toggleBd }};background:transparent;color:{{ b.toggleFg }};font-size:12px;font-weight:600;cursor:pointer;">{{ b.toggleLabel }}</button>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ cIsAdd }}">
+              <div style="max-width:480px;background:#FFFFFF;border:1px solid #E3DED6;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+                <div style="font-size:16px;font-weight:600;color:#20302E;">{{ addFormTitle }}</div>
+                <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;font-weight:500;color:#4A5754;">Full name</span>
+                  <input value="{{ addName }}" onChange="{{ setAddName }}" placeholder="Juana Dela Cruz" style="height:44px;border-radius:10px;border:1.5px solid #C9C2B6;padding:0 12px;font-size:14px;color:#20302E;box-sizing:border-box;"></label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                  <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;color:#8A968F;">Region</span>
+                    <select value="{{ addRegion }}" onChange="{{ setAddRegion }}" style="height:42px;border-radius:10px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 8px;font-size:13px;color:#20302E;">
+                      <sc-for list="{{ regionOpts }}" as="o" hint-placeholder-count="1"><option value="{{ o }}">{{ o }}</option></sc-for>
+                    </select></label>
+                  <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;color:#8A968F;">Province</span>
+                    <select value="{{ addProv }}" onChange="{{ setAddProv }}" style="height:42px;border-radius:10px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 8px;font-size:13px;color:#20302E;">
+                      <sc-for list="{{ provOpts }}" as="o" hint-placeholder-count="1"><option value="{{ o }}">{{ o }}</option></sc-for>
+                    </select></label>
+                  <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;color:#8A968F;">City / Municipality</span>
+                    <select value="{{ addCity }}" onChange="{{ setAddCity }}" style="height:42px;border-radius:10px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 8px;font-size:13px;color:#20302E;">
+                      <sc-for list="{{ cityOpts }}" as="o" hint-placeholder-count="1"><option value="{{ o }}">{{ o }}</option></sc-for>
+                    </select></label>
+                  <label style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;color:#8A968F;">Assigned barangay</span>
+                    <select value="{{ addBrgy }}" onChange="{{ setAddBrgy }}" style="height:42px;border-radius:10px;border:1.5px solid #C9C2B6;background:#FFFFFF;padding:0 8px;font-size:13px;color:#20302E;">
+                      <sc-for list="{{ brgyOpts }}" as="o" hint-placeholder-count="1"><option value="{{ o }}">{{ o }}</option></sc-for>
+                    </select></label>
+                </div>
+                <div style="background:#F7F5F1;border:1px dashed #C9C2B6;border-radius:10px;padding:12px 14px;">
+                  <div style="font-size:11.5px;font-weight:700;letter-spacing:0.05em;color:#8A968F;">EMAIL · AUTO-GENERATED</div>
+                  <div style="margin-top:5px;font-size:13.5px;font-weight:600;font-family:ui-monospace,Menlo,monospace;color:{{ addEmailColor }};overflow-wrap:anywhere;">{{ addEmailDisplay }}</div>
+                  <div style="margin-top:5px;font-size:11px;color:#8A968F;">Format: firstname.lastname.barangay@tbscreen.ph — uniform across all BHW accounts.</div>
+                </div>
+                <div style="display:flex;gap:10px;">
+                  <button onClick="{{ cancelBhw }}" style="flex:1;height:44px;border-radius:22px;border:1.5px solid #C9C2B6;background:transparent;color:#4A5754;font-size:13.5px;font-weight:600;cursor:pointer;">Cancel</button>
+                  <button onClick="{{ saveBhw }}" style="flex:1.5;height:44px;border-radius:22px;border:none;background:{{ saveBhwBg }};color:{{ saveBhwFg }};font-size:13.5px;font-weight:600;cursor:pointer;">{{ saveBhwLabel }}</button>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ cIsConfirm }}">
+              <div style="max-width:480px;background:#FFFFFF;border:1px solid #E3DED6;border-radius:14px;padding:28px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;">
+                <span style="font-family:'Material Symbols Outlined';font-size:48px;color:#028090;">check_circle</span>
+                <div style="font-size:17px;font-weight:600;color:#20302E;">BHW account created</div>
+                <div style="font-size:13.5px;color:#5A6B68;">{{ invName }}</div>
+                <div style="width:100%;background:#F7F5F1;border:1px solid #E3DED6;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;text-align:left;box-sizing:border-box;">
+                  <div style="display:flex;justify-content:space-between;gap:10px;font-size:12.5px;"><span style="color:#8A968F;">Email</span><span style="font-family:ui-monospace,Menlo,monospace;font-weight:600;color:#016575;overflow-wrap:anywhere;text-align:right;">{{ invEmail }}</span></div>
+                  <div style="display:flex;justify-content:space-between;gap:10px;font-size:12.5px;"><span style="color:#8A968F;">Temporary password</span><span style="font-family:ui-monospace,Menlo,monospace;font-weight:600;color:#20302E;">TBS-4829</span></div>
+                </div>
+                <div style="font-size:12px;color:#8A968F;line-height:1.5;">Share these with the BHW in person. They sign in with the temporary credential and set their own password on first login.</div>
+                <button onClick="{{ inviteDone }}" style="width:100%;height:44px;border-radius:22px;border:none;background:#028090;color:#FFFFFF;font-size:13.5px;font-weight:600;cursor:pointer;">Done</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ dlgOpen }}">
+              <div style="position:absolute;inset:0;background:rgba(32,48,46,0.35);display:flex;align-items:center;justify-content:center;z-index:10;">
+                <div style="width:380px;background:#FFFFFF;border-radius:16px;padding:24px;box-shadow:0 12px 40px rgba(32,48,46,0.25);display:flex;flex-direction:column;gap:12px;">
+                  <div style="font-size:16px;font-weight:600;color:#20302E;">Deactivate {{ dlgName }}?</div>
+                  <div style="font-size:13px;line-height:1.55;color:#5A6B68;">They will no longer be able to sign in or submit screenings. Past records stay intact. You can reactivate this account anytime.</div>
+                  <div style="display:flex;gap:10px;margin-top:6px;">
+                    <button onClick="{{ cancelDlg }}" style="flex:1;height:42px;border-radius:21px;border:1.5px solid #C9C2B6;background:transparent;color:#4A5754;font-size:13px;font-weight:600;cursor:pointer;">Cancel</button>
+                    <button onClick="{{ confirmDeactivate }}" style="flex:1;height:42px;border-radius:21px;border:none;background:#96362E;color:#FFFFFF;font-size:13px;font-weight:600;cursor:pointer;">Deactivate</button>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+          </div>
+
+        <!-- DASHBOARD -->
+        <sc-if value="{{ pIsDash }}" hint-placeholder-val="{{ true }}">
+          <div style="flex:1;padding:20px 24px;">
+            <div style="display:flex;align-items:baseline;gap:14px;">
+              <span style="font-size:18px;font-weight:600;color:#20302E;">Dashboard</span>
+              <span style="font-size:12.5px;color:#8A968F;">Today · Jul 7, 2026 · Argao RHU TB-DOTS catchment</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;max-width:1120px;margin-top:16px;">
+              <sc-for list="{{ dashCards }}" as="c" hint-placeholder-count="5">
+                <div style="background:{{ c.bg }};border:1px solid {{ c.bd }};border-radius:14px;padding:18px 16px;min-height:112px;display:flex;flex-direction:column;gap:6px;box-sizing:border-box;">
+                  <span style="font-size:34px;font-weight:700;color:{{ c.fg }};line-height:1;">{{ c.n }}</span>
+                  <span style="font-size:13px;font-weight:600;color:{{ c.fg }};line-height:1.3;">{{ c.label }}</span>
+                  <span style="font-size:11.5px;color:{{ c.sb }};line-height:1.4;">{{ c.sub }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin-top:16px;max-width:1120px;font-size:11.5px;color:#8A968F;line-height:1.5;background:#FFFFFF;border:1px solid #E3DED6;border-radius:10px;padding:10px 14px;">Result outcomes (positive / negative) are recorded and visible only at the facility. BHWs see referral progress — submitted, received, tested, result recorded — never the outcome itself.</div>
+          </div>
+        </sc-if>
+
+        <!-- REFERRAL INBOX -->
+        <sc-if value="{{ pIsInbox }}">
+          <div style="flex:1;display:flex;gap:0;min-height:0;">
+            <div style="flex:1;padding:20px 24px;min-width:0;">
+              <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px;">
+                <span style="font-size:18px;font-weight:600;color:#20302E;">Referral inbox</span>
+                <span style="font-size:12.5px;color:#8A968F;">{{ inboxCount }} referrals</span>
+              </div>
+              <div style="background:#FFFFFF;border:1px solid #E3DED6;border-radius:12px;overflow:hidden;">
+                <div style="display:grid;grid-template-columns:2fr 1.3fr 1fr 1.2fr;gap:8px;padding:10px 16px;background:#F3F0EA;font-size:11.5px;font-weight:700;letter-spacing:0.05em;color:#8A968F;">
+                  <span>PATIENT</span><span>BARANGAY</span><span>DATE</span><span>STATUS</span>
+                </div>
+                <sc-for list="{{ pRows }}" as="r" hint-placeholder-count="4">
+                  <button onClick="{{ r.onOpen }}" style="width:100%;display:grid;grid-template-columns:2fr 1.3fr 1fr 1.2fr;gap:8px;padding:12px 16px;border:none;border-top:1px solid #F0EDE7;background:{{ r.rowBg }};cursor:pointer;text-align:left;align-items:center;">
+                    <span style="display:flex;flex-direction:column;gap:1px;">
+                      <span style="font-size:13.5px;font-weight:600;color:#20302E;">{{ r.name }}</span>
+                      <span style="font-size:11.5px;color:#8A968F;font-family:ui-monospace,Menlo,monospace;">{{ r.code }}</span>
+                    </span>
+                    <span style="font-size:13px;color:#4A5754;">{{ r.brgy }}</span>
+                    <span style="font-size:13px;color:#4A5754;">{{ r.date }}</span>
+                    <span><span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:11px;background:{{ r.chipBg }};color:{{ r.chipFg }};white-space:nowrap;">{{ r.chip }}</span></span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+            <!-- DETAIL PANEL -->
+            <div style="width:400px;flex-shrink:0;border-left:1px solid #E3DED6;background:#FFFFFF;padding:20px 22px;overflow:auto;">
+              <sc-if value="{{ pNoSel }}" hint-placeholder-val="{{ true }}">
+                <div style="padding-top:120px;text-align:center;color:#8A968F;">
+                  <span style="font-family:'Material Symbols Outlined';font-size:40px;color:#C9C2B6;">left_click</span>
+                  <div style="margin-top:10px;font-size:13.5px;">Select a referral to view details</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ pHasSel }}">
+                <div style="display:flex;flex-direction:column;gap:16px;">
+                  <div>
+                    <div style="font-size:17px;font-weight:600;color:#20302E;">{{ selName }}</div>
+                    <div style="font-size:12.5px;color:#8A968F;margin-top:2px;">{{ selCode }} · {{ selMeta }} · {{ selBrgy }}</div>
+                    <div style="margin-top:8px;"><span style="font-size:11.5px;font-weight:600;padding:4px 11px;border-radius:12px;background:{{ selChipBg }};color:{{ selChipFg }};">{{ selChip }}</span></div>
+                  </div>
+                  <div>
+                    <div style="font-size:11.5px;font-weight:700;letter-spacing:0.05em;color:#8A968F;margin-bottom:6px;">SCREENING SUMMARY · {{ selDate }}</div>
+                    <div style="border:1px solid #E3DED6;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;">
+                      <sc-for list="{{ selAnswers }}" as="a" hint-placeholder-count="4">
+                        <div style="display:flex;justify-content:space-between;font-size:12.5px;"><span style="color:#4A5754;">{{ a.q }}</span><span style="font-weight:600;color:{{ a.vColor }};">{{ a.v }}</span></div>
+                      </sc-for>
+                      <div style="display:flex;justify-content:space-between;font-size:12.5px;border-top:1px dashed #E3DED6;padding-top:6px;margin-top:2px;">
+                        <span style="color:#4A5754;">PGI-S cough severity <span style="font-size:10.5px;color:#8A5E00;background:#F7ECD8;border-radius:8px;padding:1px 7px;font-weight:600;">patient-reported</span></span>
+                        <span style="font-weight:700;color:#20302E;">{{ selPgis }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="font-size:11.5px;font-weight:700;letter-spacing:0.05em;color:#8A968F;margin-bottom:6px;">ACTIONS</div>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                      <button onClick="{{ actReceived }}" style="height:42px;border-radius:21px;border:none;background:{{ actRecBg }};color:{{ actRecFg }};font-size:13px;font-weight:600;cursor:pointer;">{{ actRecLabel }}</button>
+                      <div style="display:flex;gap:8px;">
+                        <button onClick="{{ actTested }}" style="flex:1;height:42px;border-radius:21px;border:1.5px solid #028090;background:{{ actTestBg }};color:{{ actTestFg }};font-size:13px;font-weight:600;cursor:pointer;">{{ actTestLabel }}</button>
+                        <button onClick="{{ actResult }}" style="flex:1;height:42px;border-radius:21px;border:1.5px solid #028090;background:{{ actResBg }};color:{{ actResFg }};font-size:13px;font-weight:600;cursor:pointer;">{{ actResLabel }}</button>
+                      </div>
+                      <div style="display:flex;gap:8px;align-items:center;border:1px solid #E3DED6;border-radius:10px;padding:10px 12px;">
+                        <span style="font-family:'Material Symbols Outlined';font-size:19px;color:#8A968F;">event</span>
+                        <span style="font-size:12.5px;color:#4A5754;flex:1;">Next check-up</span>
+                        <input type="date" value="{{ selApptDate }}" onChange="{{ setApptDate }}" style="height:34px;border-radius:8px;border:1.5px solid #C9C2B6;padding:0 8px;font-size:12.5px;color:#20302E;">
+                      </div>
+                      <div style="display:flex;gap:8px;">
+                        <button onClick="{{ actAttended }}" style="flex:1;height:42px;border-radius:21px;border:1.5px solid #C9C2B6;background:{{ actAttBg }};color:{{ actAttFg }};font-size:13px;font-weight:600;cursor:pointer;">{{ actAttLabel }}</button>
+                        <button onClick="{{ actDnp }}" style="flex:1;height:42px;border-radius:21px;border:1.5px solid #E0C98F;background:{{ actDnpBg }};color:{{ actDnpFg }};font-size:13px;font-weight:600;cursor:pointer;">{{ actDnpLabel }}</button>
+                      </div>
+                      <div style="font-size:11px;color:#8A968F;text-align:center;">Tap a completed action again to undo it.</div>
+                    </div>
+                  </div>
+                  <div style="font-size:11.5px;color:#8A968F;line-height:1.5;background:#F7F5F1;border-radius:10px;padding:10px 12px;">Flagging "did not present" notifies the referring BHW's follow-up list. No diagnosis data is shown to BHWs — only referral progress.</div>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- HOTSPOT VIEW -->
+        <sc-if value="{{ pIsHotspot }}">
+          <div style="flex:1;padding:20px 24px;">
+            <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:4px;">
+              <span style="font-size:18px;font-weight:600;color:#20302E;">Presumptive case counts by barangay</span>
+            </div>
+            <div style="font-size:12.5px;color:#8A968F;margin-bottom:14px;">Referrals meeting presumptive TB criteria, grouped by barangay across the Argao catchment. Surveillance view — no patient-level linking.</div>
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+              <sc-for list="{{ rangeOpts }}" as="g" hint-placeholder-count="3">
+                <button onClick="{{ g.onPick }}" style="height:36px;padding:0 16px;border-radius:18px;border:{{ g.border }};background:{{ g.bg }};color:{{ g.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ g.label }}</button>
+              </sc-for>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid #E3DED6;border-radius:12px;padding:20px 24px;max-width:760px;display:flex;flex-direction:column;gap:12px;">
+              <sc-for list="{{ hotRows }}" as="h" hint-placeholder-count="6">
+                <div style="display:grid;grid-template-columns:24px 150px 1fr 40px;gap:12px;align-items:center;">
+                  <span style="font-size:12px;font-weight:600;color:#8A968F;font-family:ui-monospace,Menlo,monospace;">{{ h.rank }}</span>
+                  <span style="font-size:13.5px;font-weight:500;color:#20302E;">{{ h.name }}</span>
+                  <span style="height:22px;border-radius:6px;background:#EDE8E0;overflow:hidden;display:block;">
+                    <span style="display:block;height:22px;border-radius:6px;background:{{ h.barBg }};width:{{ h.pct }};"></span>
+                  </span>
+                  <span style="font-size:14px;font-weight:700;color:#20302E;text-align:right;">{{ h.count }}</span>
+                </div>
+              </sc-for>
+              <div style="font-size:11.5px;color:#8A968F;border-top:1px solid #F0EDE7;padding-top:10px;">Counts are presumptive referrals only — not confirmed cases, not diagnoses.</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- BHW MANAGEMENT (captain) -->
+        <sc-if value="{{ pIsBhw }}">
+          
+        </sc-if>
+      </sc-if>
+    </div>
+  </x-import>
+</section>
+
+<!-- ============ 1c TRILINGUAL ENROLLMENT ============ -->
+<section id="1c" style="padding:12px 44px 44px;">
+  <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px;">
+    <a href="#1c" style="font-size:10.5px;font-weight:600;font-family:ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,0.08);color:#1a1a1a;border-radius:5px;text-decoration:none;">1c</a>
+    <span style="font-size:12px;color:#5A6B68;">Enrollment in all three languages — Tagalog/Cebuano strings run ~20–35% longer; labels wrap, controls keep height</span>
+  </div>
+  <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+    <sc-for list="{{ demoLangs }}" as="d" hint-placeholder-count="3">
+      <div style="width:360px;background:#FBF9F6;border:1px solid #D8D2C8;border-radius:20px;overflow:hidden;box-shadow:0 2px 10px rgba(32,48,46,0.07);">
+        <div style="padding:10px 16px;background:#20302E;color:#FFFFFF;font-size:12px;font-weight:600;display:flex;justify-content:space-between;">
+          <span>{{ d.tag }}</span><span style="opacity:0.6;font-family:ui-monospace,Menlo,monospace;">{{ d.code }}</span>
+        </div>
+        <div style="padding:16px 18px 22px;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-family:'Material Symbols Outlined';font-size:22px;color:#20302E;">arrow_back</span>
+            <span style="font-size:19px;font-weight:500;color:#20302E;">{{ d.enrollTitle }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <span style="font-size:12.5px;font-weight:500;color:#4A5754;">{{ d.fullName }} <span style="color:#96362E;">*</span></span>
+            <div style="height:50px;border-radius:12px;border:1.5px solid #C9C2B6;background:#FFFFFF;display:flex;align-items:center;padding:0 14px;font-size:15px;color:#20302E;">Maria Santos</div>
+          </div>
+          <div>
+            <div style="font-size:12.5px;font-weight:500;color:#4A5754;margin-bottom:6px;">{{ d.sex }}</div>
+            <div style="display:flex;gap:8px;">
+              <div style="flex:1;height:46px;border-radius:23px;border:1.5px solid #C9C2B6;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#4A5754;">{{ d.male }}</div>
+              <div style="flex:1;height:46px;border-radius:23px;border:none;background:#028090;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#FFFFFF;">{{ d.female }}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-end;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+              <span style="font-size:12.5px;font-weight:500;color:#4A5754;">{{ d.birthdate }} <span style="color:#96362E;">*</span></span>
+              <div style="height:50px;border-radius:12px;border:1.5px solid #C9C2B6;background:#FFFFFF;display:flex;align-items:center;padding:0 14px;font-size:15px;color:#20302E;">02 / 14 / 1983</div>
+            </div>
+            <div style="min-width:92px;height:50px;border-radius:12px;background:#EDE8E0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+              <span style="font-size:10.5px;color:#8A968F;">{{ d.agePrefix }}</span>
+              <span style="font-size:17px;font-weight:700;color:#20302E;">43</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <span style="font-size:12.5px;font-weight:500;color:#4A5754;">{{ d.barangay }}</span>
+            <div style="height:46px;border-radius:10px;border:1.5px solid #C9C2B6;background:#FFFFFF;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:14px;color:#20302E;">Lamacan<span style="font-family:'Material Symbols Outlined';font-size:20px;color:#8A968F;">arrow_drop_down</span></div>
+          </div>
+          <div style="background:#D9EEEF;border:1.5px solid #7CBEC6;border-radius:14px;padding:14px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-family:'Material Symbols Outlined';font-size:20px;color:#016575;">handshake</span>
+              <span style="font-size:14px;font-weight:700;color:#014B57;">{{ d.consentTitle }}</span>
+            </div>
+            <div style="margin-top:6px;font-size:12.5px;line-height:1.55;color:#014B57;">{{ d.consentBody }}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:#FFFFFF;border:1px solid #E3DED6;border-radius:14px;padding:12px 14px;">
+            <span style="width:46px;height:26px;border-radius:13px;background:#028090;position:relative;display:inline-block;flex-shrink:0;">
+              <span style="position:absolute;top:3px;left:23px;width:20px;height:20px;border-radius:10px;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></span>
+            </span>
+            <span style="font-size:13px;font-weight:600;color:#20302E;line-height:1.35;">{{ d.smsTitle }}</span>
+          </div>
+          <div style="height:50px;border-radius:25px;background:#028090;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#FFFFFF;">{{ d.enrollBtn }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- ============ 1d SPECIMEN FORM PAPER ============ -->
+<section id="1d" style="padding:12px 44px 44px;">
+  <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px;">
+    <a href="#1d" style="font-size:10.5px;font-weight:600;font-family:ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,0.08);color:#1a1a1a;border-radius:5px;text-decoration:none;">1d</a>
+    <span style="font-size:12px;color:#5A6B68;">Printed specimen form — A5 paper, thermal-printer friendly (black on white, no tints)</span>
+  </div>
+  <div style="width:560px;background:#FFFFFF;border:1px solid #C9C2B6;box-shadow:0 6px 24px rgba(32,48,46,0.14);padding:34px 38px;font-size:13px;color:#20302E;box-sizing:border-box;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid #20302E;padding-bottom:12px;">
+      <div>
+        <div style="font-size:16px;font-weight:700;letter-spacing:0.01em;">TB-DOTS REFERRAL &amp; SPUTUM SPECIMEN FORM</div>
+        <div style="color:#5A6B68;margin-top:3px;font-size:12px;">Argao RHU TB-DOTS · Municipality of Argao, Cebu · Region VII</div>
+      </div>
+      <div style="text-align:right;font-size:12px;color:#5A6B68;line-height:1.5;">REF-2026-0412<br>Jul 7, 2026</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;padding:14px 0;border-bottom:1px solid #C9C2B6;">
+      <div><span style="color:#8A968F;">Patient:</span> <b>Maria Santos</b></div>
+      <div><span style="color:#8A968F;">Code:</span> <b style="font-family:ui-monospace,Menlo,monospace;">PAT-0001</b></div>
+      <div><span style="color:#8A968F;">Sex / Age:</span> Female · 43</div>
+      <div><span style="color:#8A968F;">Barangay:</span> Lamacan, Argao, Cebu</div>
+      <div style="grid-column:1 / -1;"><span style="color:#8A968F;">Sitio:</span> Sitio Ubos</div>
+    </div>
+    <div style="padding:12px 0;border-bottom:1px solid #C9C2B6;">
+      <div style="font-weight:700;margin-bottom:8px;font-size:12.5px;">SYMPTOM CHECKLIST (DOH-NTP)</div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:4px 16px;font-size:12.5px;">
+        <span style="color:#4A5754;">Cough for 2 weeks or longer</span><b>Yes</b>
+        <span style="color:#4A5754;">Unexplained weight loss</span><b>Yes</b>
+        <span style="color:#4A5754;">Night sweats</span><b>Unsure</b>
+        <span style="color:#4A5754;">Fever</span><b>No</b>
+        <span style="color:#4A5754;">Blood in sputum</span><b>No</b>
+        <span style="color:#4A5754;">Chest pain</span><b>Yes</b>
+        <span style="color:#4A5754;">Fatigue or tiredness</span><b>Yes</b>
+        <span style="color:#4A5754;">Loss of appetite</span><b>No</b>
+        <span style="color:#4A5754;">Close contact with a known TB case</span><b>No</b>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px dashed #C9C2B6;font-size:12.5px;">
+        <span style="color:#4A5754;">PGI-S — cough severity (patient-reported)</span><b>Moderate</b>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:14px;">
+      <div style="font-size:12px;line-height:1.7;color:#4A5754;">
+        Appointment: <b>Jul 10, 2026 · 8:00 AM</b><br>
+        Referred by: <b>Rosario Dizon</b> — BHW, Brgy. Lamacan<br>
+        Recommendation: <b>Meets presumptive TB criteria — refer to TB-DOTS</b><br>
+        <span style="font-size:10.5px;color:#8A968F;">Generated by TB-Screen BHW. Pre-screening support only — this form is not a diagnosis.</span>
+      </div>
+      <div style="text-align:center;flex-shrink:0;margin-left:20px;">
+        <div style="width:92px;height:92px;border:3px solid #20302E;padding:6px;box-sizing:border-box;">
+          <div style="width:100%;height:100%;background:repeating-linear-gradient(90deg,#20302E 0 7px,transparent 7px 14px),repeating-linear-gradient(0deg,#20302E 0 7px,transparent 7px 14px);"></div>
+        </div>
+        <div style="font-size:10px;font-family:ui-monospace,Menlo,monospace;margin-top:4px;">PAT-0001 · REF-2026-0412</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1e COMPONENT SHEET ============ -->
+<section id="1e" style="padding:12px 44px 60px;">
+  <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px;">
+    <a href="#1e" style="font-size:10.5px;font-weight:600;font-family:ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,0.08);color:#1a1a1a;border-radius:5px;text-decoration:none;">1e</a>
+    <span style="font-size:12px;color:#5A6B68;">Component sheet — all mapped to React Native Paper (MD3) primitives; captions name the Paper component</span>
+  </div>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;">
+
+    <div style="width:400px;background:#FFFFFF;border:1px solid #E3DED6;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-size:13px;font-weight:700;color:#20302E;">Buttons</div>
+      <div style="height:52px;border-radius:26px;background:#028090;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;">Primary — New screening</div>
+      <div style="font-size:10.5px;color:#8A968F;font-family:ui-monospace,Menlo,monospace;">Button mode="contained" · h 52–56 · radius full</div>
+      <div style="height:52px;border-radius:26px;background:#D9EEEF;color:#014B57;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;">Tonal — Secondary action</div>
+      <div style="font-size:10.5px;color:#8A968F;font-family:ui-monospace,Menlo,monospace;">Button mode="contained-tonal"</div>
+      <div style="height:52px;border-radius:26px;border:1.5px solid #028090;color:#028090;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;box-sizing:border-box;">Outlined — Print / Share</div>
+      <div style="font-size:10.5px;color:#8A968F;font-family:ui-monospace,Menlo,monospace;">Button mode="outlined"</div>
+      <div style="height:52px;border-radius:26px;background:#E3DED6;color:#9C948A;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;">Disabled — until valid</div>
+      <div style="font-size:10.5px;color:#8A968F;font-family:ui-monospace,Menlo,monospace;">Button disabled · used on Enroll / Next until required fields are set</div>
+    </div>
+
+    <div style="width:400px;background:#FFFFFF;border:1px solid #E3DED6;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-size:13px;font-weight:700;color:#20302E;">Tri-state answer chips</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;height:54px;padding:0 18px;border-radius:27px;background:#028090;color:#FFFFFF;font-size:16px;font-weight:600;"><span style="font-family:'Material Symbols Outlined';font-size:22px;">check</span>Yes — selected</div>
+        <div style="display:flex;align-items:center;gap:10px;height:54px;padding:0 18px;border-radius:27px;border:1.5px solid #20302E;color:#20302E;font-size:16px;font-weight:600;box-sizing:border-box;"><span style="font-family:'Material Symbols Outlined';font-size:22px;">close</span>No — selected</div>
+        <div style="display:flex;align-items:center;gap:10px;height:54px;padding:0 18px;border-radius:27px;background:#EDE8E0;color:#4A5754;font-size:16px;font-weight:600;"><span style="font-family:'Material Symbols Outlined';font-size:22px;">help</span>Unsure — selected</div>
+        <div style="display:flex;align-items:center;gap:10px;height:54px;padding:0 18px;border-radius:27px;border:1.5px solid #C9C2B6;color:#4A5754;font-size:16px;font-weight:600;box-sizing:border-box;"><span style="font-family:'Material Symbols Outlined';font-size:22px;">check</span>Unselected state</div>
+      </div>
+      <div style="font-size:10.5px;color:#8A968F;font-family:ui-monospace,Menlo,monospace;">Chip / ToggleButton · one selected per question · Yes=filled teal, No=outlined ink, Unsure=tonal neutral</div>
+      <div style="font-size:13px;font-weight:700;color:#20302E;margin-top:6px;">PGI-S severity (patient-reported)</div>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;height:46px;border-radius:23px;border:1.5px solid #E0C98F;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#6F5B33;box-sizing:border-box;">None</div>
+        <div style="flex:1;height:46px;border-radius:23px;border:1.5px solid #E0C98F;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#6F5B33;box-sizing:border-box;">Mild</div>
+        <div style="flex:1;height:46px;border-radius:23px;background:#8A5E00;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#FFFFFF;">Moderate</div>
+        <div style="flex:1;height:46px;border-radius:23px;border:1.5px solid #E0C98F;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#6F5B33;box-sizing:border-box;">Severe</div>
+      </div>
+      <div style="font-size:10.5px;color:#8A968F;font-family:ui-monospace,Menlo,monospace;">Amber family = patient's own voice, distinct from BHW-entered teal</div>
+    </div>
+
+    <div style="width:400px;background:#FFFFFF;border:1px solid #E3DED6;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-size:13px;font-weight:700;color:#20302E;">Status chips</div>
+      <div style="font-size:11px;color:#8A968F;">Sync (calm, never alarming)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:16px;background:#D9EEEF;color:#016575;border:1px solid #7CBEC6;font-size:12.5px;font-weight:600;"><span style="font-family:'Material Symbols Outlined';font-size:16px;">cloud_done</span>Synced</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:16px;background:#F7ECD8;color:#6F4C00;border:1px solid #E0C98F;font-size:12.5px;font-weight:600;"><span style="font-family:'Material Symbols Outlined';font-size:16px;">cloud_upload</span>Pending sync · 3</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:16px;background:#F3F0EA;color:#5A6B68;border:1px solid #D8D2C8;font-size:12.5px;font-weight:600;"><span style="font-family:'Material Symbols Outlined';font-size:16px;">cloud_off</span>Offline — saved on phone</span>
+      </div>
+      <div style="font-size:11px;color:#8A968F;margin-top:4px;">Follow-up status</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span style="display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:16px;background:#D9EEEF;color:#016575;font-size:12.5px;font-weight:600;">Upcoming</span>
+        <span style="display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:16px;background:#FBE7E5;color:#96362E;font-size:12.5px;font-weight:600;">Missed</span>
+        <span style="display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:16px;background:#F7ECD8;color:#6F4C00;font-size:12.5px;font-weight:600;">Did not present</span>
+      </div>
+      <div style="font-size:11px;color:#8A968F;margin-top:4px;">Referral stages</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span style="display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:16px;border:1px solid #C9C2B6;color:#4A5754;font-size:12.5px;font-weight:600;box-sizing:border-box;">Submitted</span>
+        <span style="display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:16px;background:#EDE8E0;color:#4A5754;font-size:12.5px;font-weight:600;">Received</span>
+        <span style="display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:16px;background:#D9EEEF;color:#016575;font-size:12.5px;font-weight:600;">Tested</span>
+        <span style="display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:16px;background:#028090;color:#FFFFFF;font-size:12.5px;font-weight:600;">Result recorded</span>
+      </div>
+      <div style="font-size:10.5px;color:#8A968F;font-family:ui-monospace,Menlo,monospace;">Chip compact · tonal containers · never red for offline</div>
+    </div>
+
+    <div style="width:400px;background:#FFFFFF;border:1px solid #E3DED6;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-size:13px;font-weight:700;color:#20302E;">Consent card</div>
+      <div style="background:#D9EEEF;border:1.5px solid #7CBEC6;border-radius:16px;padding:16px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-family:'Material Symbols Outlined';font-size:22px;color:#016575;">handshake</span>
+          <span style="font-size:15px;font-weight:700;color:#014B57;">Informed consent</span>
+        </div>
+        <div style="margin-top:8px;font-size:13px;line-height:1.6;color:#014B57;">Read together with the patient. Plain language, second person, no jargon. Consent is a deliberate toggle — never pre-checked.</div>
+        <div style="margin-top:12px;display:flex;align-items:center;gap:12px;background:#FFFFFF;border-radius:12px;padding:10px 14px;">
+          <span style="width:52px;height:30px;border-radius:15px;background:#028090;position:relative;display:inline-block;">
+            <span style="position:absolute;top:3px;left:25px;width:24px;height:24px;border-radius:12px;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></span>
+          </span>
+          <span style="font-size:13.5px;font-weight:600;color:#20302E;">Patient gave consent</span>
+        </div>
+      </div>
+      <div style="font-size:10.5px;color:#8A968F;font-family:ui-monospace,Menlo,monospace;">Card mode="outlined" on secondaryContainer + Switch</div>
+      <div style="font-size:13px;font-weight:700;color:#20302E;margin-top:6px;">Stat cards</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <div style="background:#D9EEEF;border-radius:14px;padding:12px 10px;"><div style="font-size:24px;font-weight:700;color:#016575;">3</div><div style="font-size:11px;font-weight:500;color:#014B57;line-height:1.3;">Upcoming check-ups</div></div>
+        <div style="background:#FBE7E5;border-radius:14px;padding:12px 10px;"><div style="font-size:24px;font-weight:700;color:#96362E;">1</div><div style="font-size:11px;font-weight:500;color:#7A2B24;line-height:1.3;">Missed check-ups</div></div>
+        <div style="background:#F7ECD8;border-radius:14px;padding:12px 10px;"><div style="font-size:24px;font-weight:700;color:#8A5E00;">1</div><div style="font-size:11px;font-weight:500;color:#6F4C00;line-height:1.3;">Did not present</div></div>
+      </div>
+      <div style="font-size:10.5px;color:#8A968F;font-family:ui-monospace,Menlo,monospace;">Card contained · tonal container colors · tap → filtered follow-up list</div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;syncState&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;synced&quot;, &quot;pending&quot;, &quot;offline&quot;], &quot;default&quot;: &quot;synced&quot;, &quot;tsType&quot;: &quot;'synced' | 'pending' | 'offline'&quot;, &quot;section&quot;: &quot;Demo&quot; },
+  &quot;showJumpStrip&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Demo&quot; }
+}">
+class Component extends DCLogic {
+  state = {
+    lang: 'en',
+    screen: 'lang',
+    email: '', pw: '',
+    search: '',
+    syncOverride: null,
+    // assigned barangay (settings)
+    myRegion: 'Region VII – Central Visayas', myProv: 'Cebu', myCity: 'Argao', myBrgy: 'Lamacan',
+    // enrollment
+    enName: '', enSex: null, enDob: '', enSitio: '',
+    enRegion: 'Region VII – Central Visayas', enProv: 'Cebu', enCity: 'Argao', enBrgy: 'Lamacan',
+    consent: false, sms: false, enPhone: '',
+    enrolledCode: null,
+    // screening
+    qIndex: 0, answers: [null,null,null,null,null,null,null,null,null], pgis: null,
+    screeningName: null,
+    // result / referral
+    refConfirmed: false,
+    // record / followup
+    activePatient: 0, recordFrom: 'home',
+    recEditing: false, edName: '', edSex: 'F', edDob: '', patientEdits: {},
+    fuFilter: 'upcoming',
+    // portal
+    pScreen: 'login', pTab: 'dash', pSel: null,
+    pStatuses: ['new','received','tested','result'],
+    pDnpFlags: [false,false,false,true],
+    selApptDate: '2026-07-14',
+    range: '30',
+    // captain / BHW management
+    pRole: 'staff',
+    cScreen: 'list', dlgIdx: null, editIdx: null,
+    addName: '', addRegion: 'Region VII – Central Visayas', addProv: 'Cebu', addCity: 'Argao', addBrgy: 'Lamacan',
+    lastInvite: null,
+    bhws: [
+      { name: 'Rosario Dizon', brgy: 'Lamacan', active: true, scr: 14, ref: 6 },
+      { name: 'Carmela Abella', brgy: 'Poblacion', active: true, scr: 11, ref: 4 },
+      { name: 'Felix Bacalso', brgy: 'Tulic', active: true, scr: 8, ref: 3 },
+      { name: 'Nida Alcoseba', brgy: 'Canbanua', active: false, scr: 0, ref: 0 },
+      { name: 'Marites Sumalinog', brgy: 'Bulasa', active: true, scr: 6, ref: 2 },
+    ],
+  };
+
+  STR = {
+    en: {
+      continueBtn: 'Continue', langSub: 'You can change this anytime in Settings',
+      termsTitle: 'Terms & Conditions', termsAccept: 'I understand and accept',
+      discTitle: 'This app does not diagnose TB',
+      discBody: 'TB-Screen BHW is a pre-screening support tool. Only a TB-DOTS facility can test for and diagnose tuberculosis. This app only helps you decide who to refer.',
+      tc1h: 'Purpose', tc1b: 'This tool supports Barangay Health Workers in pre-screening community members for possible referral to TB-DOTS facilities, using the DOH-NTP symptom checklist.',
+      tc2h: 'Data privacy', tc2b: 'Patient information is stored securely and shared only with the linked TB-DOTS facility, in line with the Data Privacy Act of 2012 (RA 10173). Patients may decline SMS reminders and still be enrolled.',
+      tc3h: 'Limitations', tc3b: 'The app never produces a diagnosis, score, or probability. A referral recommendation follows the national symptom checklist only. Final assessment is always made by the TB-DOTS facility.',
+      signIn: 'Sign in', email: 'Email', password: 'Password', loginBtn: 'Sign in', loginHint: 'BHW account issued by your RHU',
+      hello: 'Good morning', todayTitle: 'TODAY', upcoming: 'Upcoming check-ups', missed: 'Missed check-ups', dnp: 'Did not present',
+      newScreening: 'New screening', searchPh: 'Search patients…', noResults: 'No patients match your search',
+      offlineNote: 'You are offline. Everything keeps working — records are saved on this phone and will sync automatically.',
+      settings: 'Settings', language: 'LANGUAGE', assignedBrgy: 'ASSIGNED BARANGAY', assignedNote: 'Set once — pre-fills every enrollment', account: 'ACCOUNT', signOut: 'Sign out',
+      enrollTitle: 'Enroll patient', fullName: 'Full name', sex: 'Sex', male: 'Male', female: 'Female',
+      birthdate: 'Birthdate', agePrefix: 'Age', address: 'ADDRESS', region: 'Region', province: 'Province', cityMun: 'City / Municipality', barangay: 'Barangay', sitio: 'Sitio (free text)',
+      prefillNote: 'Pre-filled from your assigned barangay — editable',
+      consentTitle: 'Informed consent', consentBody: '"Your answers will be shared with the TB-DOTS facility to help decide if you should be referred for TB testing. You may say no at any time. Saying no will not affect your care."',
+      consentToggle: 'Patient gave consent', smsTitle: 'SMS check-up reminders', smsBody: 'Optional. The patient can enroll without SMS.', phone: 'Mobile number',
+      enrollBtn: 'Enroll patient', enrolledTitle: 'Patient enrolled', startScreening: 'Start screening', backHome: 'Back to home',
+      screeningTitle: 'Symptom screening', checklistTag: 'DOH-NTP CHECKLIST', yes: 'Yes', no: 'No', unsure: 'Unsure',
+      next: 'Next', back: 'Back', finish: 'See recommendation', answerFirst: 'Choose an answer',
+      reviewTitle: 'Review answers', reviewHint: 'Tap an answer to change it before finishing.', editAnswers: 'Edit answers',
+      pgisTitle: 'How severe is your cough?', pgisNote: 'Ask the patient to answer in their own words — this is the patient\u2019s own rating, not yours.', pgisChip: 'PATIENT-REPORTED',
+      pgisOpts: ['None','Mild','Moderate','Severe'],
+      qList: [
+        'Cough for 2 weeks or longer?','Unexplained weight loss?','Night sweats?','Fever?','Blood in sputum?','Chest pain?','Fatigue or tiredness?','Loss of appetite?','Close contact with a known TB case?'
+      ],
+      meetsTitle: 'Meets presumptive TB criteria', meetsBody: 'Refer to TB-DOTS for testing.',
+      notTitle: 'Does not meet criteria', notBody: 'No referral needed today. Advise the patient to return if symptoms appear or worsen.',
+      resultNote: 'Pre-screening recommendation from the DOH-NTP symptom checklist only. This is not a diagnosis. Only a TB-DOTS facility can diagnose TB.',
+      createReferral: 'Create referral', done: 'Done',
+      refTitle: 'Referral & specimen form', facility: 'TB-DOTS facility', appt: 'Appointment',
+      confirmRef: 'Confirm referral', confirmed: 'Referral confirmed', formPreview: 'SPECIMEN FORM PREVIEW', print: 'Print', share: 'Share',
+      recTitle: 'Patient record', history: 'SCREENING HISTORY', refStatus: 'REFERRAL STATUS', appts: 'CHECK-UPS',
+      editDetails: 'Edit details', saveChanges: 'Save changes', cancel: 'Cancel', undo: 'Undo',
+      attended: 'Attended', missedChip: 'Missed', upcomingChip: 'Upcoming', dnpChip: 'Did not present',
+      stSubmitted: 'Submitted', stReceived: 'Received', stTested: 'Tested', stResult: 'Result recorded',
+      fuTitle: 'Follow-ups', fuUpcoming: 'Upcoming', fuMissed: 'Missed', fuDnp: 'Did not present',
+      fuEmpty: 'No patients here right now', fuEmptySub: 'Patients flagged by the TB-DOTS facility will appear in this list.',
+      synced: 'Synced', pending: 'Pending · 3', offline: 'Offline',
+      presumptive: 'Presumptive', notPres: 'Not presumptive',
+    },
+    tl: {
+      continueBtn: 'Magpatuloy', langSub: 'Maaari itong palitan anumang oras sa Settings',
+      termsTitle: 'Mga Tuntunin at Kundisyon', termsAccept: 'Nauunawaan ko at tinatanggap',
+      discTitle: 'Hindi nagdi-diagnose ng TB ang app na ito',
+      discBody: 'Ang TB-Screen BHW ay kasangkapan lamang sa paunang pagsusuri (pre-screening). Tanging ang TB-DOTS facility ang maaaring magsuri at mag-diagnose ng tuberculosis. Tumutulong lang ito para malaman kung sino ang dapat i-refer.',
+      tc1h: 'Layunin', tc1b: 'Sinusuportahan ng kasangkapang ito ang mga Barangay Health Worker sa paunang pagsusuri ng mga miyembro ng komunidad para sa posibleng referral sa TB-DOTS, gamit ang DOH-NTP symptom checklist.',
+      tc2h: 'Privacy ng datos', tc2b: 'Ligtas na iniimbak ang impormasyon ng pasyente at ibinabahagi lamang sa nakaugnay na TB-DOTS facility, alinsunod sa Data Privacy Act of 2012 (RA 10173). Maaaring tumanggi sa SMS ang pasyente at maka-enroll pa rin.',
+      tc3h: 'Mga limitasyon', tc3b: 'Hindi kailanman gumagawa ang app ng diagnosis, iskor, o probabilidad. Ang rekomendasyon sa referral ay batay lamang sa pambansang symptom checklist. Ang huling pagsusuri ay laging sa TB-DOTS facility.',
+      signIn: 'Mag-sign in', email: 'Email', password: 'Password', loginBtn: 'Mag-sign in', loginHint: 'BHW account mula sa inyong RHU',
+      hello: 'Magandang umaga', todayTitle: 'NGAYONG ARAW', upcoming: 'Paparating na check-up', missed: 'Hindi natupad na check-up', dnp: 'Hindi dumating',
+      newScreening: 'Bagong screening', searchPh: 'Maghanap ng pasyente…', noResults: 'Walang pasyenteng tumugma sa hinahanap',
+      offlineNote: 'Offline ka. Gumagana pa rin ang lahat — naka-save sa telepono ang mga tala at awtomatikong magsi-sync.',
+      settings: 'Mga Setting', language: 'WIKA', assignedBrgy: 'NAKATALAGANG BARANGAY', assignedNote: 'Itakda nang isang beses — awtomatikong lalabas sa bawat enrollment', account: 'ACCOUNT', signOut: 'Mag-sign out',
+      enrollTitle: 'I-enroll ang pasyente', fullName: 'Buong pangalan', sex: 'Kasarian', male: 'Lalaki', female: 'Babae',
+      birthdate: 'Petsa ng kapanganakan', agePrefix: 'Edad', address: 'TIRAHAN', region: 'Rehiyon', province: 'Probinsya', cityMun: 'Lungsod / Munisipalidad', barangay: 'Barangay', sitio: 'Sitio (malayang isulat)',
+      prefillNote: 'Naka-pre-fill mula sa nakatalagang barangay — maaaring baguhin',
+      consentTitle: 'May-kaalamang pahintulot', consentBody: '"Ibabahagi ang iyong mga sagot sa TB-DOTS facility upang matulungan kang madesisyunan kung dapat kang i-refer para sa TB testing. Maaari kang tumanggi anumang oras. Hindi ito makakaapekto sa iyong pangangalaga."',
+      consentToggle: 'Pumayag ang pasyente', smsTitle: 'Mga paalala sa check-up sa SMS', smsBody: 'Opsyonal. Maaaring ma-enroll ang pasyente kahit walang SMS.', phone: 'Numero ng mobile',
+      enrollBtn: 'I-enroll ang pasyente', enrolledTitle: 'Na-enroll ang pasyente', startScreening: 'Simulan ang screening', backHome: 'Bumalik sa home',
+      screeningTitle: 'Pagsusuri ng sintomas', checklistTag: 'DOH-NTP CHECKLIST', yes: 'Oo', no: 'Hindi', unsure: 'Hindi sigurado',
+      next: 'Susunod', back: 'Bumalik', finish: 'Tingnan ang rekomendasyon', answerFirst: 'Pumili muna ng sagot',
+      reviewTitle: 'Suriin ang mga sagot', reviewHint: 'Pindutin ang sagot upang baguhin bago tapusin.', editAnswers: 'Baguhin ang mga sagot',
+      pgisTitle: 'Gaano kalala ang iyong ubo?', pgisNote: 'Hilingin sa pasyenteng sumagot sa sarili niyang salita — ito ang sariling sagot ng pasyente, hindi sa iyo.', pgisChip: 'SAGOT NG PASYENTE',
+      pgisOpts: ['Wala','Bahagya','Katamtaman','Matindi'],
+      qList: [
+        'Ubo nang 2 linggo o higit pa?','Pagbaba ng timbang na walang dahilan?','Pagpapawis sa gabi?','Lagnat?','Dugo sa plema?','Pananakit ng dibdib?','Panghihina o pagkapagod?','Kawalan ng gana sa pagkain?','Malapit na nakasalamuha ang taong may TB?'
+      ],
+      meetsTitle: 'Pasok sa pamantayan ng presumptive TB', meetsBody: 'I-refer sa TB-DOTS para sa pagsusuri.',
+      notTitle: 'Hindi pasok sa pamantayan', notBody: 'Hindi kailangan ng referral ngayon. Payuhan ang pasyenteng bumalik kung lumitaw o lumala ang mga sintomas.',
+      resultNote: 'Rekomendasyon mula lamang sa DOH-NTP symptom checklist. Hindi ito diagnosis. Tanging TB-DOTS facility ang maaaring mag-diagnose ng TB.',
+      createReferral: 'Gumawa ng referral', done: 'Tapos na',
+      refTitle: 'Referral at specimen form', facility: 'TB-DOTS facility', appt: 'Appointment',
+      confirmRef: 'Kumpirmahin ang referral', confirmed: 'Nakumpirma ang referral', formPreview: 'PREVIEW NG SPECIMEN FORM', print: 'I-print', share: 'Ibahagi',
+      recTitle: 'Tala ng pasyente', history: 'KASAYSAYAN NG SCREENING', refStatus: 'KATAYUAN NG REFERRAL', appts: 'MGA CHECK-UP',
+      editDetails: 'Baguhin ang detalye', saveChanges: 'I-save ang mga pagbabago', cancel: 'Kanselahin', undo: 'I-undo',
+      attended: 'Dumalo', missedChip: 'Hindi natupad', upcomingChip: 'Paparating', dnpChip: 'Hindi dumating',
+      stSubmitted: 'Naipasa', stReceived: 'Natanggap', stTested: 'Nasuri', stResult: 'Naitala ang resulta',
+      fuTitle: 'Mga follow-up', fuUpcoming: 'Paparating', fuMissed: 'Hindi natupad', fuDnp: 'Hindi dumating',
+      fuEmpty: 'Walang pasyente rito sa ngayon', fuEmptySub: 'Lalabas dito ang mga pasyenteng na-flag ng TB-DOTS facility.',
+      synced: 'Naka-sync', pending: 'Naghihintay · 3', offline: 'Offline',
+      presumptive: 'Presumptive', notPres: 'Hindi presumptive',
+    },
+    ceb: {
+      continueBtn: 'Padayon', langSub: 'Mahimo kining usbon bisan kanus-a sa Settings',
+      termsTitle: 'Mga Termino ug Kondisyon', termsAccept: 'Nakasabot ko ug midawat',
+      discTitle: 'Kini nga app dili mag-diagnose og TB',
+      discBody: 'Ang TB-Screen BHW usa lang ka himan sa pauna nga pagsusi (pre-screening). Ang TB-DOTS facility ra ang makasusi ug maka-diagnose sa tuberculosis. Motabang lang kini sa pagsuta kon kinsa ang angay i-refer.',
+      tc1h: 'Katuyoan', tc1b: 'Kini nga himan motabang sa mga Barangay Health Worker sa pauna nga pagsusi sa mga miyembro sa komunidad alang sa posibleng referral ngadto sa TB-DOTS, gamit ang DOH-NTP symptom checklist.',
+      tc2h: 'Privacy sa datos', tc2b: 'Luwas nga gitipigan ang impormasyon sa pasyente ug gipaambit lang sa nalambigit nga TB-DOTS facility, subay sa Data Privacy Act of 2012 (RA 10173). Mahimong mobalibad sa SMS ang pasyente ug maka-enroll gihapon.',
+      tc3h: 'Mga limitasyon', tc3b: 'Ang app dili gayod maghimo og diagnosis, iskor, o probabilidad. Ang rekomendasyon sa referral gibase lamang sa nasudnong symptom checklist. Ang kataposang pagsusi kanunay anaa sa TB-DOTS facility.',
+      signIn: 'Pag-sign in', email: 'Email', password: 'Password', loginBtn: 'Pag-sign in', loginHint: 'BHW account gikan sa inyong RHU',
+      hello: 'Maayong buntag', todayTitle: 'KARONG ADLAWA', upcoming: 'Umaabot nga check-up', missed: 'Wala natuman nga check-up', dnp: 'Wala miabot',
+      newScreening: 'Bag-ong screening', searchPh: 'Pangitaa ang pasyente…', noResults: 'Walay pasyente nga mitakdo sa gipangita',
+      offlineNote: 'Offline ka. Nagpadagan gihapon ang tanan — natipigan sa telepono ang mga rekord ug awtomatikong mag-sync.',
+      settings: 'Mga Setting', language: 'PINULONGAN', assignedBrgy: 'GITAHAS NGA BARANGAY', assignedNote: 'Itakda kausa — awtomatikong mogawas sa matag enrollment', account: 'ACCOUNT', signOut: 'Pag-sign out',
+      enrollTitle: 'I-enroll ang pasyente', fullName: 'Tibuok nga ngalan', sex: 'Sekso', male: 'Lalaki', female: 'Babaye',
+      birthdate: 'Petsa sa pagkatawo', agePrefix: 'Edad', address: 'PUY-ANAN', region: 'Rehiyon', province: 'Probinsya', cityMun: 'Siyudad / Munisipyo', barangay: 'Barangay', sitio: 'Sitio (gawasnong isulat)',
+      prefillNote: 'Na-pre-fill gikan sa gitahas nga barangay — mahimong usbon',
+      consentTitle: 'Sinayran nga pagtugot', consentBody: '"Ang imong mga tubag ipaambit sa TB-DOTS facility aron matabangan sa pagdesisyon kon angay ka bang i-refer alang sa TB testing. Mahimo kang mobalibad bisan kanus-a. Dili kini makaapekto sa imong pag-atiman."',
+      consentToggle: 'Mitugot ang pasyente', smsTitle: 'Mga pahinumdom sa check-up pinaagi sa SMS', smsBody: 'Opsyonal. Maka-enroll ang pasyente bisan walay SMS.', phone: 'Numero sa mobile',
+      enrollBtn: 'I-enroll ang pasyente', enrolledTitle: 'Na-enroll ang pasyente', startScreening: 'Sugdan ang screening', backHome: 'Balik sa home',
+      screeningTitle: 'Pagsusi sa sintomas', checklistTag: 'DOH-NTP CHECKLIST', yes: 'Oo', no: 'Dili', unsure: 'Dili sigurado',
+      next: 'Sunod', back: 'Balik', finish: 'Tan-awa ang rekomendasyon', answerFirst: 'Pilia una ang tubag',
+      reviewTitle: 'Susiha ang mga tubag', reviewHint: 'Pislita ang tubag aron usbon una mahuman.', editAnswers: 'Usba ang mga tubag',
+      pgisTitle: 'Unsa ka grabe ang imong ubo?', pgisNote: 'Hangyoa ang pasyente nga motubag sa iyang kaugalingong pulong — kini ang kaugalingong tubag sa pasyente, dili imoha.', pgisChip: 'TUBAG SA PASYENTE',
+      pgisOpts: ['Wala','Gamay','Kasarangan','Grabe'],
+      qList: [
+        'Ubo sulod sa 2 ka semana o kapin?','Pagniwang nga walay hinungdan?','Pagpaningot sa gabii?','Hilanat?','Dugo sa plema?','Sakit sa dughan?','Kakapoy o kaluya?','Walay gana mokaon?','Duol nga kontak sa tawong may TB?'
+      ],
+      meetsTitle: 'Nakaabot sa sukdanan sa presumptive TB', meetsBody: 'I-refer sa TB-DOTS alang sa pagsusi.',
+      notTitle: 'Wala makaabot sa sukdanan', notBody: 'Dili kinahanglan og referral karon. Tambagi ang pasyente nga mobalik kon mogawas o mograbe ang mga sintomas.',
+      resultNote: 'Rekomendasyon gikan lamang sa DOH-NTP symptom checklist. Dili kini diagnosis. Ang TB-DOTS facility ra ang maka-diagnose og TB.',
+      createReferral: 'Paghimo og referral', done: 'Humana',
+      refTitle: 'Referral ug specimen form', facility: 'TB-DOTS facility', appt: 'Appointment',
+      confirmRef: 'Kumpirmaha ang referral', confirmed: 'Nakumpirma ang referral', formPreview: 'PREVIEW SA SPECIMEN FORM', print: 'I-print', share: 'Ipaambit',
+      recTitle: 'Rekord sa pasyente', history: 'KASAYSAYAN SA SCREENING', refStatus: 'KAHIMTANG SA REFERRAL', appts: 'MGA CHECK-UP',
+      editDetails: 'Usba ang detalye', saveChanges: 'I-save ang mga kausaban', cancel: 'Kanselahon', undo: 'I-undo',
+      attended: 'Mitambong', missedChip: 'Wala natuman', upcomingChip: 'Umaabot', dnpChip: 'Wala miabot',
+      stSubmitted: 'Gipasa', stReceived: 'Nadawat', stTested: 'Nasusi', stResult: 'Narekord ang resulta',
+      fuTitle: 'Mga follow-up', fuUpcoming: 'Umaabot', fuMissed: 'Wala natuman', fuDnp: 'Wala miabot',
+      fuEmpty: 'Walay pasyente dinhi karon', fuEmptySub: 'Mogawas dinhi ang mga pasyenteng gi-flag sa TB-DOTS facility.',
+      synced: 'Naka-sync', pending: 'Nagpaabot · 3', offline: 'Offline',
+      presumptive: 'Presumptive', notPres: 'Dili presumptive',
+    },
+  };
+
+  PATIENTS = [
+    { name: 'Maria Santos', code: 'PAT-0001', sex: 'F', age: 43, dob: '1983-02-14', brgy: 'Lamacan', status: 'result', fu: 'upcoming', fuDate: 'Jul 9',
+      timeline: [['stSubmitted','Jul 1'],['stReceived','Jul 2'],['stTested','Jul 4'],['stResult','Jul 5']], tlDone: 4,
+      history: [{ date: 'Jul 1, 2026', pgis: 'Moderate', meets: true }],
+      appts: [{ date: 'Jul 9, 2026 · 8:00 AM', st: 'upcoming' }, { date: 'Jul 2, 2026 · 8:00 AM', st: 'attended' }] },
+    { name: 'Jose Ramirez', code: 'PAT-0002', sex: 'M', age: 58, dob: '1968-03-02', brgy: 'Poblacion', status: 'received', fu: 'missed', fuDate: 'Jul 3',
+      timeline: [['stSubmitted','Jun 28'],['stReceived','Jun 30'],['stTested','—'],['stResult','—']], tlDone: 2,
+      history: [{ date: 'Jun 28, 2026', pgis: 'Severe', meets: true }],
+      appts: [{ date: 'Jul 3, 2026 · 8:00 AM', st: 'missed' }] },
+    { name: 'Elena Cruz', code: 'PAT-0003', sex: 'F', age: 36, dob: '1990-04-20', brgy: 'Tulic', status: 'submitted', fu: null, fuDate: '',
+      timeline: [['stSubmitted','Jul 6'],['stReceived','—'],['stTested','—'],['stResult','—']], tlDone: 1,
+      history: [{ date: 'Jul 6, 2026', pgis: 'Mild', meets: true }],
+      appts: [{ date: 'Jul 12, 2026 · 8:00 AM', st: 'upcoming' }] },
+    { name: 'Ricardo Dela Peña', code: 'PAT-0004', sex: 'M', age: 61, dob: '1964-11-08', brgy: 'Lamacan', status: 'received', fu: 'dnp', fuDate: 'Jul 5',
+      timeline: [['stSubmitted','Jun 25'],['stReceived','Jun 27'],['stTested','—'],['stResult','—']], tlDone: 2,
+      history: [{ date: 'Jun 25, 2026', pgis: 'Moderate', meets: true }],
+      appts: [{ date: 'Jul 5, 2026 · 8:00 AM', st: 'dnp' }] },
+    { name: 'Luzviminda Ocampo', code: 'PAT-0005', sex: 'F', age: 49, dob: '1977-01-25', brgy: 'Canbanua', status: 'submitted', fu: 'upcoming', fuDate: 'Jul 8',
+      timeline: [['stSubmitted','Jul 5'],['stReceived','—'],['stTested','—'],['stResult','—']], tlDone: 1,
+      history: [{ date: 'Jul 5, 2026', pgis: 'Mild', meets: true }],
+      appts: [{ date: 'Jul 8, 2026 · 8:00 AM', st: 'upcoming' }] },
+    { name: 'Antonio Villanueva', code: 'PAT-0006', sex: 'M', age: 52, dob: '1974-05-30', brgy: 'Bulasa', status: 'tested', fu: 'upcoming', fuDate: 'Jul 10',
+      timeline: [['stSubmitted','Jun 30'],['stReceived','Jul 1'],['stTested','Jul 6'],['stResult','—']], tlDone: 3,
+      history: [{ date: 'Jun 30, 2026', pgis: 'Moderate', meets: true }],
+      appts: [{ date: 'Jul 10, 2026 · 8:00 AM', st: 'upcoming' }] },
+  ];
+
+  GEO = {
+    regions: ['Region VII – Central Visayas', 'Region VI – Western Visayas', 'Region VIII – Eastern Visayas'],
+    provs: ['Cebu', 'Bohol', 'Negros Oriental', 'Siquijor'],
+    cities: ['Argao', 'Carcar City', 'Dalaguete', 'Sibonga'],
+    brgys: ['Lamacan', 'Poblacion', 'Tulic', 'Canbanua', 'Bulasa', 'Talaga'],
+  };
+
+  REFS = [
+    { p: 0, date: 'Jul 1', pgis: 'Moderate', answers: ['Yes','Yes','Unsure','No','No','Yes','Yes','No','No'] },
+    { p: 1, date: 'Jun 28', pgis: 'Severe', answers: ['Yes','No','Yes','Yes','Yes','No','Yes','Yes','No'] },
+    { p: 2, date: 'Jul 6', pgis: 'Mild', answers: ['Yes','No','No','Unsure','No','No','Yes','No','Yes'] },
+    { p: 3, date: 'Jun 25', pgis: 'Moderate', answers: ['Yes','Yes','No','No','No','Yes','No','Yes','No'] },
+  ];
+
+  HOT = {
+    '30': [['Lamacan',7],['Poblacion',5],['Tulic',4],['Canbanua',3],['Bulasa',2],['Talaga',1]],
+    '60': [['Lamacan',12],['Poblacion',9],['Tulic',6],['Canbanua',6],['Bulasa',4],['Talaga',2]],
+    '90': [['Lamacan',16],['Poblacion',14],['Tulic',9],['Canbanua',8],['Bulasa',5],['Talaga',4]],
+  };
+
+  go(screen) { this.setState({ screen }); }
+
+  ageFrom(dob) {
+    if (!dob) return null;
+    const d = new Date(dob + 'T00:00:00'); const now = new Date('2026-07-07T00:00:00');
+    let age = now.getFullYear() - d.getFullYear();
+    if (now.getMonth() < d.getMonth() || (now.getMonth() === d.getMonth() && now.getDate() < d.getDate())) age--;
+    return (isNaN(age) || age < 0 || age > 130) ? null : age;
+  }
+
+  bhwEmail(name, brgy) {
+    if (!name || !name.trim()) return null;
+    const slug = (x) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z\s]/g, '').trim().split(/\s+/).join('.');
+    return slug(name) + '.' + slug(brgy) + '@tbscreen.ph';
+  }
+
+  getPatient(i) {
+    const e = this.state.patientEdits[i];
+    return e ? Object.assign({}, this.PATIENTS[i], e) : this.PATIENTS[i];
+  }
+
+  initials(name) { return name.split(' ').map(w => w[0]).slice(0, 2).join(''); }
+
+  fuChip(t, fu) {
+    if (fu === 'missed') return { chip: t.missedChip, chipBg: '#FBE7E5', chipFg: '#96362E' };
+    if (fu === 'dnp') return { chip: t.dnpChip, chipBg: '#F7ECD8', chipFg: '#6F4C00' };
+    return { chip: t.upcomingChip, chipBg: '#D9EEEF', chipFg: '#016575' };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const t = this.STR[s.lang];
+    const T = this.STR.en;
+    const sel = (cond) => cond
+      ? { border: '2px solid #028090', bg: '#D9EEEF', checkColor: '#028090' }
+      : { border: '1.5px solid #C9C2B6', bg: '#FFFFFF', checkColor: 'transparent' };
+
+    // ---- language options ----
+    const langDefs = [
+      { key: 'en', native: 'English', sub: 'English', flag: '🇺🇸' },
+      { key: 'tl', native: 'Tagalog', sub: 'Filipino', flag: '🇵🇭' },
+      { key: 'ceb', native: 'Cebuano', sub: 'Sinugboanon', flag: '🇵🇭' },
+    ];
+    const langOpts = langDefs.map(d => Object.assign({
+      native: d.native, sub: d.sub, flag: d.flag,
+      onPick: () => this.setState({ lang: d.key }),
+    }, sel(s.lang === d.key)));
+
+    // ---- sync chip ----
+    const syncState = s.syncOverride ?? (this.props.syncState ?? 'synced');
+    const syncMap = {
+      synced: { syncLabel: t.synced, syncIcon: 'cloud_done', syncBg: '#D9EEEF', syncFg: '#016575', syncBd: '#7CBEC6' },
+      pending: { syncLabel: t.pending, syncIcon: 'cloud_upload', syncBg: '#F7ECD8', syncFg: '#6F4C00', syncBd: '#E0C98F' },
+      offline: { syncLabel: t.offline, syncIcon: 'cloud_off', syncBg: '#F3F0EA', syncFg: '#5A6B68', syncBd: '#D8D2C8' },
+    };
+
+    // ---- home patient rows ----
+    const PL = this.PATIENTS.map((_, i) => this.getPatient(i));
+    const q = s.search.trim().toLowerCase();
+    const matched = PL.filter(p => !q || p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q));
+    const patientRows = matched.slice(0, 4).map(p => {
+      const idx = PL.indexOf(p);
+      const stMap = { submitted: t.stSubmitted, received: t.stReceived, tested: t.stTested, result: t.stResult };
+      const stBg = { submitted: '#F3F0EA', received: '#EDE8E0', tested: '#D9EEEF', result: '#028090' };
+      const stFg = { submitted: '#5A6B68', received: '#4A5754', tested: '#016575', result: '#FFFFFF' };
+      return {
+        name: p.name, code: p.code, brgy: 'Brgy. ' + p.brgy, initials: this.initials(p.name),
+        chip: stMap[p.status], chipBg: stBg[p.status], chipFg: stFg[p.status],
+        onOpen: () => this.setState({ activePatient: idx, screen: 'record', recordFrom: 'home', recEditing: false }),
+      };
+    });
+
+    // ---- enrollment ----
+    const age = this.ageFrom(s.enDob);
+    const enrollValid = s.enName.trim() && s.enSex && age !== null && s.consent && (!s.sms || s.enPhone.trim());
+    const sexSel = (on) => on
+      ? { bd: 'none', bg: '#028090', fg: '#FFFFFF' }
+      : { bd: '1.5px solid #C9C2B6', bg: '#FFFFFF', fg: '#4A5754' };
+    const mS = sexSel(s.enSex === 'M'), fS = sexSel(s.enSex === 'F');
+
+    // ---- screening ----
+    const isPgisStep = s.qIndex === 9;
+    const answered = isPgisStep ? s.pgis !== null : s.answers[s.qIndex] !== null;
+    const triDefs = [
+      { v: 'yes', label: t.yes, icon: 'check', on: { border: 'none', bg: '#028090', fg: '#FFFFFF' } },
+      { v: 'no', label: t.no, icon: 'close', on: { border: '2px solid #20302E', bg: '#FFFFFF', fg: '#20302E' } },
+      { v: 'unsure', label: t.unsure, icon: 'help', on: { border: 'none', bg: '#EDE8E0', fg: '#4A5754' } },
+    ];
+    const triOpts = triDefs.map(d => {
+      const on = s.answers[s.qIndex] === d.v;
+      return {
+        label: d.label, icon: d.icon,
+        border: on ? d.on.border : '1.5px solid #C9C2B6',
+        bg: on ? d.on.bg : '#FFFFFF', fg: on ? d.on.fg : '#4A5754',
+        onPick: () => { const a = s.answers.slice(); a[s.qIndex] = d.v; this.setState({ answers: a }); },
+      };
+    });
+    const pgisOpts = t.pgisOpts.map((label, i) => {
+      const on = s.pgis === i;
+      return {
+        label,
+        border: on ? 'none' : '1.5px solid #E0C98F',
+        bg: on ? '#8A5E00' : '#FFFFFF', fg: on ? '#FFFFFF' : '#6F5B33',
+        checkColor: on ? '#FFFFFF' : 'transparent',
+        onPick: () => this.setState({ pgis: i }),
+      };
+    });
+    // ---- review ----
+    const reviewRows = t.qList.map((qq, i) => ({
+      q: qq,
+      opts: triDefs.map(d => {
+        const on = s.answers[i] === d.v;
+        return {
+          label: d.label,
+          border: on ? d.on.border : '1.5px solid #C9C2B6',
+          bg: on ? d.on.bg : '#FFFFFF', fg: on ? d.on.fg : '#4A5754',
+          onPick: () => { const a = s.answers.slice(); a[i] = d.v; this.setState({ answers: a }); },
+        };
+      }),
+    }));
+    const reviewPgis = t.pgisOpts.map((label, i) => {
+      const on = s.pgis === i;
+      return {
+        label,
+        border: on ? 'none' : '1.5px solid #E0C98F',
+        bg: on ? '#8A5E00' : '#FFFFFF', fg: on ? '#FFFFFF' : '#6F5B33',
+        onPick: () => this.setState({ pgis: i }),
+      };
+    });
+    const allAnswered = s.answers.every(a => a !== null) && s.pgis !== null;
+    const yesCount = s.answers.slice(1, 8).filter(a => a === 'yes').length;
+    const meets = s.answers[0] === 'yes' || s.answers[4] === 'yes' || s.answers[8] === 'yes' || yesCount >= 2;
+
+    // ---- record view ----
+    const p = this.getPatient(s.activePatient);
+    const recTimeline = p.timeline.map((step, i) => {
+      const done = i < p.tlDone;
+      const last = i === p.timeline.length - 1;
+      return {
+        label: t[step[0]], date: step[1] === '—' ? '—' : step[1] + ', 2026',
+        icon: done ? 'check' : 'circle',
+        dotBg: done ? '#028090' : '#EDE8E0', dotFg: done ? '#FFFFFF' : '#C9C2B6',
+        lineBg: last ? 'transparent' : (i < p.tlDone - 1 ? '#028090' : '#EDE8E0'),
+        labelColor: done ? '#20302E' : '#8A968F',
+      };
+    });
+    const recHistory = p.history.map(h => ({
+      date: h.date, pgis: h.pgis,
+      chip: h.meets ? t.presumptive : t.notPres,
+      chipBg: h.meets ? '#D9EEEF' : '#F3F0EA', chipFg: h.meets ? '#016575' : '#5A6B68',
+    }));
+    const edAge = this.ageFrom(s.edDob);
+    const edValid = !!(s.edName && s.edName.trim() && edAge !== null);
+    const emS = sexSel(s.edSex === 'M'), efS = sexSel(s.edSex === 'F');
+    const apChip = { upcoming: [t.upcomingChip, '#D9EEEF', '#016575'], attended: [t.attended, '#D9EEEF', '#016575'], missed: [t.missedChip, '#FBE7E5', '#96362E'], dnp: [t.dnpChip, '#F7ECD8', '#6F4C00'] };
+    const recAppts = p.appts.map(a => ({ date: a.date, chip: apChip[a.st][0], chipBg: apChip[a.st][1], chipFg: apChip[a.st][2] }));
+
+    // ---- follow-up list ----
+    const fuDefs = [['upcoming', t.fuUpcoming], ['missed', t.fuMissed], ['dnp', t.fuDnp]];
+    const fuFilters = fuDefs.map(([k, label]) => {
+      const on = s.fuFilter === k;
+      return {
+        label,
+        border: on ? 'none' : '1.5px solid #C9C2B6',
+        bg: on ? '#028090' : '#FFFFFF', fg: on ? '#FFFFFF' : '#4A5754',
+        onPick: () => this.setState({ fuFilter: k }),
+      };
+    });
+    const fuMatches = PL.map((pp, i) => [pp, i]).filter(([pp]) => pp.fu === s.fuFilter);
+    const fuRows = fuMatches.map(([pp, i]) => Object.assign({
+      name: pp.name, brgy: 'Brgy. ' + pp.brgy, date: pp.fuDate + ', 2026', initials: this.initials(pp.name),
+      onOpen: () => this.setState({ activePatient: i, screen: 'record', recordFrom: 'followup', recEditing: false }),
+    }, this.fuChip(t, pp.fu)));
+
+    // ---- jump strip ----
+    const jumpDefs = [
+      ['lang', '1', 'Language picker'], ['terms', '2', 'Terms & disclaimer'], ['login', '3', 'Login'],
+      ['home', '4', 'Home dashboard'], ['settings', '5', 'Settings'], ['enroll', '6', 'Enrollment'],
+      ['screening', '7', 'Screening flow'], ['review', '7b', 'Review answers'], ['result', '7c', 'Recommendation'], ['referral', '8', 'Referral + form'],
+      ['record', '9', 'Patient record'], ['followup', '10', 'Follow-up list'],
+    ];
+    const jumpItems = jumpDefs.map(([key, n, label]) => {
+      const on = s.screen === key;
+      return {
+        n, label,
+        bd: on ? '#028090' : '#D8D2C8', bg: on ? '#D9EEEF' : '#FFFFFF', fg: on ? '#014B57' : '#4A5754',
+        onGo: () => {
+          const extra = {};
+          if (key === 'screening') { extra.qIndex = 0; if (!s.screeningName) extra.screeningName = 'Maria Santos · PAT-0001'; }
+          if ((key === 'result' || key === 'review') && s.answers.every(a => a === null)) {
+            extra.answers = ['yes','yes','unsure','no','no','yes','yes','no','no']; extra.pgis = 2;
+            extra.screeningName = 'Maria Santos · PAT-0001';
+          }
+          if (key === 'enroll') extra.enrolledCode = null;
+          this.setState(Object.assign({ screen: key }, extra));
+        },
+      };
+    });
+
+    // ---- referral form data ----
+    const refAnswers = T.qList.map((qq, i) => {
+      const v = s.answers[i];
+      return { q: qq.replace('?', ''), v: v === 'yes' ? 'Yes' : v === 'no' ? 'No' : v === 'unsure' ? 'Unsure' : '—' };
+    });
+    const refName = s.screeningName || 'Maria Santos · PAT-0001';
+    const refParts = refName.split(' · ');
+
+    // ---- portal ----
+    const stDefs = {
+      new: ['New', '#F7ECD8', '#6F4C00'], received: ['Received', '#EDE8E0', '#4A5754'],
+      tested: ['Tested', '#D9EEEF', '#016575'], result: ['Result recorded', '#028090', '#FFFFFF'],
+      dnp: ['Did not present', '#FBE7E5', '#96362E'],
+    };
+    const pRows = this.REFS.map((r, i) => {
+      const pp = this.getPatient(r.p);
+      const stKey = s.pDnpFlags[i] ? 'dnp' : s.pStatuses[i];
+      const st = stDefs[stKey];
+      return {
+        name: pp.name, code: pp.code, brgy: 'Brgy. ' + pp.brgy, date: r.date + ', 2026',
+        chip: st[0], chipBg: st[1], chipFg: st[2],
+        rowBg: s.pSel === i ? '#F0F7F7' : '#FFFFFF',
+        onOpen: () => this.setState({ pSel: i }),
+      };
+    });
+    let selVals = {};
+    if (s.pSel !== null) {
+      const r = this.REFS[s.pSel];
+      const pp = this.getPatient(r.p);
+      const stKey = s.pDnpFlags[s.pSel] ? 'dnp' : s.pStatuses[s.pSel];
+      const st = stDefs[stKey];
+      const stOrder = ['new','received','tested','result'];
+      const stIdx = stOrder.indexOf(s.pStatuses[s.pSel]);
+      const setStatus = (v) => { const arr = s.pStatuses.slice(); arr[s.pSel] = v; this.setState({ pStatuses: arr }); };
+      const recDone = stIdx >= 1, testDone = stIdx >= 2, resDone = stIdx >= 3;
+      selVals = {
+        selName: pp.name, selCode: pp.code, selMeta: (pp.sex === 'F' ? 'Female' : 'Male') + ' · ' + pp.age,
+        selBrgy: 'Brgy. ' + pp.brgy, selDate: r.date + ', 2026',
+        selChip: st[0], selChipBg: st[1], selChipFg: st[2], selPgis: r.pgis,
+        selAnswers: T.qList.map((qq, i) => ({
+          q: qq.replace('?', ''), v: r.answers[i],
+          vColor: r.answers[i] === 'Yes' ? '#016575' : r.answers[i] === 'Unsure' ? '#8A5E00' : '#8A968F',
+        })),
+        actReceived: () => { if (stIdx === 1) setStatus('new'); else if (stIdx === 0) setStatus('received'); },
+        actRecLabel: recDone ? '✓ Received' : 'Mark received',
+        actRecBg: recDone ? '#EDE8E0' : '#028090', actRecFg: recDone ? '#4A5754' : '#FFFFFF',
+        actTested: () => { if (stIdx === 2) setStatus('received'); else if (stIdx === 1) setStatus('tested'); },
+        actTestLabel: testDone ? '✓ Tested' : 'Mark tested',
+        actTestBg: testDone ? '#D9EEEF' : '#FFFFFF', actTestFg: testDone ? '#016575' : '#028090',
+        actResult: () => { if (stIdx === 3) setStatus('tested'); else if (stIdx === 2) setStatus('result'); },
+        actResLabel: resDone ? '✓ Result · Jul 5' : 'Record result',
+        actResBg: resDone ? '#D9EEEF' : '#FFFFFF', actResFg: resDone ? '#016575' : '#028090',
+        actAttended: () => { const f = s.pDnpFlags.slice(); f[s.pSel] = false; this.setState({ pDnpFlags: f }); },
+        actAttLabel: 'Mark attended',
+        actAttBg: '#FFFFFF', actAttFg: '#4A5754',
+        actDnp: () => { const f = s.pDnpFlags.slice(); f[s.pSel] = !f[s.pSel]; this.setState({ pDnpFlags: f }); },
+        actDnpLabel: s.pDnpFlags[s.pSel] ? '✓ Did not present' : 'Flag: did not present',
+        actDnpBg: s.pDnpFlags[s.pSel] ? '#F7ECD8' : '#FFFFFF', actDnpFg: '#6F4C00',
+      };
+    }
+    const hotData = this.HOT[s.range];
+    const maxCount = hotData[0][1];
+    const hotRows = hotData.map(([name, count], i) => ({
+      rank: String(i + 1).padStart(2, '0'), name: 'Brgy. ' + name, count,
+      pct: Math.round((count / maxCount) * 100) + '%',
+      barBg: i === 0 ? '#028090' : i < 3 ? '#00A896' : '#7CBEC6',
+    }));
+    const rangeOpts = ['30', '60', '90'].map(k => {
+      const on = s.range === k;
+      return {
+        label: 'Last ' + k + ' days',
+        border: on ? 'none' : '1.5px solid #C9C2B6',
+        bg: on ? '#028090' : '#FFFFFF', fg: on ? '#FFFFFF' : '#4A5754',
+        onPick: () => this.setState({ range: k }),
+      };
+    });
+
+    return Object.assign({
+      t,
+      // screens
+      isLang: s.screen === 'lang', isTerms: s.screen === 'terms', isLogin: s.screen === 'login',
+      isHome: s.screen === 'home', isSettings: s.screen === 'settings', isEnroll: s.screen === 'enroll',
+      isScreening: s.screen === 'screening', isResult: s.screen === 'result', isReferral: s.screen === 'referral',
+      isRecord: s.screen === 'record', isFollowup: s.screen === 'followup', isReview: s.screen === 'review',
+      // language
+      langOpts, langContinue: () => this.go('terms'),
+      acceptTerms: () => this.go('login'),
+      // login
+      email: s.email, pw: s.pw,
+      setEmail: (e) => this.setState({ email: e.target.value }),
+      setPw: (e) => this.setState({ pw: e.target.value }),
+      doLogin: () => this.go('home'),
+      // home
+      statUpcoming: 3, statMissed: 1, statDnp: 1,
+      search: s.search, setSearch: (e) => this.setState({ search: e.target.value }),
+      patientRows, searchEmpty: q && matched.length === 0,
+      syncBanner: syncState === 'offline',
+      cycleSync: () => {
+        const order = ['synced', 'pending', 'offline'];
+        this.setState({ syncOverride: order[(order.indexOf(syncState) + 1) % 3] });
+      },
+      toSettings: () => this.go('settings'), toHome: () => this.go('home'),
+      toEnroll: () => this.setState({ screen: 'enroll', enrolledCode: null }),
+      toFollowUpcoming: () => this.setState({ screen: 'followup', fuFilter: 'upcoming' }),
+      toFollowMissed: () => this.setState({ screen: 'followup', fuFilter: 'missed' }),
+      toFollowDnp: () => this.setState({ screen: 'followup', fuFilter: 'dnp' }),
+      signOut: () => this.go('login'),
+      // settings selects
+      regionOpts: this.GEO.regions, provOpts: this.GEO.provs, cityOpts: this.GEO.cities, brgyOpts: this.GEO.brgys,
+      myRegion: s.myRegion, myProv: s.myProv, myCity: s.myCity, myBrgy: s.myBrgy,
+      setMyRegion: (e) => this.setState({ myRegion: e.target.value }),
+      setMyProv: (e) => this.setState({ myProv: e.target.value }),
+      setMyCity: (e) => this.setState({ myCity: e.target.value }),
+      setMyBrgy: (e) => this.setState({ myBrgy: e.target.value, enBrgy: e.target.value }),
+      // enrollment
+      enrollForm: !s.enrolledCode, enrollDone: !!s.enrolledCode,
+      enName: s.enName, setEnName: (e) => this.setState({ enName: e.target.value }),
+      pickMale: () => this.setState({ enSex: 'M' }), pickFemale: () => this.setState({ enSex: 'F' }),
+      maleBd: mS.bd, maleBg: mS.bg, maleFg: mS.fg, femaleBd: fS.bd, femaleBg: fS.bg, femaleFg: fS.fg,
+      enDob: s.enDob, setDob: (e) => this.setState({ enDob: e.target.value }),
+      ageDisplay: age !== null ? String(age) : '—', ageColor: age !== null ? '#016575' : '#C9C2B6',
+      enRegion: s.enRegion, enProv: s.enProv, enCity: s.enCity, enBrgy: s.enBrgy, enSitio: s.enSitio,
+      setEnRegion: (e) => this.setState({ enRegion: e.target.value }),
+      setEnProv: (e) => this.setState({ enProv: e.target.value }),
+      setEnCity: (e) => this.setState({ enCity: e.target.value }),
+      setEnBrgy: (e) => this.setState({ enBrgy: e.target.value }),
+      setSitio: (e) => this.setState({ enSitio: e.target.value }),
+      toggleConsent: () => this.setState({ consent: !s.consent }),
+      consentTrackBg: s.consent ? '#028090' : '#C9C2B6', consentKnobLeft: s.consent ? '25px' : '3px',
+      toggleSms: () => this.setState({ sms: !s.sms }),
+      smsTrackBg: s.sms ? '#028090' : '#C9C2B6', smsKnobLeft: s.sms ? '25px' : '3px',
+      smsOn: s.sms, enPhone: s.enPhone, setPhone: (e) => this.setState({ enPhone: e.target.value }),
+      enrollBtnBg: enrollValid ? '#028090' : '#E3DED6', enrollBtnFg: enrollValid ? '#FFFFFF' : '#9C948A',
+      submitEnroll: () => { if (enrollValid) this.setState({ enrolledCode: 'PAT-0007' }); },
+      enNameDone: s.enName || 'New patient', newCode: 'PAT-0007',
+      startScreening: () => this.setState({
+        screen: 'screening', qIndex: 0, pgis: null,
+        answers: [null,null,null,null,null,null,null,null,null],
+        screeningName: (s.enName || 'New patient') + ' · PAT-0007',
+      }),
+      // screening
+      screeningPatient: s.screeningName || 'Maria Santos · PAT-0001',
+      isChecklist: !isPgisStep, isPgis: isPgisStep,
+      qText: t.qList[Math.min(s.qIndex, 8)],
+      stepLabel: isPgisStep ? 'PGI-S · 10 / 10' : (s.qIndex + 1) + ' / 10',
+      progressPct: Math.round(((s.qIndex + (answered ? 1 : 0)) / 10) * 100) + '%',
+      triOpts, pgisOpts,
+      nextBg: answered ? '#028090' : '#E3DED6', nextFg: answered ? '#FFFFFF' : '#9C948A',
+      nextLabel: !answered ? t.answerFirst : (isPgisStep ? t.finish : t.next),
+      goNext: () => {
+        if (!answered) return;
+        if (isPgisStep) this.go('review');
+        else this.setState({ qIndex: s.qIndex + 1 });
+      },
+      screeningBack: () => {
+        if (s.qIndex === 0) this.go('home');
+        else this.setState({ qIndex: s.qIndex - 1 });
+      },
+      // review
+      reviewRows, reviewPgis,
+      backToPgis: () => this.setState({ screen: 'screening', qIndex: 9 }),
+      reviewBtnBg: allAnswered ? '#028090' : '#E3DED6', reviewBtnFg: allAnswered ? '#FFFFFF' : '#9C948A',
+      seeRecommendation: () => { if (allAnswered) this.go('result'); },
+      editAnswers: () => this.go('review'),
+      // result
+      resMeets: meets,
+      resTitle: meets ? t.meetsTitle : t.notTitle,
+      resBody: meets ? t.meetsBody : t.notBody,
+      resIcon: meets ? 'assignment_turned_in' : 'check_circle',
+      resBg: meets ? '#D9EEEF' : '#F3F0EA', resBd: meets ? '#7CBEC6' : '#D8D2C8',
+      resFg: meets ? '#014B57' : '#4A5754', resIconColor: meets ? '#016575' : '#8A968F',
+      toReferral: () => this.setState({ screen: 'referral', refConfirmed: false }),
+      // referral
+      refPending: !s.refConfirmed, refConfirmed: s.refConfirmed,
+      confirmReferral: () => this.setState({ refConfirmed: true }),
+      undoReferral: () => this.setState({ refConfirmed: false }),
+      editEnrollment: () => this.setState({ enrolledCode: null }),
+      refAnswers,
+      refPatientName: refParts[0], refPatientCode: refParts[1] || 'PAT-0001',
+      refPatientMeta: 'Female · 43', refPatientBrgy: 'Lamacan, Argao, Cebu',
+      refPgis: s.pgis !== null ? T.pgisOpts[s.pgis] : 'Moderate',
+      noop: () => {},
+      // record
+      recName: p.name, recCode: p.code, recInitials: this.initials(p.name),
+      recMeta: (p.sex === 'F' ? t.female : t.male) + ' · ' + p.age,
+      recAddress: 'Brgy. ' + p.brgy + ', Argao, Cebu',
+      recTimeline, recHistory, recAppts,
+      recordBack: () => this.go(s.recordFrom === 'followup' ? 'followup' : 'home'),
+      recViewing: !s.recEditing, recIsEditing: s.recEditing,
+      openRecEdit: () => this.setState({ recEditing: true, edName: p.name, edSex: p.sex, edDob: p.dob }),
+      cancelRecEdit: () => this.setState({ recEditing: false }),
+      saveRecEdit: () => {
+        if (!edValid) return;
+        const pe = Object.assign({}, s.patientEdits);
+        pe[s.activePatient] = { name: s.edName.trim(), sex: s.edSex, dob: s.edDob, age: edAge };
+        this.setState({ patientEdits: pe, recEditing: false });
+      },
+      edName: s.edName, setEdName: (e) => this.setState({ edName: e.target.value }),
+      edDob: s.edDob, setEdDob: (e) => this.setState({ edDob: e.target.value }),
+      pickEdMale: () => this.setState({ edSex: 'M' }), pickEdFemale: () => this.setState({ edSex: 'F' }),
+      edMaleBd: emS.bd, edMaleBg: emS.bg, edMaleFg: emS.fg, edFemaleBd: efS.bd, edFemaleBg: efS.bg, edFemaleFg: efS.fg,
+      edAgeDisplay: edAge !== null ? String(edAge) : '—', edAgeColor: edAge !== null ? '#016575' : '#C9C2B6',
+      edSaveBg: edValid ? '#028090' : '#E3DED6', edSaveFg: edValid ? '#FFFFFF' : '#9C948A',
+      screenFromRecord: () => this.setState({
+        screen: 'screening', qIndex: 0, pgis: null,
+        answers: [null,null,null,null,null,null,null,null,null],
+        screeningName: p.name + ' · ' + p.code,
+      }),
+      // follow-up
+      fuFilters, fuRows, fuEmpty: fuRows.length === 0,
+      // jump strip
+      showJump: this.props.showJumpStrip ?? true,
+      jumpItems,
+      // sync
+      // portal
+      portalW: 1200, portalH: 780,
+      pIsLogin: s.pScreen === 'login', pIsApp: s.pScreen === 'app',
+      pLogin: () => this.setState({ pScreen: 'app', pTab: s.pRole === 'captain' ? 'bhw' : 'dash' }),
+      pSignOut: () => this.setState({ pScreen: 'login', pSel: null, cScreen: 'list', dlgIdx: null }),
+      // roles
+      pIsStaff: s.pRole === 'staff', pIsCaptain: s.pRole === 'captain',
+      pickRoleStaff: () => this.setState({ pRole: 'staff' }),
+      pickRoleCaptain: () => this.setState({ pRole: 'captain' }),
+      roleStaffBd: s.pRole === 'staff' ? 'none' : '1.5px solid #C9C2B6',
+      roleStaffBg: s.pRole === 'staff' ? '#028090' : '#FFFFFF', roleStaffFg: s.pRole === 'staff' ? '#FFFFFF' : '#4A5754',
+      roleCapBd: s.pRole === 'captain' ? 'none' : '1.5px solid #C9C2B6',
+      roleCapBg: s.pRole === 'captain' ? '#028090' : '#FFFFFF', roleCapFg: s.pRole === 'captain' ? '#FFFFFF' : '#4A5754',
+      portalUser: s.pRole === 'captain' ? 'Kap. Eduardo Villamor' : 'Nurse A. Bautista',
+      portalInit: s.pRole === 'captain' ? 'EV' : 'AB',
+      portalOrg: s.pRole === 'captain' ? 'Barangay Captain · Argao' : 'Argao RHU TB-DOTS',
+      pIsInbox: s.pTab === 'inbox', pIsHotspot: s.pTab === 'hotspot', pIsDash: s.pTab === 'dash',
+      pTabInbox: () => this.setState({ pTab: 'inbox' }),
+      pTabHotspot: () => this.setState({ pTab: 'hotspot' }),
+      pTabDash: () => this.setState({ pTab: 'dash' }),
+      tabDashBg: s.pTab === 'dash' ? '#D9EEEF' : 'transparent', tabDashFg: s.pTab === 'dash' ? '#014B57' : '#5A6B68',
+      dashCards: [
+        { n: '8', label: 'Screened today', sub: 'Screenings submitted by BHWs', bg: '#D9EEEF', bd: 'transparent', fg: '#016575', sb: '#014B57' },
+        { n: '2', label: 'Tested positive', sub: 'Confirmed by facility · treatment started', bg: '#FBE7E5', bd: 'transparent', fg: '#96362E', sb: '#7A2B24' },
+        { n: '3', label: 'Tested negative', sub: 'Results recorded today', bg: '#F3F0EA', bd: 'transparent', fg: '#4A5754', sb: '#5A6B68' },
+        { n: '4', label: 'Attended check-up', sub: 'Of 5 scheduled today', bg: '#FFFFFF', bd: '#E3DED6', fg: '#016575', sb: '#8A968F' },
+        { n: '1', label: 'Missed check-up', sub: 'BHW follow-up lists updated', bg: '#FFFFFF', bd: '#E3DED6', fg: '#96362E', sb: '#8A968F' },
+      ],
+      tabInboxBg: s.pTab === 'inbox' ? '#D9EEEF' : 'transparent', tabInboxFg: s.pTab === 'inbox' ? '#014B57' : '#5A6B68',
+      tabHotBg: s.pTab === 'hotspot' ? '#D9EEEF' : 'transparent', tabHotFg: s.pTab === 'hotspot' ? '#014B57' : '#5A6B68',
+      inboxCount: this.REFS.length,
+      pRows, pNoSel: s.pSel === null, pHasSel: s.pSel !== null,
+      selApptDate: s.selApptDate, setApptDate: (e) => this.setState({ selApptDate: e.target.value }),
+      hotRows, rangeOpts,
+      // BHW management (captain)
+      pIsBhw: s.pTab === 'bhw',
+      cIsList: s.cScreen === 'list', cIsAdd: s.cScreen === 'add', cIsConfirm: s.cScreen === 'confirm',
+      bhwCount: s.bhws.length,
+      bhwRows: s.bhws.map((b, i) => ({
+        name: b.name, brgy: 'Brgy. ' + b.brgy,
+        email: this.bhwEmail(b.name, b.brgy),
+        activity: b.scr + ' screenings · ' + b.ref + ' referrals',
+        chip: b.active ? 'Active' : 'Deactivated',
+        chipBg: b.active ? '#D9EEEF' : '#F3F0EA', chipFg: b.active ? '#016575' : '#8A968F',
+        nameColor: b.active ? '#20302E' : '#8A968F',
+        toggleLabel: b.active ? 'Deactivate' : 'Reactivate',
+        toggleFg: b.active ? '#96362E' : '#016575', toggleBd: b.active ? '#E3B8B4' : '#7CBEC6',
+        onToggle: () => {
+          if (b.active) this.setState({ dlgIdx: i });
+          else { const arr = s.bhws.slice(); arr[i] = Object.assign({}, b, { active: true }); this.setState({ bhws: arr }); }
+        },
+        onEdit: () => this.setState({ cScreen: 'add', editIdx: i, addName: b.name, addBrgy: b.brgy }),
+      })),
+      openAddBhw: () => this.setState({ cScreen: 'add', editIdx: null, addName: '', addBrgy: 'Lamacan' }),
+      addFormTitle: s.editIdx !== null ? 'Edit BHW' : 'Add BHW',
+      addName: s.addName, setAddName: (e) => this.setState({ addName: e.target.value }),
+      addRegion: s.addRegion, addProv: s.addProv, addCity: s.addCity, addBrgy: s.addBrgy,
+      setAddRegion: (e) => this.setState({ addRegion: e.target.value }),
+      setAddProv: (e) => this.setState({ addProv: e.target.value }),
+      setAddCity: (e) => this.setState({ addCity: e.target.value }),
+      setAddBrgy: (e) => this.setState({ addBrgy: e.target.value }),
+      addEmailDisplay: this.bhwEmail(s.addName, s.addBrgy) || '— type a name —',
+      addEmailColor: this.bhwEmail(s.addName, s.addBrgy) ? '#016575' : '#9C948A',
+      saveBhwBg: this.bhwEmail(s.addName, s.addBrgy) ? '#028090' : '#E3DED6',
+      saveBhwFg: this.bhwEmail(s.addName, s.addBrgy) ? '#FFFFFF' : '#9C948A',
+      saveBhwLabel: s.editIdx !== null ? 'Save changes' : 'Create account',
+      saveBhw: () => {
+        const em = this.bhwEmail(s.addName, s.addBrgy);
+        if (!em) return;
+        const arr = s.bhws.slice();
+        if (s.editIdx !== null) {
+          arr[s.editIdx] = Object.assign({}, arr[s.editIdx], { name: s.addName.trim(), brgy: s.addBrgy });
+          this.setState({ bhws: arr, cScreen: 'list', editIdx: null });
+        } else {
+          arr.push({ name: s.addName.trim(), brgy: s.addBrgy, active: true, scr: 0, ref: 0 });
+          this.setState({ bhws: arr, cScreen: 'confirm', lastInvite: { name: s.addName.trim(), email: em } });
+        }
+      },
+      cancelBhw: () => this.setState({ cScreen: 'list', editIdx: null }),
+      inviteDone: () => this.setState({ cScreen: 'list' }),
+      invName: s.lastInvite ? s.lastInvite.name : '', invEmail: s.lastInvite ? s.lastInvite.email : '',
+      dlgOpen: s.dlgIdx !== null,
+      dlgName: s.dlgIdx !== null ? s.bhws[s.dlgIdx].name : '',
+      confirmDeactivate: () => {
+        const arr = s.bhws.slice();
+        arr[s.dlgIdx] = Object.assign({}, arr[s.dlgIdx], { active: false });
+        this.setState({ bhws: arr, dlgIdx: null });
+      },
+      cancelDlg: () => this.setState({ dlgIdx: null }),
+      // trilingual demo
+      demoLangs: [
+        Object.assign({ tag: 'English', code: 'en' }, this.pickDemo('en')),
+        Object.assign({ tag: 'Tagalog', code: 'tl' }, this.pickDemo('tl')),
+        Object.assign({ tag: 'Cebuano', code: 'ceb' }, this.pickDemo('ceb')),
+      ],
+    }, syncMap[syncState], selVals);
+  }
+
+  pickDemo(k) {
+    const d = this.STR[k];
+    return {
+      enrollTitle: d.enrollTitle, fullName: d.fullName, sex: d.sex, male: d.male, female: d.female,
+      birthdate: d.birthdate, agePrefix: d.agePrefix, barangay: d.barangay,
+      consentTitle: d.consentTitle, consentBody: d.consentBody, smsTitle: d.smsTitle, enrollBtn: d.enrollBtn,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+
+# Local env files — never commit real keys (.env.example is the template)
+.env
+.env.*.local
+*.local
+
+# Build output
+dist/
+build/
+web-build/
+*.tsbuildinfo
+
+# Expo / React Native local state
+.expo/
+.kotlin/
+.metro-health-check*
+expo-env.d.ts
+
+# Generated Android native project + build artifacts
+mobile/android/
+.gradle/
+.cxx/
+
+# Supabase CLI local state
+.branches/
+.temp/
+
+# Secrets / key material
+*.jks
+*.p8
+*.p12
+*.key
+*.pem
+*.keystore
+*.mobileprovision
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Raw session transcripts — contain live keys and test patient data
+docs/chat-history/
+
+# Pre-monorepo sub-repo history backups (safe to delete once the push is verified)
+.git-backup/
+
+# Logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# OS cruft
+.DS_Store
+Thumbs.db
