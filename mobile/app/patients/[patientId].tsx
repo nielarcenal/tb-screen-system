@@ -1,0 +1,702 @@
+/**
+ * Patient record (design 1a, screen 9): identity card with avatar, referral
+ * status shown as a 4-step timeline (submitted → received → tested → result),
+ * screening history cards with flagged/not-flagged chips, check-up list, and
+ * the "start screening" CTA. All read from the local cache (offline).
+ *
+ * POSITIONING (§1): screenings are shown as "flagged for referral" or "not
+ * flagged" — never as a diagnosis or risk. PGI-S is displayed as supplementary
+ * context only.
+ */
+import { useCallback, useState } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Appbar, Button, HelperText, Switch, Text, TextInput } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { DatePickerModal } from 'react-native-paper-dates';
+
+import { getLocalPatient, updateLocalPatientDetails } from '../../src/db/patientsRepo';
+import { isValidPhMobile } from '../../src/components/ConsentFields';
+import { listScreeningsForPatient, LocalScreeningRow } from '../../src/db/screeningsRepo';
+import { getReferralForScreening, LocalReferralRow } from '../../src/db/referralsRepo';
+import { listAppointmentsForPatient } from '../../src/db/appointmentsRepo';
+import { barangayLabel } from '../../src/db/psgcRepo';
+import { AppointmentRow, LocalPatientRow, ReferralStatus, Sex } from '../../src/db/types';
+import { ageFromBirthdate, toDateOnly } from '../../src/lib/dates';
+import { composeFullName, nameInitials, splitFullName } from '../../src/lib/names';
+import { nowIso } from '../../src/lib/uuid';
+import { useSessionStore } from '../../src/store/sessionStore';
+import { triggerSync } from '../../src/sync/syncManager';
+import { palette, followUpChip, statusChip } from '../../src/ui/tokens';
+
+const STATUS_ORDER: ReferralStatus[] = ['submitted', 'received', 'tested', 'closed'];
+
+/** Small tonal chip. */
+function TonalChip({ label, bg, fg }: { label: string; bg: string; fg: string }) {
+  return (
+    <View
+      style={{
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 12,
+        backgroundColor: bg,
+        alignSelf: 'flex-start',
+      }}
+    >
+      <Text variant="labelSmall" style={{ color: fg, fontWeight: '600' }}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+/** Uppercased muted section label. */
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <Text
+      variant="labelMedium"
+      style={{ color: palette.muted, fontWeight: '700', letterSpacing: 0.8, marginBottom: 8 }}
+    >
+      {children.toUpperCase()}
+    </Text>
+  );
+}
+
+export default function PatientDetailScreen() {
+  const { t, i18n } = useTranslation();
+  const router = useRouter();
+  const { patientId } = useLocalSearchParams<{ patientId: string }>();
+  const userId = useSessionStore((s) => s.userId);
+  const bhwName = useSessionStore((s) => s.fullName);
+
+  const [patient, setPatient] = useState<LocalPatientRow | null>(null);
+  // Edit-details card (design screen 9): name / birthdate / sex.
+  const [editing, setEditing] = useState(false);
+  const [edFirst, setEdFirst] = useState('');
+  const [edMiddle, setEdMiddle] = useState('');
+  const [edLast, setEdLast] = useState('');
+  const [edBirthdate, setEdBirthdate] = useState<Date | undefined>(undefined);
+  const [edSex, setEdSex] = useState<Sex>('female');
+  const [edSms, setEdSms] = useState(false);
+  const [edPhone, setEdPhone] = useState('');
+  const [edPickerOpen, setEdPickerOpen] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [screenings, setScreenings] = useState<LocalScreeningRow[]>([]);
+  // Referral (if any) per screening_id — drives the per-screening action button.
+  const [referrals, setReferrals] = useState<Record<string, LocalReferralRow | null>>({});
+  const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
+  const [address, setAddress] = useState<string>('');
+  const [loaded, setLoaded] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!patientId) return;
+      void (async () => {
+        const p = await getLocalPatient(patientId);
+        setPatient(p);
+        const s = p ? await listScreeningsForPatient(p.patient_id) : [];
+        setScreenings(s);
+        const pairs = await Promise.all(
+          s.map(async (row) => [row.screening_id, await getReferralForScreening(row.screening_id)] as const),
+        );
+        setReferrals(Object.fromEntries(pairs));
+        setAppointments(p ? await listAppointmentsForPatient(p.patient_id) : []);
+        setAddress(p ? ((await barangayLabel(p.barangay_code)) ?? p.barangay_code) : '');
+        setLoaded(true);
+      })();
+    }, [patientId]),
+  );
+
+  const openEdit = () => {
+    if (!patient) return;
+    // Pre-0010 rows carry only full_name — split it so the fields aren't blank.
+    const legacy = splitFullName(patient.full_name);
+    setEdFirst(patient.first_name ?? legacy.first);
+    setEdMiddle(patient.middle_name ?? legacy.middle);
+    setEdLast(patient.last_name ?? legacy.last);
+    setEdBirthdate(patient.birthdate ? new Date(`${patient.birthdate}T00:00:00`) : undefined);
+    setEdSex(patient.sex);
+    setEdSms(patient.sms_consent);
+    setEdPhone(patient.contact_number ?? '');
+    setEditing(true);
+  };
+
+  const edBirthdateStr = edBirthdate ? toDateOnly(edBirthdate) : null;
+  // Pre-0006 rows may have no birthdate: keep the stored age unless one is picked.
+  const edAge = edBirthdateStr ? ageFromBirthdate(edBirthdateStr) : (patient?.age ?? null);
+  const edPhoneValid = !edSms || isValidPhMobile(edPhone);
+  // Middle name is optional — not every patient has one.
+  const edNameValid = edFirst.trim().length > 0 && edLast.trim().length > 0;
+  const edValid = edNameValid && edAge !== null && edPhoneValid;
+
+  const saveEdit = async () => {
+    if (!patient || !edValid || edAge === null || savingEdit) return;
+    setSavingEdit(true);
+    try {
+      await updateLocalPatientDetails(patient.patient_id, {
+        full_name: composeFullName(edFirst, edMiddle, edLast),
+        first_name: edFirst.trim(),
+        middle_name: edMiddle.trim() || null,
+        last_name: edLast.trim(),
+        birthdate: edBirthdateStr ?? patient.birthdate,
+        age: edAge,
+        sex: edSex,
+        // Privacy §4: number + consent date exist only while opted in. Keep
+        // the original consent_date when SMS was already on; stamp now when
+        // the BHW enables it here.
+        sms_consent: edSms,
+        contact_number: edSms ? edPhone.trim() : null,
+        consent_date: edSms ? (patient.consent_date ?? nowIso()) : null,
+      });
+      void triggerSync(); // best-effort; row stays queued if offline
+      setPatient(await getLocalPatient(patient.patient_id));
+      setEditing(false);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  /** 4-step referral timeline (design: teal dots for done stages). */
+  const timeline = (referral: LocalReferralRow) => {
+    const doneIdx = STATUS_ORDER.indexOf(referral.status);
+    return (
+      <View
+        style={{
+          backgroundColor: palette.paper,
+          borderWidth: 1,
+          borderColor: palette.border,
+          borderRadius: 16,
+          padding: 18,
+          paddingBottom: 4,
+        }}
+      >
+        {STATUS_ORDER.map((st, i) => {
+          const done = i <= doneIdx;
+          const last = i === STATUS_ORDER.length - 1;
+          return (
+            <View key={st} style={{ flexDirection: 'row', gap: 14 }}>
+              <View style={{ alignItems: 'center' }}>
+                <View
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: 13,
+                    backgroundColor: done ? palette.teal : palette.surfaceVariant,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name={done ? 'check' : 'circle-small'}
+                    size={15}
+                    color={done ? '#FFFFFF' : palette.outline}
+                  />
+                </View>
+                {!last ? (
+                  <View
+                    style={{
+                      width: 2,
+                      flex: 1,
+                      minHeight: 16,
+                      backgroundColor: i < doneIdx ? palette.teal : palette.surfaceVariant,
+                    }}
+                  />
+                ) : null}
+              </View>
+              <View style={{ paddingBottom: 16 }}>
+                <Text
+                  variant="titleSmall"
+                  style={{ color: done ? palette.ink : palette.muted, fontWeight: '600' }}
+                >
+                  {t(`status.${st}`)}
+                </Text>
+              </View>
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
+
+  const apptChip = (a: AppointmentRow) => {
+    if (a.status === 'missed') return followUpChip.missed;
+    return followUpChip.upcoming; // scheduled + attended both wear teal
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: palette.background }}>
+      <Appbar.Header style={{ backgroundColor: palette.background }}>
+        <Appbar.BackAction onPress={() => router.back()} />
+        <Appbar.Content title={patient?.full_name ?? patient?.display_code ?? ''} />
+        {patient && !editing ? (
+          <Button
+            mode="outlined"
+            icon="pencil"
+            compact
+            onPress={openEdit}
+            textColor={palette.teal}
+            labelStyle={{ fontSize: 13, fontWeight: '600' }}
+            style={{ borderColor: palette.teal, borderRadius: 20, marginRight: 8 }}
+          >
+            {t('patientDetail.editDetails')}
+          </Button>
+        ) : null}
+      </Appbar.Header>
+
+      {loaded && !patient ? (
+        <Text variant="bodyMedium" style={{ padding: 16 }}>
+          {t('patientDetail.notFound')}
+        </Text>
+      ) : patient ? (
+        <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 6, paddingBottom: 32, gap: 16 }}>
+          {/* Edit-details card (design screen 9) replaces the identity card. */}
+          {editing ? (
+            <View
+              style={{
+                backgroundColor: palette.paper,
+                borderWidth: 1.5,
+                borderColor: palette.teal,
+                borderRadius: 16,
+                padding: 18,
+                gap: 14,
+              }}
+            >
+              <Text
+                variant="labelSmall"
+                style={{ color: palette.tealDark, fontWeight: '700', letterSpacing: 0.7 }}
+              >
+                {t('patientDetail.editDetails').toUpperCase()} · {patient.display_code}
+              </Text>
+              <TextInput
+                label={`${t('enroll.firstNameLabel')} *`}
+                value={edFirst}
+                onChangeText={setEdFirst}
+                mode="outlined"
+                autoCapitalize="words"
+                style={{ backgroundColor: palette.paper }}
+              />
+              <TextInput
+                label={t('enroll.middleNameLabel')}
+                value={edMiddle}
+                onChangeText={setEdMiddle}
+                mode="outlined"
+                autoCapitalize="words"
+                style={{ backgroundColor: palette.paper }}
+              />
+              <TextInput
+                label={`${t('enroll.lastNameLabel')} *`}
+                value={edLast}
+                onChangeText={setEdLast}
+                mode="outlined"
+                autoCapitalize="words"
+                style={{ backgroundColor: palette.paper }}
+              />
+              <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+                <View style={{ flex: 1 }}>
+                  <Pressable onPress={() => setEdPickerOpen(true)}>
+                    <View pointerEvents="none">
+                      <TextInput
+                        label={t('enroll.birthdateLabel')}
+                        value={edBirthdateStr ?? (patient.birthdate ?? '')}
+                        editable={false}
+                        mode="outlined"
+                        style={{ backgroundColor: palette.paper }}
+                        right={<TextInput.Icon icon="calendar" />}
+                      />
+                    </View>
+                  </Pressable>
+                </View>
+                <View
+                  style={{
+                    minWidth: 96,
+                    height: 52,
+                    borderRadius: 12,
+                    backgroundColor: palette.surfaceVariant,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 1,
+                  }}
+                >
+                  <Text variant="labelSmall" style={{ color: palette.muted }}>
+                    {t('enroll.ageLabel')}
+                  </Text>
+                  <Text
+                    variant="titleMedium"
+                    style={{
+                      fontWeight: '700',
+                      color: edAge !== null ? palette.tealDark : palette.outline,
+                    }}
+                  >
+                    {edAge !== null ? String(edAge) : '—'}
+                  </Text>
+                </View>
+              </View>
+              <DatePickerModal
+                locale={i18n.language}
+                mode="single"
+                visible={edPickerOpen}
+                date={edBirthdate}
+                validRange={{ endDate: new Date() }}
+                onDismiss={() => setEdPickerOpen(false)}
+                onConfirm={({ date: picked }) => {
+                  setEdPickerOpen(false);
+                  if (picked) setEdBirthdate(picked);
+                }}
+              />
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {(['male', 'female'] as Sex[]).map((sx) => {
+                  const on = edSex === sx;
+                  return (
+                    <Pressable
+                      key={sx}
+                      onPress={() => setEdSex(sx)}
+                      style={{
+                        flex: 1,
+                        height: 48,
+                        borderRadius: 24,
+                        borderWidth: on ? 0 : 1.5,
+                        borderColor: palette.outline,
+                        backgroundColor: on ? palette.teal : palette.paper,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text
+                        variant="titleSmall"
+                        style={{ color: on ? '#FFFFFF' : palette.inkMid, fontWeight: '600' }}
+                      >
+                        {t(`sex.${sx}`)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {/* SMS opt-in — editable after enrollment (privacy gate applies:
+                  number + consent date exist only while opted in). */}
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderColor: palette.border,
+                  borderRadius: 14,
+                  padding: 14,
+                  gap: 10,
+                }}
+              >
+                <Pressable
+                  onPress={() => setEdSms((on) => !on)}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: edSms }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                    minHeight: 52,
+                  }}
+                >
+                  {/* Visual only — the row owns the press (see ConsentFields). */}
+                  <View pointerEvents="none">
+                    <Switch value={edSms} color={palette.teal} />
+                  </View>
+                  <Text
+                    variant="bodyMedium"
+                    style={{ color: palette.ink, fontWeight: '600', flex: 1 }}
+                  >
+                    {t('consent.smsOptInLabel')}
+                  </Text>
+                </Pressable>
+                {edSms ? (
+                  <>
+                    <TextInput
+                      label={t('consent.contactNumberLabel')}
+                      placeholder={t('consent.contactNumberPlaceholder')}
+                      value={edPhone}
+                      onChangeText={setEdPhone}
+                      keyboardType="phone-pad"
+                      mode="outlined"
+                      error={edPhone.length > 0 && !edPhoneValid}
+                      style={{ backgroundColor: palette.paper }}
+                    />
+                    <HelperText
+                      type="error"
+                      visible={edPhone.length > 0 && !edPhoneValid}
+                      style={{ paddingHorizontal: 0 }}
+                    >
+                      {t('consent.contactNumberError')}
+                    </HelperText>
+                  </>
+                ) : null}
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <Button
+                  mode="outlined"
+                  disabled={savingEdit}
+                  onPress={() => setEditing(false)}
+                  textColor={palette.inkMid}
+                  contentStyle={{ height: 48 }}
+                  labelStyle={{ fontWeight: '600' }}
+                  style={{ flex: 1, borderRadius: 24, borderColor: palette.outline }}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  mode="contained"
+                  disabled={!edValid || savingEdit}
+                  loading={savingEdit}
+                  onPress={() => void saveEdit()}
+                  contentStyle={{ height: 48 }}
+                  labelStyle={{ fontWeight: '600' }}
+                  style={{ flex: 1.5, borderRadius: 24 }}
+                >
+                  {t('patientDetail.saveChanges')}
+                </Button>
+              </View>
+            </View>
+          ) : (
+          <View
+            style={{
+              backgroundColor: palette.paper,
+              borderWidth: 1,
+              borderColor: palette.border,
+              borderRadius: 16,
+              padding: 18,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 14,
+            }}
+          >
+            <View
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 26,
+                backgroundColor: palette.tealContainer,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {patient.full_name ? (
+                <Text variant="titleMedium" style={{ color: palette.tealDark, fontWeight: '600' }}>
+                  {nameInitials(patient.full_name)}
+                </Text>
+              ) : (
+                <MaterialCommunityIcons name="account" size={26} color={palette.tealDark} />
+              )}
+            </View>
+            <View style={{ flex: 1, gap: 3 }}>
+              <Text variant="titleMedium" style={{ color: palette.ink, fontWeight: '600' }}>
+                {patient.full_name ?? patient.display_code}
+              </Text>
+              <Text variant="bodySmall" style={{ color: palette.muted }}>
+                {patient.display_code} ·{' '}
+                {t('patients.itemDescription', {
+                  sex: t(`sex.${patient.sex}`),
+                  age: patient.age,
+                })}
+                {' · '}
+                {address}
+                {patient.sitio ? ` · ${patient.sitio}` : ''}
+              </Text>
+              <Text variant="bodySmall" style={{ color: palette.muted }}>
+                {t('patientDetail.smsLabel')}:{' '}
+                {patient.sms_consent
+                  ? t('patientDetail.smsOptedIn', { number: patient.contact_number ?? '' })
+                  : t('patientDetail.smsDeclined')}
+              </Text>
+              {patient.enrolled_by === userId && bhwName ? (
+                <Text variant="bodySmall" style={{ color: palette.muted }}>
+                  {t('patientDetail.enrolledBy', { name: bhwName })}
+                </Text>
+              ) : null}
+              <TonalChip
+                label={
+                  patient.sync_status === 'synced'
+                    ? t('patientDetail.syncSynced')
+                    : t('patientDetail.syncPending')
+                }
+                bg={patient.sync_status === 'synced' ? palette.tealContainer : palette.amberContainer}
+                fg={patient.sync_status === 'synced' ? palette.tealDark : palette.amberInk}
+              />
+            </View>
+          </View>
+          )}
+
+          {/* Screening history. */}
+          <View>
+            <SectionLabel>{t('patientDetail.screeningsSection')}</SectionLabel>
+            {screenings.length === 0 ? (
+              <Text variant="bodyMedium" style={{ color: palette.muted }}>
+                {t('patientDetail.noScreenings')}
+              </Text>
+            ) : (
+              <View style={{ gap: 10 }}>
+                {screenings.map((s) => {
+                  const referral = referrals[s.screening_id] ?? null;
+                  const flagged = s.referred;
+                  return (
+                    <View key={s.screening_id} style={{ gap: 10 }}>
+                      <View
+                        style={{
+                          backgroundColor: palette.paper,
+                          borderWidth: 1,
+                          borderColor: palette.border,
+                          borderRadius: 14,
+                          paddingHorizontal: 16,
+                          paddingVertical: 14,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 12,
+                        }}
+                      >
+                        <MaterialCommunityIcons
+                          name="clipboard-text"
+                          size={22}
+                          color={palette.muted}
+                        />
+                        <View style={{ flex: 1, gap: 2 }}>
+                          <Text variant="titleSmall" style={{ color: palette.ink }}>
+                            {new Date(s.created_at).toLocaleString()}
+                          </Text>
+                          {s.pgis_severity ? (
+                            <Text variant="bodySmall" style={{ color: palette.muted }}>
+                              {t('patientDetail.pgisShort', {
+                                value: t(`screening.pgisOptions.${s.pgis_severity}`),
+                              })}
+                            </Text>
+                          ) : null}
+                        </View>
+                        <TonalChip
+                          label={
+                            flagged
+                              ? t('patientDetail.flaggedChip')
+                              : t('patientDetail.notFlaggedChip')
+                          }
+                          bg={flagged ? palette.tealContainer : palette.surfaceSubtle}
+                          fg={flagged ? palette.tealDark : palette.inkSoft}
+                        />
+                      </View>
+
+                      {/* Referral status + actions only for checklist-flagged screenings (§5). */}
+                      {flagged ? (
+                        <View style={{ gap: 10 }}>
+                          {referral ? (
+                            <>
+                              {timeline(referral)}
+                              {referral.presented === false ? (
+                                <TonalChip
+                                  label={t('patientDetail.noShowChip')}
+                                  bg={followUpChip.noShow.bg}
+                                  fg={followUpChip.noShow.fg}
+                                />
+                              ) : null}
+                              {/* Lab result recorded by TB-DOTS staff — displayed, never computed (§1). */}
+                              {referral.result ? (
+                                <View
+                                  style={{
+                                    backgroundColor: statusChip.closed.bg,
+                                    borderRadius: 14,
+                                    paddingHorizontal: 16,
+                                    paddingVertical: 12,
+                                  }}
+                                >
+                                  <Text
+                                    variant="bodyMedium"
+                                    style={{ color: statusChip.closed.fg }}
+                                  >
+                                    {t('patientDetail.resultLine', {
+                                      date: referral.result_date
+                                        ? new Date(referral.result_date).toLocaleDateString()
+                                        : '—',
+                                      result: referral.result,
+                                    })}
+                                  </Text>
+                                </View>
+                              ) : null}
+                              <Button
+                                mode="outlined"
+                                icon="file-document"
+                                textColor={palette.teal}
+                                onPress={() => router.push(`/specimen/${referral.referral_id}`)}
+                                contentStyle={{ height: 48 }}
+                                labelStyle={{ fontWeight: '600' }}
+                                style={{ borderRadius: 24, borderColor: palette.teal }}
+                              >
+                                {t('patientDetail.viewSpecimen')}
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              mode="contained-tonal"
+                              icon="send"
+                              onPress={() => router.push(`/referral/${s.screening_id}`)}
+                              contentStyle={{ height: 48 }}
+                              labelStyle={{ fontWeight: '600' }}
+                              style={{ borderRadius: 24 }}
+                            >
+                              {t('patientDetail.createReferral')}
+                            </Button>
+                          )}
+                        </View>
+                      ) : null}
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+
+          {/* Check-ups. */}
+          {appointments.length > 0 ? (
+            <View>
+              <SectionLabel>{t('referral.appointmentSection')}</SectionLabel>
+              <View style={{ gap: 8 }}>
+                {appointments.map((a) => {
+                  const chip = apptChip(a);
+                  return (
+                    <View
+                      key={a.appointment_id}
+                      style={{
+                        backgroundColor: palette.paper,
+                        borderWidth: 1,
+                        borderColor: palette.border,
+                        borderRadius: 14,
+                        paddingHorizontal: 16,
+                        paddingVertical: 14,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 12,
+                      }}
+                    >
+                      <MaterialCommunityIcons name="calendar" size={22} color={palette.muted} />
+                      <Text variant="titleSmall" style={{ color: palette.ink, flex: 1 }}>
+                        {a.scheduled_date}
+                      </Text>
+                      <TonalChip
+                        label={t(`patientDetail.appt.${a.status}`)}
+                        bg={chip.bg}
+                        fg={chip.fg}
+                      />
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          ) : null}
+
+          {/* Primary action. */}
+          <Button
+            mode="contained"
+            icon="clipboard-list"
+            onPress={() => router.push(`/screening/${patient.patient_id}`)}
+            contentStyle={{ height: 54 }}
+            labelStyle={{ fontSize: 16, fontWeight: '600' }}
+            style={{ borderRadius: 27 }}
+          >
+            {t('patientDetail.startScreening')}
+          </Button>
+        </ScrollView>
+      ) : null}
+    </View>
+  );
+}
