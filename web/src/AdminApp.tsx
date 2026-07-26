@@ -17,10 +17,11 @@ import AppShell, { ShellNavItem } from './components/AppShell';
 import LangToggle from './components/LangToggle';
 import AdminDashboard from './components/AdminDashboard';
 import CaptainManagement from './components/CaptainManagement';
+import FacilityManagement from './components/FacilityManagement';
 import StaffManagement from './components/StaffManagement';
 import PasswordField from './components/PasswordField';
 
-type Page = 'dashboard' | 'captains' | 'staff';
+type Page = 'dashboard' | 'captains' | 'facilities' | 'staff';
 
 export default function AdminApp() {
   const { t } = useTranslation();
@@ -159,6 +160,13 @@ export default function AdminApp() {
       onClick: () => setPage('captains'),
     },
     {
+      key: 'facilities',
+      icon: 'local_hospital',
+      label: t('facilities.title'),
+      active: page === 'facilities',
+      onClick: () => setPage('facilities'),
+    },
+    {
       key: 'staff',
       icon: 'groups',
       label: t('nav.staff'),
@@ -168,13 +176,21 @@ export default function AdminApp() {
   ];
 
   const headerTitle =
-    page === 'dashboard' ? t('nav.dashboard') : page === 'staff' ? t('nav.staff') : t('nav.captains');
+    page === 'dashboard'
+      ? t('nav.dashboard')
+      : page === 'facilities'
+        ? t('facilities.title')
+        : page === 'staff'
+          ? t('nav.staff')
+          : t('nav.captains');
   const headerSub =
     page === 'dashboard'
       ? t('adminDash.headerSub')
-      : page === 'staff'
-        ? t('shell.staffSub')
-        : t('shell.captainsSub');
+      : page === 'facilities'
+        ? t('shell.facilitiesSub')
+        : page === 'staff'
+          ? t('shell.staffSub')
+          : t('shell.captainsSub');
 
   return (
     <AppShell
@@ -191,6 +207,8 @@ export default function AdminApp() {
     >
       {page === 'dashboard' ? (
         <AdminDashboard />
+      ) : page === 'facilities' ? (
+        <FacilityManagement />
       ) : page === 'staff' ? (
         <StaffManagement />
       ) : (
