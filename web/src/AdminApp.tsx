@@ -15,6 +15,7 @@ import { supabase } from './lib/supabase';
 import { PortalUser } from './lib/types';
 import AppShell, { ShellNavItem } from './components/AppShell';
 import LangToggle from './components/LangToggle';
+import LoginLayout from './components/LoginLayout';
 import AdminDashboard from './components/AdminDashboard';
 import CaptainManagement from './components/CaptainManagement';
 import FacilityManagement from './components/FacilityManagement';
@@ -79,45 +80,51 @@ export default function AdminApp() {
 
   if (!session) {
     return (
-      <div className="loginpage">
-        <div className="loginpage-top">
-          <LangToggle />
+      <LoginLayout>
+        <div className="login-head">
+          <h2>{t('login.signinTitle')}</h2>
+          <p>{t('admin.sub')}</p>
         </div>
-        <div className="card login">
-          <div className="loginhead">
-            <span className="mark msym">terminal</span>
-            <div>
-              <h2>{t('admin.portalTitle')}</h2>
-              <div className="sub">{t('admin.sub')}</div>
-            </div>
+
+        {loginError ? (
+          <div className="login-err">
+            <span className="msym" aria-hidden="true">
+              error
+            </span>
+            <span>{t('login.error', { message: loginError })}</span>
           </div>
-          <form onSubmit={(e) => void signIn(e)}>
-            <label htmlFor="adm-email">{t('login.email')}</label>
+        ) : null}
+
+        <form className="login-form" onSubmit={(e) => void signIn(e)}>
+          <label htmlFor="adm-email">
+            <span>{t('login.email')}</span>
             <input
               id="adm-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="username"
+              disabled={busy}
               required
             />
-            <label htmlFor="adm-password">{t('login.password')}</label>
+          </label>
+          <label htmlFor="adm-password">
+            <span>{t('login.password')}</span>
             <PasswordField
               id="adm-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
+              disabled={busy}
               required
             />
-            {loginError ? (
-              <p className="error">{t('login.error', { message: loginError })}</p>
-            ) : null}
-            <button type="submit" disabled={busy}>
-              {t('login.cta')}
-            </button>
-          </form>
-        </div>
-      </div>
+          </label>
+          <button type="submit" className="login-cta" disabled={busy}>
+            {busy ? <span className="login-spinner" aria-hidden="true" /> : null}
+            <span>{t('login.cta')}</span>
+          </button>
+        </form>
+      </LoginLayout>
     );
   }
 

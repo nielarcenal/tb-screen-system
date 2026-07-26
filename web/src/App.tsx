@@ -15,7 +15,6 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase } from './lib/supabase';
 import { PortalUser } from './lib/types';
 import AppShell, { ShellNavItem } from './components/AppShell';
-import LangToggle from './components/LangToggle';
 import LoginForm from './components/LoginForm';
 import Dashboard from './components/Dashboard';
 import CaptainDashboard from './components/CaptainDashboard';
@@ -79,20 +78,13 @@ export default function App() {
       });
   }, [session]);
 
-  // Not signed in: the sidebar shell is hidden; show the login with the
-  // language toggle still reachable. (Login redesign proper is §4.)
+  // Not signed in: the sidebar shell is hidden; the two-panel sign-in (§4)
+  // carries its own brand panel and language toggle.
   if (!sessionLoaded) {
     return <p style={{ padding: 24, textAlign: 'center' }}>{t('common.loading')}</p>;
   }
   if (!session) {
-    return (
-      <div className="loginpage">
-        <div className="loginpage-top">
-          <LangToggle />
-        </div>
-        <LoginForm />
-      </div>
-    );
+    return <LoginForm />;
   }
   if (!me) {
     return <p style={{ padding: 24, textAlign: 'center' }}>{t('common.loading')}</p>;

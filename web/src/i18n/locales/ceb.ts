@@ -260,6 +260,18 @@ export const ceb: Translation = {
     hidePassword: 'Tagoi ang password',
     cta: 'Pag-sign in',
     error: 'Napakyas ang pag-sign in: {{message}}',
+    brandTag: 'Plataporma sa Health Worker',
+    brandHead: 'Koordinadong TB screening sa komunidad, sa usa ka plataporma.',
+    brandSub:
+      'Usa ka plataporma nga nag-uban sa mga barangay health worker, kapitan, ug pasilidad sa TB-DOTS sa Bukidnon.',
+    pSecure: 'Luwas, role-based nga access',
+    pRoles: 'Para sa BHW, kapitan ug pasilidad',
+    pProgram: 'Programa sa TB-DOTS sa Bukidnon',
+    copyright: 'TB-Screen · Bukidnon TB-DOTS',
+    signinTitle: 'Pag-sign in',
+    signinSub: 'Maayong pagbalik. Isulod ang imong kredensyal aron magpadayon.',
+    accessHelp:
+      'Ang access gihatag sa imong administrator. Kontaka sila kung dili ka maka-sign in.',
   },
   inbox: {
     title: 'Inbox sa mga referral',

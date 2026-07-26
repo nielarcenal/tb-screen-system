@@ -259,6 +259,18 @@ export const en = {
     hidePassword: 'Hide password',
     cta: 'Sign in',
     error: 'Sign-in failed: {{message}}',
+    brandTag: 'Health Worker Platform',
+    brandHead: 'Community TB screening, coordinated in one place.',
+    brandSub:
+      'One platform connecting barangay health workers, captains, and TB-DOTS facilities across Bukidnon.',
+    pSecure: 'Secure, role-based access',
+    pRoles: 'For BHWs, captains & facilities',
+    pProgram: 'Bukidnon TB-DOTS Program',
+    copyright: 'TB-Screen · Bukidnon TB-DOTS',
+    signinTitle: 'Sign in',
+    signinSub: 'Welcome back. Enter your credentials to continue.',
+    accessHelp:
+      'Access is provisioned by your administrator. Contact them if you can’t sign in.',
   },
   inbox: {
     title: 'Referral inbox',

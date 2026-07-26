@@ -260,6 +260,18 @@ export const tl: Translation = {
     hidePassword: 'Itago ang password',
     cta: 'Mag-sign in',
     error: 'Nabigo ang pag-sign in: {{message}}',
+    brandTag: 'Plataporma ng Health Worker',
+    brandHead: 'Koordinadong TB screening sa komunidad, sa iisang plataporma.',
+    brandSub:
+      'Isang plataporma na nag-uugnay sa mga barangay health worker, kapitan, at pasilidad ng TB-DOTS sa Bukidnon.',
+    pSecure: 'Ligtas, role-based na access',
+    pRoles: 'Para sa BHW, kapitan at pasilidad',
+    pProgram: 'Programang TB-DOTS ng Bukidnon',
+    copyright: 'TB-Screen · Bukidnon TB-DOTS',
+    signinTitle: 'Mag-sign in',
+    signinSub: 'Maligayang pagbabalik. Ilagay ang inyong kredensyal upang magpatuloy.',
+    accessHelp:
+      'Ang access ay ibinibigay ng inyong administrator. Makipag-ugnayan sa kanila kung hindi kayo makapag-sign in.',
   },
   inbox: {
     title: 'Inbox ng mga referral',

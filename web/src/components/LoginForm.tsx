@@ -1,15 +1,16 @@
 /**
- * Portal sign-in (design 1b): app mark + "TB-Screen Portal / TB-DOTS facility
- * staff" header, the staff/captain role toggle, email + password, pill CTA.
- * The toggle mirrors the design; the account's users row is what actually
- * decides which portal opens after sign-in (a captain lands on BHW management
- * regardless of the pill picked here). Accounts are provisioned by the admin
- * (see supabase/seed.sql) — there is deliberately no self-registration.
+ * Facility portal sign-in (redesign §4): the two-panel brand + form shell with
+ * the staff/captain role toggle and a pill CTA that shows a spinner while
+ * signing in. The toggle mirrors the design; the account's users row is what
+ * actually decides which portal opens after sign-in (a captain lands on their
+ * dashboard regardless of the pill picked here). Accounts are provisioned by
+ * the admin (see supabase/seed.sql) — there is deliberately no self-registration.
  */
 import { FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
+import LoginLayout from './LoginLayout';
 import PasswordField from './PasswordField';
 
 export default function LoginForm() {
@@ -30,55 +31,69 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="card login">
-      <div className="loginhead">
-        <span className="mark msym">health_and_safety</span>
-        <div>
-          <h2>{t('common.appName')}</h2>
-          <div className="sub">{t('login.sub')}</div>
-        </div>
+    <LoginLayout>
+      <div className="login-head">
+        <h2>{t('login.signinTitle')}</h2>
+        <p>{t('login.signinSub')}</p>
       </div>
 
-      <div className="rolepair">
+      <div className="login-roles" role="group" aria-label={t('login.sub')}>
         <button
           type="button"
-          className={role === 'staff' ? '' : 'secondary'}
+          className={role === 'staff' ? 'on' : ''}
+          aria-pressed={role === 'staff'}
           onClick={() => setRole('staff')}
         >
           {t('login.roleStaff')}
         </button>
         <button
           type="button"
-          className={role === 'captain' ? '' : 'secondary'}
+          className={role === 'captain' ? 'on' : ''}
+          aria-pressed={role === 'captain'}
           onClick={() => setRole('captain')}
         >
           {t('login.roleCaptain')}
         </button>
       </div>
 
-      <form onSubmit={(e) => void submit(e)}>
-        <label htmlFor="email">{t('login.email')}</label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="username"
-          required
-        />
-        <label htmlFor="password">{t('login.password')}</label>
-        <PasswordField
-          id="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-          required
-        />
-        {error ? <p className="error">{t('login.error', { message: error })}</p> : null}
-        <button type="submit" disabled={busy}>
-          {t('login.cta')}
+      {error ? (
+        <div className="login-err">
+          <span className="msym" aria-hidden="true">
+            error
+          </span>
+          <span>{t('login.error', { message: error })}</span>
+        </div>
+      ) : null}
+
+      <form className="login-form" onSubmit={(e) => void submit(e)}>
+        <label htmlFor="email">
+          <span>{t('login.email')}</span>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="username"
+            disabled={busy}
+            required
+          />
+        </label>
+        <label htmlFor="password">
+          <span>{t('login.password')}</span>
+          <PasswordField
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            disabled={busy}
+            required
+          />
+        </label>
+        <button type="submit" className="login-cta" disabled={busy}>
+          {busy ? <span className="login-spinner" aria-hidden="true" /> : null}
+          <span>{t('login.cta')}</span>
         </button>
       </form>
-    </div>
+    </LoginLayout>
   );
 }
