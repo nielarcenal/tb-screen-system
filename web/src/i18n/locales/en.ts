@@ -150,6 +150,12 @@ export const en = {
     done: 'Done',
     confirmDeactivate:
       'Deactivate {{name}}? They will no longer be able to sign in or submit screenings. Past records stay intact. You can reactivate this account anytime.',
+    deactivateTitle: 'Deactivate this BHW?',
+    activityLabel: 'Activity in the last 30 days',
+    reassignLabel: 'Reassign coverage to',
+    reassignNone: 'Leave unassigned for now',
+    reassignNote:
+      'Their enrolled patients move to the chosen BHW so follow-ups continue. Leave unassigned to keep them with this account.',
     empty: 'No BHW accounts in your facility yet.',
     loadError: 'Could not load BHW accounts: {{message}}',
     actionError: 'Action failed: {{message}}',

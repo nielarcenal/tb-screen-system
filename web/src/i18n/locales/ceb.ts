@@ -150,6 +150,12 @@ export const ceb: Translation = {
     done: 'Humana',
     confirmDeactivate:
       'I-deactivate si {{name}}? Dili na sila maka-sign in o makasumite og screening. Magpabilin ang mga daang rekord. Mahimong i-reactivate bisan kanus-a.',
+    deactivateTitle: 'I-deactivate kini nga BHW?',
+    activityLabel: 'Kalihokan sa milabay nga 30 ka adlaw',
+    reassignLabel: 'Ibalhin ang saklaw ngadto kang',
+    reassignNone: 'Pasagdi una nga walay assigned',
+    reassignNote:
+      'Ang ilang mga naka-enroll nga pasyente mobalhin ngadto sa napiling BHW aron magpadayon ang follow-up. Pasagdi nga walay assigned aron magpabilin sila niini nga account.',
     empty: 'Wala pay BHW account sa inyong pasilidad.',
     loadError: 'Dili ma-load ang mga BHW account: {{message}}',
     actionError: 'Napakyas ang aksyon: {{message}}',

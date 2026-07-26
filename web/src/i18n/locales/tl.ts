@@ -150,6 +150,12 @@ export const tl: Translation = {
     done: 'Tapos na',
     confirmDeactivate:
       'I-deactivate si {{name}}? Hindi na sila makakapag-sign in o makakapagsumite ng screening. Mananatili ang mga lumang rekord. Maaaring i-reactivate anumang oras.',
+    deactivateTitle: 'I-deactivate ang BHW na ito?',
+    activityLabel: 'Aktibidad sa nakaraang 30 araw',
+    reassignLabel: 'Ilipat ang saklaw kay',
+    reassignNone: 'Iwan munang walang nakatalaga',
+    reassignNote:
+      'Ililipat sa napiling BHW ang mga naka-enroll nilang pasyente upang magpatuloy ang follow-up. Iwang walang nakatalaga upang manatili sila sa account na ito.',
     empty: 'Wala pang BHW account sa inyong pasilidad.',
     loadError: 'Hindi ma-load ang mga BHW account: {{message}}',
     actionError: 'Nabigo ang aksyon: {{message}}',

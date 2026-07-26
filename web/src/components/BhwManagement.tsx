@@ -31,6 +31,8 @@ export default function BhwManagement() {
   const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  // Optional coverage successor when deactivating a BHW ('' = leave unassigned).
+  const [reassignTo, setReassignTo] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -122,11 +124,15 @@ export default function BhwManagement() {
     }
   };
 
-  const setActive = async (row: BhwActivityRow, active: boolean) => {
+  const setActive = async (row: BhwActivityRow, active: boolean, successorId?: string) => {
     setBusy(true);
     setError(null);
     try {
-      await invoke({ action: active ? 'reactivate' : 'deactivate', user_id: row.user_id });
+      await invoke({
+        action: active ? 'reactivate' : 'deactivate',
+        user_id: row.user_id,
+        ...(successorId ? { reassign_to: successorId } : {}),
+      });
       setView({ kind: 'list' });
       await load();
     } catch (e) {
@@ -213,11 +219,39 @@ export default function BhwManagement() {
   }
 
   if (view.kind === 'confirmDeactivate') {
+    const target = view.target;
+    // Successor candidates: other still-active BHWs (all share the captain's barangay).
+    const successors = rows.filter((r) => r.active && r.user_id !== target.user_id);
     return (
-      <div className="card centered" style={{ maxWidth: 420 }}>
-        <p>{t('bhw.confirmDeactivate', { name: view.target.full_name })}</p>
+      <div className="card centered" style={{ maxWidth: 460 }}>
+        <h2>{t('bhw.deactivateTitle')}</h2>
+        <p>{t('bhw.confirmDeactivate', { name: target.full_name })}</p>
+        <p className="mutedline" style={{ marginTop: 0 }}>
+          {t('bhw.activityLabel')}:{' '}
+          {t('bhw.activityLine', {
+            screenings: target.screenings_n,
+            referrals: target.referrals_n,
+          })}
+        </p>
+
+        <label htmlFor="reassign">{t('bhw.reassignLabel')}</label>
+        <select
+          id="reassign"
+          value={reassignTo}
+          onChange={(e) => setReassignTo(e.target.value)}
+          style={{ width: '100%' }}
+        >
+          <option value="">{t('bhw.reassignNone')}</option>
+          {successors.map((b) => (
+            <option key={b.user_id} value={b.user_id}>
+              {b.full_name}
+            </option>
+          ))}
+        </select>
+        <p className="mutedline">{t('bhw.reassignNote')}</p>
+
         <p>
-          <button disabled={busy} onClick={() => void setActive(view.target, false)}>
+          <button disabled={busy} onClick={() => void setActive(target, false, reassignTo)}>
             {t('bhw.deactivate')}
           </button>
           <button className="secondary" disabled={busy} onClick={() => setView({ kind: 'list' })}>
@@ -381,7 +415,10 @@ export default function BhwManagement() {
                   <button
                     className="danger"
                     disabled={busy}
-                    onClick={() => setView({ kind: 'confirmDeactivate', target: r })}
+                    onClick={() => {
+                      setReassignTo('');
+                      setView({ kind: 'confirmDeactivate', target: r });
+                    }}
                   >
                     {t('bhw.deactivate')}
                   </button>

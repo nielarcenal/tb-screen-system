@@ -23,7 +23,11 @@
  *                    row, returns { email, temp_password }.
  *   update         { user_id, first_name, last_name } (admin may also send
  *                  barangay_code to reassign a captain)
- *   deactivate     { user_id } → users.active=false + auth ban (blocks sign-in).
+ *   deactivate     { user_id, reassign_to? } → users.active=false + auth ban
+ *                  (blocks sign-in). Captains may pass reassign_to (another
+ *                  active BHW of the same barangay) to hand that BHW's enrolled
+ *                  patients over to a successor so cross-barangay enrollments
+ *                  and their follow-ups are not orphaned.
  *   reactivate     { user_id } → users.active=true  + ban lifted.
  *   reset_password { user_id } → sets a fresh temp password and returns it
  *                  (passwords are hashed — they can never be viewed, only reset).
@@ -31,8 +35,11 @@
  * Browser calls: supabase.functions.invoke sends a CORS preflight — every
  * response (including OPTIONS) must carry the CORS headers.
  *
- * PRIVACY: this function reads/writes ONLY facilities/users/auth — no patient
- * data ever passes through it. Captains and admins have no patient policies.
+ * PRIVACY: this function reads/writes facilities/users/auth — no patient data
+ * is ever read or returned to the caller. The ONE exception is the coverage
+ * handoff above: a deactivation may reassign patients.enrolled_by (a foreign
+ * key only) from the deactivated BHW to the successor, server-side, without
+ * exposing any patient row. Captains and admins have no patient read policies.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -45,6 +52,8 @@ interface Body {
   last_name?: string;
   barangay_code?: string;
   facility_id?: string;
+  /** deactivate only (captain → BHW): successor to receive the enrolled patients. */
+  reassign_to?: string;
 }
 
 const CORS = {
@@ -275,6 +284,37 @@ Deno.serve(async (req) => {
         const target = await loadTarget(body.user_id);
         if (!target) return notFound();
         const activate = body.action === 'reactivate';
+
+        // Optional coverage handoff (captain deactivating a BHW): move the
+        // BHW's enrolled patients to an active BHW of the same barangay, so a
+        // cross-barangay enrollment (visible only to its enroller) is not
+        // orphaned. Done BEFORE the ban so a failure aborts cleanly, leaving
+        // the BHW active for a retry.
+        if (!activate && body.reassign_to && managedRole === 'bhw') {
+          if (body.reassign_to === target.user_id) {
+            return json(400, { error: 'cannot reassign coverage to the same BHW' });
+          }
+          const { data: successor, error: succErr } = await admin
+            .from('users')
+            .select('user_id, role, active, assigned_barangay_code')
+            .eq('user_id', body.reassign_to)
+            .maybeSingle();
+          if (succErr) return json(500, { error: succErr.message });
+          if (
+            !successor ||
+            successor.role !== 'bhw' ||
+            !successor.active ||
+            successor.assigned_barangay_code !== caller.assigned_barangay_code
+          ) {
+            return json(400, { error: 'reassign_to must be an active BHW in your barangay' });
+          }
+          const { error: reErr } = await admin
+            .from('patients')
+            .update({ enrolled_by: body.reassign_to })
+            .eq('enrolled_by', target.user_id);
+          if (reErr) return json(500, { error: reErr.message });
+        }
+
         // Auth ban is what actually blocks sign-in; users.active drives the UI.
         const { error: banErr } = await admin.auth.admin.updateUserById(target.user_id, {
           ban_duration: activate ? 'none' : '87600h', // ~10 years
