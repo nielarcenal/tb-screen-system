@@ -244,6 +244,23 @@ export const en = {
     markMissed: 'Mark missed',
     updateError: 'Update failed: {{message}}',
     notFound: 'Referral not found (or not addressed to your facility).',
+    readOnly: 'Read-only',
+    pgisLabel: 'Symptom severity (PGI-S)',
+    pgisNote: 'Supplementary context only — not used to decide referral.',
+    recvLabel: 'Referral receipt',
+    recvUndo: 'Undo received',
+    recvLocked: 'Locked after testing',
+    labTitle: 'Laboratory outcome',
+    labHint: 'Recorded by staff after testing — not computed by the system.',
+    savedFlash: 'Saved',
+    resultNone: 'Not yet recorded',
+    attendLabel: 'Attendance',
+    closedTag: 'Closed',
+    footerNote:
+      'Positive and negative outcomes are recorded by staff, never computed by the system.',
+    selectTitle: 'Select a referral',
+    selectBody:
+      'Choose a patient from the inbox to view their screening and record outcomes.',
   },
   address: {
     region: 'Region',

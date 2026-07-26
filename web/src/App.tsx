@@ -155,7 +155,15 @@ export default function App() {
             {openReferralId ? (
               <ReferralDetail referralId={openReferralId} onBack={() => setOpenReferralId(null)} />
             ) : (
-              <div className="placeholder">{t('inbox.selectPrompt')}</div>
+              <div className="rd-empty">
+                <div className="badge">
+                  <span className="msym" aria-hidden="true">
+                    move_to_inbox
+                  </span>
+                </div>
+                <div className="rd-emptytitle">{t('detail.selectTitle')}</div>
+                <div className="rd-emptybody">{t('detail.selectBody')}</div>
+              </div>
             )}
           </div>
         </div>

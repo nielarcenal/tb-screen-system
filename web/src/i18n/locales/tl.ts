@@ -245,6 +245,23 @@ export const tl: Translation = {
     markMissed: 'Markahang hindi dumalo',
     updateError: 'Nabigo ang pag-update: {{message}}',
     notFound: 'Hindi natagpuan ang referral (o hindi ito para sa inyong pasilidad).',
+    readOnly: 'Basahin lamang',
+    pgisLabel: 'Tindi ng sintomas (PGI-S)',
+    pgisNote: 'Karagdagang konteksto lamang — hindi ginagamit sa pagpapasya ng referral.',
+    recvLabel: 'Pagtanggap ng referral',
+    recvUndo: 'Bawiin ang pagtanggap',
+    recvLocked: 'Naka-lock pagkatapos ng pagsusuri',
+    labTitle: 'Resulta ng laboratoryo',
+    labHint: 'Itinatala ng staff pagkatapos ng pagsusuri — hindi kinakalkula ng sistema.',
+    savedFlash: 'Nai-save',
+    resultNone: 'Hindi pa naitatala',
+    attendLabel: 'Pagdalo',
+    closedTag: 'Sarado',
+    footerNote:
+      'Ang positibo at negatibong resulta ay itinatala ng staff, hindi kinakalkula ng sistema.',
+    selectTitle: 'Pumili ng referral',
+    selectBody:
+      'Pumili ng pasyente mula sa kahon upang makita ang kanilang screening at itala ang mga resulta.',
   },
   address: {
     region: 'Rehiyon',

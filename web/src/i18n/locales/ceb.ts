@@ -245,6 +245,23 @@ export const ceb: Translation = {
     markMissed: 'Markahi nga wala mitambong',
     updateError: 'Napakyas ang pag-update: {{message}}',
     notFound: 'Wala makit-an ang referral (o dili kini alang sa inyong pasilidad).',
+    readOnly: 'Basahon lamang',
+    pgisLabel: 'Kagrabe sa sintomas (PGI-S)',
+    pgisNote: 'Dugang nga konteksto lamang — dili gamiton sa pagdesisyon sa referral.',
+    recvLabel: 'Pagdawat sa referral',
+    recvUndo: 'Ibalik ang pagdawat',
+    recvLocked: 'Na-lock human sa pagsulay',
+    labTitle: 'Resulta sa laboratoryo',
+    labHint: 'Girekord sa staff human sa pagsulay — dili kalkulahon sa sistema.',
+    savedFlash: 'Na-save',
+    resultNone: 'Wala pa na-rekord',
+    attendLabel: 'Pagtambong',
+    closedTag: 'Sirado',
+    footerNote:
+      'Ang positibo ug negatibo nga resulta girekord sa staff, dili kalkulahon sa sistema.',
+    selectTitle: 'Pagpili ug referral',
+    selectBody:
+      'Pagpili ug pasyente gikan sa sudlanan aron makita ang ilang screening ug irekord ang mga resulta.',
   },
   address: {
     region: 'Rehiyon',
