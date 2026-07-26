@@ -8,11 +8,10 @@
  * offline work never hits this screen.
  */
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Image, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Appbar, Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { supabase } from '../src/lib/supabase';
 import { useSessionStore } from '../src/store/sessionStore';
@@ -26,6 +25,7 @@ export default function SignInScreen() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -53,18 +53,11 @@ export default function SignInScreen() {
       </Appbar.Header>
       <ScrollView contentContainerStyle={{ padding: 24, gap: 16, flexGrow: 1 }}>
         <View style={{ alignItems: 'center', gap: 12, marginTop: 24 }}>
-          <View
-            style={{
-              width: 60,
-              height: 60,
-              borderRadius: 18,
-              backgroundColor: palette.teal,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <MaterialCommunityIcons name="hospital-box" size={32} color="#FFFFFF" />
-          </View>
+          <Image
+            source={require('../assets/tb-screen-logo.png')}
+            style={{ width: 60, height: 60, borderRadius: 18 }}
+            accessibilityLabel={t('common.appName')}
+          />
           <Text variant="titleLarge" style={{ color: palette.ink, fontWeight: '600' }}>
             {t('signIn.title')}
           </Text>
@@ -92,8 +85,17 @@ export default function SignInScreen() {
             value={password}
             onChangeText={setPassword}
             mode="outlined"
-            secureTextEntry
+            secureTextEntry={!showPassword}
             autoComplete="current-password"
+            right={
+              <TextInput.Icon
+                icon={showPassword ? 'eye-off' : 'eye'}
+                onPress={() => setShowPassword((v) => !v)}
+                accessibilityLabel={
+                  showPassword ? t('signIn.hidePassword') : t('signIn.showPassword')
+                }
+              />
+            }
             style={{ backgroundColor: palette.paper }}
           />
         </View>
@@ -111,6 +113,13 @@ export default function SignInScreen() {
         >
           {t('signIn.cta')}
         </Button>
+
+        <Text
+          variant="bodySmall"
+          style={{ marginTop: 14, textAlign: 'center', color: palette.inkSoft, lineHeight: 19 }}
+        >
+          {t('signIn.helper')}
+        </Text>
 
         <View style={{ flex: 1 }} />
         <Text

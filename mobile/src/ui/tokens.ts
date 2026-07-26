@@ -15,8 +15,8 @@ export const palette = {
   tealContainer: '#D9EEEF',
   tealBorder: '#7CBEC6',
 
-  // surfaces (warm off-whites)
-  background: '#FBF9F6',
+  // surfaces (warm off-whites) — #F7F5F1 mirrors the web --bg (parity §6)
+  background: '#F7F5F1',
   surfaceSubtle: '#F3F0EA',
   surfaceVariant: '#EDE8E0',
   border: '#E3DED6',

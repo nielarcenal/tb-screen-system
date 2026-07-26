@@ -6,7 +6,7 @@
  * reachable when terms are not yet accepted (or after a dev reset).
  */
 import { useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Image, Pressable, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
@@ -43,18 +43,11 @@ export default function WelcomeScreen() {
         contentContainerStyle={{ flexGrow: 1, padding: 24, paddingTop: 64, paddingBottom: 28 }}
       >
         <View style={{ alignItems: 'center', gap: 14 }}>
-          <View
-            style={{
-              width: 72,
-              height: 72,
-              borderRadius: 22,
-              backgroundColor: palette.teal,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <MaterialCommunityIcons name="hospital-box" size={38} color="#FFFFFF" />
-          </View>
+          <Image
+            source={require('../assets/tb-screen-logo.png')}
+            style={{ width: 72, height: 72, borderRadius: 22 }}
+            accessibilityLabel={t('common.appName')}
+          />
           <Text variant="headlineSmall" style={{ color: palette.ink, fontWeight: '600' }}>
             {t('common.appName')}
           </Text>
