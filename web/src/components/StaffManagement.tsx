@@ -42,7 +42,17 @@ export default function StaffManagement() {
   // List navigation: show one facility's accounts (facilities can have many
   // staff) or all of them.
   const [facilityFilter, setFacilityFilter] = useState<'all' | string>('all');
+  const [search, setSearch] = useState('');
   const [busy, setBusy] = useState(false);
+
+  const initials = (name: string) =>
+    name
+      .trim()
+      .split(/\s+/)
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || '·';
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -267,97 +277,158 @@ export default function StaffManagement() {
     );
   }
 
-  const visible =
-    facilityFilter === 'all' ? rows : rows.filter((r) => r.facility_id === facilityFilter);
+  const q = search.trim().toLowerCase();
+  const visible = rows.filter((r) => {
+    if (facilityFilter !== 'all' && r.facility_id !== facilityFilter) return false;
+    if (!q) return true;
+    return (
+      r.full_name.toLowerCase().includes(q) ||
+      (r.facilities?.name ?? '').toLowerCase().includes(q)
+    );
+  });
 
   return (
-    <div className="card">
-      <div className="toolbar">
-        <div>
-          <h2 style={{ marginBottom: 2 }}>{t('staff.title')}</h2>
-          <span className="mutedline">{t('staff.subtitle', { count: visible.length })}</span>
+    <div className="dcard">
+      <div className="bhw-head">
+        <div className="bhw-titlerow">
+          <div className="bhw-titleleft">
+            <h2>{t('staff.title')}</h2>
+            <span className="count-pill">{rows.length}</span>
+          </div>
+          <button className="bhw-new" onClick={openAdd}>
+            <span className="msym" aria-hidden="true">
+              add
+            </span>
+            {t('staff.addCta')}
+          </button>
         </div>
-        <span style={{ flex: 1 }} />
-        <label htmlFor="st-filter" style={{ margin: 0 }}>
-          {t('staff.filterLabel')}
-        </label>
-        <select
-          id="st-filter"
-          value={facilityFilter}
-          onChange={(e) => setFacilityFilter(e.target.value)}
-        >
-          <option value="all">{t('common.all')}</option>
-          {facilities.map((f) => (
-            <option key={f.facility_id} value={f.facility_id}>
-              {f.name} ({rows.filter((r) => r.facility_id === f.facility_id).length})
-            </option>
-          ))}
-        </select>
-        <button onClick={openAdd}>{t('staff.addCta')}</button>
+        <div className="bhw-tools">
+          <div className="search-wrap">
+            <span className="msym search-ic" aria-hidden="true">
+              search
+            </span>
+            <input
+              type="search"
+              placeholder={t('bhw.searchPlaceholder')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="select-wrap">
+            <select
+              value={facilityFilter}
+              aria-label={t('staff.filterLabel')}
+              onChange={(e) => setFacilityFilter(e.target.value)}
+            >
+              <option value="all">{t('common.all')}</option>
+              {facilities.map((f) => (
+                <option key={f.facility_id} value={f.facility_id}>
+                  {f.name} ({rows.filter((r) => r.facility_id === f.facility_id).length})
+                </option>
+              ))}
+            </select>
+            <span className="msym sel-ic" aria-hidden="true">
+              expand_more
+            </span>
+          </div>
+          <button
+            className="icon-btn"
+            onClick={() => void load()}
+            disabled={loading}
+            title={t('common.refresh')}
+            aria-label={t('common.refresh')}
+          >
+            <span className={`msym${loading ? ' spin' : ''}`} aria-hidden="true">
+              refresh
+            </span>
+          </button>
+        </div>
       </div>
 
-      {error ? <p className="error">{t('bhw.loadError', { message: error })}</p> : null}
-
-      {loading ? (
-        <p>{t('common.loading')}</p>
-      ) : visible.length === 0 ? (
-        <p className="mutedline">{t('staff.empty')}</p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>{t('bhw.colName')}</th>
-              <th>{t('staff.colFacility')}</th>
-              <th>{t('bhw.colStatus')}</th>
-              <th>{t('bhw.colActions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map((r) => (
-              <tr key={r.user_id} style={{ opacity: r.active ? 1 : 0.6 }}>
-                <td>
-                  <b>{r.full_name}</b>
-                </td>
-                <td>{r.facilities?.name ?? r.facility_id}</td>
-                <td>
-                  <span className={`chip ${r.active ? 'tested' : ''}`}>
-                    {r.active ? t('bhw.active') : t('bhw.deactivated')}
-                  </span>
-                </td>
-                <td>
-                  <button className="secondary" disabled={busy} onClick={() => openEdit(r)}>
-                    {t('bhw.edit')}
-                  </button>
+      <div className="bhw-list" aria-busy={loading}>
+        {error ? (
+          <div className="dstate err">
+            <div className="badge">
+              <span className="msym" aria-hidden="true">
+                cloud_off
+              </span>
+            </div>
+            <div className="st-title">{t('staff.errorTitle')}</div>
+            <div className="st-body">{t('bhw.errorBody')}</div>
+            <button className="retry" onClick={() => void load()}>
+              <span className="msym" aria-hidden="true">
+                refresh
+              </span>
+              {t('bhw.retry')}
+            </button>
+          </div>
+        ) : loading ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bhw-row skel" aria-hidden="true">
+              <span className="sk av" />
+              <div className="bhw-info">
+                <span className="sk n" />
+                <span className="sk s" />
+              </div>
+              <span className="sk ch" />
+            </div>
+          ))
+        ) : rows.length === 0 ? (
+          <div className="dstate ok">
+            <div className="badge">
+              <span className="msym" aria-hidden="true">
+                group_off
+              </span>
+            </div>
+            <div className="st-title">{t('staff.empty')}</div>
+            <div className="st-body">{t('staff.emptyDataBody')}</div>
+          </div>
+        ) : visible.length === 0 ? (
+          <div className="dstate ok">
+            <div className="badge">
+              <span className="msym" aria-hidden="true">
+                search_off
+              </span>
+            </div>
+            <div className="st-title">{t('staff.filterEmptyTitle')}</div>
+            <div className="st-body">{t('staff.filterEmptyBody')}</div>
+          </div>
+        ) : (
+          visible.map((r) => (
+            <div key={r.user_id} className={`bhw-row${r.active ? '' : ' inactive'}`}>
+              <span className="bhw-avatar">{initials(r.full_name)}</span>
+              <div className="bhw-info">
+                <span className="bhw-name">{r.full_name}</span>
+                <span className="bhw-sub">{r.facilities?.name ?? r.facility_id}</span>
+              </div>
+              <span className={`chip ${r.active ? 'active' : 'inactive'}`}>
+                {r.active ? t('bhw.active') : t('bhw.deactivated')}
+              </span>
+              <div className="bhw-actions">
+                <button disabled={busy} onClick={() => openEdit(r)}>
+                  {t('bhw.edit')}
+                </button>
+                <button disabled={busy} onClick={() => void resetPassword(r)}>
+                  {t('bhw.resetPw')}
+                </button>
+                {r.active ? (
                   <button
-                    className="secondary"
+                    className="danger"
                     disabled={busy}
-                    onClick={() => void resetPassword(r)}
+                    onClick={() => setView({ kind: 'confirmDeactivate', target: r })}
                   >
-                    {t('bhw.resetPw')}
+                    {t('bhw.deactivate')}
                   </button>
-                  {r.active ? (
-                    <button
-                      className="secondary"
-                      disabled={busy}
-                      onClick={() => setView({ kind: 'confirmDeactivate', target: r })}
-                    >
-                      {t('bhw.deactivate')}
-                    </button>
-                  ) : (
-                    <button
-                      className="secondary"
-                      disabled={busy}
-                      onClick={() => void setActive(r, true)}
-                    >
-                      {t('bhw.reactivate')}
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+                ) : (
+                  <button disabled={busy} onClick={() => void setActive(r, true)}>
+                    {t('bhw.reactivate')}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

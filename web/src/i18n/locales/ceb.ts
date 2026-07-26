@@ -38,6 +38,10 @@ export const ceb: Translation = {
     referralsSub: 'Mga referral nga gipadala sa inyong pasilidad',
     hotspotsSub: 'Mga presumptive nga kaso matag barangay',
     bhwSub: 'Mga health worker sa inyong barangay',
+    adminPortal: 'Portal sa Developer',
+    roleAdmin: 'Administrator',
+    captainsSub: 'Paghatag og mga account sa Kapitan sa Barangay',
+    staffSub: 'Paghatag og mga account sa TB-DOTS staff',
   },
   admin: {
     portalTitle: 'TB-Screen Developer Portal',
@@ -60,6 +64,10 @@ export const ceb: Translation = {
     scopeNote:
       'Makita lamang sa account ang mga referral nga gipadala sa pasilidad nga gipili dinhi — mao kini ang sakop sa tibuok nilang portal.',
     empty: 'Wala pay staff account.',
+    errorTitle: 'Wala ma-load ang staff',
+    filterEmptyTitle: 'Walay staff nga nahaom',
+    emptyDataBody: 'Pagdugang og staff account aron magsugod.',
+    filterEmptyBody: 'Sulayi hawaan ang pagpangita o filter sa pasilidad.',
   },
   captains: {
     title: 'Mga account sa Kapitan sa Barangay',
@@ -75,6 +83,9 @@ export const ceb: Translation = {
     scopeNote:
       'Ang kapitan makadugang ug makadumala lamang og mga BHW account alang sa barangay nga gitakda dinhi.',
     empty: 'Wala pay account sa kapitan.',
+    errorTitle: 'Wala ma-load ang mga kapitan',
+    filterEmptyTitle: 'Walay kapitan nga nahaom',
+    emptyDataBody: 'Pagdugang og kapitan aron magsugod.',
   },
   dashboard: {
     title: 'Dashboard',

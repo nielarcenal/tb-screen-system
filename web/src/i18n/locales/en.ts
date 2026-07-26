@@ -38,6 +38,10 @@ export const en = {
     referralsSub: 'Referrals addressed to your facility',
     hotspotsSub: 'Presumptive cases by barangay',
     bhwSub: 'Health workers in your barangay',
+    adminPortal: 'Developer Portal',
+    roleAdmin: 'Administrator',
+    captainsSub: 'Provision Barangay Captain accounts',
+    staffSub: 'Provision TB-DOTS staff accounts',
   },
   admin: {
     portalTitle: 'TB-Screen Developer Portal',
@@ -60,6 +64,10 @@ export const en = {
     scopeNote:
       'The account only sees referrals addressed to the facility chosen here — it defines their whole portal.',
     empty: 'No staff accounts yet.',
+    errorTitle: 'Couldn’t load staff',
+    filterEmptyTitle: 'No staff match',
+    emptyDataBody: 'Add a staff account to get started.',
+    filterEmptyBody: 'Try clearing the search or facility filter.',
   },
   captains: {
     title: 'Barangay Captain accounts',
@@ -75,6 +83,9 @@ export const en = {
     scopeNote:
       'The captain will only be able to add and manage BHW accounts for the barangay assigned here.',
     empty: 'No captain accounts yet.',
+    errorTitle: 'Couldn’t load captains',
+    filterEmptyTitle: 'No captains match',
+    emptyDataBody: 'Add a captain to get started.',
   },
   dashboard: {
     title: 'Dashboard',

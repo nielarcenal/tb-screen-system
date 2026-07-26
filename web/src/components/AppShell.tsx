@@ -29,6 +29,9 @@ interface Props {
   user: { name: string; roleLabel: string };
   headerTitle: string;
   headerSub?: string;
+  /** Standing note under every content area. Defaults to the §1 non-diagnostic
+   *  note; the admin portal (no clinical content) passes its provisioning note. */
+  footnote?: string;
   children: ReactNode;
 }
 
@@ -51,6 +54,7 @@ export default function AppShell({
   user,
   headerTitle,
   headerSub,
+  footnote,
   children,
 }: Props) {
   const { t } = useTranslation();
@@ -127,7 +131,7 @@ export default function AppShell({
         <main className="content-main">{children}</main>
 
         {/* Standing positioning note (§1) — visible under every space. */}
-        <div className="footnote">{t('common.nonDiagnostic')}</div>
+        <div className="footnote">{footnote ?? t('common.nonDiagnostic')}</div>
       </div>
     </div>
   );

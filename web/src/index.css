@@ -1319,7 +1319,7 @@ button.amber:hover { background: var(--amber-container); }
 .hs-row.skel .b.ct { width: 46px; height: 12px; }
 .hs-row.skel .b.tr { margin-top: 10px; height: 8px; border-radius: 999px; width: 60%; background: #efeae0; }
 
-/* ---------- captain: BHW management list + four states (§4) ---------- */
+/* ---------- account-management list (shared: BHW / captain / staff) + states (§4) ---------- */
 .bhw-head { padding: 15px 16px 13px; border-bottom: 1px solid #f0ece4; }
 .bhw-titlerow {
   display: flex;

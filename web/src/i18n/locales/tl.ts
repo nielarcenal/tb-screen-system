@@ -38,6 +38,10 @@ export const tl: Translation = {
     referralsSub: 'Mga referral na nakatalaga sa inyong pasilidad',
     hotspotsSub: 'Mga presumptive na kaso ayon sa barangay',
     bhwSub: 'Mga health worker sa inyong barangay',
+    adminPortal: 'Portal ng Developer',
+    roleAdmin: 'Administrator',
+    captainsSub: 'Maglaan ng mga account ng Kapitan ng Barangay',
+    staffSub: 'Maglaan ng mga account ng TB-DOTS staff',
   },
   admin: {
     portalTitle: 'TB-Screen Developer Portal',
@@ -60,6 +64,10 @@ export const tl: Translation = {
     scopeNote:
       'Makikita lamang ng account ang mga referral na ipinadala sa pasilidad na pinili rito — ito ang saklaw ng buong portal nila.',
     empty: 'Wala pang staff account.',
+    errorTitle: 'Hindi ma-load ang staff',
+    filterEmptyTitle: 'Walang tumugmang staff',
+    emptyDataBody: 'Magdagdag ng staff account upang magsimula.',
+    filterEmptyBody: 'Subukang alisin ang paghahanap o filter ng pasilidad.',
   },
   captains: {
     title: 'Mga account ng Kapitan ng Barangay',
@@ -75,6 +83,9 @@ export const tl: Translation = {
     scopeNote:
       'Ang kapitan ay makakapagdagdag at makakapamahala lamang ng mga BHW account para sa barangay na itinakda rito.',
     empty: 'Wala pang account ng kapitan.',
+    errorTitle: 'Hindi ma-load ang mga kapitan',
+    filterEmptyTitle: 'Walang tumugmang kapitan',
+    emptyDataBody: 'Magdagdag ng kapitan upang magsimula.',
   },
   dashboard: {
     title: 'Dashboard',
