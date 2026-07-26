@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&display=block" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon-180.png">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:Inter,system-ui,-apple-system,sans-serif;color:#20302e;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:#016575;text-decoration:none}
+a:hover{color:#014b57}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#d7d2c8;border-radius:8px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#c3bdb0;background-clip:content-box}
+input::placeholder,textarea::placeholder{color:#a7b0aa}
+@keyframes tbfade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes tbspin{to{transform:rotate(360deg)}}
+@keyframes tbpulse{0%,100%{opacity:1}50%{opacity:0.45}}
+@media (max-width:1100px){
+.tb-main{grid-template-columns:1fr!important;overflow-y:auto!important;overflow-x:hidden!important;align-content:start!important}
+.tb-pane{min-height:0!important;overflow:visible!important}
+.tb-pane>div{overflow:visible!important}
+}
+</style>
+</helmet>
+<div style="display:flex; height:100vh; min-height:100vh; width:100%; background:#f7f5f1; color:#20302e; font-family:Inter,system-ui,sans-serif; overflow:hidden">
+
+  <aside style="flex:0 0 252px; width:252px; background:#0B2E33; color:#fff; display:flex; flex-direction:column; padding:16px 14px 14px">
+    <div style="display:flex; align-items:center; gap:11px; padding:6px 6px 18px">
+      <img src="assets/tb-screen-logo.png" alt="TB-Screen" width="40" height="40" style="width:40px; height:40px; border-radius:10px; display:block; box-shadow:0 0 0 1px rgba(255,255,255,0.10)" />
+      <div style="display:flex; flex-direction:column; gap:2px; min-width:0">
+        <span style="font-size:15px; font-weight:600; letter-spacing:-0.01em; color:#fff">TB&#8209;Screen</span>
+        <span style="font-size:10px; font-weight:600; letter-spacing:0.09em; text-transform:uppercase; color:#68b6bd">{{ L.brand_portal }}</span>
+      </div>
+    </div>
+
+    <nav style="display:flex; flex-direction:column; gap:3px; margin-top:2px">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="3">
+        <button onClick="{{ n.onClick }}" style="display:flex; align-items:center; gap:12px; padding:9px 11px; border-radius:9px; border:none; text-align:left; width:100%; font-family:inherit; cursor:pointer; font-size:13.5px; color:{{ n.color }}; font-weight:{{ n.weight }}; background:{{ n.bg }}; box-shadow:{{ n.shadow }}" style-hover="filter:brightness(1.12)">
+          <span style="font-family:'Material Symbols Outlined'; font-size:20px; color:{{ n.iconColor }}">{{ n.icon }}</span>
+          <span>{{ n.label }}</span>
+        </button>
+      </sc-for>
+    </nav>
+
+    <div style="flex:1"></div>
+
+    <div style="border-top:1px solid rgba(255,255,255,0.10); padding-top:13px; margin-top:12px; display:flex; flex-direction:column; gap:11px">
+      <div style="display:flex; align-items:center; gap:9px; padding:0 4px">
+        <span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#68b6bd; flex:0 0 auto">local_hospital</span>
+        <div style="min-width:0">
+          <div style="font-size:12.5px; font-weight:600; color:#e8f1f1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">Malaybalay City TB&#8209;DOTS</div>
+          <div style="font-size:11px; color:#7f9a9d">Bukidnon</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:9px; padding:0 4px">
+        <div style="width:30px; height:30px; border-radius:50%; background:#00a896; color:#04322e; display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700; flex:0 0 30px">RA</div>
+        <div style="min-width:0; flex:1">
+          <div style="font-size:12.5px; font-weight:600; color:#e8f1f1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">Dr. Ramon Aquino</div>
+          <div style="font-size:11px; color:#7f9a9d">{{ L.role_label }}</div>
+        </div>
+      </div>
+      <button style="display:flex; align-items:center; gap:9px; width:100%; padding:9px 10px; border-radius:9px; border:1px solid rgba(255,255,255,0.12); background:transparent; color:rgba(255,255,255,0.80); font-size:12.5px; font-weight:500; font-family:inherit; cursor:pointer" style-hover="background:rgba(255,255,255,0.06); color:#ffffff">
+        <span style="font-family:'Material Symbols Outlined'; font-size:18px">logout</span>
+        <span>{{ L.sign_out }}</span>
+      </button>
+    </div>
+  </aside>
+
+  <div style="flex:1; min-width:0; display:flex; flex-direction:column; overflow:hidden">
+    <header style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; padding:20px 28px 14px">
+      <div style="display:flex; flex-direction:column; gap:3px; min-width:0">
+        <h1 style="margin:0; font-size:22px; font-weight:700; letter-spacing:-0.02em; color:#14302f">{{ headerTitle }}</h1>
+        <p style="margin:0; font-size:13px; color:#6d7a76">{{ headerSub }}</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; flex:0 0 auto">
+        <div style="display:flex; align-items:center; gap:7px; padding:6px 12px; background:#fff; border:1px solid #e3ded6; border-radius:999px; font-size:12.5px; color:#6d7a76; font-weight:500">
+          <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#8a968f">calendar_today</span>
+          <span>Wed &middot; 22 Jul 2026</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:2px; padding:3px; background:#fff; border:1px solid #e3ded6; border-radius:999px">
+          <span style="font-family:'Material Symbols Outlined'; font-size:17px; color:#8a968f; margin:0 3px 0 6px">language</span>
+          <sc-for list="{{ langButtons }}" as="b" hint-placeholder-count="3">
+            <button onClick="{{ b.onClick }}" style="border:none; background:{{ b.bg }}; color:{{ b.fg }}; padding:5px 11px; border-radius:999px; font-size:11.5px; font-weight:700; letter-spacing:0.02em; cursor:pointer; font-family:inherit">{{ b.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </header>
+
+    <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+    <main style="flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding:6px 28px 28px; display:flex; flex-direction:column; gap:18px">
+      <sc-if value="{{ dashError }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:14px; padding:56px 24px; text-align:center">
+          <div style="width:60px; height:60px; border-radius:16px; background:#fbe7e5; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:30px; color:#b0473b">cloud_off</span></div>
+          <div style="font-size:16px; font-weight:700; color:#2c3a37">{{ L.dash_error_title }}</div>
+          <div style="font-size:13px; color:#8a968f; max-width:320px; line-height:1.55">{{ L.dash_error_body }}</div>
+          <button onClick="{{ dashRetry }}" style="display:inline-flex; align-items:center; gap:7px; border:none; padding:10px 18px; border-radius:9px; font-size:13px; font-weight:600; font-family:inherit; color:#fff; background:#028090; cursor:pointer" style-hover="background:#016575"><span style="font-family:'Material Symbols Outlined'; font-size:18px">refresh</span>{{ L.retry }}</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ dashOk }}" hint-placeholder-val="{{ true }}">
+        <section style="flex:0 0 auto; background:#fff; border:1px solid #e3ded6; border-radius:14px; box-shadow:0 1px 2px rgba(20,48,51,0.04),0 1px 3px rgba(20,48,51,0.05); overflow:hidden">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 18px; border-bottom:1px solid #f0ece4; flex-wrap:wrap">
+            <div style="display:flex; align-items:center; gap:9px; min-width:0">
+              <span style="font-family:'Material Symbols Outlined'; font-size:20px; color:#028090">insights</span>
+              <h2 style="margin:0; font-size:14.5px; font-weight:700; color:#14302f; letter-spacing:-0.01em">{{ dashCardTitle }}</h2>
+            </div>
+            <button onClick="{{ dashRefresh }}" style="display:inline-flex; align-items:center; gap:7px; border:1px solid #e3ded6; background:#faf9f6; color:#4a5754; padding:7px 13px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#f0efe9"><span style="font-family:'Material Symbols Outlined'; font-size:17px; {{ dashSpinStyle }}">refresh</span>{{ L.dash_refresh }}</button>
+          </div>
+          <div style="padding:16px 18px">
+            <sc-if value="{{ dashLoading }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px">
+                <sc-for list="{{ skeletons }}" as="k" hint-placeholder-count="6">
+                  <div style="border:1px solid #f0ece4; border-radius:12px; padding:15px 16px; background:#fbfaf7">
+                    <div style="width:34px; height:34px; border-radius:9px; background:#eee9df; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:52px; height:26px; border-radius:6px; background:#eee9df; margin-top:14px; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:96px; height:11px; border-radius:5px; background:#efeae0; margin-top:12px; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:64px; height:9px; border-radius:5px; background:#f2ede4; margin-top:8px; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ dashTiles }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px">
+                <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="6">
+                  <div style="border:1px solid #efeadf; border-radius:12px; padding:15px 16px; background:#fdfcfa">
+                    <span style="width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; background:{{ t.iconBg }}"><span style="font-family:'Material Symbols Outlined'; font-size:20px; color:{{ t.iconColor }}">{{ t.icon }}</span></span>
+                    <div style="font-size:30px; font-weight:700; letter-spacing:-0.02em; color:{{ t.valueColor }}; font-variant-numeric:tabular-nums; margin-top:12px; line-height:1">{{ t.value }}</div>
+                    <div style="font-size:12.5px; font-weight:600; color:#3f4b48; margin-top:7px">{{ t.label }}</div>
+                    <div style="font-size:11px; color:#9aa39c; margin-top:2px">{{ t.sub }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+          <div style="padding:12px 18px; border-top:1px solid #f0ece4; background:#fbfaf7; display:flex; align-items:flex-start; gap:8px">
+            <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#a0a89f; flex:0 0 auto; margin-top:1px">info</span>
+            <p style="margin:0; font-size:11.5px; color:#8a968f; line-height:1.5">{{ L.footer_note }}</p>
+          </div>
+        </section>
+        <section style="flex:0 0 auto; background:#fff; border:1px solid #e3ded6; border-radius:14px; box-shadow:0 1px 2px rgba(20,48,51,0.04),0 1px 3px rgba(20,48,51,0.05); overflow:hidden">
+          <div style="display:flex; align-items:center; gap:9px; padding:15px 18px; border-bottom:1px solid #f0ece4">
+            <span style="font-family:'Material Symbols Outlined'; font-size:20px; color:#028090">history</span>
+            <div style="min-width:0">
+              <h2 style="margin:0; font-size:14.5px; font-weight:700; color:#14302f; letter-spacing:-0.01em">{{ L.recent_activity }}</h2>
+              <div style="font-size:11.5px; color:#8a968f; margin-top:1px">{{ L.activity_sub }}</div>
+            </div>
+          </div>
+          <sc-if value="{{ dashLoading }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <sc-for list="{{ skeletonRows }}" as="k" hint-placeholder-count="5">
+                <div style="display:flex; align-items:center; gap:12px; padding:13px 18px; border-bottom:1px solid #f4f1ea">
+                  <div style="width:36px; height:36px; border-radius:50%; background:#eee9df; flex:0 0 auto; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                  <div style="flex:1; min-width:0">
+                    <div style="width:60%; height:12px; border-radius:6px; background:#eee9df; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:35%; height:10px; border-radius:5px; background:#f2ede4; margin-top:7px; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                  </div>
+                  <div style="width:52px; height:10px; border-radius:5px; background:#f2ede4; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ dashEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:10px; padding:44px 24px; text-align:center">
+              <div style="width:52px; height:52px; border-radius:14px; background:#eef4f4; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:26px; color:#4f9aa1">event_note</span></div>
+              <div style="font-size:14px; font-weight:600; color:#2c3a37">{{ L.activity_empty_title }}</div>
+              <div style="font-size:12.5px; color:#8a968f; max-width:300px; line-height:1.55">{{ L.activity_empty_body }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ dashList }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <sc-for list="{{ activity }}" as="a" hint-placeholder-count="6">
+                <div style="display:flex; align-items:center; gap:12px; padding:12px 18px; border-bottom:1px solid #f4f1ea">
+                  <span style="width:36px; height:36px; border-radius:50%; flex:0 0 auto; display:flex; align-items:center; justify-content:center; background:{{ a.iconBg }}"><span style="font-family:'Material Symbols Outlined'; font-size:19px; color:{{ a.iconColor }}">{{ a.icon }}</span></span>
+                  <div style="flex:1; min-width:0">
+                    <div style="font-size:13px; color:#2c3a37; line-height:1.35"><span style="font-weight:600">{{ a.action }}</span> &middot; {{ a.name }}</div>
+                    <div style="font-size:11.5px; color:#9aa39c; margin-top:1px">{{ a.barangay }}</div>
+                  </div>
+                  <div style="font-size:11.5px; color:#9aa39c; font-variant-numeric:tabular-nums; white-space:nowrap; flex:0 0 auto">{{ a.time }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </section>
+      </sc-if>
+    </main>
+    </sc-if>
+
+    <sc-if value="{{ isReferrals }}" hint-placeholder-val="{{ false }}">
+    <main class="tb-main" style="flex:1; min-height:0; padding:6px 28px 24px; display:grid; grid-template-columns:minmax(300px,360px) minmax(0,1fr); gap:20px; align-items:stretch">
+
+      <section class="tb-pane" style="display:flex; flex-direction:column; min-height:0; background:#fff; border:1px solid #e3ded6; border-radius:14px; box-shadow:0 1px 2px rgba(20,48,51,0.04),0 1px 3px rgba(20,48,51,0.05); overflow:hidden">
+        <div style="padding:15px 16px 13px; border-bottom:1px solid #f0ece4">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px">
+            <h2 style="margin:0; font-size:14px; font-weight:700; color:#14302f; letter-spacing:-0.01em">{{ L.inbox_title }}</h2>
+            <span style="font-size:11.5px; font-weight:600; color:#028090; background:#e6f2f2; padding:2px 10px; border-radius:999px; font-variant-numeric:tabular-nums; white-space:nowrap">{{ countText }}</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px">
+            <div style="position:relative; flex:1; min-width:0">
+              <span style="position:absolute; left:9px; top:50%; transform:translateY(-50%); font-family:'Material Symbols Outlined'; font-size:18px; color:#a7b0aa; pointer-events:none">search</span>
+              <input value="{{ search }}" onChange="{{ setSearch }}" placeholder="{{ L.search_ph }}" style="width:100%; padding:8px 10px 8px 33px; border:1px solid #e3ded6; border-radius:9px; font-size:12.5px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+            </div>
+            <div style="position:relative; flex:0 0 auto">
+              <select value="{{ statusFilter }}" onChange="{{ setStatus }}" style="appearance:none; -webkit-appearance:none; padding:8px 30px 8px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:12.5px; font-family:inherit; color:#20302e; background:#faf9f6; cursor:pointer; outline:none">
+                <sc-for list="{{ statusOptions }}" as="o" hint-placeholder-count="6"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+              </select>
+              <span style="position:absolute; right:8px; top:50%; transform:translateY(-50%); font-family:'Material Symbols Outlined'; font-size:18px; color:#8a968f; pointer-events:none">expand_more</span>
+            </div>
+            <button onClick="{{ refresh }}" title="Refresh" style="flex:0 0 auto; width:35px; height:35px; display:flex; align-items:center; justify-content:center; border:1px solid #e3ded6; border-radius:9px; background:#faf9f6; color:#6d7a76; cursor:pointer" style-hover="background:#f0efe9">
+              <span style="font-family:'Material Symbols Outlined'; font-size:18px; {{ spinStyle }}">refresh</span>
+            </button>
+          </div>
+        </div>
+        <div style="flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column">
+          <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{ filtered }}" as="r" hint-placeholder-count="6">
+              <button onClick="{{ r.onSelect }}" style="display:flex; width:100%; text-align:left; gap:10px; padding:12px 15px; border:none; border-bottom:1px solid #f4f1ea; background:{{ r.rowBg }}; box-shadow:{{ r.rowShadow }}; cursor:pointer; font-family:inherit; align-items:flex-start" style-hover="filter:brightness(0.985)">
+                <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px">
+                  <span style="font-size:13.5px; font-weight:600; color:#14302f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ r.name }}</span>
+                  <span style="font-size:11px; color:#8a968f; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ r.code }}</span>
+                  <span style="font-size:12px; color:#6d7a76; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ r.metaSub }}</span>
+                </div>
+                <div style="flex:0 0 auto; display:flex; flex-direction:column; align-items:flex-end; gap:5px">
+                  <span style="font-size:11px; font-weight:600; padding:3px 9px; border-radius:999px; background:{{ r.statusChip.bg }}; color:{{ r.statusChip.fg }}; white-space:nowrap">{{ r.statusChip.label }}</span>
+                  <sc-if value="{{ r.showResultPill }}" hint-placeholder-val="{{ false }}"><span style="font-size:10.5px; font-weight:600; padding:2px 8px; border-radius:999px; background:{{ r.resultPill.bg }}; color:{{ r.resultPill.fg }}; white-space:nowrap">{{ r.resultPill.label }}</span></sc-if>
+                </div>
+              </button>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:9px; padding:40px 24px; text-align:center">
+              <span style="font-family:'Material Symbols Outlined'; font-size:32px; color:#c7cec9">search_off</span>
+              <div style="font-size:13.5px; font-weight:600; color:#4a5754">{{ L.empty_title }}</div>
+              <div style="font-size:12px; color:#8a968f; max-width:210px; line-height:1.5">{{ L.empty_body }}</div>
+            </div>
+          </sc-if>
+        </div>
+      </section>
+
+      <section class="tb-pane" style="display:flex; flex-direction:column; min-height:0; background:#fff; border:1px solid #e3ded6; border-radius:14px; box-shadow:0 1px 2px rgba(20,48,51,0.04),0 1px 3px rgba(20,48,51,0.05); overflow:hidden">
+        <div style="flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column">
+          <sc-if value="{{ hasSelection }}" hint-placeholder-val="{{ true }}">
+            <div style="animation:tbfade 0.22s ease">
+
+              <div style="padding:18px 20px 16px; border-bottom:1px solid #f0ece4">
+                <div style="display:flex; align-items:flex-start; gap:12px">
+                  <div style="flex:1; min-width:0">
+                    <div style="font-size:18px; font-weight:700; color:#14302f; letter-spacing:-0.01em">{{ sel.name }}</div>
+                    <div style="font-size:12.5px; color:#6d7a76; margin-top:3px">{{ sel.metaLine }}</div>
+                    <div style="font-size:12px; color:#8a968f; margin-top:2px">{{ sel.screenedText }}</div>
+                  </div>
+                  <button onClick="{{ clearSel }}" title="Close" style="flex:0 0 auto; width:30px; height:30px; border-radius:8px; border:1px solid #e3ded6; background:#fff; color:#6d7a76; cursor:pointer; display:flex; align-items:center; justify-content:center" style-hover="background:#f5f4f0">
+                    <span style="font-family:'Material Symbols Outlined'; font-size:18px">close</span>
+                  </button>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:13px">
+                  <span style="font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; background:{{ sel.statusChip.bg }}; color:{{ sel.statusChip.fg }}">{{ sel.statusChip.label }}</span>
+                  <sc-if value="{{ sel.showNoShow }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; background:{{ sel.noShowChip.bg }}; color:{{ sel.noShowChip.fg }}">{{ sel.noShowChip.label }}</span></sc-if>
+                  <sc-if value="{{ sel.hasResult }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; background:{{ sel.resultChip.bg }}; color:{{ sel.resultChip.fg }}">{{ sel.resultChip.label }}</span></sc-if>
+                </div>
+              </div>
+
+              <div style="padding:16px 20px; border-bottom:1px solid #f0ece4">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px">
+                  <span style="font-family:'Material Symbols Outlined'; font-size:18px; color:#028090">checklist</span>
+                  <h3 style="margin:0; font-size:12px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:#4a5754">{{ L.screening_summary }}</h3>
+                  <span style="margin-left:auto; font-size:10.5px; font-weight:600; color:#8a968f; background:#f2f4f1; padding:2px 9px; border-radius:999px">{{ L.readonly_tag }}</span>
+                </div>
+                <sc-for list="{{ sel.symptoms }}" as="s" hint-placeholder-count="6">
+                  <div style="display:flex; align-items:center; gap:12px; padding:8px 0; border-top:1px solid #f4f1ea">
+                    <span style="flex:1; font-size:13px; color:#2c3a37; line-height:1.35">{{ s.label }}</span>
+                    <span style="flex:0 0 auto; font-size:11.5px; font-weight:600; padding:3px 11px; border-radius:999px; background:{{ s.aBg }}; color:{{ s.aFg }}; border:{{ s.aBorder }}; white-space:nowrap">{{ s.aLabel }}</span>
+                  </div>
+                </sc-for>
+                <div style="display:flex; align-items:center; gap:10px; padding:12px 0 0; border-top:1px solid #f4f1ea; margin-top:2px; flex-wrap:wrap">
+                  <span style="flex:1; min-width:120px; font-size:13px; color:#2c3a37">{{ L.pgis_label }}</span>
+                  <span style="flex:0 0 auto; font-size:11.5px; font-weight:600; padding:3px 11px; border-radius:999px; background:#eef2f1; color:#46514e">{{ sel.pgisValue }}</span>
+                  <span style="flex:0 0 auto; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.03em; color:#5f8f8f; background:#e6f2f2; padding:3px 9px; border-radius:999px">{{ L.patient_reported }}</span>
+                </div>
+                <p style="margin:9px 0 0; font-size:11.5px; color:#8a968f; line-height:1.5">{{ L.pgis_note }}</p>
+              </div>
+
+              <div style="padding:16px 20px; border-bottom:1px solid #f0ece4; display:flex; flex-direction:column; gap:13px">
+                <div style="display:flex; align-items:center; gap:8px">
+                  <span style="font-family:'Material Symbols Outlined'; font-size:18px; color:#028090">assignment</span>
+                  <h3 style="margin:0; font-size:12px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:#4a5754">{{ L.actions_title }}</h3>
+                </div>
+
+                <div style="border:1px solid #efeadf; border-radius:11px; padding:13px 14px; background:#fdfcfa">
+                  <div style="display:flex; align-items:center; gap:7px; margin-bottom:9px">
+                    <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#6d7a76">move_to_inbox</span>
+                    <span style="font-size:12px; font-weight:600; color:#4a5754">{{ L.recv_label }}</span>
+                  </div>
+                  <sc-if value="{{ sel.recvTodo }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ toggleReceived }}" style="border:none; padding:9px 15px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; color:#fff; background:#028090; cursor:pointer" style-hover="background:#016575">{{ L.recv_do }}</button>
+                  </sc-if>
+                  <sc-if value="{{ sel.recvDone2 }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px">
+                      <span style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:#05614f"><span style="font-family:'Material Symbols Outlined'; font-size:17px">check_circle</span>{{ L.recv_done }}</span>
+                      <button onClick="{{ toggleReceived }}" style="border:1px solid #e3ded6; background:#fff; color:#6d7a76; padding:6px 11px; border-radius:8px; font-size:12px; font-family:inherit; cursor:pointer" style-hover="background:#f5f4f0">{{ L.recv_undo }}</button>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ sel.recvLockedMode }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex; align-items:center; gap:9px; flex-wrap:wrap">
+                      <span style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:#05614f"><span style="font-family:'Material Symbols Outlined'; font-size:17px">check_circle</span>{{ L.recv_done }}</span>
+                      <span style="font-size:11.5px; color:#a0a89f; display:flex; align-items:center; gap:4px"><span style="font-family:'Material Symbols Outlined'; font-size:14px">lock</span>{{ L.recv_locked }}</span>
+                    </div>
+                  </sc-if>
+                </div>
+
+                <div style="border:1px solid #efeadf; border-radius:11px; padding:13px 14px; background:#fdfcfa">
+                  <div style="display:flex; align-items:center; gap:7px; margin-bottom:3px">
+                    <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#6d7a76">biotech</span>
+                    <span style="font-size:12px; font-weight:600; color:#4a5754">{{ L.lab_label }}</span>
+                    <sc-if value="{{ sel.hasResult }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto; font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; background:{{ sel.resultChip.bg }}; color:{{ sel.resultChip.fg }}">{{ sel.resultChip.label }}</span></sc-if>
+                  </div>
+                  <p style="margin:0 0 10px; font-size:11.5px; color:#8a968f; line-height:1.45">{{ L.lab_hint }}</p>
+                  <div style="display:flex; gap:8px; margin-bottom:10px">
+                    <button onClick="{{ setPositive }}" style="flex:1; padding:9px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; background:{{ sel.posBg }}; color:{{ sel.posFg }}; border:{{ sel.posBorder }}">{{ L.positive }}</button>
+                    <button onClick="{{ setNegative }}" style="flex:1; padding:9px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; background:{{ sel.negBg }}; color:{{ sel.negFg }}; border:{{ sel.negBorder }}">{{ L.negative }}</button>
+                  </div>
+                  <textarea value="{{ sel.notes }}" onChange="{{ setNotes }}" placeholder="{{ L.notes_ph }}" rows="2" style="width:100%; resize:vertical; padding:9px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:12.5px; font-family:inherit; color:#20302e; background:#fff; outline:none; line-height:1.45" style-focus="border-color:#028090"></textarea>
+                  <div style="display:flex; align-items:center; gap:10px; margin-top:10px">
+                    <button onClick="{{ saveOutcome }}" style="border:none; padding:9px 16px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; color:#fff; background:{{ sel.saveBg }}; opacity:{{ sel.saveOpacity }}; cursor:{{ sel.saveCursor }}">{{ L.save_btn }}</button>
+                    <sc-if value="{{ sel.saved }}" hint-placeholder-val="{{ false }}"><span style="display:flex; align-items:center; gap:5px; font-size:12.5px; font-weight:600; color:#05614f"><span style="font-family:'Material Symbols Outlined'; font-size:17px">check_circle</span>{{ L.saved_flash }}</span></sc-if>
+                    <sc-if value="{{ sel.noResult }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px; color:#a0a89f; margin-left:auto">{{ L.result_none }}</span></sc-if>
+                  </div>
+                </div>
+
+                <div style="border:1px solid #efeadf; border-radius:11px; padding:13px 14px; background:#fdfcfa">
+                  <div style="display:flex; align-items:center; gap:7px; margin-bottom:9px">
+                    <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#6d7a76">how_to_reg</span>
+                    <span style="font-size:12px; font-weight:600; color:#4a5754">{{ L.attend_label }}</span>
+                  </div>
+                  <div style="display:flex; gap:8px">
+                    <button onClick="{{ doPresent }}" style="flex:1; padding:9px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; background:{{ sel.presentBg }}; color:{{ sel.presentFg }}; border:{{ sel.presentBorder }}">{{ L.presented_btn }}</button>
+                    <button onClick="{{ doNoShow }}" style="flex:1; padding:9px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; background:{{ sel.nsBg }}; color:{{ sel.nsFg }}; border:{{ sel.nsBorder }}">{{ L.noshow_btn }}</button>
+                  </div>
+                </div>
+
+                <sc-if value="{{ sel.showClose }}" hint-placeholder-val="{{ true }}">
+                  <button onClick="{{ closeRef }}" style="width:100%; padding:10px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; background:#fff; color:#4a5754; border:1px solid #d7d2c8" style-hover="background:#f5f4f0">{{ L.close_do }}</button>
+                </sc-if>
+                <sc-if value="{{ sel.showReopen }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:2px 2px">
+                    <span style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:#6b6357"><span style="font-family:'Material Symbols Outlined'; font-size:16px">task_alt</span>{{ L.closed_tag }}</span>
+                    <button onClick="{{ reopenRef }}" style="border:1px solid #e3ded6; background:#fff; color:#6d7a76; padding:7px 12px; border-radius:8px; font-size:12px; font-family:inherit; cursor:pointer" style-hover="background:#f5f4f0">{{ L.close_reopen }}</button>
+                  </div>
+                </sc-if>
+              </div>
+
+              <div style="padding:16px 20px">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap">
+                  <span style="font-family:'Material Symbols Outlined'; font-size:18px; color:#028090">calendar_month</span>
+                  <h3 style="margin:0; font-size:12px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:#4a5754">{{ L.appts_label }}</h3>
+                  <sc-if value="{{ sched.showAddBtn }}" hint-placeholder-val="{{ true }}">
+                    <button onClick="{{ openSchedule }}" style="margin-left:auto; display:inline-flex; align-items:center; gap:5px; border:1px solid #a9d7db; background:#eaf6f6; color:#014b57; padding:6px 11px; border-radius:8px; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer; white-space:normal; max-width:100%; text-align:left" style-hover="background:#dcefef"><span style="font-family:'Material Symbols Outlined'; font-size:16px; flex:0 0 auto">add</span>{{ L.schedule_btn }}</button>
+                  </sc-if>
+                </div>
+
+                <sc-if value="{{ sched.open }}" hint-placeholder-val="{{ false }}">
+                  <div style="border:1px solid #cfe6e6; background:#f4fafa; border-radius:11px; padding:13px 14px; margin-bottom:14px; animation:tbfade .2s ease">
+                    <div style="display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap">
+                      <label style="flex:1; min-width:150px; display:flex; flex-direction:column; gap:5px">
+                        <span style="font-size:11px; font-weight:600; color:#4a5754">{{ L.schedule_date_label }}</span>
+                        <input type="date" value="{{ sched.date }}" min="{{ sched.minDate }}" onChange="{{ setScheduleDate }}" style="width:100%; padding:8px 11px; border:1px solid #cfe0e0; border-radius:9px; font-size:12.5px; font-family:inherit; color:#20302e; background:#ffffff; outline:none" style-focus="border-color:#028090" />
+                      </label>
+                      <div style="display:flex; gap:8px; flex-wrap:wrap">
+                        <button onClick="{{ submitSchedule }}" style="display:inline-flex; align-items:center; border:none; padding:9px 16px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; color:#fff; background:#028090; opacity:{{ sched.confirmOpacity }}; cursor:{{ sched.confirmCursor }}"><sc-if value="{{ sched.saving }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Material Symbols Outlined'; font-size:16px; margin-right:6px; animation:tbspin .65s linear">progress_activity</span></sc-if>{{ sched.confirmLabel }}</button>
+                        <button onClick="{{ cancelSchedule }}" style="border:1px solid #e3ded6; background:#fff; color:#6d7a76; padding:9px 14px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#f5f4f0">{{ L.cancel }}</button>
+                      </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:5px; margin-top:8px; font-size:11px; color:#8a968f"><span style="font-family:'Material Symbols Outlined'; font-size:14px">event_upcoming</span>{{ L.date_future_hint }}</div>
+                    <sc-if value="{{ sched.error }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex; align-items:center; gap:8px; margin-top:11px; padding:9px 11px; border-radius:9px; background:#fbe7e5; border:1px solid #f0c7c1; flex-wrap:wrap">
+                        <span style="font-family:'Material Symbols Outlined'; font-size:17px; color:#96362e; flex:0 0 auto">error</span>
+                        <span style="flex:1; min-width:0; font-size:11.5px; color:#8a3a32; line-height:1.4">{{ L.schedule_error }}</span>
+                        <button onClick="{{ submitSchedule }}" style="flex:0 0 auto; border:1px solid #e0aaa2; background:#fff; color:#96362e; padding:5px 12px; border-radius:8px; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer">{{ L.retry }}</button>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ sel.hasAppts }}" hint-placeholder-val="{{ true }}">
+                  <div style="margin-top:2px">
+                    <sc-for list="{{ sel.appts }}" as="a" hint-placeholder-count="3">
+                      <div style="display:flex; gap:12px">
+                        <div style="flex:0 0 18px; display:flex; flex-direction:column; align-items:center">
+                          <span style="width:12px; height:12px; border-radius:50%; background:{{ a.dotColor }}; box-shadow:{{ a.ring }}; margin-top:3px; flex:0 0 auto"></span>
+                          <span style="width:2px; flex:1; min-height:10px; background:{{ a.lineColor }}; margin-top:4px"></span>
+                        </div>
+                        <div style="flex:1; min-width:0; padding-bottom:15px">
+                          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+                            <span style="font-size:12.5px; font-weight:600; color:#2c3a37; font-variant-numeric:tabular-nums">{{ a.date }}</span>
+                            <span style="font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; background:{{ a.chipBg }}; color:{{ a.chipFg }}; white-space:nowrap">{{ a.chipLabel }}</span>
+                            <sc-if value="{{ a.isScheduled }}" hint-placeholder-val="{{ true }}">
+                              <span style="display:flex; gap:6px; margin-left:auto; flex-wrap:wrap">
+                                <button onClick="{{ a.onAttended }}" style="border:1px solid #a9d7db; background:#eaf6f6; color:#014b57; padding:5px 10px; border-radius:8px; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer">{{ L.mark_attended }}</button>
+                                <button onClick="{{ a.onMissed }}" style="border:1px solid #e6cfa0; background:#fbf4e5; color:#8a5e00; padding:5px 10px; border-radius:8px; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer">{{ L.mark_missed }}</button>
+                              </span>
+                            </sc-if>
+                          </div>
+                          <div style="display:flex; align-items:center; gap:5px; margin-top:3px">
+                            <span style="font-family:'Material Symbols Outlined'; font-size:13px; color:#b3bbb4">{{ a.originIcon }}</span>
+                            <span style="font-size:10.5px; color:#9aa39c; font-weight:500">{{ a.originLabel }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ sched.showEmpty }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex; flex-direction:column; align-items:center; gap:7px; padding:22px 16px; text-align:center; border:1px dashed #dcd7cc; border-radius:11px; background:#fbfaf7">
+                    <span style="font-family:'Material Symbols Outlined'; font-size:24px; color:#c7cec9">event_available</span>
+                    <div style="font-size:12.5px; color:#8a968f; max-width:230px; line-height:1.5">{{ L.no_appts }}</div>
+                  </div>
+                </sc-if>
+              </div>
+
+              <div style="padding:13px 20px; border-top:1px solid #f0ece4; background:#fbfaf7; display:flex; align-items:flex-start; gap:8px">
+                <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#a0a89f; flex:0 0 auto; margin-top:1px">info</span>
+                <p style="margin:0; font-size:11.5px; color:#8a968f; line-height:1.5">{{ L.footer_note }}</p>
+              </div>
+
+            </div>
+          </sc-if>
+          <sc-if value="{{ noSelection }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:12px; padding:48px; text-align:center">
+              <div style="width:56px; height:56px; border-radius:14px; background:#eef4f4; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:28px; color:#4f9aa1">move_to_inbox</span></div>
+              <div style="font-size:15px; font-weight:600; color:#2c3a37">{{ L.select_title }}</div>
+              <div style="font-size:13px; color:#8a968f; max-width:280px; line-height:1.55">{{ L.select_body }}</div>
+            </div>
+          </sc-if>
+        </div>
+      </section>
+
+    </main>
+    </sc-if>
+
+    <sc-if value="{{ isHotspots }}" hint-placeholder-val="{{ false }}">
+    <main style="flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding:6px 28px 28px; display:flex; flex-direction:column">
+      <section style="flex:0 0 auto; background:#fff; border:1px solid #e3ded6; border-radius:14px; box-shadow:0 1px 2px rgba(20,48,51,0.04),0 1px 3px rgba(20,48,51,0.05); overflow:hidden">
+        <div style="padding:15px 18px; border-bottom:1px solid #f0ece4">
+          <p style="margin:0 0 12px; font-size:12.5px; color:#6d7a76; line-height:1.5; max-width:640px">{{ L.hs_intro }}</p>
+          <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap">
+            <sc-for list="{{ hsRanges }}" as="p" hint-placeholder-count="3">
+              <button onClick="{{ p.onClick }}" style="padding:7px 14px; border-radius:999px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; background:{{ p.bg }}; color:{{ p.fg }}; border:{{ p.border }}">{{ p.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <sc-if value="{{ hsError }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:13px; padding:52px 24px; text-align:center">
+            <div style="width:56px; height:56px; border-radius:15px; background:#fbe7e5; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:28px; color:#b0473b">cloud_off</span></div>
+            <div style="font-size:15px; font-weight:700; color:#2c3a37">{{ L.hs_error_title }}</div>
+            <div style="font-size:12.5px; color:#8a968f; max-width:300px; line-height:1.55">{{ L.hs_error_body }}</div>
+            <button onClick="{{ hsRetry }}" style="display:inline-flex; align-items:center; gap:7px; border:none; padding:9px 17px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; color:#fff; background:#028090; cursor:pointer" style-hover="background:#016575"><span style="font-family:'Material Symbols Outlined'; font-size:17px">refresh</span>{{ L.retry }}</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ hsLoading }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:6px 18px 10px">
+            <sc-for list="{{ hsSkel }}" as="k" hint-placeholder-count="8">
+              <div style="display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid #f4f1ea">
+                <div style="width:22px; height:13px; border-radius:4px; background:#eee9df; flex:0 0 auto; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                <div style="flex:1; min-width:0">
+                  <div style="display:flex; justify-content:space-between; gap:12px">
+                    <div style="width:130px; height:12px; border-radius:5px; background:#eee9df; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:46px; height:12px; border-radius:5px; background:#eee9df; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                  </div>
+                  <div style="margin-top:10px; height:8px; border-radius:999px; background:#efeae0; width:{{ k.w }}"></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ hsEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:10px; padding:48px 24px; text-align:center">
+            <div style="width:52px; height:52px; border-radius:14px; background:#eef4f4; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:26px; color:#4f9aa1">bar_chart</span></div>
+            <div style="font-size:14px; font-weight:600; color:#2c3a37">{{ L.hs_empty_title }}</div>
+            <div style="font-size:12.5px; color:#8a968f; max-width:300px; line-height:1.55">{{ L.hs_empty_body }}</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ hsList }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:6px 18px 10px">
+            <sc-for list="{{ hsRows }}" as="r" hint-placeholder-count="8">
+              <div style="display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid #f4f1ea">
+                <span style="flex:0 0 auto; width:22px; font-size:13px; font-weight:700; color:#b3bbb4; font-variant-numeric:tabular-nums">{{ r.rank }}</span>
+                <div style="flex:1; min-width:0">
+                  <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px">
+                    <div style="min-width:0">
+                      <div style="font-size:13.5px; font-weight:600; color:#14302f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ r.b }}</div>
+                      <div style="font-size:11px; color:#9aa39c; margin-top:1px">{{ r.muni }}</div>
+                    </div>
+                    <div style="flex:0 0 auto; display:flex; align-items:baseline; gap:5px">
+                      <span style="font-size:16px; font-weight:700; color:#14302f; font-variant-numeric:tabular-nums">{{ r.count }}</span>
+                      <span style="font-size:11px; color:#9aa39c">{{ L.hs_unit }}</span>
+                    </div>
+                  </div>
+                  <div style="margin-top:8px; height:8px; border-radius:999px; background:#f0ece4; overflow:hidden">
+                    <div style="height:100%; border-radius:999px; width:{{ r.barWidth }}; background:{{ r.barColor }}"></div>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <div style="padding:12px 18px; border-top:1px solid #f0ece4; background:#fbfaf7; display:flex; align-items:flex-start; gap:8px">
+          <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#a0a89f; flex:0 0 auto; margin-top:1px">info</span>
+          <p style="margin:0; font-size:11.5px; color:#8a968f; line-height:1.5">{{ L.hs_note }}</p>
+        </div>
+      </section>
+    </main>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;language&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;en&quot;,&quot;tl&quot;,&quot;ceb&quot;],&quot;default&quot;:&quot;en&quot;,&quot;tsType&quot;:&quot;'en'|'tl'|'ceb'&quot;,&quot;section&quot;:&quot;Display&quot;},
+  &quot;startView&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dashboard&quot;,&quot;referrals&quot;,&quot;hotspots&quot;],&quot;default&quot;:&quot;dashboard&quot;,&quot;tsType&quot;:&quot;'dashboard'|'referrals'|'hotspots'&quot;,&quot;section&quot;:&quot;Display&quot;},
+  &quot;dashboardState&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;idle&quot;,&quot;loading&quot;,&quot;empty&quot;,&quot;error&quot;],&quot;default&quot;:&quot;idle&quot;,&quot;tsType&quot;:&quot;'idle'|'loading'|'empty'|'error'&quot;,&quot;section&quot;:&quot;Dashboard&quot;},
+  &quot;hotspotsState&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;idle&quot;,&quot;loading&quot;,&quot;empty&quot;,&quot;error&quot;],&quot;default&quot;:&quot;idle&quot;,&quot;tsType&quot;:&quot;'idle'|'loading'|'empty'|'error'&quot;,&quot;section&quot;:&quot;Hotspots&quot;}
+}">
+class Component extends DCLogic {
+  dict = {
+    en: {
+      brand_portal:"Facility Portal", nav_dashboard:"Dashboard", nav_referrals:"Referrals", nav_hotspots:"Hotspots",
+      page_title:"Referrals", page_sub:"Referrals addressed to your facility",
+      inbox_title:"Referral inbox", search_ph:"Search name, code, or specimen ID", status_all:"All statuses",
+      st_submitted:"Submitted", st_received:"Received", st_tested:"Tested", st_closed:"Closed", st_noshow:"No-show",
+      empty_title:"No referrals match", empty_body:"Try clearing the search or status filter.",
+      select_title:"Select a referral", select_body:"Choose a patient from the inbox to view their screening and record outcomes.",
+      screened_by:"Screened by", screening_summary:"Screening summary", readonly_tag:"Read-only",
+      ans_yes:"Yes", ans_no:"No", ans_unsure:"Unsure",
+      pgis_label:"Symptom severity (PGI-S)", patient_reported:"Patient-reported",
+      pgis_note:"Supplementary context only — not used to decide referral.",
+      actions_title:"Actions", recv_label:"Referral receipt", recv_do:"Mark received", recv_undo:"Undo received", recv_done:"Received", recv_locked:"Locked after testing",
+      lab_label:"Laboratory outcome", lab_hint:"Recorded by staff after testing — not computed by the system.",
+      positive:"Positive", negative:"Negative", notes_ph:"Notes (optional)", save_btn:"Save outcome", saved_flash:"Saved", result_none:"Not yet recorded",
+      attend_label:"Attendance", presented_btn:"Presented", noshow_btn:"No-show",
+      close_do:"Close referral", close_reopen:"Reopen referral", closed_tag:"Closed",
+      appts_label:"Check-up appointments", appt_scheduled:"Scheduled", appt_attended:"Attended", appt_missed:"Missed", mark_attended:"Mark attended", mark_missed:"Mark missed", no_appts:"No check-ups scheduled yet.",
+      schedule_btn:"Schedule check-up", schedule_date_label:"Check-up date", schedule_confirm:"Schedule", cancel:"Cancel", saving:"Scheduling…", schedule_error:"Couldn’t save the check-up. Please try again.", retry:"Retry", date_future_hint:"Future dates only", origin_bhw:"Initial · BHW referral", origin_facility:"Follow-up · Facility",
+      footer_note:"Positive and negative outcomes are recorded by staff, never computed by the system.",
+      sign_out:"Sign out", role_label:"TB-DOTS staff", results_word:"results",
+      dash_title:"Dashboard", dash_sub:"Today’s activity at your facility", today_word:"Today", dash_refresh:"Refresh",
+      tile_screened:"Screened today", tile_screened_sub:"across 6 barangays",
+      tile_referred:"Referred today", tile_referred_sub:"sent to this facility",
+      tile_pos:"Tested positive", tile_pos_sub:"sputum-confirmed",
+      tile_neg:"Tested negative", tile_neg_sub:"ruled out today",
+      tile_attended:"Attended", tile_attended_a:"of", tile_attended_b:"scheduled",
+      tile_missed:"Missed", tile_missed_sub:"did not present",
+      recent_activity:"Recent activity", activity_sub:"Latest updates recorded today", dash_loading:"Loading today’s activity…",
+      dash_error_title:"Couldn’t load the dashboard", dash_error_body:"We couldn’t reach the server. Check your connection and try again.",
+      act_referred:"New referral", act_received:"Referral received", act_pos:"Tested positive", act_neg:"Tested negative", act_attended:"Attended check-up", act_missed:"Missed check-up", act_scheduled:"Check-up scheduled",
+      activity_empty_title:"Nothing recorded yet", activity_empty_body:"Activity from screenings, tests, and check-ups will show up here through the day.",
+      hotspots_soon_title:"Barangay hotspots", hotspots_soon_body:"The hotspot ranking is the next screen in this build.",
+      hs_sub:"Barangays with the most screenings", hs_intro:"Barangays ranked by the number of people screened in the selected period.", hs_30:"Last 30 days", hs_60:"Last 60 days", hs_90:"Last 90 days", hs_unit:"screened", hs_note:"Counts reflect screening volume only — not confirmed TB cases.", hs_empty_title:"No screening data", hs_empty_body:"No screenings were recorded in this period. Try a longer range.", hs_error_title:"Couldn’t load hotspots", hs_error_body:"We couldn’t reach the server. Check your connection and try again."
+    },
+    tl: {
+      brand_portal:"Portal ng Pasilidad", nav_dashboard:"Dashboard", nav_referrals:"Mga Referral", nav_hotspots:"Mga Hotspot",
+      page_title:"Mga Referral", page_sub:"Mga referral na nakatalaga sa inyong pasilidad",
+      inbox_title:"Kahon ng mga referral", search_ph:"Maghanap ng pangalan, code, o specimen ID", status_all:"Lahat ng status",
+      st_submitted:"Naisumite", st_received:"Natanggap", st_tested:"Nasuri", st_closed:"Sarado", st_noshow:"Hindi dumalo",
+      empty_title:"Walang tumugmang referral", empty_body:"Subukang alisin ang paghahanap o filter ng status.",
+      select_title:"Pumili ng referral", select_body:"Pumili ng pasyente mula sa kahon upang makita ang kanilang screening at itala ang mga resulta.",
+      screened_by:"Na-screen ni", screening_summary:"Buod ng screening", readonly_tag:"Basahin lamang",
+      ans_yes:"Oo", ans_no:"Hindi", ans_unsure:"Hindi sigurado",
+      pgis_label:"Tindi ng sintomas (PGI-S)", patient_reported:"Iniulat ng pasyente",
+      pgis_note:"Karagdagang konteksto lamang — hindi ginagamit sa pagpapasya ng referral.",
+      actions_title:"Mga aksyon", recv_label:"Pagtanggap ng referral", recv_do:"Markahan na natanggap", recv_undo:"Bawiin ang pagtanggap", recv_done:"Natanggap", recv_locked:"Naka-lock pagkatapos ng pagsusuri",
+      lab_label:"Resulta ng laboratoryo", lab_hint:"Itinatala ng staff pagkatapos ng pagsusuri — hindi kinakalkula ng sistema.",
+      positive:"Positibo", negative:"Negatibo", notes_ph:"Mga tala (opsyonal)", save_btn:"I-save ang resulta", saved_flash:"Nai-save", result_none:"Hindi pa naitatala",
+      attend_label:"Pagdalo", presented_btn:"Dumalo", noshow_btn:"Hindi dumalo",
+      close_do:"Isara ang referral", close_reopen:"Buksang muli ang referral", closed_tag:"Sarado",
+      appts_label:"Mga appointment sa check-up", appt_scheduled:"Nakatakda", appt_attended:"Dumalo", appt_missed:"Hindi dumalo", mark_attended:"Markahan na dumalo", mark_missed:"Markahan na hindi dumalo", no_appts:"Wala pang nakatakdang check-up.",
+      schedule_btn:"Mag-iskedyul ng check-up", schedule_date_label:"Petsa ng check-up", schedule_confirm:"I-iskedyul", cancel:"Kanselahin", saving:"Ini-iskedyul…", schedule_error:"Hindi na-save ang check-up. Pakisubukang muli.", retry:"Subukang muli", date_future_hint:"Mga darating na petsa lamang", origin_bhw:"Paunang · Referral ng BHW", origin_facility:"Follow-up · Pasilidad",
+      footer_note:"Ang positibo at negatibong resulta ay itinatala ng staff, hindi kinakalkula ng sistema.",
+      sign_out:"Mag-sign out", role_label:"Staff ng TB-DOTS", results_word:"resulta",
+      dash_title:"Dashboard", dash_sub:"Aktibidad ngayong araw sa inyong pasilidad", today_word:"Ngayon", dash_refresh:"I-refresh",
+      tile_screened:"Na-screen ngayon", tile_screened_sub:"sa 6 na barangay",
+      tile_referred:"Na-refer ngayon", tile_referred_sub:"ipinadala sa pasilidad",
+      tile_pos:"Positibo sa test", tile_pos_sub:"nakumpirma sa plema",
+      tile_neg:"Negatibo sa test", tile_neg_sub:"na-clear ngayon",
+      tile_attended:"Dumalo", tile_attended_a:"sa", tile_attended_b:"nakatakda",
+      tile_missed:"Hindi dumalo", tile_missed_sub:"hindi humarap",
+      recent_activity:"Kamakailang aktibidad", activity_sub:"Pinakabagong tala ngayong araw", dash_loading:"Nilo-load ang aktibidad ngayon…",
+      dash_error_title:"Hindi ma-load ang dashboard", dash_error_body:"Hindi maabot ang server. Suriin ang koneksyon at subukang muli.",
+      act_referred:"Bagong referral", act_received:"Natanggap na referral", act_pos:"Positibo sa test", act_neg:"Negatibo sa test", act_attended:"Dumalo sa check-up", act_missed:"Hindi dumalo sa check-up", act_scheduled:"Naka-iskedyul na check-up",
+      activity_empty_title:"Wala pang naitatala", activity_empty_body:"Lalabas dito ang aktibidad mula sa screening, pagsusuri, at check-up sa buong araw.",
+      hotspots_soon_title:"Mga hotspot ng barangay", hotspots_soon_body:"Ang ranking ng hotspot ang susunod na screen sa build na ito.",
+      hs_sub:"Mga barangay na may pinakamaraming na-screen", hs_intro:"Mga barangay na naka-ranggo ayon sa bilang ng na-screen sa napiling panahon.", hs_30:"Huling 30 araw", hs_60:"Huling 60 araw", hs_90:"Huling 90 araw", hs_unit:"na-screen", hs_note:"Ang bilang ay para lamang sa dami ng screening — hindi kumpirmadong kaso ng TB.", hs_empty_title:"Walang datos ng screening", hs_empty_body:"Walang naitalang screening sa panahong ito. Subukan ang mas mahabang saklaw.", hs_error_title:"Hindi ma-load ang mga hotspot", hs_error_body:"Hindi maabot ang server. Suriin ang koneksyon at subukang muli."
+    },
+    ceb: {
+      brand_portal:"Portal sa Pasilidad", nav_dashboard:"Dashboard", nav_referrals:"Mga Referral", nav_hotspots:"Mga Hotspot",
+      page_title:"Mga Referral", page_sub:"Mga referral nga gipadala sa inyong pasilidad",
+      inbox_title:"Sudlanan sa mga referral", search_ph:"Pangitaa ang ngalan, code, o specimen ID", status_all:"Tanang kahimtang",
+      st_submitted:"Gisumite", st_received:"Nadawat", st_tested:"Nasulayan", st_closed:"Sirado", st_noshow:"Wala nitunga",
+      empty_title:"Walay referral nga nahaom", empty_body:"Sulayi hawaan ang pagpangita o filter sa kahimtang.",
+      select_title:"Pagpili ug referral", select_body:"Pagpili ug pasyente gikan sa sudlanan aron makita ang ilang screening ug irekord ang mga resulta.",
+      screened_by:"Gi-screen ni", screening_summary:"Sumaryo sa screening", readonly_tag:"Basahon lamang",
+      ans_yes:"Oo", ans_no:"Dili", ans_unsure:"Dili sigurado",
+      pgis_label:"Kagrabe sa sintomas (PGI-S)", patient_reported:"Gi-report sa pasyente",
+      pgis_note:"Dugang nga konteksto lamang — dili gamiton sa pagdesisyon sa referral.",
+      actions_title:"Mga aksyon", recv_label:"Pagdawat sa referral", recv_do:"Markahi nga nadawat", recv_undo:"Ibalik ang pagdawat", recv_done:"Nadawat", recv_locked:"Na-lock human sa pagsulay",
+      lab_label:"Resulta sa laboratoryo", lab_hint:"Girekord sa staff human sa pagsulay — dili kalkulahon sa sistema.",
+      positive:"Positibo", negative:"Negatibo", notes_ph:"Mga nota (opsyonal)", save_btn:"I-save ang resulta", saved_flash:"Na-save", result_none:"Wala pa na-rekord",
+      attend_label:"Pagtambong", presented_btn:"Nitunga", noshow_btn:"Wala nitunga",
+      close_do:"Sirad-i ang referral", close_reopen:"Ablihi pag-usab ang referral", closed_tag:"Sirado",
+      appts_label:"Mga appointment sa check-up", appt_scheduled:"Naka-iskedyul", appt_attended:"Nitambong", appt_missed:"Wala nitambong", mark_attended:"Markahi nga nitambong", mark_missed:"Markahi nga wala nitambong", no_appts:"Wala pay naka-iskedyul nga check-up.",
+      schedule_btn:"Mag-iskedyul ug check-up", schedule_date_label:"Petsa sa check-up", schedule_confirm:"I-iskedyul", cancel:"Kanselahon", saving:"Gi-iskedyul…", schedule_error:"Wala ma-save ang check-up. Palihug sulayi pag-usab.", retry:"Sulayi pag-usab", date_future_hint:"Umaabot nga petsa lamang", origin_bhw:"Sinugdan · Referral sa BHW", origin_facility:"Follow-up · Pasilidad",
+      footer_note:"Ang positibo ug negatibo nga resulta girekord sa staff, dili kalkulahon sa sistema.",
+      sign_out:"Mag-sign out", role_label:"Staff sa TB-DOTS", results_word:"nga resulta",
+      dash_title:"Dashboard", dash_sub:"Kalihokan karong adlawa sa inyong pasilidad", today_word:"Karon", dash_refresh:"I-refresh",
+      tile_screened:"Na-screen karon", tile_screened_sub:"sa 6 ka barangay",
+      tile_referred:"Na-refer karon", tile_referred_sub:"gipadala sa pasilidad",
+      tile_pos:"Positibo sa test", tile_pos_sub:"nakumpirma sa plema",
+      tile_neg:"Negatibo sa test", tile_neg_sub:"na-clear karon",
+      tile_attended:"Nitambong", tile_attended_a:"sa", tile_attended_b:"naka-iskedyul",
+      tile_missed:"Wala nitambong", tile_missed_sub:"wala nipakita",
+      recent_activity:"Bag-ong kalihokan", activity_sub:"Pinakabag-ong rekord karong adlawa", dash_loading:"Gi-load ang kalihokan karon…",
+      dash_error_title:"Wala ma-load ang dashboard", dash_error_body:"Wala maabot ang server. Susiha ang koneksyon ug sulayi pag-usab.",
+      act_referred:"Bag-ong referral", act_received:"Nadawat nga referral", act_pos:"Positibo sa test", act_neg:"Negatibo sa test", act_attended:"Nitambong sa check-up", act_missed:"Wala nitambong sa check-up", act_scheduled:"Naka-iskedyul nga check-up",
+      activity_empty_title:"Wala pay narekord", activity_empty_body:"Ang kalihokan gikan sa screening, pagsulay, ug check-up mopakita dinhi sa tibuok adlaw.",
+      hotspots_soon_title:"Mga hotspot sa barangay", hotspots_soon_body:"Ang ranking sa hotspot mao ang sunod nga screen niini nga build.",
+      hs_sub:"Mga barangay nga adunay pinakadaghang na-screen", hs_intro:"Mga barangay nga gi-ranggo sumala sa gidaghanon sa na-screen sulod sa gipili nga panahon.", hs_30:"Milabay nga 30 ka adlaw", hs_60:"Milabay nga 60 ka adlaw", hs_90:"Milabay nga 90 ka adlaw", hs_unit:"na-screen", hs_note:"Ang ihap para lamang sa gidaghanon sa screening — dili kumpirmado nga kaso sa TB.", hs_empty_title:"Walay datos sa screening", hs_empty_body:"Walay natala nga screening niini nga panahon. Sulayi ang mas taas nga sakop.", hs_error_title:"Wala ma-load ang mga hotspot", hs_error_body:"Wala maabot ang server. Susiha ang koneksyon ug sulayi pag-usab."
+    }
+  };
+
+  symLabels = {
+    en:["Cough of 2 weeks or more","Coughing up blood","Fever (2 weeks or more)","Night sweats","Unexplained weight loss","Chest or back pain"],
+    tl:["Ubo ng 2 linggo o higit pa","Pag-ubo ng dugo","Lagnat (2 linggo o higit pa)","Pagpapawis sa gabi","Hindi maipaliwanag na pagbaba ng timbang","Sakit sa dibdib o likod"],
+    ceb:["Ubo sulod sa 2 ka semana o kapin","Pag-ubo ug dugo","Hilanat (2 ka semana o kapin)","Paningot sa gabii","Wala mapasabot nga pagkunhod sa timbang","Sakit sa dughan o likod"]
+  };
+
+  pgisMap = {
+    en:{Mild:"Mild",Moderate:"Moderate",Severe:"Severe"},
+    tl:{Mild:"Banayad",Moderate:"Katamtaman",Severe:"Malubha"},
+    ceb:{Mild:"Hinay",Moderate:"Kasarangan",Severe:"Grabe"}
+  };
+
+  activityData=[
+    {type:"pos",name:"Rosalinda Cuevas",barangay:"Bangcud · Purok 5",time:"10:24 AM"},
+    {type:"attended",name:"Maria Lourdes Bautista",barangay:"Casisang · Purok 3",time:"09:50 AM"},
+    {type:"received",name:"Cristina Dizon",barangay:"San Jose · Purok 3",time:"09:12 AM"},
+    {type:"neg",name:"Ferdinand Abella",barangay:"Aglayan · Purok 2",time:"08:47 AM"},
+    {type:"scheduled",name:"Jomar Villanueva",barangay:"Sumpong · Purok 1",time:"08:30 AM"},
+    {type:"missed",name:"Danilo Mercado",barangay:"Kalasungay · Purok 4",time:"08:05 AM"}
+  ];
+  skeletons=[1,2,3,4,5,6];
+  skeletonRows=[1,2,3,4,5];
+  hotspotData=[
+    {b:"Casisang",d30:18,d60:34,d90:47},
+    {b:"Sumpong",d30:15,d60:28,d90:41},
+    {b:"Bangcud",d30:14,d60:25,d90:38},
+    {b:"Kalasungay",d30:11,d60:21,d90:30},
+    {b:"Aglayan",d30:9,d60:17,d90:26},
+    {b:"Managok",d30:7,d60:14,d90:22},
+    {b:"San Jose",d30:6,d60:12,d90:19},
+    {b:"Linabo",d30:5,d60:10,d90:15},
+    {b:"Dalwangan",d30:4,d60:8,d90:13},
+    {b:"Can-ayan",d30:3,d60:6,d90:10}
+  ];
+  hsSkel=[{w:"92%"},{w:"80%"},{w:"70%"},{w:"58%"},{w:"48%"},{w:"38%"},{w:"30%"},{w:"22%"}];
+
+  state = {
+    lang:"en", search:"", statusFilter:"all", selectedId:"r1", draftResult:null, savedFlash:false, spin:false, view:"dashboard", dash:"idle", dashSpin:false, hsRange:"30", hs:"idle",
+    scheduleOpen:false, scheduling:false, scheduleError:false, scheduleDate:"",
+    referrals:[
+      {id:"r1", name:"Maria Lourdes Bautista", code:"TB-2026-0148", specimenId:"SPX-24817", sex:"F", age:42, barangay:"Casisang", sitio:"Purok 3", screenedBy:"BHW Elena Reyes", referredOn:"18 Jul 2026", status:"received", presented:true, result:null, notes:"", pgis:"Moderate", sym:["yes","no","yes","unsure","yes","no"], appts:[{id:"a2",date:"08 Jul 2026",iso:"2026-07-08",status:"attended",origin:"bhw"},{id:"a9",date:"15 Jul 2026",iso:"2026-07-15",status:"attended",origin:"facility"},{id:"a1",date:"22 Jul 2026 · 9:00 AM",iso:"2026-07-22",status:"scheduled",origin:"facility"}]},
+      {id:"r2", name:"Jomar Villanueva", code:"TB-2026-0151", specimenId:"SPX-24820", sex:"M", age:29, barangay:"Sumpong", sitio:"Purok 1", screenedBy:"BHW Grace Lim", referredOn:"19 Jul 2026", status:"submitted", presented:null, result:null, notes:"", pgis:"Mild", sym:["yes","no","no","no","unsure","no"], appts:[{id:"a3",date:"24 Jul 2026 · 10:30 AM",iso:"2026-07-24",status:"scheduled",origin:"bhw"}]},
+      {id:"r3", name:"Rosalinda Cuevas", code:"TB-2026-0139", specimenId:"SPX-24790", sex:"F", age:55, barangay:"Bangcud", sitio:"Purok 5", screenedBy:"BHW Elena Reyes", referredOn:"12 Jul 2026", status:"tested", presented:true, result:"positive", notes:"Sputum smear positive (2+). Endorsed to TB-DOTS for treatment initiation.", pgis:"Severe", sym:["yes","yes","yes","yes","yes","yes"], appts:[{id:"a4",date:"13 Jul 2026",iso:"2026-07-13",status:"attended",origin:"bhw"}]},
+      {id:"r4", name:"Ferdinand Abella", code:"TB-2026-0142", specimenId:"SPX-24801", sex:"M", age:61, barangay:"Aglayan", sitio:"Purok 2", screenedBy:"BHW Rodel Sison", referredOn:"14 Jul 2026", status:"tested", presented:true, result:"negative", notes:"Sputum smear negative. Advised to return if symptoms persist.", pgis:"Mild", sym:["yes","no","no","unsure","no","no"], appts:[{id:"a5",date:"16 Jul 2026",iso:"2026-07-16",status:"attended",origin:"bhw"}]},
+      {id:"r5", name:"Danilo Mercado", code:"TB-2026-0146", specimenId:"SPX-24812", sex:"M", age:37, barangay:"Kalasungay", sitio:"Purok 4", screenedBy:"BHW Grace Lim", referredOn:"16 Jul 2026", status:"received", presented:false, result:null, notes:"", pgis:"Moderate", sym:["yes","no","yes","yes","no","unsure"], appts:[{id:"a6",date:"19 Jul 2026",iso:"2026-07-19",status:"missed",origin:"bhw"}]},
+      {id:"r6", name:"Editha Ramos", code:"TB-2026-0150", specimenId:"SPX-24819", sex:"F", age:48, barangay:"Managok", sitio:"Purok 6", screenedBy:"BHW Rodel Sison", referredOn:"19 Jul 2026", status:"submitted", presented:null, result:null, notes:"", pgis:"Mild", sym:["unsure","no","yes","no","no","no"], appts:[]},
+      {id:"r7", name:"Noli Pascual", code:"TB-2026-0133", specimenId:"SPX-24772", sex:"M", age:24, barangay:"Linabo", sitio:"Purok 2", screenedBy:"BHW Elena Reyes", referredOn:"08 Jul 2026", status:"closed", presented:true, result:"negative", notes:"Sputum smear negative. Case closed.", pgis:"Mild", sym:["yes","no","no","no","no","no"], appts:[{id:"a7",date:"10 Jul 2026",iso:"2026-07-10",status:"attended",origin:"bhw"}]},
+      {id:"r8", name:"Cristina Dizon", code:"TB-2026-0149", specimenId:"SPX-24818", sex:"F", age:33, barangay:"San Jose", sitio:"Purok 3", screenedBy:"BHW Grace Lim", referredOn:"18 Jul 2026", status:"received", presented:true, result:null, notes:"", pgis:"Moderate", sym:["yes","no","yes","no","unsure","yes"], appts:[{id:"a8",date:"23 Jul 2026 · 2:00 PM",iso:"2026-07-23",status:"scheduled",origin:"bhw"}]}
+    ]
+  };
+
+  updateSel(fn){ this.setState(s=>({referrals: s.referrals.map(r=> r.id===s.selectedId ? fn(r) : r)})); }
+
+  setSearch = e => this.setState({search:e.target.value});
+  setStatus = e => this.setState({statusFilter:e.target.value});
+  clearSel = () => this.setState({selectedId:null});
+  setLang = code => this.setState({lang:code});
+
+  selectRow = id => { const r=this.state.referrals.find(x=>x.id===id); this.setState({selectedId:id, draftResult: r?r.result:null, savedFlash:false}); };
+  refresh = () => { this.setState({spin:true}); clearTimeout(this._rt); this._rt=setTimeout(()=>this.setState({spin:false}),650); };
+  setView = v => this.setState({view:v});
+  dashRefresh = () => { if(this.state.dash==="loading") return; this.setState({dash:"loading"}); clearTimeout(this._dt); this._dt=setTimeout(()=>this.setState({dash:"idle"}),750); };
+  dashRetry = () => this.dashRefresh();
+  setHsRange = r => { this.setState({hsRange:r, hs:"loading"}); clearTimeout(this._ht); this._ht=setTimeout(()=>this.setState({hs:"idle"}),650); };
+  hsRetry = () => { this.setState({hs:"loading"}); clearTimeout(this._ht); this._ht=setTimeout(()=>this.setState({hs:"idle"}),650); };
+  componentDidMount(){ const p=this.props||{}; const u={}; if(p.language) u.lang=p.language; if(p.startView) u.view=p.startView; if(p.dashboardState) u.dash=p.dashboardState; if(p.hotspotsState) u.hs=p.hotspotsState; if(Object.keys(u).length) this.setState(u); }
+  componentDidUpdate(prev){ const p=this.props||{}, q=prev||{}; if(p.dashboardState&&p.dashboardState!==q.dashboardState) this.setState({dash:p.dashboardState}); if(p.hotspotsState&&p.hotspotsState!==q.hotspotsState) this.setState({hs:p.hotspotsState}); if(p.startView&&p.startView!==q.startView) this.setState({view:p.startView}); if(p.language&&p.language!==q.language) this.setState({lang:p.language}); }
+  toggleReceived = () => this.updateSel(r => r.status==="submitted" ? {...r,status:"received"} : r.status==="received" ? {...r,status:"submitted"} : r);
+  setResult = v => this.setState({draftResult:v});
+  setNotes = e => { const v=e.target.value; this.updateSel(r=>({...r,notes:v})); };
+  saveOutcome = () => { const dr=this.state.draftResult; if(!dr) return; this.updateSel(r=>({...r,result:dr,status: r.status==="closed"?r.status:"tested"})); this.setState({savedFlash:true}); clearTimeout(this._st); this._st=setTimeout(()=>this.setState({savedFlash:false}),1600); };
+  doPresent = () => this.updateSel(r=>({...r,presented:true}));
+  doNoShow = () => this.updateSel(r=>({...r,presented:false}));
+  closeRef = () => this.updateSel(r=>({...r,status:"closed"}));
+  reopenRef = () => this.updateSel(r=>({...r,status: r.result?"tested":"received"}));
+  apptSet = (id,st) => this.updateSel(r=>({...r,appts:r.appts.map(a=>a.id===id?{...a,status:st}:a)}));
+
+  openSchedule = () => this.setState({scheduleOpen:true, scheduleError:false, scheduleDate:""});
+  cancelSchedule = () => this.setState({scheduleOpen:false, scheduling:false, scheduleError:false, scheduleDate:""});
+  setScheduleDate = e => this.setState({scheduleDate:e.target.value, scheduleError:false});
+  fmtIso(iso){ const m=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]; const p=String(iso).split("-"); if(p.length!==3) return iso; return p[2]+" "+(m[Number(p[1])-1]||"")+" "+p[0]; }
+  dotColor(st){ if(st==="attended") return "#17876e"; if(st==="missed") return "#b0473b"; if(st==="scheduled") return "#028090"; return "#9aa39c"; }
+  submitSchedule = () => {
+    const d=this.state.scheduleDate; if(!d || this.state.scheduling) return;
+    this.setState({scheduling:true, scheduleError:false});
+    clearTimeout(this._sch);
+    this._sch=setTimeout(()=>{
+      const id=this.state.selectedId; if(!this._failed) this._failed={};
+      if(!this._failed[id]){ this._failed[id]=true; this.setState({scheduling:false, scheduleError:true}); return; }
+      const appt={id:"n"+Date.now(), date:this.fmtIso(d), iso:d, status:"scheduled", origin:"facility"};
+      this.setState(s=>({referrals:s.referrals.map(r=>r.id===id?{...r,appts:[...r.appts,appt]}:r), scheduling:false, scheduleOpen:false, scheduleError:false, scheduleDate:""}));
+    },750);
+  };
+
+  chip(status,L){ const m={
+    submitted:{bg:"#e9f0ef",fg:"#3f5a58",label:L.st_submitted},
+    received:{bg:"#d9eeef",fg:"#014b57",label:L.st_received},
+    tested:{bg:"#d6efe8",fg:"#05614f",label:L.st_tested},
+    closed:{bg:"#eae7df",fg:"#6b6357",label:L.st_closed},
+    noshow:{bg:"#f7ecd8",fg:"#8a5e00",label:L.st_noshow}
+  }; return m[status]; }
+  resultChipFor(res,L){ return res==="positive" ? {bg:"#fbe7e5",fg:"#96362e",label:L.positive} : {bg:"#eef2f1",fg:"#46514e",label:L.negative}; }
+  answerChip(a,L){ if(a==="yes") return {bg:"#f7ecd8",fg:"#8a5e00",border:"1px solid transparent",label:L.ans_yes}; if(a==="no") return {bg:"#eef2f1",fg:"#46514e",border:"1px solid transparent",label:L.ans_no}; return {bg:"#ffffff",fg:"#8a968f",border:"1px dashed #ccd4cf",label:L.ans_unsure}; }
+  apptChip(st,L){ if(st==="attended") return {bg:"#d9eeef",fg:"#014b57",label:L.appt_attended}; if(st==="missed") return {bg:"#fbe7e5",fg:"#96362e",label:L.appt_missed}; return {bg:"#f2f4f1",fg:"#6d7a76",label:L.appt_scheduled}; }
+
+  renderVals(){
+    const s=this.state, lang=s.lang, L=this.dict[lang];
+    const navItems=[["dashboard","space_dashboard",L.nav_dashboard],["referrals","move_to_inbox",L.nav_referrals],["hotspots","map",L.nav_hotspots]].map(([key,icon,label])=>{const on=s.view===key; return {icon,label,onClick:()=>this.setView(key),bg:on?"rgba(255,255,255,0.10)":"transparent",color:on?"#ffffff":"rgba(255,255,255,0.72)",weight:on?"600":"500",shadow:on?"inset 3px 0 0 #00a896":"inset 3px 0 0 transparent",iconColor:on?"#5fd0c4":"rgba(255,255,255,0.72)"};});
+    let headerTitle=L.page_title, headerSub=L.page_sub;
+    if(s.view==="dashboard"){ headerTitle=L.dash_title; headerSub=L.dash_sub; }
+    else if(s.view==="hotspots"){ headerTitle=L.nav_hotspots; headerSub=L.hs_sub; }
+    const dashEmptyState=s.dash==="empty", nz=v=>dashEmptyState?0:v;
+    const attendedN=dashEmptyState?0:9, scheduledN=dashEmptyState?0:12;
+    const tiles=[
+      {value:nz(34),label:L.tile_screened,sub:L.tile_screened_sub,icon:"fact_check",iconBg:"#e6f2f2",iconColor:"#028090",valueColor:"#028090"},
+      {value:nz(5),label:L.tile_referred,sub:L.tile_referred_sub,icon:"move_to_inbox",iconBg:"#eef4f4",iconColor:"#046a78",valueColor:"#14302f"},
+      {value:nz(2),label:L.tile_pos,sub:L.tile_pos_sub,icon:"coronavirus",iconBg:"#fbe7e5",iconColor:"#b0473b",valueColor:"#a5382f"},
+      {value:nz(7),label:L.tile_neg,sub:L.tile_neg_sub,icon:"verified",iconBg:"#eef2f1",iconColor:"#46514e",valueColor:"#3f4b48"},
+      {value:attendedN,label:L.tile_attended,sub:L.tile_attended_a+" "+scheduledN+" "+L.tile_attended_b,icon:"how_to_reg",iconBg:"#dff0ea",iconColor:"#17876e",valueColor:"#12735f"},
+      {value:nz(3),label:L.tile_missed,sub:L.tile_missed_sub,icon:"event_busy",iconBg:"#f7ecd8",iconColor:"#8a5e00",valueColor:"#8a5e00"}
+    ];
+    const amap={referred:{k:"act_referred",icon:"move_to_inbox",bg:"#e6f2f2",fg:"#028090"},received:{k:"act_received",icon:"inventory_2",bg:"#e6f2f2",fg:"#028090"},pos:{k:"act_pos",icon:"biotech",bg:"#fbe7e5",fg:"#b0473b"},neg:{k:"act_neg",icon:"biotech",bg:"#eef2f1",fg:"#46514e"},attended:{k:"act_attended",icon:"how_to_reg",bg:"#dff0ea",fg:"#17876e"},missed:{k:"act_missed",icon:"event_busy",bg:"#f7ecd8",fg:"#8a5e00"},scheduled:{k:"act_scheduled",icon:"calendar_add_on",bg:"#e6f2f2",fg:"#028090"}};
+    const activity=this.activityData.map(a=>{const m=amap[a.type]; return {action:L[m.k],name:a.name,barangay:a.barangay,time:a.time,icon:m.icon,iconBg:m.bg,iconColor:m.fg};});
+    const dashCardTitle=L.today_word+" · 22 Jul 2026";
+    const hsKey="d"+s.hsRange;
+    const hsSorted=[...this.hotspotData].sort((x,y)=>y[hsKey]-x[hsKey]);
+    const hsMax=hsSorted.length?hsSorted[0][hsKey]:1;
+    const hsRows=hsSorted.map((r,i)=>{const c=r[hsKey], rank=i+1, color=rank===1?"#016575":(rank<=3?"#00a896":"#a9d7db"); return {rank:String(rank).padStart(2,"0"), b:r.b, muni:"Malaybalay City · Bukidnon", count:c, barWidth:Math.max(6,Math.round(c/hsMax*100))+"%", barColor:color};});
+    const hsRanges=[["30",L.hs_30],["60",L.hs_60],["90",L.hs_90]].map(([v,label])=>{const on=s.hsRange===v; return {label,onClick:()=>this.setHsRange(v),bg:on?"#0B2E33":"#ffffff",fg:on?"#ffffff":"#4a5754",border:on?"1px solid #0B2E33":"1px solid #e3ded6"};});
+    const term=s.search.trim().toLowerCase();
+    const match=r=> !term || [r.name,r.code,r.specimenId,r.barangay].some(x=>x.toLowerCase().includes(term));
+    const matchStatus=r=> s.statusFilter==="all" ? true : s.statusFilter==="noshow" ? r.presented===false : r.status===s.statusFilter;
+    const list=s.referrals.filter(r=>match(r)&&matchStatus(r));
+
+    const filtered=list.map(r=>{
+      const eff = r.presented===false ? "noshow" : r.status;
+      const showRes = (r.status==="tested"||r.status==="closed") && r.result && r.presented!==false;
+      const isSel = r.id===s.selectedId;
+      return {
+        id:r.id, name:r.name, code:r.code+" · "+r.specimenId, metaSub:r.barangay+" · "+r.referredOn,
+        statusChip:this.chip(eff,L),
+        showResultPill:!!showRes, resultPill: showRes ? this.resultChipFor(r.result,L) : {bg:"",fg:"",label:""},
+        rowBg: isSel ? "#eef7f7" : "#ffffff",
+        rowShadow: isSel ? "inset 3px 0 0 #028090" : "inset 3px 0 0 transparent",
+        onSelect: () => this.selectRow(r.id)
+      };
+    });
+
+    const langButtons=[["en","EN"],["tl","TL"],["ceb","CEB"]].map(([code,label])=>({
+      label, onClick:()=>this.setLang(code),
+      bg: lang===code ? "#0B2E33" : "transparent",
+      fg: lang===code ? "#ffffff" : "#6d7a76"
+    }));
+    const statusOptions=[["all",L.status_all],["submitted",L.st_submitted],["received",L.st_received],["tested",L.st_tested],["closed",L.st_closed],["noshow",L.st_noshow]].map(([value,label])=>({value,label}));
+
+    const sr=s.referrals.find(r=>r.id===s.selectedId)||null;
+    let sel=null, sched=null;
+    if(sr){
+      const labels=this.symLabels[lang];
+      const symptoms=sr.sym.map((a,i)=>{ const c=this.answerChip(a,L); return {label:labels[i], aLabel:c.label, aBg:c.bg, aFg:c.fg, aBorder:c.border}; });
+      const dr=s.draftResult, pos=dr==="positive", neg=dr==="negative", saveDisabled=!dr;
+      const today="2026-07-22";
+      const sortedAppts=[...sr.appts].sort((x,y)=> x.iso<y.iso?1:x.iso>y.iso?-1:0);
+      const upc=sortedAppts.filter(a=>a.status==="scheduled"&&a.iso>=today).map(a=>a.iso).sort();
+      const nextUpIso=upc.length?upc[0]:null;
+      const appts=sortedAppts.map((a,i)=>{ const c=this.apptChip(a.status,L); const isLast=i===sortedAppts.length-1; const isNext=a.status==="scheduled"&&a.iso===nextUpIso; return {id:a.id, date:a.date, chipBg:c.bg, chipFg:c.fg, chipLabel:c.label, dotColor:this.dotColor(a.status), ring: isNext?"0 0 0 3px rgba(2,128,144,0.18)":"none", lineColor: isLast?"transparent":"#ece8df", isScheduled:a.status==="scheduled", originIcon: a.origin==="bhw"?"person":"local_hospital", originLabel: a.origin==="bhw"?L.origin_bhw:L.origin_facility, onAttended:()=>this.apptSet(a.id,"attended"), onMissed:()=>this.apptSet(a.id,"missed")}; });
+      sched={ open:s.scheduleOpen, saving:s.scheduling, error:s.scheduleError, date:s.scheduleDate, minDate:"2026-07-23", showAddBtn:!s.scheduleOpen, showEmpty: appts.length===0 && !s.scheduleOpen, confirmLabel: s.scheduling?L.saving:L.schedule_confirm, confirmOpacity: (!s.scheduleDate||s.scheduling)?"0.6":"1", confirmCursor: (!s.scheduleDate||s.scheduling)?"default":"pointer" };
+      sel={
+        name:sr.name,
+        metaLine: sr.code+" · "+sr.sex+" · "+sr.age+"y · "+sr.barangay+" · "+sr.sitio,
+        screenedText: L.screened_by+" "+sr.screenedBy,
+        statusChip:this.chip(sr.status,L),
+        showNoShow: sr.presented===false, noShowChip:this.chip("noshow",L),
+        hasResult: !!sr.result, noResult: !sr.result, resultChip: sr.result ? this.resultChipFor(sr.result,L) : {bg:"",fg:"",label:""},
+        symptoms, pgisValue:this.pgisMap[lang][sr.pgis],
+        recvTodo: sr.status==="submitted", recvDone2: sr.status==="received", recvLockedMode: sr.status==="tested"||sr.status==="closed",
+        posBg: pos?"#fbe7e5":"#ffffff", posFg: pos?"#96362e":"#6d7a76", posBorder: pos?"1px solid #e7b3ad":"1px solid #e3ded6",
+        negBg: neg?"#eef2f1":"#ffffff", negFg: neg?"#20302e":"#6d7a76", negBorder: neg?"1px solid #cdd5d1":"1px solid #e3ded6",
+        notes:sr.notes, saveBg: saveDisabled?"#9cc3c8":"#028090", saveOpacity: saveDisabled?"0.65":"1", saveCursor: saveDisabled?"default":"pointer", saved:s.savedFlash,
+        presentBg: sr.presented===true?"#d9eeef":"#ffffff", presentFg: sr.presented===true?"#014b57":"#6d7a76", presentBorder: sr.presented===true?"1px solid #a9d7db":"1px solid #e3ded6",
+        nsBg: sr.presented===false?"#f7ecd8":"#ffffff", nsFg: sr.presented===false?"#8a5e00":"#6d7a76", nsBorder: sr.presented===false?"1px solid #e6cfa0":"1px solid #e3ded6",
+        showClose: sr.status!=="closed", showReopen: sr.status==="closed",
+        appts, hasAppts: appts.length>0, hasNoAppts: appts.length===0
+      };
+    }
+
+    return {
+      L, langButtons, statusOptions, statusFilter:s.statusFilter, search:s.search,
+      setSearch:this.setSearch, setStatus:this.setStatus, refresh:this.refresh,
+      spinStyle: s.spin ? "animation:tbspin 0.65s linear" : "",
+      filtered, countText: filtered.length+" "+L.results_word,
+      isEmpty: filtered.length===0, hasRows: filtered.length>0,
+      hasSelection: !!sel, noSelection: !sel, sel: sel||{},
+      clearSel:this.clearSel, toggleReceived:this.toggleReceived,
+      setPositive:()=>this.setResult("positive"), setNegative:()=>this.setResult("negative"),
+      saveOutcome:this.saveOutcome, setNotes:this.setNotes,
+      doPresent:this.doPresent, doNoShow:this.doNoShow, closeRef:this.closeRef, reopenRef:this.reopenRef,
+      sched, openSchedule:this.openSchedule, cancelSchedule:this.cancelSchedule, setScheduleDate:this.setScheduleDate, submitSchedule:this.submitSchedule,
+      view:s.view, isDashboard:s.view==="dashboard", isReferrals:s.view==="referrals", isHotspots:s.view==="hotspots",
+      navItems, headerTitle, headerSub, tiles, activity, skeletons:this.skeletons, skeletonRows:this.skeletonRows, dashCardTitle,
+      dashError:s.dash==="error", dashOk:s.dash!=="error", dashLoading:s.dash==="loading", dashTiles:(s.dash==="idle"||s.dash==="empty"), dashEmpty:s.dash==="empty", dashList:s.dash==="idle",
+      dashSpinStyle: s.dash==="loading"?"animation:tbspin 0.65s linear":"", dashRefresh:this.dashRefresh, dashRetry:this.dashRetry,
+      hsRanges, hsRows, hsSkel:this.hsSkel, hsError:s.hs==="error", hsLoading:s.hs==="loading", hsEmpty:s.hs==="empty", hsList:s.hs==="idle", hsRetry:this.hsRetry
+    };
+  }
+}
+</script>
+</body>
+</html>

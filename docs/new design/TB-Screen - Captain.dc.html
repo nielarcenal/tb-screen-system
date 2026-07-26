@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&display=block" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon-180.png">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:Inter,system-ui,-apple-system,sans-serif;color:#20302e;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:#016575;text-decoration:none}
+a:hover{color:#014b57}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#d7d2c8;border-radius:8px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#c3bdb0;background-clip:content-box}
+input::placeholder,textarea::placeholder{color:#a7b0aa}
+@keyframes tbfade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes tbspin{to{transform:rotate(360deg)}}
+@keyframes tbpulse{0%,100%{opacity:1}50%{opacity:0.45}}
+@keyframes tbpop{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:none}}
+@media (max-width:1100px){
+.tb-main{grid-template-columns:1fr!important;overflow-y:auto!important;overflow-x:hidden!important;align-content:start!important}
+.tb-pane{min-height:0!important;overflow:visible!important}
+.tb-pane>div{overflow:visible!important}
+}
+</style>
+</helmet>
+<div style="display:flex; height:100vh; min-height:100vh; width:100%; background:#f7f5f1; color:#20302e; font-family:Inter,system-ui,sans-serif; overflow:hidden">
+
+  <aside style="flex:0 0 252px; width:252px; background:#0B2E33; color:#fff; display:flex; flex-direction:column; padding:16px 14px 14px">
+    <div style="display:flex; align-items:center; gap:11px; padding:6px 6px 18px">
+      <img src="assets/tb-screen-logo.png" alt="TB-Screen" width="40" height="40" style="width:40px; height:40px; border-radius:10px; display:block; box-shadow:0 0 0 1px rgba(255,255,255,0.10)" />
+      <div style="display:flex; flex-direction:column; gap:2px; min-width:0">
+        <span style="font-size:15px; font-weight:600; letter-spacing:-0.01em; color:#fff">TB&#8209;Screen</span>
+        <span style="font-size:10px; font-weight:600; letter-spacing:0.09em; text-transform:uppercase; color:#68b6bd">{{ L.brand_captain }}</span>
+      </div>
+    </div>
+
+    <nav style="display:flex; flex-direction:column; gap:3px; margin-top:2px">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="2">
+        <button onClick="{{ n.onClick }}" style="display:flex; align-items:center; gap:12px; padding:9px 11px; border-radius:9px; border:none; text-align:left; width:100%; font-family:inherit; cursor:pointer; font-size:13.5px; color:{{ n.color }}; font-weight:{{ n.weight }}; background:{{ n.bg }}; box-shadow:{{ n.shadow }}" style-hover="filter:brightness(1.12)">
+          <span style="font-family:'Material Symbols Outlined'; font-size:20px; color:{{ n.iconColor }}">{{ n.icon }}</span>
+          <span>{{ n.label }}</span>
+        </button>
+      </sc-for>
+    </nav>
+
+    <div style="flex:1"></div>
+
+    <div style="border-top:1px solid rgba(255,255,255,0.10); padding-top:13px; margin-top:12px; display:flex; flex-direction:column; gap:11px">
+      <div style="display:flex; align-items:center; gap:9px; padding:0 4px">
+        <span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#68b6bd; flex:0 0 auto">holiday_village</span>
+        <div style="min-width:0">
+          <div style="font-size:12.5px; font-weight:600; color:#e8f1f1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">Barangay Casisang</div>
+          <div style="font-size:11px; color:#7f9a9d">Malaybalay City TB&#8209;DOTS</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:9px; padding:0 4px">
+        <div style="width:30px; height:30px; border-radius:50%; background:#00a896; color:#04322e; display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700; flex:0 0 30px">CD</div>
+        <div style="min-width:0; flex:1">
+          <div style="font-size:12.5px; font-weight:600; color:#e8f1f1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">Corazon Delgado</div>
+          <div style="font-size:11px; color:#7f9a9d">{{ L.role_captain }}</div>
+        </div>
+      </div>
+      <button style="display:flex; align-items:center; gap:9px; width:100%; padding:9px 10px; border-radius:9px; border:1px solid rgba(255,255,255,0.12); background:transparent; color:rgba(255,255,255,0.80); font-size:12.5px; font-weight:500; font-family:inherit; cursor:pointer" style-hover="background:rgba(255,255,255,0.06); color:#ffffff">
+        <span style="font-family:'Material Symbols Outlined'; font-size:18px">logout</span>
+        <span>{{ L.sign_out }}</span>
+      </button>
+    </div>
+  </aside>
+
+  <div style="flex:1; min-width:0; display:flex; flex-direction:column; overflow:hidden; position:relative">
+    <header style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; padding:20px 28px 14px">
+      <div style="display:flex; flex-direction:column; gap:3px; min-width:0">
+        <h1 style="margin:0; font-size:22px; font-weight:700; letter-spacing:-0.02em; color:#14302f">{{ headerTitle }}</h1>
+        <p style="margin:0; font-size:13px; color:#6d7a76">{{ headerSub }}</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; flex:0 0 auto">
+        <div style="display:flex; align-items:center; gap:7px; padding:6px 12px; background:#fff; border:1px solid #e3ded6; border-radius:999px; font-size:12.5px; color:#6d7a76; font-weight:500">
+          <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#8a968f">calendar_today</span>
+          <span>Wed &middot; 22 Jul 2026</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:2px; padding:3px; background:#fff; border:1px solid #e3ded6; border-radius:999px">
+          <span style="font-family:'Material Symbols Outlined'; font-size:17px; color:#8a968f; margin:0 3px 0 6px">language</span>
+          <sc-for list="{{ langButtons }}" as="b" hint-placeholder-count="3">
+            <button onClick="{{ b.onClick }}" style="border:none; background:{{ b.bg }}; color:{{ b.fg }}; padding:5px 11px; border-radius:999px; font-size:11.5px; font-weight:700; letter-spacing:0.02em; cursor:pointer; font-family:inherit">{{ b.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </header>
+
+    <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+    <main data-screen-label="Captain Dashboard" style="flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding:6px 28px 28px; display:flex; flex-direction:column; gap:18px">
+      <sc-if value="{{ dashError }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:14px; padding:56px 24px; text-align:center">
+          <div style="width:60px; height:60px; border-radius:16px; background:#fbe7e5; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:30px; color:#b0473b">cloud_off</span></div>
+          <div style="font-size:16px; font-weight:700; color:#2c3a37">{{ L.dash_error_title }}</div>
+          <div style="font-size:13px; color:#8a968f; max-width:320px; line-height:1.55">{{ L.dash_error_body }}</div>
+          <button onClick="{{ dashRetry }}" style="display:inline-flex; align-items:center; gap:7px; border:none; padding:10px 18px; border-radius:9px; font-size:13px; font-weight:600; font-family:inherit; color:#fff; background:#028090; cursor:pointer" style-hover="background:#016575"><span style="font-family:'Material Symbols Outlined'; font-size:18px">refresh</span>{{ L.retry }}</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ dashOk }}" hint-placeholder-val="{{ true }}">
+        <section style="flex:0 0 auto; background:#fff; border:1px solid #e3ded6; border-radius:14px; box-shadow:0 1px 2px rgba(20,48,51,0.04),0 1px 3px rgba(20,48,51,0.05); overflow:hidden">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 18px; border-bottom:1px solid #f0ece4; flex-wrap:wrap">
+            <div style="display:flex; align-items:center; gap:9px; min-width:0">
+              <span style="font-family:'Material Symbols Outlined'; font-size:20px; color:#028090">insights</span>
+              <h2 style="margin:0; font-size:14.5px; font-weight:700; color:#14302f; letter-spacing:-0.01em">{{ dashCardTitle }}</h2>
+            </div>
+            <button onClick="{{ dashRefresh }}" style="display:inline-flex; align-items:center; gap:7px; border:1px solid #e3ded6; background:#faf9f6; color:#4a5754; padding:7px 13px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#f0efe9"><span style="font-family:'Material Symbols Outlined'; font-size:17px; {{ dashSpinStyle }}">refresh</span>{{ L.refresh }}</button>
+          </div>
+          <div style="padding:16px 18px">
+            <sc-if value="{{ dashLoading }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px">
+                <sc-for list="{{ tileSkel }}" as="k" hint-placeholder-count="3">
+                  <div style="border:1px solid #f0ece4; border-radius:12px; padding:15px 16px; background:#fbfaf7">
+                    <div style="width:34px; height:34px; border-radius:9px; background:#eee9df; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:52px; height:26px; border-radius:6px; background:#eee9df; margin-top:14px; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:96px; height:11px; border-radius:5px; background:#efeae0; margin-top:12px; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:64px; height:9px; border-radius:5px; background:#f2ede4; margin-top:8px; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ dashTiles }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px">
+                <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="3">
+                  <div style="border:1px solid #efeadf; border-radius:12px; padding:15px 16px; background:#fdfcfa">
+                    <span style="width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; background:{{ t.iconBg }}"><span style="font-family:'Material Symbols Outlined'; font-size:20px; color:{{ t.iconColor }}">{{ t.icon }}</span></span>
+                    <div style="font-size:30px; font-weight:700; letter-spacing:-0.02em; color:{{ t.valueColor }}; font-variant-numeric:tabular-nums; margin-top:12px; line-height:1">{{ t.value }}</div>
+                    <div style="font-size:12.5px; font-weight:600; color:#3f4b48; margin-top:7px">{{ t.label }}</div>
+                    <div style="font-size:11px; color:#9aa39c; margin-top:2px">{{ t.sub }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </section>
+
+        <section style="flex:0 0 auto; background:#fff; border:1px solid #e3ded6; border-radius:14px; box-shadow:0 1px 2px rgba(20,48,51,0.04),0 1px 3px rgba(20,48,51,0.05); overflow:hidden">
+          <div style="display:flex; align-items:center; gap:9px; padding:15px 18px; border-bottom:1px solid #f0ece4">
+            <span style="font-family:'Material Symbols Outlined'; font-size:20px; color:#028090">monitoring</span>
+            <div style="min-width:0; flex:1">
+              <h2 style="margin:0; font-size:14.5px; font-weight:700; color:#14302f; letter-spacing:-0.01em">{{ L.activity_title }}</h2>
+              <div style="font-size:11.5px; color:#8a968f; margin-top:1px">{{ L.activity_sub }}</div>
+            </div>
+            <span style="flex:0 0 auto; font-size:10.5px; font-weight:600; color:#8a968f; background:#f2f4f1; padding:3px 10px; border-radius:999px">{{ L.readonly_tag }}</span>
+          </div>
+          <sc-if value="{{ dashLoading }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <sc-for list="{{ covSkel }}" as="k" hint-placeholder-count="5">
+                <div style="display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid #f4f1ea">
+                  <div style="width:38px; height:38px; border-radius:50%; background:#eee9df; flex:0 0 auto; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                  <div style="flex:1; min-width:0">
+                    <div style="width:45%; height:12px; border-radius:6px; background:#eee9df; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:28%; height:10px; border-radius:5px; background:#f2ede4; margin-top:7px; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                  </div>
+                  <div style="width:120px; height:10px; border-radius:5px; background:#f2ede4; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ dashEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:10px; padding:44px 24px; text-align:center">
+              <div style="width:52px; height:52px; border-radius:14px; background:#eef4f4; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:26px; color:#4f9aa1">group_add</span></div>
+              <div style="font-size:14px; font-weight:600; color:#2c3a37">{{ L.activity_empty_title }}</div>
+              <div style="font-size:12.5px; color:#8a968f; max-width:320px; line-height:1.55">{{ L.activity_empty_body }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ dashList }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <sc-for list="{{ activity }}" as="a" hint-placeholder-count="6">
+                <div style="display:flex; align-items:center; gap:13px; padding:13px 18px; border-bottom:1px solid #f4f1ea">
+                  <span style="width:38px; height:38px; border-radius:50%; flex:0 0 auto; display:flex; align-items:center; justify-content:center; background:#e6f2f2; color:#046a78; font-size:12.5px; font-weight:700; opacity:{{ a.opacity }}">{{ a.initials }}</span>
+                  <div style="flex:1; min-width:0; opacity:{{ a.opacity }}">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+                      <span style="font-size:13.5px; font-weight:600; color:#14302f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ a.name }}</span>
+                      <span style="font-size:10.5px; font-weight:600; padding:2px 9px; border-radius:999px; background:{{ a.statusChip.bg }}; color:{{ a.statusChip.fg }}; white-space:nowrap">{{ a.statusChip.label }}</span>
+                    </div>
+                    <div style="font-size:11.5px; color:#9aa39c; margin-top:2px">{{ a.purok }}</div>
+                  </div>
+                  <div style="flex:0 0 auto; display:flex; align-items:center; gap:18px; opacity:{{ a.opacity }}">
+                    <div style="text-align:right; min-width:52px">
+                      <div style="font-size:15px; font-weight:700; color:#14302f; font-variant-numeric:tabular-nums; line-height:1">{{ a.scr }}</div>
+                      <div style="font-size:10px; color:#9aa39c; margin-top:3px">{{ L.word_screenings }}</div>
+                    </div>
+                    <div style="text-align:right; min-width:52px">
+                      <div style="font-size:15px; font-weight:700; color:#12735f; font-variant-numeric:tabular-nums; line-height:1">{{ a.ref }}</div>
+                      <div style="font-size:10px; color:#9aa39c; margin-top:3px">{{ L.word_referrals }}</div>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div style="padding:12px 18px; border-top:1px solid #f0ece4; background:#fbfaf7; display:flex; align-items:flex-start; gap:8px">
+            <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#a0a89f; flex:0 0 auto; margin-top:1px">shield</span>
+            <p style="margin:0; font-size:11.5px; color:#8a968f; line-height:1.5">{{ L.footer_note_captain }}</p>
+          </div>
+        </section>
+      </sc-if>
+    </main>
+    </sc-if>
+
+    <sc-if value="{{ isBhws }}" hint-placeholder-val="{{ false }}">
+    <main data-screen-label="My BHWs" class="tb-main" style="flex:1; min-height:0; padding:6px 28px 24px; display:grid; grid-template-columns:minmax(300px,360px) minmax(0,1fr); gap:20px; align-items:stretch">
+
+      <section class="tb-pane" style="display:flex; flex-direction:column; min-height:0; background:#fff; border:1px solid #e3ded6; border-radius:14px; box-shadow:0 1px 2px rgba(20,48,51,0.04),0 1px 3px rgba(20,48,51,0.05); overflow:hidden">
+        <div style="padding:15px 16px 13px; border-bottom:1px solid #f0ece4">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px">
+            <div style="display:flex; align-items:center; gap:8px; min-width:0">
+              <h2 style="margin:0; font-size:14px; font-weight:700; color:#14302f; letter-spacing:-0.01em">{{ L.bhw_list_title }}</h2>
+              <span style="font-size:11.5px; font-weight:600; color:#028090; background:#e6f2f2; padding:2px 10px; border-radius:999px; font-variant-numeric:tabular-nums; white-space:nowrap">{{ bhwCountText }}</span>
+            </div>
+            <button onClick="{{ newBhw }}" style="display:inline-flex; align-items:center; gap:5px; border:none; background:#028090; color:#fff; padding:7px 12px; border-radius:9px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; white-space:nowrap; flex:0 0 auto" style-hover="background:#016575"><span style="font-family:'Material Symbols Outlined'; font-size:17px">add</span>{{ L.new_bhw }}</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px">
+            <div style="position:relative; flex:1; min-width:0">
+              <span style="position:absolute; left:9px; top:50%; transform:translateY(-50%); font-family:'Material Symbols Outlined'; font-size:18px; color:#a7b0aa; pointer-events:none">search</span>
+              <input value="{{ search }}" onChange="{{ setSearch }}" placeholder="{{ L.bhw_search_ph }}" style="width:100%; padding:8px 10px 8px 33px; border:1px solid #e3ded6; border-radius:9px; font-size:12.5px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+            </div>
+            <div style="position:relative; flex:0 0 auto">
+              <select value="{{ filter }}" onChange="{{ setFilter }}" style="appearance:none; -webkit-appearance:none; padding:8px 30px 8px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:12.5px; font-family:inherit; color:#20302e; background:#faf9f6; cursor:pointer; outline:none">
+                <sc-for list="{{ statusOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+              </select>
+              <span style="position:absolute; right:8px; top:50%; transform:translateY(-50%); font-family:'Material Symbols Outlined'; font-size:18px; color:#8a968f; pointer-events:none">expand_more</span>
+            </div>
+            <button onClick="{{ bhwRefresh }}" title="Refresh" style="flex:0 0 auto; width:35px; height:35px; display:flex; align-items:center; justify-content:center; border:1px solid #e3ded6; border-radius:9px; background:#faf9f6; color:#6d7a76; cursor:pointer" style-hover="background:#f0efe9">
+              <span style="font-family:'Material Symbols Outlined'; font-size:18px; {{ bhwSpinStyle }}">refresh</span>
+            </button>
+          </div>
+        </div>
+        <div style="flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column">
+          <sc-if value="{{ bhwErr }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:11px; padding:40px 24px; text-align:center">
+              <div style="width:52px; height:52px; border-radius:14px; background:#fbe7e5; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:26px; color:#b0473b">cloud_off</span></div>
+              <div style="font-size:13.5px; font-weight:700; color:#2c3a37">{{ L.bhw_error_title }}</div>
+              <div style="font-size:12px; color:#8a968f; max-width:220px; line-height:1.5">{{ L.bhw_error_body }}</div>
+              <button onClick="{{ bhwRetry }}" style="display:inline-flex; align-items:center; gap:6px; border:none; padding:8px 15px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; color:#fff; background:#028090; cursor:pointer" style-hover="background:#016575"><span style="font-family:'Material Symbols Outlined'; font-size:16px">refresh</span>{{ L.retry }}</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ bhwLoading }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <sc-for list="{{ rowSkel }}" as="k" hint-placeholder-count="6">
+                <div style="display:flex; align-items:center; gap:12px; padding:13px 15px; border-bottom:1px solid #f4f1ea">
+                  <div style="width:36px; height:36px; border-radius:50%; background:#eee9df; flex:0 0 auto; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                  <div style="flex:1; min-width:0">
+                    <div style="width:55%; height:12px; border-radius:6px; background:#eee9df; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:32%; height:10px; border-radius:5px; background:#f2ede4; margin-top:7px; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                  </div>
+                  <div style="width:54px; height:18px; border-radius:999px; background:#f2ede4; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ bhwEmptyData }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:9px; padding:40px 24px; text-align:center">
+              <span style="font-family:'Material Symbols Outlined'; font-size:32px; color:#c7cec9">group_off</span>
+              <div style="font-size:13.5px; font-weight:600; color:#4a5754">{{ L.bhw_emptydata_title }}</div>
+              <div style="font-size:12px; color:#8a968f; max-width:220px; line-height:1.5">{{ L.bhw_emptydata_body }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ bhwHasRows }}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{ bhwRows }}" as="r" hint-placeholder-count="6">
+              <button onClick="{{ r.onSelect }}" style="display:flex; width:100%; text-align:left; gap:11px; padding:12px 15px; border:none; border-bottom:1px solid #f4f1ea; background:{{ r.rowBg }}; box-shadow:{{ r.rowShadow }}; cursor:pointer; font-family:inherit; align-items:center" style-hover="filter:brightness(0.985)">
+                <span style="width:36px; height:36px; border-radius:50%; flex:0 0 auto; display:flex; align-items:center; justify-content:center; background:#eef4f4; color:#046a78; font-size:12px; font-weight:700; opacity:{{ r.opacity }}">{{ r.initials }}</span>
+                <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; opacity:{{ r.opacity }}">
+                  <span style="font-size:13.5px; font-weight:600; color:#14302f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ r.name }}</span>
+                  <span style="font-size:12px; color:#6d7a76; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ r.purok }}</span>
+                </div>
+                <span style="flex:0 0 auto; font-size:11px; font-weight:600; padding:3px 9px; border-radius:999px; background:{{ r.statusChip.bg }}; color:{{ r.statusChip.fg }}; white-space:nowrap">{{ r.statusChip.label }}</span>
+              </button>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ bhwNoMatch }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:9px; padding:40px 24px; text-align:center">
+              <span style="font-family:'Material Symbols Outlined'; font-size:32px; color:#c7cec9">search_off</span>
+              <div style="font-size:13.5px; font-weight:600; color:#4a5754">{{ L.bhw_empty_title }}</div>
+              <div style="font-size:12px; color:#8a968f; max-width:210px; line-height:1.5">{{ L.bhw_empty_body }}</div>
+            </div>
+          </sc-if>
+        </div>
+      </section>
+
+      <section class="tb-pane" style="display:flex; flex-direction:column; min-height:0; background:#fff; border:1px solid #e3ded6; border-radius:14px; box-shadow:0 1px 2px rgba(20,48,51,0.04),0 1px 3px rgba(20,48,51,0.05); overflow:hidden">
+        <div style="flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column">
+          <sc-if value="{{ bhwHasPanel }}" hint-placeholder-val="{{ true }}">
+            <div style="animation:tbfade 0.22s ease">
+              <div style="padding:18px 20px 16px; border-bottom:1px solid #f0ece4; display:flex; align-items:flex-start; gap:12px">
+                <div style="flex:1; min-width:0">
+                  <div style="font-size:18px; font-weight:700; color:#14302f; letter-spacing:-0.01em">{{ bhw.title }}</div>
+                  <div style="font-size:12.5px; color:#6d7a76; margin-top:3px">{{ bhw.subline }}</div>
+                </div>
+                <sc-if value="{{ bhw.isEdit }}" hint-placeholder-val="{{ true }}">
+                  <span style="flex:0 0 auto; font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; background:{{ bhw.statusChip.bg }}; color:{{ bhw.statusChip.fg }}">{{ bhw.statusChip.label }}</span>
+                </sc-if>
+              </div>
+
+              <div style="padding:16px 20px; display:flex; flex-direction:column; gap:14px">
+                <label style="display:flex; flex-direction:column; gap:6px">
+                  <span style="font-size:11px; font-weight:600; color:#4a5754">{{ L.f_name }}</span>
+                  <input value="{{ bhw.name }}" onChange="{{ setName }}" style="width:100%; padding:9px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:13px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+                </label>
+                <label style="display:flex; flex-direction:column; gap:6px">
+                  <span style="font-size:11px; font-weight:600; color:#4a5754">{{ L.f_coverage }}</span>
+                  <input value="{{ bhw.purok }}" onChange="{{ setPurok }}" placeholder="{{ L.f_coverage_ph }}" style="width:100%; padding:9px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:13px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+                </label>
+                <label style="display:flex; flex-direction:column; gap:6px">
+                  <span style="font-size:11px; font-weight:600; color:#4a5754">{{ L.f_email }}</span>
+                  <input type="email" value="{{ bhw.email }}" onChange="{{ setEmail }}" style="width:100%; padding:9px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:13px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+                </label>
+                <sc-if value="{{ bhw.isNew }}" hint-placeholder-val="{{ false }}">
+                  <label style="display:flex; flex-direction:column; gap:6px">
+                    <span style="font-size:11px; font-weight:600; color:#4a5754">{{ L.f_password }}</span>
+                    <div style="position:relative">
+                      <input type="{{ pwType }}" value="{{ bhw.password }}" onChange="{{ setPassword }}" style="width:100%; padding:9px 40px 9px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:13px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+                      <button type="button" onClick="{{ togglePw }}" aria-label="{{ pwAria }}" style="position:absolute; right:4px; top:50%; transform:translateY(-50%); width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:#8a968f; cursor:pointer; border-radius:7px" style-hover="background:#eef2f1; color:#4a5754"><span style="font-family:'Material Symbols Outlined'; font-size:19px">{{ pwIcon }}</span></button>
+                    </div>
+                    <span style="font-size:11px; color:#8a968f; line-height:1.5">{{ L.f_password_hint_bhw }}</span>
+                  </label>
+                </sc-if>
+
+                <sc-if value="{{ bhw.isEdit }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex; gap:10px; flex-wrap:wrap; padding:2px 0 0">
+                    <div style="flex:1; min-width:120px; border:1px solid #efeadf; border-radius:11px; padding:11px 13px; background:#fdfcfa">
+                      <div style="font-size:11px; color:#8a968f">{{ L.ctx_coverage }}</div>
+                      <div style="font-size:13px; font-weight:600; color:#2c3a37; margin-top:3px">{{ bhw.purokCtx }}</div>
+                    </div>
+                    <div style="flex:1; min-width:90px; border:1px solid #efeadf; border-radius:11px; padding:11px 13px; background:#fdfcfa">
+                      <div style="font-size:11px; color:#8a968f">{{ L.ctx_screen }}</div>
+                      <div style="font-size:13px; font-weight:600; color:#2c3a37; margin-top:3px; font-variant-numeric:tabular-nums">{{ bhw.scr }}</div>
+                    </div>
+                    <div style="flex:1; min-width:90px; border:1px solid #efeadf; border-radius:11px; padding:11px 13px; background:#fdfcfa">
+                      <div style="font-size:11px; color:#8a968f">{{ L.ctx_ref }}</div>
+                      <div style="font-size:13px; font-weight:600; color:#2c3a37; margin-top:3px; font-variant-numeric:tabular-nums">{{ bhw.ref }}</div>
+                    </div>
+                    <div style="flex:1; min-width:90px; border:1px solid #efeadf; border-radius:11px; padding:11px 13px; background:#fdfcfa">
+                      <div style="font-size:11px; color:#8a968f">{{ L.ctx_joined }}</div>
+                      <div style="font-size:13px; font-weight:600; color:#2c3a37; margin-top:3px">{{ bhw.joined }}</div>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+
+              <div style="padding:0 20px 18px; display:flex; flex-direction:column; gap:12px">
+                <sc-if value="{{ bhw.isNew }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+                    <button onClick="{{ createBhw }}" style="border:none; padding:10px 18px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; color:#fff; background:{{ bhw.saveBg }}; opacity:{{ bhw.saveOpacity }}; cursor:{{ bhw.saveCursor }}">{{ L.btn_create_bhw }}</button>
+                    <button onClick="{{ cancelBhw }}" style="border:1px solid #e3ded6; background:#fff; color:#6d7a76; padding:10px 15px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#f5f4f0">{{ L.cancel }}</button>
+                    <span style="font-size:11px; color:#a0a89f; margin-left:auto">{{ L.req_note_bhw }}</span>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ bhw.isEdit }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+                    <button onClick="{{ saveBhw }}" style="border:none; padding:10px 18px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; color:#fff; background:#028090; cursor:pointer" style-hover="background:#016575">{{ L.btn_save }}</button>
+                    <sc-if value="{{ bhw.saved }}" hint-placeholder-val="{{ false }}"><span style="display:flex; align-items:center; gap:5px; font-size:12.5px; font-weight:600; color:#05614f"><span style="font-family:'Material Symbols Outlined'; font-size:17px">check_circle</span>{{ L.saved_flash }}</span></sc-if>
+                  </div>
+
+                  <sc-if value="{{ bhw.showReset }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+                      <button onClick="{{ openResetPw }}" style="display:inline-flex; align-items:center; gap:6px; border:1px solid #e3ded6; background:#faf9f6; color:#4a5754; padding:9px 14px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#f0efe9"><span style="font-family:'Material Symbols Outlined'; font-size:17px">key</span>{{ L.btn_reset_pw }}</button>
+                      <sc-if value="{{ bhw.tempSet }}" hint-placeholder-val="{{ false }}"><span style="display:flex; align-items:center; gap:5px; font-size:12.5px; font-weight:600; color:#05614f"><span style="font-family:'Material Symbols Outlined'; font-size:17px">check_circle</span>{{ L.temp_set_flash }}</span></sc-if>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ bhw.resetOpen }}" hint-placeholder-val="{{ false }}">
+                    <div style="border:1px solid #dfe6df; background:#fbfcfb; border-radius:11px; padding:13px 14px; display:flex; flex-direction:column; gap:10px">
+                      <div style="font-size:12.5px; font-weight:700; color:#2c3a37">{{ L.btn_reset_pw }}</div>
+                      <div style="position:relative">
+                        <input type="{{ pwType }}" value="{{ bhw.password }}" onChange="{{ setPassword }}" style="width:100%; padding:9px 40px 9px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:13px; font-family:inherit; color:#20302e; background:#ffffff; outline:none" style-focus="border-color:#028090" />
+                        <button type="button" onClick="{{ togglePw }}" aria-label="{{ pwAria }}" style="position:absolute; right:4px; top:50%; transform:translateY(-50%); width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:#8a968f; cursor:pointer; border-radius:7px" style-hover="background:#eef2f1; color:#4a5754"><span style="font-family:'Material Symbols Outlined'; font-size:19px">{{ pwIcon }}</span></button>
+                      </div>
+                      <span style="font-size:11px; color:#8a968f; line-height:1.5">{{ L.f_password_hint_bhw }}</span>
+                      <div style="display:flex; gap:8px">
+                        <button onClick="{{ setTempPassword }}" style="border:none; padding:8px 15px; border-radius:8px; font-size:12px; font-weight:600; font-family:inherit; color:#fff; background:{{ bhw.setPwBg }}; opacity:{{ bhw.setPwOpacity }}; cursor:{{ bhw.setPwCursor }}">{{ L.btn_set_pw }}</button>
+                        <button onClick="{{ cancelResetPw }}" style="border:1px solid #e3ded6; background:#fff; color:#6d7a76; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#f5f4f0">{{ L.cancel }}</button>
+                      </div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ bhw.showDeactivate }}" hint-placeholder-val="{{ true }}">
+                    <button onClick="{{ askDeactivateBhw }}" style="align-self:flex-start; display:inline-flex; align-items:center; gap:6px; border:1px solid #e7b3ad; background:#fff; color:#96362e; padding:9px 15px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#fbe7e5"><span style="font-family:'Material Symbols Outlined'; font-size:17px">block</span>{{ L.btn_deactivate }}</button>
+                  </sc-if>
+                  <sc-if value="{{ bhw.showReactivate }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex; flex-direction:column; gap:10px">
+                      <button onClick="{{ reactivateBhw }}" style="align-self:flex-start; display:inline-flex; align-items:center; gap:6px; border:1px solid #a9d7db; background:#eaf6f6; color:#014b57; padding:9px 15px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#dcefef"><span style="font-family:'Material Symbols Outlined'; font-size:17px">restart_alt</span>{{ L.btn_reactivate }}</button>
+                      <sc-if value="{{ bhw.hasReassigned }}" hint-placeholder-val="{{ false }}">
+                        <div style="display:flex; align-items:center; gap:8px; font-size:11.5px; color:#6d7a76; background:#f4f6f4; border:1px solid #e6ebe6; border-radius:9px; padding:9px 12px">
+                          <span style="font-family:'Material Symbols Outlined'; font-size:17px; color:#4f9aa1; flex:0 0 auto">swap_horiz</span>
+                          <span>{{ bhw.reassignedNote }}</span>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-if>
+                </sc-if>
+              </div>
+
+              <div style="padding:13px 20px; border-top:1px solid #f0ece4; background:#fbfaf7; display:flex; align-items:flex-start; gap:8px">
+                <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#a0a89f; flex:0 0 auto; margin-top:1px">info</span>
+                <p style="margin:0; font-size:11.5px; color:#8a968f; line-height:1.5">{{ L.footer_note_captain }}</p>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ bhwNoPanel }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:12px; padding:48px; text-align:center">
+              <div style="width:56px; height:56px; border-radius:14px; background:#eef4f4; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:28px; color:#4f9aa1">badge</span></div>
+              <div style="font-size:15px; font-weight:600; color:#2c3a37">{{ L.bhw_select_title }}</div>
+              <div style="font-size:13px; color:#8a968f; max-width:280px; line-height:1.55">{{ L.bhw_select_body }}</div>
+            </div>
+          </sc-if>
+        </div>
+      </section>
+    </main>
+    </sc-if>
+
+    <sc-if value="{{ showHandoff }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Deactivation handoff" style="position:absolute; inset:0; z-index:40; display:flex; align-items:center; justify-content:center; padding:28px; background:rgba(11,46,51,0.42); backdrop-filter:blur(2px)">
+        <div role="dialog" aria-modal="true" aria-label="{{ L.ho_title }}" style="width:100%; max-width:452px; max-height:88%; overflow:auto; background:#fff; border-radius:16px; box-shadow:0 20px 52px rgba(11,46,51,0.32); animation:tbpop 0.18s ease">
+          <div style="padding:18px 20px 15px; border-bottom:1px solid #f0ece4; display:flex; align-items:flex-start; gap:12px">
+            <span style="width:40px; height:40px; border-radius:11px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; background:#fbe7e5"><span style="font-family:'Material Symbols Outlined'; font-size:22px; color:#b0473b">block</span></span>
+            <div style="flex:1; min-width:0">
+              <div style="font-size:16px; font-weight:700; color:#14302f; letter-spacing:-0.01em">{{ L.ho_title }}</div>
+              <div style="font-size:12.5px; color:#6d7a76; margin-top:3px">{{ bhw.summary }}</div>
+            </div>
+            <button onClick="{{ cancelHandoff }}" aria-label="{{ L.cancel }}" style="flex:0 0 auto; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:#9aa39c; cursor:pointer; border-radius:8px" style-hover="background:#f2f0ea; color:#4a5754"><span style="font-family:'Material Symbols Outlined'; font-size:20px">close</span></button>
+          </div>
+
+          <div style="padding:16px 20px; display:flex; flex-direction:column; gap:15px">
+            <div>
+              <div style="font-size:10.5px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; color:#9aa39c; margin-bottom:8px">{{ L.ho_activity_label }}</div>
+              <div style="display:flex; gap:10px">
+                <div style="flex:1; border:1px solid #efeadf; border-radius:11px; padding:11px 13px; background:#fdfcfa">
+                  <div style="font-size:22px; font-weight:700; color:#14302f; font-variant-numeric:tabular-nums; line-height:1">{{ bhw.scr }}</div>
+                  <div style="font-size:11px; color:#8a968f; margin-top:5px">{{ L.word_screenings }}</div>
+                </div>
+                <div style="flex:1; border:1px solid #efeadf; border-radius:11px; padding:11px 13px; background:#fdfcfa">
+                  <div style="font-size:22px; font-weight:700; color:#12735f; font-variant-numeric:tabular-nums; line-height:1">{{ bhw.ref }}</div>
+                  <div style="font-size:11px; color:#8a968f; margin-top:5px">{{ L.word_referrals }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size:10.5px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; color:#9aa39c; margin-bottom:8px">{{ L.ho_what }}</div>
+              <div style="display:flex; flex-direction:column; gap:9px">
+                <div style="display:flex; align-items:flex-start; gap:9px">
+                  <span style="font-family:'Material Symbols Outlined'; font-size:18px; color:#b0473b; flex:0 0 auto; margin-top:1px">lock</span>
+                  <span style="font-size:12.5px; color:#4a5754; line-height:1.5">{{ L.ho_point1 }}</span>
+                </div>
+                <div style="display:flex; align-items:flex-start; gap:9px">
+                  <span style="font-family:'Material Symbols Outlined'; font-size:18px; color:#17876e; flex:0 0 auto; margin-top:1px">inventory_2</span>
+                  <span style="font-size:12.5px; color:#4a5754; line-height:1.5">{{ L.ho_point2 }}</span>
+                </div>
+                <div style="display:flex; align-items:flex-start; gap:9px">
+                  <span style="font-family:'Material Symbols Outlined'; font-size:18px; color:#8a5e00; flex:0 0 auto; margin-top:1px">follow_the_signs</span>
+                  <span style="font-size:12.5px; color:#4a5754; line-height:1.5">{{ L.ho_point3 }}</span>
+                </div>
+              </div>
+            </div>
+
+            <label style="display:flex; flex-direction:column; gap:6px">
+              <span style="font-size:11px; font-weight:600; color:#4a5754">{{ L.ho_reassign_label }}</span>
+              <div style="position:relative">
+                <select value="{{ handoffReassign }}" onChange="{{ setHandoffReassign }}" style="appearance:none; -webkit-appearance:none; width:100%; padding:10px 34px 10px 12px; border:1px solid #e3ded6; border-radius:9px; font-size:13px; font-family:inherit; color:#20302e; background:#faf9f6; cursor:pointer; outline:none" style-focus="border-color:#028090; background:#ffffff">
+                  <sc-for list="{{ handoffOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+                </select>
+                <span style="position:absolute; right:9px; top:50%; transform:translateY(-50%); font-family:'Material Symbols Outlined'; font-size:19px; color:#8a968f; pointer-events:none">expand_more</span>
+              </div>
+            </label>
+          </div>
+
+          <div style="padding:14px 20px 18px; display:flex; align-items:center; gap:10px; border-top:1px solid #f0ece4">
+            <button onClick="{{ confirmDeactivateBhw }}" style="display:inline-flex; align-items:center; gap:6px; border:none; background:#b0473b; color:#fff; padding:10px 18px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#953a30"><span style="font-family:'Material Symbols Outlined'; font-size:17px">block</span>{{ L.ho_confirm }}</button>
+            <button onClick="{{ cancelHandoff }}" style="border:1px solid #e3ded6; background:#fff; color:#6d7a76; padding:10px 15px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#f5f4f0">{{ L.cancel }}</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;language&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;en&quot;,&quot;tl&quot;,&quot;ceb&quot;],&quot;default&quot;:&quot;en&quot;,&quot;tsType&quot;:&quot;'en'|'tl'|'ceb'&quot;,&quot;section&quot;:&quot;Display&quot;},
+  &quot;captainView&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dashboard&quot;,&quot;bhws&quot;],&quot;default&quot;:&quot;dashboard&quot;,&quot;tsType&quot;:&quot;'dashboard'|'bhws'&quot;,&quot;section&quot;:&quot;Display&quot;},
+  &quot;dashboardState&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;idle&quot;,&quot;loading&quot;,&quot;empty&quot;,&quot;error&quot;],&quot;default&quot;:&quot;idle&quot;,&quot;tsType&quot;:&quot;'idle'|'loading'|'empty'|'error'&quot;,&quot;section&quot;:&quot;States&quot;},
+  &quot;bhwsState&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;idle&quot;,&quot;loading&quot;,&quot;empty&quot;,&quot;error&quot;],&quot;default&quot;:&quot;idle&quot;,&quot;tsType&quot;:&quot;'idle'|'loading'|'empty'|'error'&quot;,&quot;section&quot;:&quot;States&quot;}
+}">
+class Component extends DCLogic {
+  dict = {
+    en: {
+      brand_captain:"Captain Portal", nav_dashboard:"Dashboard", nav_bhws:"My BHWs",
+      sign_out:"Sign out", role_captain:"Barangay captain",
+      results_word:"results", today_word:"Today", refresh:"Refresh", retry:"Retry", cancel:"Cancel",
+      status_all:"All statuses", st_active:"Active", st_deactivated:"Deactivated", readonly_tag:"Read-only", active_lc:"active", inactive_lc:"inactive",
+      cap_dash_title:"Dashboard", cap_dash_sub:"Your BHW team at a glance",
+      tile_bhws:"BHWs", tile_screen:"Screenings", tile_ref:"Referrals", last30:"last 30 days",
+      activity_title:"Activity this month", activity_sub:"Screenings and referrals per BHW, last 30 days",
+      word_screenings:"screenings", word_referrals:"referrals",
+      dash_error_title:"Couldn’t load your dashboard", dash_error_body:"We couldn’t reach the server. Check your connection and try again.",
+      activity_empty_title:"No BHWs yet", activity_empty_body:"Once you add BHWs, their monthly activity appears here.",
+      footer_note_captain:"Activity counts are totals only — no patient information is shown to captains.",
+      bhw_title:"My BHWs", bhw_sub:"Barangay health workers in Casisang",
+      bhw_list_title:"BHWs", bhw_search_ph:"Search name or purok", new_bhw:"New BHW",
+      bhw_empty_title:"No BHWs match", bhw_empty_body:"Try clearing the search or status filter.",
+      bhw_emptydata_title:"No BHWs yet", bhw_emptydata_body:"Add a BHW to start building your team.",
+      bhw_error_title:"Couldn’t load BHWs", bhw_error_body:"We couldn’t reach the server. Try again.",
+      bhw_select_title:"Select a BHW", bhw_select_body:"Choose a BHW to view or edit their account, or add a new one.",
+      form_new_bhw:"New BHW", form_edit_bhw:"Edit BHW", bhw_new_sub:"Create a BHW account in Casisang",
+      f_name:"Full name", f_coverage:"Coverage area", f_coverage_ph:"e.g. Purok 3", f_email:"Email address", f_password:"Initial password",
+      f_password_hint_bhw:"The BHW is prompted to set their own password on first sign-in.",
+      show_pw:"Show password", hide_pw:"Hide password",
+      btn_create_bhw:"Create BHW", btn_save:"Save changes", saved_flash:"Saved", temp_set_flash:"Temporary password set",
+      btn_reset_pw:"Reset password", btn_set_pw:"Set password",
+      ctx_coverage:"Coverage area", ctx_screen:"Screenings", ctx_ref:"Referrals", ctx_joined:"Joined",
+      reassigned_pre:"Coverage reassigned to ",
+      btn_deactivate:"Deactivate", btn_reactivate:"Reactivate",
+      req_note_bhw:"Name, coverage area and email required.",
+      ho_title:"Deactivate this BHW?", ho_activity_label:"Activity in the last 30 days", ho_what:"What happens",
+      ho_point1:"Loses app access immediately.",
+      ho_point2:"Their screening and referral history is retained and stays with the facility.",
+      ho_point3:"Their coverage area needs another BHW — reassign it below, or leave it for now.",
+      ho_reassign_label:"Reassign coverage to", ho_reassign_none:"Leave unassigned for now", ho_confirm:"Deactivate BHW"
+    },
+    tl: {
+      brand_captain:"Portal ng Kapitan", nav_dashboard:"Dashboard", nav_bhws:"Aking mga BHW",
+      sign_out:"Mag-sign out", role_captain:"Kapitan ng barangay",
+      results_word:"resulta", today_word:"Ngayon", refresh:"I-refresh", retry:"Subukang muli", cancel:"Kanselahin",
+      status_all:"Lahat ng status", st_active:"Aktibo", st_deactivated:"Hindi aktibo", readonly_tag:"Basahin lamang", active_lc:"aktibo", inactive_lc:"hindi aktibo",
+      cap_dash_title:"Dashboard", cap_dash_sub:"Sumulyap sa inyong pangkat ng BHW",
+      tile_bhws:"Mga BHW", tile_screen:"Mga screening", tile_ref:"Mga referral", last30:"nakaraang 30 araw",
+      activity_title:"Aktibidad ngayong buwan", activity_sub:"Mga screening at referral kada BHW, nakaraang 30 araw",
+      word_screenings:"screening", word_referrals:"referral",
+      dash_error_title:"Hindi ma-load ang dashboard", dash_error_body:"Hindi maabot ang server. Suriin ang koneksyon at subukang muli.",
+      activity_empty_title:"Wala pang BHW", activity_empty_body:"Kapag nagdagdag ka ng BHW, lalabas dito ang kanilang buwanang aktibidad.",
+      footer_note_captain:"Ang bilang ng aktibidad ay kabuuan lamang — walang impormasyon ng pasyente na ipinapakita sa kapitan.",
+      bhw_title:"Aking mga BHW", bhw_sub:"Mga barangay health worker sa Casisang",
+      bhw_list_title:"Mga BHW", bhw_search_ph:"Maghanap ng pangalan o purok", new_bhw:"Bagong BHW",
+      bhw_empty_title:"Walang tumugmang BHW", bhw_empty_body:"Subukang alisin ang paghahanap o filter ng status.",
+      bhw_emptydata_title:"Wala pang BHW", bhw_emptydata_body:"Magdagdag ng BHW upang simulan ang inyong pangkat.",
+      bhw_error_title:"Hindi ma-load ang mga BHW", bhw_error_body:"Hindi maabot ang server. Subukang muli.",
+      bhw_select_title:"Pumili ng BHW", bhw_select_body:"Pumili ng BHW upang tingnan o i-edit ang account, o magdagdag ng bago.",
+      form_new_bhw:"Bagong BHW", form_edit_bhw:"I-edit ang BHW", bhw_new_sub:"Gumawa ng BHW account sa Casisang",
+      f_name:"Buong pangalan", f_coverage:"Saklaw na lugar", f_coverage_ph:"hal. Purok 3", f_email:"Email address", f_password:"Paunang password",
+      f_password_hint_bhw:"Hihilingin sa BHW na magtakda ng sariling password sa unang pag-sign in.",
+      show_pw:"Ipakita ang password", hide_pw:"Itago ang password",
+      btn_create_bhw:"Gumawa ng BHW", btn_save:"I-save ang pagbabago", saved_flash:"Nai-save", temp_set_flash:"Naitakda ang pansamantalang password",
+      btn_reset_pw:"I-reset ang password", btn_set_pw:"Itakda ang password",
+      ctx_coverage:"Saklaw na lugar", ctx_screen:"Mga screening", ctx_ref:"Mga referral", ctx_joined:"Sumali",
+      reassigned_pre:"Inilipat ang saklaw kay ",
+      btn_deactivate:"I-deactivate", btn_reactivate:"I-activate muli",
+      req_note_bhw:"Kailangan ang pangalan, saklaw na lugar, at email.",
+      ho_title:"I-deactivate ang BHW na ito?", ho_activity_label:"Aktibidad sa nakaraang 30 araw", ho_what:"Ano ang mangyayari",
+      ho_point1:"Mawawala agad ang access sa app.",
+      ho_point2:"Nananatili ang kasaysayan ng screening at referral at nasa pasilidad pa rin.",
+      ho_point3:"Kailangan ng ibang BHW para sa kanyang saklaw — ilipat ito sa ibaba, o iwan muna.",
+      ho_reassign_label:"Ilipat ang saklaw kay", ho_reassign_none:"Iwan munang walang nakatalaga", ho_confirm:"I-deactivate ang BHW"
+    },
+    ceb: {
+      brand_captain:"Portal sa Kapitan", nav_dashboard:"Dashboard", nav_bhws:"Akong mga BHW",
+      sign_out:"Mag-sign out", role_captain:"Kapitan sa barangay",
+      results_word:"nga resulta", today_word:"Karon", refresh:"I-refresh", retry:"Sulayi pag-usab", cancel:"Kanselahon",
+      status_all:"Tanang kahimtang", st_active:"Aktibo", st_deactivated:"Dili aktibo", readonly_tag:"Basahon lamang", active_lc:"aktibo", inactive_lc:"dili aktibo",
+      cap_dash_title:"Dashboard", cap_dash_sub:"Sulyap sa imong grupo sa BHW",
+      tile_bhws:"Mga BHW", tile_screen:"Mga screening", tile_ref:"Mga referral", last30:"milabay nga 30 ka adlaw",
+      activity_title:"Kalihokan karong bulana", activity_sub:"Mga screening ug referral kada BHW, milabay nga 30 ka adlaw",
+      word_screenings:"screening", word_referrals:"referral",
+      dash_error_title:"Wala ma-load ang dashboard", dash_error_body:"Wala maabot ang server. Susiha ang koneksyon ug sulayi pag-usab.",
+      activity_empty_title:"Wala pay BHW", activity_empty_body:"Kung makadugang ka ug BHW, mopakita dinhi ang ilang binulan nga kalihokan.",
+      footer_note_captain:"Ang ihap sa kalihokan kinatibuk-an lamang — walay impormasyon sa pasyente nga gipakita sa kapitan.",
+      bhw_title:"Akong mga BHW", bhw_sub:"Mga barangay health worker sa Casisang",
+      bhw_list_title:"Mga BHW", bhw_search_ph:"Pangitaa ang ngalan o purok", new_bhw:"Bag-ong BHW",
+      bhw_empty_title:"Walay BHW nga nahaom", bhw_empty_body:"Sulayi hawaan ang pagpangita o filter sa kahimtang.",
+      bhw_emptydata_title:"Wala pay BHW", bhw_emptydata_body:"Pagdugang ug BHW aron masugdan ang imong grupo.",
+      bhw_error_title:"Wala ma-load ang mga BHW", bhw_error_body:"Wala maabot ang server. Sulayi pag-usab.",
+      bhw_select_title:"Pagpili ug BHW", bhw_select_body:"Pagpili ug BHW aron tan-awon o i-edit ang account, o pagdugang ug bag-o.",
+      form_new_bhw:"Bag-ong BHW", form_edit_bhw:"I-edit ang BHW", bhw_new_sub:"Paghimo ug BHW account sa Casisang",
+      f_name:"Tibuok ngalan", f_coverage:"Saklaw nga lugar", f_coverage_ph:"pananglitan Purok 3", f_email:"Email address", f_password:"Sinugdang password",
+      f_password_hint_bhw:"Hangyoon ang BHW nga mag-set sa kaugalingong password sa unang pag-sign in.",
+      show_pw:"Ipakita ang password", hide_pw:"Itago ang password",
+      btn_create_bhw:"Paghimo ug BHW", btn_save:"I-save ang kausaban", saved_flash:"Na-save", temp_set_flash:"Na-set ang temporaryong password",
+      btn_reset_pw:"I-reset ang password", btn_set_pw:"I-set ang password",
+      ctx_coverage:"Saklaw nga lugar", ctx_screen:"Mga screening", ctx_ref:"Mga referral", ctx_joined:"Miapil",
+      reassigned_pre:"Gibalhin ang saklaw ngadto kang ",
+      btn_deactivate:"I-deactivate", btn_reactivate:"I-activate pag-usab",
+      req_note_bhw:"Gikinahanglan ang ngalan, saklaw nga lugar, ug email.",
+      ho_title:"I-deactivate kini nga BHW?", ho_activity_label:"Kalihokan sa milabay nga 30 ka adlaw", ho_what:"Unsa ang mahitabo",
+      ho_point1:"Mawad-an dayon ug access sa app.",
+      ho_point2:"Magpabilin ang kasaysayan sa screening ug referral ug anaa gihapon sa pasilidad.",
+      ho_point3:"Kinahanglan ug laing BHW alang sa iyang saklaw — ibalhin kini sa ubos, o pasagdi una.",
+      ho_reassign_label:"Ibalhin ang saklaw ngadto kang", ho_reassign_none:"Pasagdi una nga walay assigned", ho_confirm:"I-deactivate ang BHW"
+    }
+  };
+
+  tileSkel=[1,2,3]; covSkel=[1,2,3,4,5]; rowSkel=[1,2,3,4,5,6];
+  barangay="Casisang";
+
+  bhwData=[
+    {id:"b1", name:"Marilou Sabado", purok:"Purok 1", active:true, scr:14, ref:3, joined:"Mar 2025", email:"msabado@tbscreen.ph"},
+    {id:"b2", name:"Jessa Tolentino", purok:"Purok 2", active:true, scr:9, ref:2, joined:"Apr 2025", email:"jtolentino@tbscreen.ph"},
+    {id:"b3", name:"Danilo Regis", purok:"Purok 3", active:true, scr:18, ref:5, joined:"Jan 2025", email:"dregis@tbscreen.ph"},
+    {id:"b4", name:"Aurora Villamor", purok:"Purok 4", active:true, scr:6, ref:1, joined:"Jun 2025", email:"avillamor@tbscreen.ph"},
+    {id:"b5", name:"Ernesto Bacani", purok:"Purok 5", active:true, scr:11, ref:2, joined:"Feb 2025", email:"ebacani@tbscreen.ph"},
+    {id:"b6", name:"Lorna Pescador", purok:"Purok 6", active:false, scr:0, ref:0, joined:"Nov 2024", email:"lpescador@tbscreen.ph", reassignedTo:"Danilo Regis"}
+  ];
+
+  state = {
+    lang:"en", view:"dashboard", dash:"idle", bhwState:"idle",
+    dashSpin:false, bhwSpin:false,
+    bhws:this.bhwData.map(b=>({...b})),
+    search:"", filter:"all", selId:"b1", isNew:false, showPw:false, saved:false, tempSet:false,
+    resetPw:false, handoff:false, handoffReassign:"",
+    draft:{name:"Marilou Sabado", purok:"Purok 1", email:"msabado@tbscreen.ph", password:""}
+  };
+
+  componentDidMount(){
+    const p=this.props||{}; const u={};
+    if(p.language) u.lang=p.language; if(p.captainView) u.view=p.captainView;
+    if(p.dashboardState) u.dash=p.dashboardState; if(p.bhwsState) u.bhwState=p.bhwsState;
+    if(Object.keys(u).length) this.setState(u);
+    document.title="TB-Screen — Captain Portal";
+  }
+  componentDidUpdate(prev){
+    const p=this.props||{}, q=prev||{};
+    if(p.language&&p.language!==q.language) this.setState({lang:p.language});
+    if(p.captainView&&p.captainView!==q.captainView) this.setState({view:p.captainView});
+    if(p.dashboardState&&p.dashboardState!==q.dashboardState) this.setState({dash:p.dashboardState});
+    if(p.bhwsState&&p.bhwsState!==q.bhwsState) this.setState({bhwState:p.bhwsState});
+  }
+
+  initials(name){ const p=(name||"").trim().split(/\s+/); return (((p[0]||"")[0]||"")+((p[p.length-1]||"")[0]||"")).toUpperCase(); }
+  stChip(active,L){ return active?{bg:"#dff0ea",fg:"#12735f",label:L.st_active}:{bg:"#eae7df",fg:"#6b6357",label:L.st_deactivated}; }
+
+  setLang = code => this.setState({lang:code});
+  setView = v => this.setState({view:v});
+  dashRefresh = () => { if(this.state.dash==="loading") return; this.setState({dash:"loading"}); clearTimeout(this._dt); this._dt=setTimeout(()=>this.setState({dash:"idle"}),750); };
+  dashRetry = () => this.dashRefresh();
+  bhwRefresh = () => { this.setState({bhwSpin:true}); clearTimeout(this._bt); this._bt=setTimeout(()=>this.setState({bhwSpin:false}),650); };
+  bhwRetry = () => this.setState({bhwState:"idle"});
+
+  setSearch = e => this.setState({search:e.target.value});
+  setFilter = e => this.setState({filter:e.target.value});
+  selectBhw = id => { const b=this.state.bhws.find(x=>x.id===id); if(!b) return; this.setState({selId:id, isNew:false, resetPw:false, handoff:false, saved:false, tempSet:false, showPw:false, draft:{name:b.name, purok:b.purok, email:b.email, password:""}}); };
+  newBhw = () => this.setState({isNew:true, selId:null, resetPw:false, handoff:false, showPw:false, saved:false, tempSet:false, draft:{name:"", purok:"", email:"", password:""}});
+  cancelBhw = () => { const first=this.state.bhws[0]; if(first){ this.selectBhw(first.id); } else { this.setState({isNew:false}); } };
+  setField = (k,v) => this.setState(s=>({draft:{...s.draft,[k]:v}}));
+  setName = e => this.setField("name",e.target.value);
+  setPurok = e => this.setField("purok",e.target.value);
+  setEmail = e => this.setField("email",e.target.value);
+  setPassword = e => this.setField("password",e.target.value);
+  togglePw = () => this.setState(s=>({showPw:!s.showPw}));
+  valid(){ const d=this.state.draft; return d.name.trim()&&d.purok.trim()&&d.email.trim(); }
+  createBhw = () => { if(!this.valid()) return; const d=this.state.draft; const id="b"+Date.now(); const nb={id, name:d.name.trim(), purok:d.purok.trim(), email:d.email.trim(), active:true, scr:0, ref:0, joined:"Jul 2026"}; this.setState(s=>({bhws:[nb,...s.bhws], isNew:false, selId:id, showPw:false, draft:{name:nb.name,purok:nb.purok,email:nb.email,password:""}, saved:true})); clearTimeout(this._sf); this._sf=setTimeout(()=>this.setState({saved:false}),1600); };
+  saveBhw = () => { const d=this.state.draft, id=this.state.selId; this.setState(s=>({bhws:s.bhws.map(b=>b.id===id?{...b,name:d.name.trim()||b.name,purok:d.purok.trim()||b.purok,email:d.email.trim()||b.email}:b), saved:true})); clearTimeout(this._sf); this._sf=setTimeout(()=>this.setState({saved:false}),1600); };
+
+  openResetPw = () => this.setState(s=>({resetPw:true, showPw:false, draft:{...s.draft, password:""}}));
+  cancelResetPw = () => this.setState({resetPw:false, showPw:false});
+  setTempPassword = () => { if(!this.state.draft.password.trim()) return; this.setState(s=>({resetPw:false, showPw:false, tempSet:true, draft:{...s.draft, password:""}})); clearTimeout(this._tf); this._tf=setTimeout(()=>this.setState({tempSet:false}),1900); };
+
+  askDeactivateBhw = () => this.setState({handoff:true, handoffReassign:""});
+  cancelHandoff = () => this.setState({handoff:false});
+  setHandoffReassign = e => this.setState({handoffReassign:e.target.value});
+  confirmDeactivateBhw = () => { const id=this.state.selId, tgt=this.state.handoffReassign; const t=tgt?this.state.bhws.find(b=>b.id===tgt):null; const tName=t?t.name:null; this.setState(s=>({bhws:s.bhws.map(b=>b.id===id?{...b,active:false,reassignedTo:tName}:b), handoff:false, handoffReassign:""})); };
+  reactivateBhw = () => { const id=this.state.selId; this.setState(s=>({bhws:s.bhws.map(b=>b.id===id?{...b,active:true,reassignedTo:null}:b)})); };
+
+  renderVals(){
+    const s=this.state, lang=s.lang, L=this.dict[lang]||this.dict.en;
+
+    const navDefs=[["dashboard","space_dashboard",L.nav_dashboard],["bhws","groups",L.nav_bhws]];
+    const navItems=navDefs.map(([key,icon,label])=>{const on=s.view===key; return {icon,label,onClick:()=>this.setView(key),bg:on?"rgba(255,255,255,0.10)":"transparent",color:on?"#ffffff":"rgba(255,255,255,0.72)",weight:on?"600":"500",shadow:on?"inset 3px 0 0 #00a896":"inset 3px 0 0 transparent",iconColor:on?"#5fd0c4":"rgba(255,255,255,0.72)"};});
+    const langButtons=[["en","EN"],["tl","TL"],["ceb","CEB"]].map(([code,label])=>({label,onClick:()=>this.setLang(code),bg:lang===code?"#0B2E33":"transparent",fg:lang===code?"#ffffff":"#6d7a76"}));
+    let headerTitle=L.cap_dash_title, headerSub=L.cap_dash_sub;
+    if(s.view==="bhws"){ headerTitle=L.bhw_title; headerSub=L.bhw_sub; }
+    const statusOptions=[["all",L.status_all],["active",L.st_active],["deactivated",L.st_deactivated]].map(([value,label])=>({value,label}));
+
+    const dashEmptyState=s.dash==="empty";
+    const total=s.bhws.length, active=s.bhws.filter(b=>b.active).length, inactive=total-active;
+    const scr30=s.bhws.reduce((n,b)=>n+(b.scr||0),0);
+    const ref30=s.bhws.reduce((n,b)=>n+(b.ref||0),0);
+    const nz=v=>dashEmptyState?0:v;
+    const tiles=[
+      {value:nz(total), label:L.tile_bhws, sub: dashEmptyState?("0 "+L.active_lc):(active+" "+L.active_lc+" · "+inactive+" "+L.inactive_lc), icon:"groups", iconBg:"#e6f2f2", iconColor:"#028090", valueColor:"#028090"},
+      {value:nz(scr30), label:L.tile_screen, sub:L.last30, icon:"fact_check", iconBg:"#eef4f4", iconColor:"#046a78", valueColor:"#14302f"},
+      {value:nz(ref30), label:L.tile_ref, sub:L.last30, icon:"move_to_inbox", iconBg:"#dff0ea", iconColor:"#17876e", valueColor:"#12735f"}
+    ];
+    const activity=s.bhws.map(b=>({name:b.name, purok:b.purok+" · "+this.barangay, initials:this.initials(b.name), scr:b.scr, ref:b.ref, opacity:b.active?"1":"0.5", statusChip:this.stChip(b.active,L)}));
+    const dashCardTitle=L.today_word+" · 22 Jul 2026";
+
+    const term=s.search.trim().toLowerCase();
+    const match=b=> !term || [b.name,b.purok,b.email].some(x=>(x||"").toLowerCase().includes(term));
+    const statusMatch=b=> s.filter==="all"?true : s.filter==="active"?b.active===true : b.active===false;
+    const list=s.bhws.filter(b=>match(b)&&statusMatch(b));
+    const bhwRows=list.map(b=>{ const isSel=b.id===s.selId&&!s.isNew; return {name:b.name, purok:b.purok, initials:this.initials(b.name), statusChip:this.stChip(b.active,L), opacity:b.active?"1":"0.55", rowBg:isSel?"#eef7f7":"#ffffff", rowShadow:isSel?"inset 3px 0 0 #028090":"inset 3px 0 0 transparent", onSelect:()=>this.selectBhw(b.id)}; });
+
+    const sel=s.bhws.find(b=>b.id===s.selId)||null;
+    const isNew=s.isNew, isEdit=!s.isNew&&!!sel;
+    const v=this.valid();
+    const pwSet=(s.draft.password||"").trim().length>0;
+    const bhw={
+      isNew, isEdit,
+      title: isNew?L.form_new_bhw:(sel?sel.name:""),
+      subline: isNew?L.bhw_new_sub:(sel?sel.email:""),
+      name:s.draft.name, purok:s.draft.purok, email:s.draft.email, password:s.draft.password,
+      statusChip: sel?this.stChip(sel.active,L):this.stChip(true,L),
+      purokCtx: sel?(sel.purok+" · "+this.barangay):this.barangay, scr: sel?sel.scr:0, ref: sel?sel.ref:0, joined: sel?sel.joined:"—",
+      summary: sel?(sel.name+" · "+sel.purok+", "+this.barangay):"",
+      hasReassigned: !!(sel&&sel.reassignedTo), reassignedNote: sel&&sel.reassignedTo?(L.reassigned_pre+sel.reassignedTo):"",
+      saveBg:v?"#028090":"#9cc3c8", saveOpacity:v?"1":"0.65", saveCursor:v?"pointer":"default",
+      setPwBg:pwSet?"#028090":"#9cc3c8", setPwOpacity:pwSet?"1":"0.65", setPwCursor:pwSet?"pointer":"default",
+      saved:s.saved, tempSet:s.tempSet,
+      showReset: isEdit && sel && sel.active && !s.resetPw,
+      resetOpen: isEdit && sel && sel.active && s.resetPw,
+      showDeactivate: isEdit && sel && sel.active,
+      showReactivate: isEdit && sel && !sel.active
+    };
+
+    const handoffOptions=[{value:"",label:L.ho_reassign_none}].concat(
+      s.bhws.filter(b=>b.active&&b.id!==s.selId).map(b=>({value:b.id,label:b.name+" · "+b.purok}))
+    );
+
+    return {
+      L, navItems, langButtons, headerTitle, headerSub, statusOptions,
+      isDashboard:s.view==="dashboard", isBhws:s.view==="bhws",
+      dashError:s.dash==="error", dashOk:s.dash!=="error", dashLoading:s.dash==="loading",
+      dashTiles:(s.dash==="idle"||s.dash==="empty"), dashList:s.dash==="idle", dashEmpty:s.dash==="empty",
+      dashRefresh:this.dashRefresh, dashRetry:this.dashRetry, dashSpinStyle:s.dash==="loading"?"animation:tbspin 0.65s linear":"",
+      dashCardTitle, tiles, activity, tileSkel:this.tileSkel, covSkel:this.covSkel, rowSkel:this.rowSkel,
+
+      search:s.search, setSearch:this.setSearch, filter:s.filter, setFilter:this.setFilter,
+      bhwRefresh:this.bhwRefresh, bhwSpinStyle:s.bhwSpin?"animation:tbspin 0.65s linear":"", bhwRetry:this.bhwRetry,
+      newBhw:this.newBhw, bhwCountText:list.length+" "+L.results_word,
+      bhwErr:s.bhwState==="error", bhwLoading:s.bhwState==="loading", bhwEmptyData:s.bhwState==="empty",
+      bhwHasRows:s.bhwState==="idle"&&bhwRows.length>0, bhwNoMatch:s.bhwState==="idle"&&bhwRows.length===0,
+      bhwRows, bhw, bhwHasPanel: isNew||isEdit, bhwNoPanel: !isNew&&!isEdit,
+      setName:this.setName, setPurok:this.setPurok, setEmail:this.setEmail, setPassword:this.setPassword,
+      pwType:s.showPw?"text":"password", pwIcon:s.showPw?"visibility_off":"visibility", pwAria:s.showPw?L.hide_pw:L.show_pw, togglePw:this.togglePw,
+      createBhw:this.createBhw, cancelBhw:this.cancelBhw, saveBhw:this.saveBhw,
+      openResetPw:this.openResetPw, cancelResetPw:this.cancelResetPw, setTempPassword:this.setTempPassword,
+      askDeactivateBhw:this.askDeactivateBhw, reactivateBhw:this.reactivateBhw,
+      showHandoff: s.handoff && isEdit && sel && sel.active,
+      handoffOptions, handoffReassign:s.handoffReassign, setHandoffReassign:this.setHandoffReassign,
+      confirmDeactivateBhw:this.confirmDeactivateBhw, cancelHandoff:this.cancelHandoff
+    };
+  }
+}
+</script>
+</body>
+</html>

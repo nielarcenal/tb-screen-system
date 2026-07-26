@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&display=block" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon-180.png">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:Inter,system-ui,-apple-system,sans-serif;color:#20302e;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:#016575;text-decoration:none}
+a:hover{color:#014b57}
+input::placeholder{color:#a7b0aa}
+@keyframes tbfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes tbspin{to{transform:rotate(360deg)}}
+.tb-topbrand{display:none}
+@media (max-width:880px){
+.tb-brandpanel{display:none!important}
+.tb-topbrand{display:flex!important}
+}
+</style>
+</helmet>
+<div style="display:flex; height:100vh; min-height:100vh; width:100%; background:#f7f5f1; color:#20302e; font-family:Inter,system-ui,sans-serif; overflow:hidden">
+
+  <aside class="tb-brandpanel" style="position:relative; flex:1 1 50%; max-width:560px; background:#0B2E33; color:#fff; padding:44px 46px; display:flex; flex-direction:column; overflow:hidden">
+    <div style="position:absolute; top:-90px; right:-70px; width:320px; height:320px; border-radius:50%; background:radial-gradient(circle, rgba(0,168,150,0.30), transparent 70%); pointer-events:none"></div>
+    <div style="position:absolute; bottom:-60px; left:-80px; width:300px; height:300px; border-radius:50%; background:radial-gradient(circle, rgba(2,128,144,0.22), transparent 72%); pointer-events:none"></div>
+    <span style="position:absolute; right:-34px; bottom:-52px; font-family:'Material Symbols Outlined'; font-size:340px; line-height:1; color:rgba(255,255,255,0.045); pointer-events:none; user-select:none">pulmonology</span>
+
+    <div style="position:relative; z-index:1; display:flex; align-items:center; gap:12px">
+      <img src="assets/tb-screen-logo.png" alt="TB-Screen" width="44" height="44" style="width:44px; height:44px; border-radius:11px; display:block; box-shadow:0 0 0 1px rgba(255,255,255,0.10)" />
+      <div style="display:flex; flex-direction:column; gap:2px">
+        <span style="font-size:16px; font-weight:600; letter-spacing:-0.01em; color:#fff">TB&#8209;Screen</span>
+        <span style="font-size:10px; font-weight:600; letter-spacing:0.10em; text-transform:uppercase; color:#68b6bd">{{ L.brand_tag }}</span>
+      </div>
+    </div>
+
+    <div style="position:relative; z-index:1; flex:1; display:flex; flex-direction:column; justify-content:center; gap:22px; padding:32px 0">
+      <h1 style="margin:0; font-size:32px; line-height:1.18; font-weight:700; letter-spacing:-0.02em; color:#f4faf9; max-width:420px; text-wrap:balance">{{ L.brand_head }}</h1>
+      <p style="margin:0; font-size:14.5px; line-height:1.6; color:#a9c4c6; max-width:400px">{{ L.brand_sub }}</p>
+      <div style="display:flex; flex-direction:column; gap:14px; margin-top:6px">
+        <sc-for list="{{ brandPoints }}" as="p" hint-placeholder-count="3">
+          <div style="display:flex; align-items:center; gap:12px">
+            <span style="width:34px; height:34px; border-radius:9px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.08)"><span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#5fd0c4">{{ p.icon }}</span></span>
+            <span style="font-size:13.5px; font-weight:500; color:#d5e4e4">{{ p.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="position:relative; z-index:1; display:flex; align-items:center; gap:8px; font-size:11.5px; color:#6f8a8d">
+      <span style="font-family:'Material Symbols Outlined'; font-size:15px">verified_user</span>
+      <span>{{ L.copyright }}</span>
+    </div>
+  </aside>
+
+  <div class="tb-formwrap" data-screen-label="Sign in" style="flex:1 1 auto; min-width:0; position:relative; display:flex; align-items:center; justify-content:center; padding:32px">
+    <div style="position:absolute; top:22px; right:26px; display:flex; align-items:center; gap:2px; padding:3px; background:#fff; border:1px solid #e3ded6; border-radius:999px; z-index:2">
+      <span style="font-family:'Material Symbols Outlined'; font-size:17px; color:#8a968f; margin:0 3px 0 6px">language</span>
+      <sc-for list="{{ langButtons }}" as="b" hint-placeholder-count="3">
+        <button onClick="{{ b.onClick }}" style="border:none; background:{{ b.bg }}; color:{{ b.fg }}; padding:5px 11px; border-radius:999px; font-size:11.5px; font-weight:700; letter-spacing:0.02em; cursor:pointer; font-family:inherit">{{ b.label }}</button>
+      </sc-for>
+    </div>
+
+    <div style="width:100%; max-width:384px; display:flex; flex-direction:column">
+      <div class="tb-topbrand" style="align-items:center; gap:11px; margin-bottom:26px">
+        <img src="assets/tb-screen-logo.png" alt="TB-Screen" width="40" height="40" style="width:40px; height:40px; border-radius:10px; display:block" />
+        <div style="display:flex; flex-direction:column; gap:1px">
+          <span style="font-size:15px; font-weight:600; letter-spacing:-0.01em; color:#14302f">TB&#8209;Screen</span>
+          <span style="font-size:9.5px; font-weight:600; letter-spacing:0.10em; text-transform:uppercase; color:#4f9aa1">{{ L.brand_tag }}</span>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:22px">
+        <h2 style="margin:0; font-size:24px; font-weight:700; letter-spacing:-0.02em; color:#14302f">{{ L.signin_title }}</h2>
+        <p style="margin:0; font-size:13.5px; color:#6d7a76; line-height:1.5">{{ L.signin_sub }}</p>
+        <sc-if value="{{ hasRoleChip }}" hint-placeholder-val="{{ false }}">
+          <span style="align-self:flex-start; margin-top:6px; display:inline-flex; align-items:center; gap:6px; padding:4px 11px; border-radius:999px; background:#e6f2f2; color:#046a78; font-size:11.5px; font-weight:600">
+            <span style="font-family:'Material Symbols Outlined'; font-size:15px">{{ roleChip.icon }}</span>{{ roleChip.label }}
+          </span>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ hasErr }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; align-items:flex-start; gap:10px; padding:11px 13px; margin-bottom:16px; background:#fbe7e5; border:1px solid #f0cdc8; border-radius:10px; animation:tbfade 0.2s ease">
+          <span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#b0473b; flex:0 0 auto; margin-top:1px">error</span>
+          <span style="font-size:12.5px; color:#8a3a31; line-height:1.5; font-weight:500">{{ errMsg }}</span>
+        </div>
+      </sc-if>
+
+      <form onSubmit="{{ onSubmit }}" style="display:flex; flex-direction:column; gap:15px">
+        <label style="display:flex; flex-direction:column; gap:7px">
+          <span style="font-size:12px; font-weight:600; color:#4a5754">{{ L.email }}</span>
+          <input type="email" value="{{ email }}" onChange="{{ setEmail }}" disabled="{{ inputsDisabled }}" autoComplete="username" style="width:100%; padding:11px 12px; border:1px solid #e3ded6; border-radius:10px; font-size:14px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+        </label>
+
+        <label style="display:flex; flex-direction:column; gap:7px">
+          <span style="font-size:12px; font-weight:600; color:#4a5754">{{ L.password }}</span>
+          <div style="position:relative">
+            <input type="{{ pwType }}" value="{{ password }}" onChange="{{ setPassword }}" disabled="{{ inputsDisabled }}" autoComplete="current-password" style="width:100%; padding:11px 44px 11px 12px; border:1px solid #e3ded6; border-radius:10px; font-size:14px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+            <button type="button" onClick="{{ togglePw }}" aria-label="{{ pwAria }}" style="position:absolute; right:5px; top:50%; transform:translateY(-50%); width:34px; height:34px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:#8a968f; cursor:pointer; border-radius:8px" style-hover="background:#eef2f1; color:#4a5754"><span style="font-family:'Material Symbols Outlined'; font-size:20px">{{ pwIcon }}</span></button>
+          </div>
+        </label>
+
+        <sc-if value="{{ notSuccess }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex; flex-direction:column; gap:15px">
+            <div style="display:flex; justify-content:flex-end; margin-top:-3px">
+              <button type="button" onClick="{{ toggleForgot }}" style="border:none; background:transparent; color:#016575; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; padding:2px 2px">{{ L.forgot }}</button>
+            </div>
+            <sc-if value="{{ forgotOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; align-items:flex-start; gap:9px; padding:11px 13px; background:#f4f6f4; border:1px solid #e6ebe6; border-radius:10px; animation:tbfade 0.2s ease">
+                <span style="font-family:'Material Symbols Outlined'; font-size:18px; color:#4f9aa1; flex:0 0 auto; margin-top:1px">help</span>
+                <span style="font-size:12px; color:#5a6763; line-height:1.55">{{ L.forgot_note }}</span>
+              </div>
+            </sc-if>
+            <button type="submit" disabled="{{ isLoading }}" style="display:flex; align-items:center; justify-content:center; gap:9px; width:100%; padding:12px 16px; border:none; border-radius:10px; font-size:14px; font-weight:600; font-family:inherit; color:#fff; background:#028090; opacity:{{ btnOpacity }}; cursor:{{ btnCursor }}" style-hover="background:#016575">
+              <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+                <span style="width:16px; height:16px; border-radius:50%; border:2px solid rgba(255,255,255,0.4); border-top-color:#fff; animation:tbspin 0.65s linear infinite; flex:0 0 auto"></span>
+              </sc-if>
+              <span>{{ btnLabel }}</span>
+            </button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isSuccess }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-direction:column; gap:12px; animation:tbfade 0.24s ease">
+            <div style="display:flex; align-items:center; gap:12px; padding:14px 15px; background:#e7f5ef; border:1px solid #c3e5d5; border-radius:11px">
+              <span style="width:36px; height:36px; border-radius:50%; flex:0 0 auto; display:flex; align-items:center; justify-content:center; background:#12735f"><span style="font-family:'Material Symbols Outlined'; font-size:21px; color:#fff">check</span></span>
+              <div style="flex:1; min-width:0">
+                <div style="font-size:13.5px; font-weight:700; color:#0f5a49">{{ L.signed_in }}</div>
+                <div style="display:flex; align-items:center; gap:7px; margin-top:2px">
+                  <span style="width:12px; height:12px; border-radius:50%; border:2px solid #bcdccf; border-top-color:#12735f; animation:tbspin 0.7s linear infinite; flex:0 0 auto"></span>
+                  <span style="font-size:12px; color:#4a7a6c">{{ redirectMsg }}</span>
+                </div>
+              </div>
+            </div>
+            <button type="button" onClick="{{ resetLogin }}" style="align-self:center; border:none; background:transparent; color:#6d7a76; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; padding:2px" style-hover="color:#014b57">{{ L.back_to_signin }}</button>
+          </div>
+        </sc-if>
+      </form>
+
+      <div style="margin-top:24px; padding-top:18px; border-top:1px solid #eae6de; display:flex; align-items:center; justify-content:center; gap:8px; text-align:center">
+        <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#a0a89f; flex:0 0 auto">lock</span>
+        <span style="font-size:11.5px; color:#8a968f; line-height:1.5">{{ L.access_help }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;language&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;en&quot;,&quot;tl&quot;,&quot;ceb&quot;],&quot;default&quot;:&quot;en&quot;,&quot;tsType&quot;:&quot;'en'|'tl'|'ceb'&quot;,&quot;section&quot;:&quot;Display&quot;},
+  &quot;space&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;unified&quot;,&quot;admin&quot;,&quot;facility&quot;,&quot;captain&quot;],&quot;default&quot;:&quot;unified&quot;,&quot;tsType&quot;:&quot;'unified'|'admin'|'facility'|'captain'&quot;,&quot;section&quot;:&quot;Display&quot;},
+  &quot;loginState&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;idle&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;success&quot;],&quot;default&quot;:&quot;idle&quot;,&quot;tsType&quot;:&quot;'idle'|'loading'|'error'|'success'&quot;,&quot;section&quot;:&quot;States&quot;}
+}">
+class Component extends DCLogic {
+  dict = {
+    en: {
+      brand_tag:"Health Worker Platform",
+      brand_head:"Community TB screening, coordinated in one place.",
+      brand_sub:"One platform connecting barangay health workers, captains, and TB-DOTS facilities across Malaybalay City.",
+      p_secure:"Secure, role-based access", p_roles:"For BHWs, captains & facilities", p_program:"Malaybalay City TB-DOTS Program",
+      copyright:"TB-Screen · Malaybalay City TB-DOTS",
+      signin_title:"Sign in", signin_sub:"Welcome back. Enter your credentials to continue.",
+      email:"Email address", password:"Password",
+      show_pw:"Show password", hide_pw:"Hide password",
+      forgot:"Forgot password?",
+      forgot_note:"Ask your administrator or barangay captain to reset it — you'll set a new password on first sign-in.",
+      btn_signin:"Sign in", signing_in:"Signing in…",
+      err_creds:"Incorrect email or password. Please try again.",
+      err_required:"Enter your email and password to continue.",
+      signed_in:"Signed in", redirecting_pre:"Taking you to ", back_to_signin:"Back to sign in",
+      access_help:"Access is provisioned by your administrator. Contact them if you can’t sign in.",
+      chip_admin:"Administrator", chip_facility:"TB-DOTS Facility", chip_captain:"Barangay Captain",
+      rd_unified:"your workspace", rd_admin:"the Admin dashboard", rd_facility:"the Facility inbox", rd_captain:"the Captain portal"
+    },
+    tl: {
+      brand_tag:"Plataporma ng Health Worker",
+      brand_head:"Koordinadong TB screening sa komunidad, sa iisang plataporma.",
+      brand_sub:"Isang plataporma na nag-uugnay sa mga barangay health worker, kapitan, at pasilidad ng TB-DOTS sa Malaybalay City.",
+      p_secure:"Ligtas, role-based na access", p_roles:"Para sa BHW, kapitan at pasilidad", p_program:"Programang TB-DOTS ng Malaybalay City",
+      copyright:"TB-Screen · Malaybalay City TB-DOTS",
+      signin_title:"Mag-sign in", signin_sub:"Maligayang pagbabalik. Ilagay ang inyong kredensyal upang magpatuloy.",
+      email:"Email address", password:"Password",
+      show_pw:"Ipakita ang password", hide_pw:"Itago ang password",
+      forgot:"Nakalimutan ang password?",
+      forgot_note:"Hilingin sa inyong administrator o kapitan ng barangay na i-reset ito — magtatakda kayo ng bagong password sa unang pag-sign in.",
+      btn_signin:"Mag-sign in", signing_in:"Nagsa-sign in…",
+      err_creds:"Mali ang email o password. Pakisubukang muli.",
+      err_required:"Ilagay ang email at password upang magpatuloy.",
+      signed_in:"Naka-sign in", redirecting_pre:"Dinadala kayo sa ", back_to_signin:"Bumalik sa pag-sign in",
+      access_help:"Ang access ay ibinibigay ng inyong administrator. Makipag-ugnayan sa kanila kung hindi kayo makapag-sign in.",
+      chip_admin:"Administrator", chip_facility:"Pasilidad ng TB-DOTS", chip_captain:"Kapitan ng Barangay",
+      rd_unified:"inyong workspace", rd_admin:"ang Admin dashboard", rd_facility:"ang Facility inbox", rd_captain:"ang Captain portal"
+    },
+    ceb: {
+      brand_tag:"Plataporma sa Health Worker",
+      brand_head:"Koordinadong TB screening sa komunidad, sa usa ka plataporma.",
+      brand_sub:"Usa ka plataporma nga nag-uban sa mga barangay health worker, kapitan, ug pasilidad sa TB-DOTS sa Malaybalay City.",
+      p_secure:"Luwas, role-based nga access", p_roles:"Para sa BHW, kapitan ug pasilidad", p_program:"Programa sa TB-DOTS sa Malaybalay City",
+      copyright:"TB-Screen · Malaybalay City TB-DOTS",
+      signin_title:"Pag-sign in", signin_sub:"Maayong pagbalik. Isulod ang imong kredensyal aron magpadayon.",
+      email:"Email address", password:"Password",
+      show_pw:"Ipakita ang password", hide_pw:"Itago ang password",
+      forgot:"Nakalimtan ang password?",
+      forgot_note:"Hangyoa ang imong administrator o kapitan sa barangay nga i-reset kini — mag-set ka ug bag-ong password sa unang pag-sign in.",
+      btn_signin:"Pag-sign in", signing_in:"Nag-sign in…",
+      err_creds:"Sayop ang email o password. Palihug sulayi pag-usab.",
+      err_required:"Isulod ang email ug password aron magpadayon.",
+      signed_in:"Naka-sign in", redirecting_pre:"Gidala ka sa ", back_to_signin:"Balik sa pag-sign in",
+      access_help:"Ang access gihatag sa imong administrator. Kontaka sila kung dili ka maka-sign in.",
+      chip_admin:"Administrator", chip_facility:"Pasilidad sa TB-DOTS", chip_captain:"Kapitan sa Barangay",
+      rd_unified:"imong workspace", rd_admin:"ang Admin dashboard", rd_facility:"ang Facility inbox", rd_captain:"ang Captain portal"
+    }
+  };
+
+  state = { lang:"en", space:"unified", login:"idle", errKind:null, email:"", password:"", showPw:false, forgotOpen:false };
+
+  mapLogin(v){ if(v==="error") return {login:"error", errKind:"creds"}; if(v==="loading") return {login:"loading", errKind:null}; if(v==="success") return {login:"success", errKind:null}; return {login:"idle", errKind:null}; }
+
+  componentDidMount(){
+    const p=this.props||{}; const u={};
+    if(p.language) u.lang=p.language;
+    if(p.space) u.space=p.space;
+    if(p.loginState) Object.assign(u, this.mapLogin(p.loginState));
+    if(Object.keys(u).length) this.setState(u);
+    document.title="TB-Screen — Sign in";
+  }
+  componentDidUpdate(prev){
+    const p=this.props||{}, q=prev||{};
+    if(p.language&&p.language!==q.language) this.setState({lang:p.language});
+    if(p.space&&p.space!==q.space) this.setState({space:p.space});
+    if(p.loginState&&p.loginState!==q.loginState) this.setState(this.mapLogin(p.loginState));
+  }
+  componentWillUnmount(){ clearTimeout(this._lt); }
+
+  setLang = code => this.setState({lang:code});
+  setEmail = e => this.setState({email:e.target.value, errKind:this.state.errKind==="required"?null:this.state.errKind});
+  setPassword = e => this.setState({password:e.target.value, errKind:this.state.errKind==="required"?null:this.state.errKind});
+  togglePw = () => this.setState(s=>({showPw:!s.showPw}));
+  toggleForgot = () => this.setState(s=>({forgotOpen:!s.forgotOpen}));
+  resetLogin = () => this.setState({login:"idle", errKind:null});
+  onSubmit = e => { if(e&&e.preventDefault) e.preventDefault(); this.doSignIn(); };
+  doSignIn = () => {
+    const s=this.state;
+    if(s.login==="loading"||s.login==="success") return;
+    if(!s.email.trim()||!s.password.trim()){ this.setState({login:"error", errKind:"required"}); return; }
+    this.setState({login:"loading", errKind:null});
+    clearTimeout(this._lt);
+    this._lt=setTimeout(()=>this.setState({login:"success"}), 1050);
+  };
+
+  renderVals(){
+    const s=this.state, L=this.dict[s.lang]||this.dict.en;
+    const langButtons=[["en","EN"],["tl","TL"],["ceb","CEB"]].map(([code,label])=>({label,onClick:()=>this.setLang(code),bg:s.lang===code?"#0B2E33":"transparent",fg:s.lang===code?"#ffffff":"#6d7a76"}));
+    const brandPoints=[{icon:"encrypted",label:L.p_secure},{icon:"groups",label:L.p_roles},{icon:"public",label:L.p_program}];
+
+    const chipMap={admin:{icon:"admin_panel_settings",label:L.chip_admin},facility:{icon:"local_hospital",label:L.chip_facility},captain:{icon:"holiday_village",label:L.chip_captain}};
+    const roleChip=chipMap[s.space]||null;
+    const rdMap={unified:L.rd_unified,admin:L.rd_admin,facility:L.rd_facility,captain:L.rd_captain};
+    const redirectName=rdMap[s.space]||L.rd_unified;
+
+    const isLoading=s.login==="loading", isSuccess=s.login==="success";
+    const errMsg=s.errKind==="creds"?L.err_creds:(s.errKind==="required"?L.err_required:"");
+
+    return {
+      L, langButtons, brandPoints,
+      hasRoleChip:!!roleChip, roleChip:roleChip||{icon:"",label:""},
+      hasErr:!!errMsg, errMsg,
+      email:s.email, password:s.password, setEmail:this.setEmail, setPassword:this.setPassword,
+      inputsDisabled:isLoading||isSuccess,
+      pwType:s.showPw?"text":"password", pwIcon:s.showPw?"visibility_off":"visibility", pwAria:s.showPw?L.hide_pw:L.show_pw, togglePw:this.togglePw,
+      forgotOpen:s.forgotOpen, toggleForgot:this.toggleForgot,
+      onSubmit:this.onSubmit, resetLogin:this.resetLogin,
+      notSuccess:!isSuccess, isSuccess, isLoading,
+      btnLabel:isLoading?L.signing_in:L.btn_signin, btnOpacity:isLoading?"0.85":"1", btnCursor:isLoading?"default":"pointer",
+      redirectMsg:L.redirecting_pre+redirectName+"…"
+    };
+  }
+}
+</script>
+</body>
+</html>

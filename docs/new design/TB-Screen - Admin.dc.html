@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&display=block" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon-180.png">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:Inter,system-ui,-apple-system,sans-serif;color:#20302e;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:#016575;text-decoration:none}
+a:hover{color:#014b57}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#d7d2c8;border-radius:8px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#c3bdb0;background-clip:content-box}
+input::placeholder,textarea::placeholder{color:#a7b0aa}
+@keyframes tbfade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes tbspin{to{transform:rotate(360deg)}}
+@keyframes tbpulse{0%,100%{opacity:1}50%{opacity:0.45}}
+@media (max-width:1100px){
+.tb-main{grid-template-columns:1fr!important;overflow-y:auto!important;overflow-x:hidden!important;align-content:start!important}
+.tb-pane{min-height:0!important;overflow:visible!important}
+.tb-pane>div{overflow:visible!important}
+}
+</style>
+</helmet>
+<div style="display:flex; height:100vh; min-height:100vh; width:100%; background:#f7f5f1; color:#20302e; font-family:Inter,system-ui,sans-serif; overflow:hidden">
+
+  <aside style="flex:0 0 252px; width:252px; background:#0B2E33; color:#fff; display:flex; flex-direction:column; padding:16px 14px 14px">
+    <div style="display:flex; align-items:center; gap:11px; padding:6px 6px 18px">
+      <img src="assets/tb-screen-logo.png" alt="TB-Screen" width="40" height="40" style="width:40px; height:40px; border-radius:10px; display:block; box-shadow:0 0 0 1px rgba(255,255,255,0.10)" />
+      <div style="display:flex; flex-direction:column; gap:2px; min-width:0">
+        <span style="font-size:15px; font-weight:600; letter-spacing:-0.01em; color:#fff">TB&#8209;Screen</span>
+        <span style="font-size:10px; font-weight:600; letter-spacing:0.09em; text-transform:uppercase; color:#68b6bd">{{ L.brand_admin }}</span>
+      </div>
+    </div>
+
+    <nav style="display:flex; flex-direction:column; gap:3px; margin-top:2px">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="3">
+        <button onClick="{{ n.onClick }}" style="display:flex; align-items:center; gap:12px; padding:9px 11px; border-radius:9px; border:none; text-align:left; width:100%; font-family:inherit; cursor:pointer; font-size:13.5px; color:{{ n.color }}; font-weight:{{ n.weight }}; background:{{ n.bg }}; box-shadow:{{ n.shadow }}" style-hover="filter:brightness(1.12)">
+          <span style="font-family:'Material Symbols Outlined'; font-size:20px; color:{{ n.iconColor }}">{{ n.icon }}</span>
+          <span>{{ n.label }}</span>
+        </button>
+      </sc-for>
+    </nav>
+
+    <div style="flex:1"></div>
+
+    <div style="border-top:1px solid rgba(255,255,255,0.10); padding-top:13px; margin-top:12px; display:flex; flex-direction:column; gap:11px">
+      <div style="display:flex; align-items:center; gap:9px; padding:0 4px">
+        <span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#68b6bd; flex:0 0 auto">public</span>
+        <div style="min-width:0">
+          <div style="font-size:12.5px; font-weight:600; color:#e8f1f1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ L.org_name }}</div>
+          <div style="font-size:11px; color:#7f9a9d">{{ L.org_sub }}</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:9px; padding:0 4px">
+        <div style="width:30px; height:30px; border-radius:50%; background:#00a896; color:#04322e; display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700; flex:0 0 30px">JC</div>
+        <div style="min-width:0; flex:1">
+          <div style="font-size:12.5px; font-weight:600; color:#e8f1f1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">Josefina Cruz</div>
+          <div style="font-size:11px; color:#7f9a9d">{{ L.role_admin }}</div>
+        </div>
+      </div>
+      <button style="display:flex; align-items:center; gap:9px; width:100%; padding:9px 10px; border-radius:9px; border:1px solid rgba(255,255,255,0.12); background:transparent; color:rgba(255,255,255,0.80); font-size:12.5px; font-weight:500; font-family:inherit; cursor:pointer" style-hover="background:rgba(255,255,255,0.06); color:#ffffff">
+        <span style="font-family:'Material Symbols Outlined'; font-size:18px">logout</span>
+        <span>{{ L.sign_out }}</span>
+      </button>
+    </div>
+  </aside>
+
+  <div style="flex:1; min-width:0; display:flex; flex-direction:column; overflow:hidden">
+    <header style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; padding:20px 28px 14px">
+      <div style="display:flex; flex-direction:column; gap:3px; min-width:0">
+        <h1 style="margin:0; font-size:22px; font-weight:700; letter-spacing:-0.02em; color:#14302f">{{ headerTitle }}</h1>
+        <p style="margin:0; font-size:13px; color:#6d7a76">{{ headerSub }}</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; flex:0 0 auto">
+        <div style="display:flex; align-items:center; gap:7px; padding:6px 12px; background:#fff; border:1px solid #e3ded6; border-radius:999px; font-size:12.5px; color:#6d7a76; font-weight:500">
+          <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#8a968f">calendar_today</span>
+          <span>Wed &middot; 22 Jul 2026</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:2px; padding:3px; background:#fff; border:1px solid #e3ded6; border-radius:999px">
+          <span style="font-family:'Material Symbols Outlined'; font-size:17px; color:#8a968f; margin:0 3px 0 6px">language</span>
+          <sc-for list="{{ langButtons }}" as="b" hint-placeholder-count="3">
+            <button onClick="{{ b.onClick }}" style="border:none; background:{{ b.bg }}; color:{{ b.fg }}; padding:5px 11px; border-radius:999px; font-size:11.5px; font-weight:700; letter-spacing:0.02em; cursor:pointer; font-family:inherit">{{ b.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </header>
+
+    <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+    <main data-screen-label="Admin Dashboard" style="flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding:6px 28px 28px; display:flex; flex-direction:column; gap:18px">
+      <sc-if value="{{ dashError }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:14px; padding:56px 24px; text-align:center">
+          <div style="width:60px; height:60px; border-radius:16px; background:#fbe7e5; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:30px; color:#b0473b">cloud_off</span></div>
+          <div style="font-size:16px; font-weight:700; color:#2c3a37">{{ L.dash_error_title }}</div>
+          <div style="font-size:13px; color:#8a968f; max-width:320px; line-height:1.55">{{ L.dash_error_body }}</div>
+          <button onClick="{{ dashRetry }}" style="display:inline-flex; align-items:center; gap:7px; border:none; padding:10px 18px; border-radius:9px; font-size:13px; font-weight:600; font-family:inherit; color:#fff; background:#028090; cursor:pointer" style-hover="background:#016575"><span style="font-family:'Material Symbols Outlined'; font-size:18px">refresh</span>{{ L.retry }}</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ dashOk }}" hint-placeholder-val="{{ true }}">
+        <section style="flex:0 0 auto; background:#fff; border:1px solid #e3ded6; border-radius:14px; box-shadow:0 1px 2px rgba(20,48,51,0.04),0 1px 3px rgba(20,48,51,0.05); overflow:hidden">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 18px; border-bottom:1px solid #f0ece4; flex-wrap:wrap">
+            <div style="display:flex; align-items:center; gap:9px; min-width:0">
+              <span style="font-family:'Material Symbols Outlined'; font-size:20px; color:#028090">insights</span>
+              <h2 style="margin:0; font-size:14.5px; font-weight:700; color:#14302f; letter-spacing:-0.01em">{{ dashCardTitle }}</h2>
+            </div>
+            <button onClick="{{ dashRefresh }}" style="display:inline-flex; align-items:center; gap:7px; border:1px solid #e3ded6; background:#faf9f6; color:#4a5754; padding:7px 13px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#f0efe9"><span style="font-family:'Material Symbols Outlined'; font-size:17px; {{ dashSpinStyle }}">refresh</span>{{ L.refresh }}</button>
+          </div>
+          <div style="padding:16px 18px">
+            <sc-if value="{{ dashLoading }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px">
+                <sc-for list="{{ tileSkel }}" as="k" hint-placeholder-count="4">
+                  <div style="border:1px solid #f0ece4; border-radius:12px; padding:15px 16px; background:#fbfaf7">
+                    <div style="width:34px; height:34px; border-radius:9px; background:#eee9df; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:52px; height:26px; border-radius:6px; background:#eee9df; margin-top:14px; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:96px; height:11px; border-radius:5px; background:#efeae0; margin-top:12px; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:64px; height:9px; border-radius:5px; background:#f2ede4; margin-top:8px; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ dashTiles }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px">
+                <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="4">
+                  <div style="border:1px solid #efeadf; border-radius:12px; padding:15px 16px; background:#fdfcfa">
+                    <span style="width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; background:{{ t.iconBg }}"><span style="font-family:'Material Symbols Outlined'; font-size:20px; color:{{ t.iconColor }}">{{ t.icon }}</span></span>
+                    <div style="font-size:30px; font-weight:700; letter-spacing:-0.02em; color:{{ t.valueColor }}; font-variant-numeric:tabular-nums; margin-top:12px; line-height:1">{{ t.value }}</div>
+                    <div style="font-size:12.5px; font-weight:600; color:#3f4b48; margin-top:7px">{{ t.label }}</div>
+                    <div style="font-size:11px; color:#9aa39c; margin-top:2px">{{ t.sub }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </section>
+
+        <section style="flex:0 0 auto; background:#fff; border:1px solid #e3ded6; border-radius:14px; box-shadow:0 1px 2px rgba(20,48,51,0.04),0 1px 3px rgba(20,48,51,0.05); overflow:hidden">
+          <div style="display:flex; align-items:center; gap:9px; padding:15px 18px; border-bottom:1px solid #f0ece4">
+            <span style="font-family:'Material Symbols Outlined'; font-size:20px; color:#028090">domain</span>
+            <div style="min-width:0; flex:1">
+              <h2 style="margin:0; font-size:14.5px; font-weight:700; color:#14302f; letter-spacing:-0.01em">{{ L.coverage_title }}</h2>
+              <div style="font-size:11.5px; color:#8a968f; margin-top:1px">{{ L.coverage_sub }}</div>
+            </div>
+            <span style="flex:0 0 auto; font-size:10.5px; font-weight:600; color:#8a968f; background:#f2f4f1; padding:3px 10px; border-radius:999px">{{ L.readonly_tag }}</span>
+          </div>
+          <sc-if value="{{ dashLoading }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <sc-for list="{{ covSkel }}" as="k" hint-placeholder-count="5">
+                <div style="display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid #f4f1ea">
+                  <div style="width:38px; height:38px; border-radius:10px; background:#eee9df; flex:0 0 auto; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                  <div style="flex:1; min-width:0">
+                    <div style="width:45%; height:12px; border-radius:6px; background:#eee9df; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:28%; height:10px; border-radius:5px; background:#f2ede4; margin-top:7px; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                  </div>
+                  <div style="width:140px; height:10px; border-radius:5px; background:#f2ede4; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ dashEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:10px; padding:44px 24px; text-align:center">
+              <div style="width:52px; height:52px; border-radius:14px; background:#eef4f4; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:26px; color:#4f9aa1">domain_add</span></div>
+              <div style="font-size:14px; font-weight:600; color:#2c3a37">{{ L.dash_empty_title }}</div>
+              <div style="font-size:12.5px; color:#8a968f; max-width:320px; line-height:1.55">{{ L.dash_empty_body }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ dashList }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <sc-for list="{{ coverage }}" as="c" hint-placeholder-count="5">
+                <div style="display:flex; align-items:center; gap:13px; padding:13px 18px; border-bottom:1px solid #f4f1ea">
+                  <span style="width:38px; height:38px; border-radius:10px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; background:#eef4f4"><span style="font-family:'Material Symbols Outlined'; font-size:20px; color:#046a78">local_hospital</span></span>
+                  <div style="flex:1; min-width:0">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+                      <span style="font-size:13.5px; font-weight:600; color:#14302f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ c.name }}</span>
+                      <span style="font-size:10.5px; font-weight:600; padding:2px 9px; border-radius:999px; background:{{ c.statusChip.bg }}; color:{{ c.statusChip.fg }}; white-space:nowrap">{{ c.statusChip.label }}</span>
+                    </div>
+                    <div style="font-size:11.5px; color:#9aa39c; margin-top:2px">{{ c.muni }}</div>
+                  </div>
+                  <div style="flex:0 0 auto; display:flex; align-items:center; gap:18px">
+                    <div style="text-align:right; min-width:52px">
+                      <div style="font-size:15px; font-weight:700; color:#14302f; font-variant-numeric:tabular-nums; line-height:1">{{ c.captains }}</div>
+                      <div style="font-size:10px; color:#9aa39c; margin-top:3px">{{ L.cov_captains }}</div>
+                    </div>
+                    <div style="text-align:right; min-width:52px">
+                      <div style="font-size:15px; font-weight:700; color:#14302f; font-variant-numeric:tabular-nums; line-height:1">{{ c.bhws }}</div>
+                      <div style="font-size:10px; color:#9aa39c; margin-top:3px">{{ L.cov_bhws }}</div>
+                    </div>
+                    <div style="text-align:right; min-width:52px">
+                      <div style="font-size:15px; font-weight:700; color:{{ c.openColor }}; font-variant-numeric:tabular-nums; line-height:1">{{ c.open }}</div>
+                      <div style="font-size:10px; color:#9aa39c; margin-top:3px">{{ L.cov_open }}</div>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div style="padding:12px 18px; border-top:1px solid #f0ece4; background:#fbfaf7; display:flex; align-items:flex-start; gap:8px">
+            <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#a0a89f; flex:0 0 auto; margin-top:1px">info</span>
+            <p style="margin:0; font-size:11.5px; color:#8a968f; line-height:1.5">{{ L.footer_note_admin }}</p>
+          </div>
+        </section>
+      </sc-if>
+    </main>
+    </sc-if>
+
+    <sc-if value="{{ isCaptains }}" hint-placeholder-val="{{ false }}">
+    <main data-screen-label="Manage Captains" class="tb-main" style="flex:1; min-height:0; padding:6px 28px 24px; display:grid; grid-template-columns:minmax(300px,360px) minmax(0,1fr); gap:20px; align-items:stretch">
+
+      <section class="tb-pane" style="display:flex; flex-direction:column; min-height:0; background:#fff; border:1px solid #e3ded6; border-radius:14px; box-shadow:0 1px 2px rgba(20,48,51,0.04),0 1px 3px rgba(20,48,51,0.05); overflow:hidden">
+        <div style="padding:15px 16px 13px; border-bottom:1px solid #f0ece4">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px">
+            <div style="display:flex; align-items:center; gap:8px; min-width:0">
+              <h2 style="margin:0; font-size:14px; font-weight:700; color:#14302f; letter-spacing:-0.01em">{{ L.cap_list_title }}</h2>
+              <span style="font-size:11.5px; font-weight:600; color:#028090; background:#e6f2f2; padding:2px 10px; border-radius:999px; font-variant-numeric:tabular-nums; white-space:nowrap">{{ capCountText }}</span>
+            </div>
+            <button onClick="{{ newCaptain }}" style="display:inline-flex; align-items:center; gap:5px; border:none; background:#028090; color:#fff; padding:7px 12px; border-radius:9px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; white-space:nowrap; flex:0 0 auto" style-hover="background:#016575"><span style="font-family:'Material Symbols Outlined'; font-size:17px">add</span>{{ L.new_captain }}</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px">
+            <div style="position:relative; flex:1; min-width:0">
+              <span style="position:absolute; left:9px; top:50%; transform:translateY(-50%); font-family:'Material Symbols Outlined'; font-size:18px; color:#a7b0aa; pointer-events:none">search</span>
+              <input value="{{ capSearch }}" onChange="{{ setCapSearch }}" placeholder="{{ L.cap_search_ph }}" style="width:100%; padding:8px 10px 8px 33px; border:1px solid #e3ded6; border-radius:9px; font-size:12.5px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+            </div>
+            <div style="position:relative; flex:0 0 auto">
+              <select value="{{ capFilter }}" onChange="{{ setCapFilter }}" style="appearance:none; -webkit-appearance:none; padding:8px 30px 8px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:12.5px; font-family:inherit; color:#20302e; background:#faf9f6; cursor:pointer; outline:none">
+                <sc-for list="{{ statusOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+              </select>
+              <span style="position:absolute; right:8px; top:50%; transform:translateY(-50%); font-family:'Material Symbols Outlined'; font-size:18px; color:#8a968f; pointer-events:none">expand_more</span>
+            </div>
+            <button onClick="{{ capRefresh }}" title="Refresh" style="flex:0 0 auto; width:35px; height:35px; display:flex; align-items:center; justify-content:center; border:1px solid #e3ded6; border-radius:9px; background:#faf9f6; color:#6d7a76; cursor:pointer" style-hover="background:#f0efe9">
+              <span style="font-family:'Material Symbols Outlined'; font-size:18px; {{ capSpinStyle }}">refresh</span>
+            </button>
+          </div>
+        </div>
+        <div style="flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column">
+          <sc-if value="{{ capErr }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:11px; padding:40px 24px; text-align:center">
+              <div style="width:52px; height:52px; border-radius:14px; background:#fbe7e5; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:26px; color:#b0473b">cloud_off</span></div>
+              <div style="font-size:13.5px; font-weight:700; color:#2c3a37">{{ L.cap_error_title }}</div>
+              <div style="font-size:12px; color:#8a968f; max-width:220px; line-height:1.5">{{ L.cap_error_body }}</div>
+              <button onClick="{{ capRetry }}" style="display:inline-flex; align-items:center; gap:6px; border:none; padding:8px 15px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; color:#fff; background:#028090; cursor:pointer" style-hover="background:#016575"><span style="font-family:'Material Symbols Outlined'; font-size:16px">refresh</span>{{ L.retry }}</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ capLoading }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <sc-for list="{{ rowSkel }}" as="k" hint-placeholder-count="6">
+                <div style="display:flex; align-items:center; gap:12px; padding:13px 15px; border-bottom:1px solid #f4f1ea">
+                  <div style="flex:1; min-width:0">
+                    <div style="width:55%; height:12px; border-radius:6px; background:#eee9df; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:32%; height:10px; border-radius:5px; background:#f2ede4; margin-top:7px; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                  </div>
+                  <div style="width:54px; height:18px; border-radius:999px; background:#f2ede4; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ capEmptyData }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:9px; padding:40px 24px; text-align:center">
+              <span style="font-family:'Material Symbols Outlined'; font-size:32px; color:#c7cec9">group_off</span>
+              <div style="font-size:13.5px; font-weight:600; color:#4a5754">{{ L.cap_emptydata_title }}</div>
+              <div style="font-size:12px; color:#8a968f; max-width:220px; line-height:1.5">{{ L.cap_emptydata_body }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ capHasRows }}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{ capRows }}" as="r" hint-placeholder-count="6">
+              <button onClick="{{ r.onSelect }}" style="display:flex; width:100%; text-align:left; gap:10px; padding:12px 15px; border:none; border-bottom:1px solid #f4f1ea; background:{{ r.rowBg }}; box-shadow:{{ r.rowShadow }}; cursor:pointer; font-family:inherit; align-items:center" style-hover="filter:brightness(0.985)">
+                <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px">
+                  <span style="font-size:13.5px; font-weight:600; color:#14302f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ r.name }}</span>
+                  <span style="font-size:12px; color:#6d7a76; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ r.barangay }}</span>
+                </div>
+                <span style="flex:0 0 auto; font-size:11px; font-weight:600; padding:3px 9px; border-radius:999px; background:{{ r.statusChip.bg }}; color:{{ r.statusChip.fg }}; white-space:nowrap">{{ r.statusChip.label }}</span>
+              </button>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ capNoMatch }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:9px; padding:40px 24px; text-align:center">
+              <span style="font-family:'Material Symbols Outlined'; font-size:32px; color:#c7cec9">search_off</span>
+              <div style="font-size:13.5px; font-weight:600; color:#4a5754">{{ L.cap_empty_title }}</div>
+              <div style="font-size:12px; color:#8a968f; max-width:210px; line-height:1.5">{{ L.cap_empty_body }}</div>
+            </div>
+          </sc-if>
+        </div>
+      </section>
+
+      <section class="tb-pane" style="display:flex; flex-direction:column; min-height:0; background:#fff; border:1px solid #e3ded6; border-radius:14px; box-shadow:0 1px 2px rgba(20,48,51,0.04),0 1px 3px rgba(20,48,51,0.05); overflow:hidden">
+        <div style="flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column">
+          <sc-if value="{{ capHasPanel }}" hint-placeholder-val="{{ true }}">
+            <div style="animation:tbfade 0.22s ease">
+              <div style="padding:18px 20px 16px; border-bottom:1px solid #f0ece4; display:flex; align-items:flex-start; gap:12px">
+                <div style="flex:1; min-width:0">
+                  <div style="font-size:18px; font-weight:700; color:#14302f; letter-spacing:-0.01em">{{ cap.title }}</div>
+                  <div style="font-size:12.5px; color:#6d7a76; margin-top:3px">{{ cap.subline }}</div>
+                </div>
+                <sc-if value="{{ cap.isEdit }}" hint-placeholder-val="{{ true }}">
+                  <span style="flex:0 0 auto; font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; background:{{ cap.statusChip.bg }}; color:{{ cap.statusChip.fg }}">{{ cap.statusChip.label }}</span>
+                </sc-if>
+              </div>
+
+              <div style="padding:16px 20px; display:flex; flex-direction:column; gap:14px">
+                <label style="display:flex; flex-direction:column; gap:6px">
+                  <span style="font-size:11px; font-weight:600; color:#4a5754">{{ L.f_name }}</span>
+                  <input value="{{ cap.name }}" onChange="{{ setCapName }}" style="width:100%; padding:9px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:13px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+                </label>
+                <label style="display:flex; flex-direction:column; gap:6px">
+                  <span style="font-size:11px; font-weight:600; color:#4a5754">{{ L.f_barangay }}</span>
+                  <input value="{{ cap.barangay }}" onChange="{{ setCapBarangay }}" style="width:100%; padding:9px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:13px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+                </label>
+                <label style="display:flex; flex-direction:column; gap:6px">
+                  <span style="font-size:11px; font-weight:600; color:#4a5754">{{ L.f_email }}</span>
+                  <input type="email" value="{{ cap.email }}" onChange="{{ setCapEmail }}" style="width:100%; padding:9px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:13px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+                </label>
+                <sc-if value="{{ cap.isNew }}" hint-placeholder-val="{{ false }}">
+                  <label style="display:flex; flex-direction:column; gap:6px">
+                    <span style="font-size:11px; font-weight:600; color:#4a5754">{{ L.f_password }}</span>
+                    <div style="position:relative">
+                      <input type="{{ capPwType }}" value="{{ cap.password }}" onChange="{{ setCapPassword }}" style="width:100%; padding:9px 40px 9px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:13px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+                      <button type="button" onClick="{{ toggleCapPw }}" aria-label="{{ capPwAria }}" style="position:absolute; right:4px; top:50%; transform:translateY(-50%); width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:#8a968f; cursor:pointer; border-radius:7px" style-hover="background:#eef2f1; color:#4a5754"><span style="font-family:'Material Symbols Outlined'; font-size:19px">{{ capPwIcon }}</span></button>
+                    </div>
+                    <span style="font-size:11px; color:#8a968f; line-height:1.5">{{ L.f_password_hint }}</span>
+                  </label>
+                </sc-if>
+
+                <sc-if value="{{ cap.isEdit }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex; gap:10px; flex-wrap:wrap; padding:2px 0 0">
+                    <div style="flex:1; min-width:130px; border:1px solid #efeadf; border-radius:11px; padding:11px 13px; background:#fdfcfa">
+                      <div style="font-size:11px; color:#8a968f">{{ L.ctx_facility }}</div>
+                      <div style="font-size:13px; font-weight:600; color:#2c3a37; margin-top:3px">{{ cap.facility }}</div>
+                    </div>
+                    <div style="flex:0 0 auto; min-width:110px; border:1px solid #efeadf; border-radius:11px; padding:11px 13px; background:#fdfcfa">
+                      <div style="font-size:11px; color:#8a968f">{{ L.ctx_bhws }}</div>
+                      <div style="font-size:13px; font-weight:600; color:#2c3a37; margin-top:3px; font-variant-numeric:tabular-nums">{{ cap.bhws }}</div>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+
+              <div style="padding:0 20px 18px; display:flex; flex-direction:column; gap:12px">
+                <sc-if value="{{ cap.isNew }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+                    <button onClick="{{ createCaptain }}" style="border:none; padding:10px 18px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; color:#fff; background:{{ cap.saveBg }}; opacity:{{ cap.saveOpacity }}; cursor:{{ cap.saveCursor }}">{{ L.btn_create_cap }}</button>
+                    <button onClick="{{ cancelCaptain }}" style="border:1px solid #e3ded6; background:#fff; color:#6d7a76; padding:10px 15px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#f5f4f0">{{ L.cancel }}</button>
+                    <span style="font-size:11px; color:#a0a89f; margin-left:auto">{{ L.req_note }}</span>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ cap.isEdit }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+                    <button onClick="{{ saveCaptain }}" style="border:none; padding:10px 18px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; color:#fff; background:#028090; cursor:pointer" style-hover="background:#016575">{{ L.btn_save }}</button>
+                    <sc-if value="{{ cap.saved }}" hint-placeholder-val="{{ false }}"><span style="display:flex; align-items:center; gap:5px; font-size:12.5px; font-weight:600; color:#05614f"><span style="font-family:'Material Symbols Outlined'; font-size:17px">check_circle</span>{{ L.saved_flash }}</span></sc-if>
+                  </div>
+                  <sc-if value="{{ cap.showConfirm }}" hint-placeholder-val="{{ false }}">
+                    <div style="border:1px solid #f0c7c1; background:#fdf1ef; border-radius:11px; padding:13px 14px">
+                      <div style="display:flex; align-items:flex-start; gap:9px">
+                        <span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#b0473b; flex:0 0 auto; margin-top:1px">warning</span>
+                        <div style="min-width:0">
+                          <div style="font-size:12.5px; font-weight:700; color:#8a3a32">{{ L.deact_title }}</div>
+                          <p style="margin:4px 0 0; font-size:11.5px; color:#96534c; line-height:1.5">{{ L.deact_body_cap }}</p>
+                        </div>
+                      </div>
+                      <div style="display:flex; gap:8px; margin-top:11px">
+                        <button onClick="{{ confirmDeactivateCaptain }}" style="border:none; background:#b0473b; color:#fff; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#953a30">{{ L.confirm_deactivate }}</button>
+                        <button onClick="{{ cancelConfirmCaptain }}" style="border:1px solid #e3ded6; background:#fff; color:#6d7a76; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#f5f4f0">{{ L.cancel }}</button>
+                      </div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ cap.showDeactivate }}" hint-placeholder-val="{{ true }}">
+                    <button onClick="{{ askDeactivateCaptain }}" style="align-self:flex-start; display:inline-flex; align-items:center; gap:6px; border:1px solid #e7b3ad; background:#fff; color:#96362e; padding:9px 15px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#fbe7e5"><span style="font-family:'Material Symbols Outlined'; font-size:17px">block</span>{{ L.btn_deactivate }}</button>
+                  </sc-if>
+                  <sc-if value="{{ cap.showReactivate }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ reactivateCaptain }}" style="align-self:flex-start; display:inline-flex; align-items:center; gap:6px; border:1px solid #a9d7db; background:#eaf6f6; color:#014b57; padding:9px 15px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#dcefef"><span style="font-family:'Material Symbols Outlined'; font-size:17px">restart_alt</span>{{ L.btn_reactivate }}</button>
+                  </sc-if>
+                </sc-if>
+              </div>
+
+              <div style="padding:13px 20px; border-top:1px solid #f0ece4; background:#fbfaf7; display:flex; align-items:flex-start; gap:8px">
+                <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#a0a89f; flex:0 0 auto; margin-top:1px">info</span>
+                <p style="margin:0; font-size:11.5px; color:#8a968f; line-height:1.5">{{ L.footer_note_admin }}</p>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ capNoPanel }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:12px; padding:48px; text-align:center">
+              <div style="width:56px; height:56px; border-radius:14px; background:#eef4f4; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:28px; color:#4f9aa1">badge</span></div>
+              <div style="font-size:15px; font-weight:600; color:#2c3a37">{{ L.cap_select_title }}</div>
+              <div style="font-size:13px; color:#8a968f; max-width:280px; line-height:1.55">{{ L.cap_select_body }}</div>
+            </div>
+          </sc-if>
+        </div>
+      </section>
+
+    </main>
+    </sc-if>
+
+    <sc-if value="{{ isFacilities }}" hint-placeholder-val="{{ false }}">
+    <main data-screen-label="Manage Facilities" class="tb-main" style="flex:1; min-height:0; padding:6px 28px 24px; display:grid; grid-template-columns:minmax(300px,360px) minmax(0,1fr); gap:20px; align-items:stretch">
+
+      <section class="tb-pane" style="display:flex; flex-direction:column; min-height:0; background:#fff; border:1px solid #e3ded6; border-radius:14px; box-shadow:0 1px 2px rgba(20,48,51,0.04),0 1px 3px rgba(20,48,51,0.05); overflow:hidden">
+        <div style="padding:15px 16px 13px; border-bottom:1px solid #f0ece4">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px">
+            <div style="display:flex; align-items:center; gap:8px; min-width:0">
+              <h2 style="margin:0; font-size:14px; font-weight:700; color:#14302f; letter-spacing:-0.01em">{{ L.fac_list_title }}</h2>
+              <span style="font-size:11.5px; font-weight:600; color:#028090; background:#e6f2f2; padding:2px 10px; border-radius:999px; font-variant-numeric:tabular-nums; white-space:nowrap">{{ facCountText }}</span>
+            </div>
+            <button onClick="{{ newFacility }}" style="display:inline-flex; align-items:center; gap:5px; border:none; background:#028090; color:#fff; padding:7px 12px; border-radius:9px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; white-space:nowrap; flex:0 0 auto" style-hover="background:#016575"><span style="font-family:'Material Symbols Outlined'; font-size:17px">add</span>{{ L.new_facility }}</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px">
+            <div style="position:relative; flex:1; min-width:0">
+              <span style="position:absolute; left:9px; top:50%; transform:translateY(-50%); font-family:'Material Symbols Outlined'; font-size:18px; color:#a7b0aa; pointer-events:none">search</span>
+              <input value="{{ facSearch }}" onChange="{{ setFacSearch }}" placeholder="{{ L.fac_search_ph }}" style="width:100%; padding:8px 10px 8px 33px; border:1px solid #e3ded6; border-radius:9px; font-size:12.5px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+            </div>
+            <div style="position:relative; flex:0 0 auto">
+              <select value="{{ facFilter }}" onChange="{{ setFacFilter }}" style="appearance:none; -webkit-appearance:none; padding:8px 30px 8px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:12.5px; font-family:inherit; color:#20302e; background:#faf9f6; cursor:pointer; outline:none">
+                <sc-for list="{{ statusOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+              </select>
+              <span style="position:absolute; right:8px; top:50%; transform:translateY(-50%); font-family:'Material Symbols Outlined'; font-size:18px; color:#8a968f; pointer-events:none">expand_more</span>
+            </div>
+            <button onClick="{{ facRefresh }}" title="Refresh" style="flex:0 0 auto; width:35px; height:35px; display:flex; align-items:center; justify-content:center; border:1px solid #e3ded6; border-radius:9px; background:#faf9f6; color:#6d7a76; cursor:pointer" style-hover="background:#f0efe9">
+              <span style="font-family:'Material Symbols Outlined'; font-size:18px; {{ facSpinStyle }}">refresh</span>
+            </button>
+          </div>
+        </div>
+        <div style="flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column">
+          <sc-if value="{{ facErr }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:11px; padding:40px 24px; text-align:center">
+              <div style="width:52px; height:52px; border-radius:14px; background:#fbe7e5; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:26px; color:#b0473b">cloud_off</span></div>
+              <div style="font-size:13.5px; font-weight:700; color:#2c3a37">{{ L.fac_error_title }}</div>
+              <div style="font-size:12px; color:#8a968f; max-width:220px; line-height:1.5">{{ L.fac_error_body }}</div>
+              <button onClick="{{ facRetry }}" style="display:inline-flex; align-items:center; gap:6px; border:none; padding:8px 15px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; color:#fff; background:#028090; cursor:pointer" style-hover="background:#016575"><span style="font-family:'Material Symbols Outlined'; font-size:16px">refresh</span>{{ L.retry }}</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ facLoading }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <sc-for list="{{ rowSkel }}" as="k" hint-placeholder-count="5">
+                <div style="display:flex; align-items:center; gap:12px; padding:13px 15px; border-bottom:1px solid #f4f1ea">
+                  <div style="flex:1; min-width:0">
+                    <div style="width:62%; height:12px; border-radius:6px; background:#eee9df; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                    <div style="width:38%; height:10px; border-radius:5px; background:#f2ede4; margin-top:7px; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                  </div>
+                  <div style="width:54px; height:18px; border-radius:999px; background:#f2ede4; animation:tbpulse 1.2s ease-in-out infinite"></div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ facEmptyData }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:9px; padding:40px 24px; text-align:center">
+              <span style="font-family:'Material Symbols Outlined'; font-size:32px; color:#c7cec9">domain_disabled</span>
+              <div style="font-size:13.5px; font-weight:600; color:#4a5754">{{ L.fac_emptydata_title }}</div>
+              <div style="font-size:12px; color:#8a968f; max-width:220px; line-height:1.5">{{ L.fac_emptydata_body }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ facHasRows }}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{ facRows }}" as="r" hint-placeholder-count="5">
+              <button onClick="{{ r.onSelect }}" style="display:flex; width:100%; text-align:left; gap:10px; padding:12px 15px; border:none; border-bottom:1px solid #f4f1ea; background:{{ r.rowBg }}; box-shadow:{{ r.rowShadow }}; cursor:pointer; font-family:inherit; align-items:center" style-hover="filter:brightness(0.985)">
+                <span style="width:34px; height:34px; border-radius:9px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; background:#eef4f4"><span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#046a78">local_hospital</span></span>
+                <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px">
+                  <span style="font-size:13.5px; font-weight:600; color:#14302f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ r.name }}</span>
+                  <span style="font-size:12px; color:#6d7a76; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ r.muni }}</span>
+                </div>
+                <span style="flex:0 0 auto; font-size:11px; font-weight:600; padding:3px 9px; border-radius:999px; background:{{ r.statusChip.bg }}; color:{{ r.statusChip.fg }}; white-space:nowrap">{{ r.statusChip.label }}</span>
+              </button>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ facNoMatch }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:9px; padding:40px 24px; text-align:center">
+              <span style="font-family:'Material Symbols Outlined'; font-size:32px; color:#c7cec9">search_off</span>
+              <div style="font-size:13.5px; font-weight:600; color:#4a5754">{{ L.fac_empty_title }}</div>
+              <div style="font-size:12px; color:#8a968f; max-width:210px; line-height:1.5">{{ L.fac_empty_body }}</div>
+            </div>
+          </sc-if>
+        </div>
+      </section>
+
+      <section class="tb-pane" style="display:flex; flex-direction:column; min-height:0; background:#fff; border:1px solid #e3ded6; border-radius:14px; box-shadow:0 1px 2px rgba(20,48,51,0.04),0 1px 3px rgba(20,48,51,0.05); overflow:hidden">
+        <div style="flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column">
+          <sc-if value="{{ facHasPanel }}" hint-placeholder-val="{{ true }}">
+            <div style="animation:tbfade 0.22s ease">
+              <div style="padding:18px 20px 16px; border-bottom:1px solid #f0ece4; display:flex; align-items:flex-start; gap:12px">
+                <div style="flex:1; min-width:0">
+                  <div style="font-size:18px; font-weight:700; color:#14302f; letter-spacing:-0.01em">{{ fac.title }}</div>
+                  <div style="font-size:12.5px; color:#6d7a76; margin-top:3px">{{ fac.subline }}</div>
+                </div>
+                <sc-if value="{{ fac.isEdit }}" hint-placeholder-val="{{ true }}">
+                  <span style="flex:0 0 auto; font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; background:{{ fac.statusChip.bg }}; color:{{ fac.statusChip.fg }}">{{ fac.statusChip.label }}</span>
+                </sc-if>
+              </div>
+
+              <div style="padding:16px 20px; display:flex; flex-direction:column; gap:14px">
+                <label style="display:flex; flex-direction:column; gap:6px">
+                  <span style="font-size:11px; font-weight:600; color:#4a5754">{{ L.f_fac_name }}</span>
+                  <input value="{{ fac.name }}" onChange="{{ setFacName }}" style="width:100%; padding:9px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:13px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+                </label>
+                <label style="display:flex; flex-direction:column; gap:6px">
+                  <span style="font-size:11px; font-weight:600; color:#4a5754">{{ L.f_municipality }}</span>
+                  <input value="{{ fac.muni }}" onChange="{{ setFacMuni }}" style="width:100%; padding:9px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:13px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+                </label>
+                <label style="display:flex; flex-direction:column; gap:6px">
+                  <span style="font-size:11px; font-weight:600; color:#4a5754">{{ L.f_email }}</span>
+                  <input type="email" value="{{ fac.email }}" onChange="{{ setFacEmail }}" style="width:100%; padding:9px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:13px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+                </label>
+                <sc-if value="{{ fac.isNew }}" hint-placeholder-val="{{ false }}">
+                  <label style="display:flex; flex-direction:column; gap:6px">
+                    <span style="font-size:11px; font-weight:600; color:#4a5754">{{ L.f_password }}</span>
+                    <div style="position:relative">
+                      <input type="{{ facPwType }}" value="{{ fac.password }}" onChange="{{ setFacPassword }}" style="width:100%; padding:9px 40px 9px 11px; border:1px solid #e3ded6; border-radius:9px; font-size:13px; font-family:inherit; color:#20302e; background:#faf9f6; outline:none" style-focus="border-color:#028090; background:#ffffff" />
+                      <button type="button" onClick="{{ toggleFacPw }}" aria-label="{{ facPwAria }}" style="position:absolute; right:4px; top:50%; transform:translateY(-50%); width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:#8a968f; cursor:pointer; border-radius:7px" style-hover="background:#eef2f1; color:#4a5754"><span style="font-family:'Material Symbols Outlined'; font-size:19px">{{ facPwIcon }}</span></button>
+                    </div>
+                    <span style="font-size:11px; color:#8a968f; line-height:1.5">{{ L.f_password_hint }}</span>
+                  </label>
+                </sc-if>
+
+                <sc-if value="{{ fac.isEdit }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex; gap:10px; flex-wrap:wrap; padding:2px 0 0">
+                    <div style="flex:1; min-width:100px; border:1px solid #efeadf; border-radius:11px; padding:11px 13px; background:#fdfcfa">
+                      <div style="font-size:11px; color:#8a968f">{{ L.ctx_captains }}</div>
+                      <div style="font-size:13px; font-weight:600; color:#2c3a37; margin-top:3px; font-variant-numeric:tabular-nums">{{ fac.captains }}</div>
+                    </div>
+                    <div style="flex:1; min-width:100px; border:1px solid #efeadf; border-radius:11px; padding:11px 13px; background:#fdfcfa">
+                      <div style="font-size:11px; color:#8a968f">{{ L.cov_bhws }}</div>
+                      <div style="font-size:13px; font-weight:600; color:#2c3a37; margin-top:3px; font-variant-numeric:tabular-nums">{{ fac.bhws }}</div>
+                    </div>
+                    <div style="flex:1; min-width:100px; border:1px solid #efeadf; border-radius:11px; padding:11px 13px; background:#fdfcfa">
+                      <div style="font-size:11px; color:#8a968f">{{ L.ctx_open }}</div>
+                      <div style="font-size:13px; font-weight:600; color:#2c3a37; margin-top:3px; font-variant-numeric:tabular-nums">{{ fac.open }}</div>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+
+              <div style="padding:0 20px 18px; display:flex; flex-direction:column; gap:12px">
+                <sc-if value="{{ fac.isNew }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+                    <button onClick="{{ createFacility }}" style="border:none; padding:10px 18px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; color:#fff; background:{{ fac.saveBg }}; opacity:{{ fac.saveOpacity }}; cursor:{{ fac.saveCursor }}">{{ L.btn_create_fac }}</button>
+                    <button onClick="{{ cancelFacility }}" style="border:1px solid #e3ded6; background:#fff; color:#6d7a76; padding:10px 15px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#f5f4f0">{{ L.cancel }}</button>
+                    <span style="font-size:11px; color:#a0a89f; margin-left:auto">{{ L.req_note_fac }}</span>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ fac.isEdit }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+                    <button onClick="{{ saveFacility }}" style="border:none; padding:10px 18px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; color:#fff; background:#028090; cursor:pointer" style-hover="background:#016575">{{ L.btn_save }}</button>
+                    <sc-if value="{{ fac.saved }}" hint-placeholder-val="{{ false }}"><span style="display:flex; align-items:center; gap:5px; font-size:12.5px; font-weight:600; color:#05614f"><span style="font-family:'Material Symbols Outlined'; font-size:17px">check_circle</span>{{ L.saved_flash }}</span></sc-if>
+                  </div>
+                  <sc-if value="{{ fac.showConfirm }}" hint-placeholder-val="{{ false }}">
+                    <div style="border:1px solid #f0c7c1; background:#fdf1ef; border-radius:11px; padding:13px 14px">
+                      <div style="display:flex; align-items:flex-start; gap:9px">
+                        <span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#b0473b; flex:0 0 auto; margin-top:1px">warning</span>
+                        <div style="min-width:0">
+                          <div style="font-size:12.5px; font-weight:700; color:#8a3a32">{{ L.deact_title }}</div>
+                          <p style="margin:4px 0 0; font-size:11.5px; color:#96534c; line-height:1.5">{{ L.deact_body_fac }}</p>
+                        </div>
+                      </div>
+                      <div style="display:flex; gap:8px; margin-top:11px">
+                        <button onClick="{{ confirmDeactivateFacility }}" style="border:none; background:#b0473b; color:#fff; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#953a30">{{ L.confirm_deactivate }}</button>
+                        <button onClick="{{ cancelConfirmFacility }}" style="border:1px solid #e3ded6; background:#fff; color:#6d7a76; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#f5f4f0">{{ L.cancel }}</button>
+                      </div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ fac.showDeactivate }}" hint-placeholder-val="{{ true }}">
+                    <button onClick="{{ askDeactivateFacility }}" style="align-self:flex-start; display:inline-flex; align-items:center; gap:6px; border:1px solid #e7b3ad; background:#fff; color:#96362e; padding:9px 15px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#fbe7e5"><span style="font-family:'Material Symbols Outlined'; font-size:17px">block</span>{{ L.btn_deactivate }}</button>
+                  </sc-if>
+                  <sc-if value="{{ fac.showReactivate }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ reactivateFacility }}" style="align-self:flex-start; display:inline-flex; align-items:center; gap:6px; border:1px solid #a9d7db; background:#eaf6f6; color:#014b57; padding:9px 15px; border-radius:9px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer" style-hover="background:#dcefef"><span style="font-family:'Material Symbols Outlined'; font-size:17px">restart_alt</span>{{ L.btn_reactivate }}</button>
+                  </sc-if>
+                </sc-if>
+              </div>
+
+              <div style="padding:13px 20px; border-top:1px solid #f0ece4; background:#fbfaf7; display:flex; align-items:flex-start; gap:8px">
+                <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#a0a89f; flex:0 0 auto; margin-top:1px">info</span>
+                <p style="margin:0; font-size:11.5px; color:#8a968f; line-height:1.5">{{ L.footer_note_admin }}</p>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ facNoPanel }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:auto; display:flex; flex-direction:column; align-items:center; gap:12px; padding:48px; text-align:center">
+              <div style="width:56px; height:56px; border-radius:14px; background:#eef4f4; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:28px; color:#4f9aa1">domain</span></div>
+              <div style="font-size:15px; font-weight:600; color:#2c3a37">{{ L.fac_select_title }}</div>
+              <div style="font-size:13px; color:#8a968f; max-width:280px; line-height:1.55">{{ L.fac_select_body }}</div>
+            </div>
+          </sc-if>
+        </div>
+      </section>
+
+    </main>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;language&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;en&quot;,&quot;tl&quot;,&quot;ceb&quot;],&quot;default&quot;:&quot;en&quot;,&quot;tsType&quot;:&quot;'en'|'tl'|'ceb'&quot;,&quot;section&quot;:&quot;Display&quot;},
+  &quot;adminView&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dashboard&quot;,&quot;captains&quot;,&quot;facilities&quot;],&quot;default&quot;:&quot;dashboard&quot;,&quot;tsType&quot;:&quot;'dashboard'|'captains'|'facilities'&quot;,&quot;section&quot;:&quot;Display&quot;},
+  &quot;dashboardState&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;idle&quot;,&quot;loading&quot;,&quot;empty&quot;,&quot;error&quot;],&quot;default&quot;:&quot;idle&quot;,&quot;tsType&quot;:&quot;'idle'|'loading'|'empty'|'error'&quot;,&quot;section&quot;:&quot;States&quot;},
+  &quot;captainsState&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;idle&quot;,&quot;loading&quot;,&quot;empty&quot;,&quot;error&quot;],&quot;default&quot;:&quot;idle&quot;,&quot;tsType&quot;:&quot;'idle'|'loading'|'empty'|'error'&quot;,&quot;section&quot;:&quot;States&quot;},
+  &quot;facilitiesState&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;idle&quot;,&quot;loading&quot;,&quot;empty&quot;,&quot;error&quot;],&quot;default&quot;:&quot;idle&quot;,&quot;tsType&quot;:&quot;'idle'|'loading'|'empty'|'error'&quot;,&quot;section&quot;:&quot;States&quot;}
+}">
+class Component extends DCLogic {
+  dict = {
+    en: {
+      brand_admin:"Admin Console", nav_dashboard:"Dashboard", nav_captains:"Captains", nav_facilities:"Facilities",
+      sign_out:"Sign out", role_admin:"System administrator", org_name:"Bukidnon Province", org_sub:"TB-Screen Program",
+      results_word:"results", today_word:"Today", refresh:"Refresh", retry:"Retry", cancel:"Cancel",
+      status_all:"All statuses", st_active:"Active", st_deactivated:"Deactivated", readonly_tag:"Read-only", active_lc:"active",
+      adm_dash_title:"Dashboard", adm_dash_sub:"Program-wide overview",
+      tile_facilities:"Facilities", tile_facilities_sub:"TB-DOTS accounts",
+      tile_captains:"Captains", tile_bhws:"BHWs", tile_bhws_sub:"across all facilities",
+      tile_open:"Open referrals", tile_open_sub:"system-wide",
+      coverage_title:"Facility coverage", coverage_sub:"Captains, BHWs and open referrals per facility",
+      cov_captains:"captains", cov_bhws:"BHWs", cov_open:"open",
+      dash_error_title:"Couldn’t load the dashboard", dash_error_body:"We couldn’t reach the server. Check your connection and try again.",
+      dash_empty_title:"No data yet", dash_empty_body:"Once facilities and captains are added, the program overview appears here.",
+      footer_note_admin:"Accounts are created here; each user sets their own password on first sign-in.",
+      cap_title:"Manage captains", cap_sub:"Barangay captains across all facilities",
+      cap_list_title:"Captains", cap_search_ph:"Search name or barangay", new_captain:"New captain",
+      cap_empty_title:"No captains match", cap_empty_body:"Try clearing the search or status filter.",
+      cap_emptydata_title:"No captains yet", cap_emptydata_body:"Add a captain to start assigning barangays.",
+      cap_error_title:"Couldn’t load captains", cap_error_body:"We couldn’t reach the server. Try again.",
+      cap_select_title:"Select a captain", cap_select_body:"Choose a captain to edit their details, or add a new one.",
+      form_new_captain:"New captain", form_edit_captain:"Edit captain", cap_new_sub:"Create a barangay captain account",
+      f_name:"Full name", f_barangay:"Barangay", f_email:"Email address", f_password:"Initial password",
+      f_password_hint:"The captain is prompted to set their own password on first sign-in.",
+      show_pw:"Show password", hide_pw:"Hide password",
+      btn_create_cap:"Create captain", btn_save:"Save changes", saved_flash:"Saved",
+      btn_deactivate:"Deactivate", btn_reactivate:"Reactivate",
+      ctx_bhws:"BHWs managed", ctx_facility:"Facility",
+      deact_title:"Deactivate this account?", deact_body_cap:"The captain loses access immediately. Their BHWs stay assigned and can be reassigned later.", confirm_deactivate:"Deactivate account",
+      req_note:"Name, barangay and email required.",
+      fac_title:"Manage facilities", fac_sub:"TB-DOTS facilities and their accounts",
+      fac_list_title:"Facilities", fac_search_ph:"Search facility or municipality", new_facility:"New facility",
+      fac_empty_title:"No facilities match", fac_empty_body:"Try clearing the search or status filter.",
+      fac_emptydata_title:"No facilities yet", fac_emptydata_body:"Add a TB-DOTS facility to get started.",
+      fac_error_title:"Couldn’t load facilities", fac_error_body:"We couldn’t reach the server. Try again.",
+      fac_select_title:"Select a facility", fac_select_body:"Choose a facility to edit its record, or add a new one.",
+      form_new_fac:"New facility", form_edit_fac:"Edit facility", fac_new_sub:"Create a TB-DOTS facility account",
+      f_fac_name:"Facility name", f_municipality:"Municipality",
+      btn_create_fac:"Create facility", ctx_captains:"Captains linked", ctx_open:"Open referrals",
+      deact_body_fac:"The facility account loses access immediately. Referral history is retained.",
+      req_note_fac:"Facility name, municipality and email required."
+    },
+    tl: {
+      brand_admin:"Console ng Admin", nav_dashboard:"Dashboard", nav_captains:"Mga Kapitan", nav_facilities:"Mga Pasilidad",
+      sign_out:"Mag-sign out", role_admin:"Administrator ng sistema", org_name:"Lalawigan ng Bukidnon", org_sub:"Programa ng TB-Screen",
+      results_word:"resulta", today_word:"Ngayon", refresh:"I-refresh", retry:"Subukang muli", cancel:"Kanselahin",
+      status_all:"Lahat ng status", st_active:"Aktibo", st_deactivated:"Hindi aktibo", readonly_tag:"Basahin lamang", active_lc:"aktibo",
+      adm_dash_title:"Dashboard", adm_dash_sub:"Pangkalahatang tanaw ng programa",
+      tile_facilities:"Mga pasilidad", tile_facilities_sub:"Mga account ng TB-DOTS",
+      tile_captains:"Mga kapitan", tile_bhws:"Mga BHW", tile_bhws_sub:"sa lahat ng pasilidad",
+      tile_open:"Bukás na referral", tile_open_sub:"buong sistema",
+      coverage_title:"Saklaw ng pasilidad", coverage_sub:"Mga kapitan, BHW, at bukás na referral kada pasilidad",
+      cov_captains:"kapitan", cov_bhws:"BHW", cov_open:"bukás",
+      dash_error_title:"Hindi ma-load ang dashboard", dash_error_body:"Hindi maabot ang server. Suriin ang koneksyon at subukang muli.",
+      dash_empty_title:"Wala pang datos", dash_empty_body:"Kapag naidagdag na ang mga pasilidad at kapitan, lalabas dito ang pangkalahatang tanaw.",
+      footer_note_admin:"Dito ginagawa ang mga account; bawat user ang magtatakda ng sariling password sa unang pag-sign in.",
+      cap_title:"Pamahalaan ang mga kapitan", cap_sub:"Mga kapitan ng barangay sa lahat ng pasilidad",
+      cap_list_title:"Mga kapitan", cap_search_ph:"Maghanap ng pangalan o barangay", new_captain:"Bagong kapitan",
+      cap_empty_title:"Walang tumugmang kapitan", cap_empty_body:"Subukang alisin ang paghahanap o filter ng status.",
+      cap_emptydata_title:"Wala pang kapitan", cap_emptydata_body:"Magdagdag ng kapitan upang makapagtalaga ng barangay.",
+      cap_error_title:"Hindi ma-load ang mga kapitan", cap_error_body:"Hindi maabot ang server. Subukang muli.",
+      cap_select_title:"Pumili ng kapitan", cap_select_body:"Pumili ng kapitan upang i-edit ang detalye, o magdagdag ng bago.",
+      form_new_captain:"Bagong kapitan", form_edit_captain:"I-edit ang kapitan", cap_new_sub:"Gumawa ng account ng kapitan ng barangay",
+      f_name:"Buong pangalan", f_barangay:"Barangay", f_email:"Email address", f_password:"Paunang password",
+      f_password_hint:"Hihilingin sa kapitan na magtakda ng sariling password sa unang pag-sign in.",
+      show_pw:"Ipakita ang password", hide_pw:"Itago ang password",
+      btn_create_cap:"Gumawa ng kapitan", btn_save:"I-save ang pagbabago", saved_flash:"Nai-save",
+      btn_deactivate:"I-deactivate", btn_reactivate:"I-activate muli",
+      ctx_bhws:"Mga BHW na pinamamahalaan", ctx_facility:"Pasilidad",
+      deact_title:"I-deactivate ang account na ito?", deact_body_cap:"Mawawala agad ang access ng kapitan. Mananatiling nakatalaga ang kanilang mga BHW at maaaring italaga muli.", confirm_deactivate:"I-deactivate ang account",
+      req_note:"Kailangan ang pangalan, barangay, at email.",
+      fac_title:"Pamahalaan ang mga pasilidad", fac_sub:"Mga pasilidad ng TB-DOTS at kanilang account",
+      fac_list_title:"Mga pasilidad", fac_search_ph:"Maghanap ng pasilidad o munisipalidad", new_facility:"Bagong pasilidad",
+      fac_empty_title:"Walang tumugmang pasilidad", fac_empty_body:"Subukang alisin ang paghahanap o filter ng status.",
+      fac_emptydata_title:"Wala pang pasilidad", fac_emptydata_body:"Magdagdag ng pasilidad ng TB-DOTS upang magsimula.",
+      fac_error_title:"Hindi ma-load ang mga pasilidad", fac_error_body:"Hindi maabot ang server. Subukang muli.",
+      fac_select_title:"Pumili ng pasilidad", fac_select_body:"Pumili ng pasilidad upang i-edit ang record, o magdagdag ng bago.",
+      form_new_fac:"Bagong pasilidad", form_edit_fac:"I-edit ang pasilidad", fac_new_sub:"Gumawa ng account ng pasilidad ng TB-DOTS",
+      f_fac_name:"Pangalan ng pasilidad", f_municipality:"Munisipalidad",
+      btn_create_fac:"Gumawa ng pasilidad", ctx_captains:"Mga kapitan na naka-link", ctx_open:"Bukás na referral",
+      deact_body_fac:"Mawawala agad ang access ng account ng pasilidad. Nananatili ang kasaysayan ng referral.",
+      req_note_fac:"Kailangan ang pangalan ng pasilidad, munisipalidad, at email."
+    },
+    ceb: {
+      brand_admin:"Console sa Admin", nav_dashboard:"Dashboard", nav_captains:"Mga Kapitan", nav_facilities:"Mga Pasilidad",
+      sign_out:"Mag-sign out", role_admin:"Administrator sa sistema", org_name:"Probinsya sa Bukidnon", org_sub:"Programa sa TB-Screen",
+      results_word:"nga resulta", today_word:"Karon", refresh:"I-refresh", retry:"Sulayi pag-usab", cancel:"Kanselahon",
+      status_all:"Tanang kahimtang", st_active:"Aktibo", st_deactivated:"Dili aktibo", readonly_tag:"Basahon lamang", active_lc:"aktibo",
+      adm_dash_title:"Dashboard", adm_dash_sub:"Kinatibuk-ang panglantaw sa programa",
+      tile_facilities:"Mga pasilidad", tile_facilities_sub:"Mga account sa TB-DOTS",
+      tile_captains:"Mga kapitan", tile_bhws:"Mga BHW", tile_bhws_sub:"sa tanang pasilidad",
+      tile_open:"Abli nga referral", tile_open_sub:"tibuok sistema",
+      coverage_title:"Saklaw sa pasilidad", coverage_sub:"Mga kapitan, BHW, ug abli nga referral kada pasilidad",
+      cov_captains:"kapitan", cov_bhws:"BHW", cov_open:"abli",
+      dash_error_title:"Wala ma-load ang dashboard", dash_error_body:"Wala maabot ang server. Susiha ang koneksyon ug sulayi pag-usab.",
+      dash_empty_title:"Wala pay datos", dash_empty_body:"Kung madugang na ang mga pasilidad ug kapitan, mopakita dinhi ang kinatibuk-ang panglantaw.",
+      footer_note_admin:"Dinhi ginahimo ang mga account; ang matag user mag-set sa kaugalingong password sa unang pag-sign in.",
+      cap_title:"Dumalaha ang mga kapitan", cap_sub:"Mga kapitan sa barangay sa tanang pasilidad",
+      cap_list_title:"Mga kapitan", cap_search_ph:"Pangitaa ang ngalan o barangay", new_captain:"Bag-ong kapitan",
+      cap_empty_title:"Walay kapitan nga nahaom", cap_empty_body:"Sulayi hawaan ang pagpangita o filter sa kahimtang.",
+      cap_emptydata_title:"Wala pay kapitan", cap_emptydata_body:"Pagdugang ug kapitan aron makasugod sa pag-assign ug barangay.",
+      cap_error_title:"Wala ma-load ang mga kapitan", cap_error_body:"Wala maabot ang server. Sulayi pag-usab.",
+      cap_select_title:"Pagpili ug kapitan", cap_select_body:"Pagpili ug kapitan aron i-edit ang detalye, o pagdugang ug bag-o.",
+      form_new_captain:"Bag-ong kapitan", form_edit_captain:"I-edit ang kapitan", cap_new_sub:"Paghimo ug account sa kapitan sa barangay",
+      f_name:"Tibuok ngalan", f_barangay:"Barangay", f_email:"Email address", f_password:"Sinugdang password",
+      f_password_hint:"Hangyoon ang kapitan nga mag-set sa kaugalingong password sa unang pag-sign in.",
+      show_pw:"Ipakita ang password", hide_pw:"Itago ang password",
+      btn_create_cap:"Paghimo ug kapitan", btn_save:"I-save ang kausaban", saved_flash:"Na-save",
+      btn_deactivate:"I-deactivate", btn_reactivate:"I-activate pag-usab",
+      ctx_bhws:"Mga BHW nga gidumala", ctx_facility:"Pasilidad",
+      deact_title:"I-deactivate kini nga account?", deact_body_cap:"Mawad-an dayon ug access ang kapitan. Magpabilin nga naka-assign ang ilang mga BHW ug mahimong i-reassign unya.", confirm_deactivate:"I-deactivate ang account",
+      req_note:"Gikinahanglan ang ngalan, barangay, ug email.",
+      fac_title:"Dumalaha ang mga pasilidad", fac_sub:"Mga pasilidad sa TB-DOTS ug ilang account",
+      fac_list_title:"Mga pasilidad", fac_search_ph:"Pangitaa ang pasilidad o munisipyo", new_facility:"Bag-ong pasilidad",
+      fac_empty_title:"Walay pasilidad nga nahaom", fac_empty_body:"Sulayi hawaan ang pagpangita o filter sa kahimtang.",
+      fac_emptydata_title:"Wala pay pasilidad", fac_emptydata_body:"Pagdugang ug pasilidad sa TB-DOTS aron magsugod.",
+      fac_error_title:"Wala ma-load ang mga pasilidad", fac_error_body:"Wala maabot ang server. Sulayi pag-usab.",
+      fac_select_title:"Pagpili ug pasilidad", fac_select_body:"Pagpili ug pasilidad aron i-edit ang rekord, o pagdugang ug bag-o.",
+      form_new_fac:"Bag-ong pasilidad", form_edit_fac:"I-edit ang pasilidad", fac_new_sub:"Paghimo ug account sa pasilidad sa TB-DOTS",
+      f_fac_name:"Ngalan sa pasilidad", f_municipality:"Munisipyo",
+      btn_create_fac:"Paghimo ug pasilidad", ctx_captains:"Mga kapitan nga naka-link", ctx_open:"Abli nga referral",
+      deact_body_fac:"Mawad-an dayon ug access ang account sa pasilidad. Magpabilin ang kasaysayan sa referral.",
+      req_note_fac:"Gikinahanglan ang ngalan sa pasilidad, munisipyo, ug email."
+    }
+  };
+
+  tileSkel=[1,2,3,4]; covSkel=[1,2,3,4,5]; rowSkel=[1,2,3,4,5,6];
+
+  facilityData=[
+    {id:"f1", name:"Malaybalay City TB-DOTS", muni:"Malaybalay City", active:true, open:14, email:"malaybalay@tbscreen.ph"},
+    {id:"f2", name:"Valencia City TB-DOTS", muni:"Valencia City", active:true, open:6, email:"valencia@tbscreen.ph"},
+    {id:"f3", name:"Maramag RHU TB-DOTS", muni:"Maramag", active:true, open:3, email:"maramag@tbscreen.ph"},
+    {id:"f4", name:"Quezon RHU TB-DOTS", muni:"Quezon", active:false, open:0, email:"quezon@tbscreen.ph"},
+    {id:"f5", name:"Don Carlos RHU TB-DOTS", muni:"Don Carlos", active:true, open:2, email:"doncarlos@tbscreen.ph"}
+  ];
+  captainData=[
+    {id:"c1", name:"Corazon Delgado", barangay:"Casisang", facilityId:"f1", active:true, bhws:6, email:"cdelgado@tbscreen.ph"},
+    {id:"c2", name:"Ramon Solis", barangay:"Sumpong", facilityId:"f1", active:true, bhws:5, email:"rsolis@tbscreen.ph"},
+    {id:"c3", name:"Lourdes Panganiban", barangay:"Bangcud", facilityId:"f1", active:true, bhws:4, email:"lpanganiban@tbscreen.ph"},
+    {id:"c4", name:"Teofilo Aranas", barangay:"Kalasungay", facilityId:"f1", active:true, bhws:5, email:"taranas@tbscreen.ph"},
+    {id:"c5", name:"Perla Montano", barangay:"Aglayan", facilityId:"f1", active:true, bhws:3, email:"pmontano@tbscreen.ph"},
+    {id:"c6", name:"Winston Gable", barangay:"Managok", facilityId:"f1", active:false, bhws:0, email:"wgable@tbscreen.ph"},
+    {id:"c7", name:"Efren Malaya", barangay:"Poblacion", facilityId:"f2", active:true, bhws:5, email:"emalaya@tbscreen.ph"},
+    {id:"c8", name:"Gloria Bantayan", barangay:"Lumbo", facilityId:"f2", active:true, bhws:4, email:"gbantayan@tbscreen.ph"},
+    {id:"c9", name:"Rodrigo Sencil", barangay:"Batangan", facilityId:"f2", active:true, bhws:3, email:"rsencil@tbscreen.ph"},
+    {id:"c10", name:"Adela Ramos", barangay:"North Poblacion", facilityId:"f3", active:true, bhws:4, email:"aramos@tbscreen.ph"},
+    {id:"c11", name:"Salvador Ong", barangay:"Base Camp", facilityId:"f3", active:true, bhws:3, email:"song@tbscreen.ph"},
+    {id:"c12", name:"Nenita Fabros", barangay:"Poblacion Norte", facilityId:"f5", active:true, bhws:4, email:"nfabros@tbscreen.ph"},
+    {id:"c13", name:"Arturo Melchor", barangay:"Sinangguyan", facilityId:"f5", active:true, bhws:3, email:"amelchor@tbscreen.ph"}
+  ];
+
+  state = {
+    lang:"en", view:"dashboard", dash:"idle", capState:"idle", facState:"idle",
+    dashSpin:false, capSpin:false, facSpin:false,
+    captains:this.captainData.map(c=>({...c})),
+    facilities:this.facilityData.map(f=>({...f})),
+    capSearch:"", capFilter:"all", capSelId:"c1", capNew:false, capShowPw:false, capConfirm:false, capSaved:false,
+    capDraft:{name:"Corazon Delgado", barangay:"Casisang", email:"cdelgado@tbscreen.ph", password:""},
+    facSearch:"", facFilter:"all", facSelId:"f1", facNew:false, facShowPw:false, facConfirm:false, facSaved:false,
+    facDraft:{name:"Malaybalay City TB-DOTS", muni:"Malaybalay City", email:"malaybalay@tbscreen.ph", password:""}
+  };
+
+  componentDidMount(){
+    const p=this.props||{}; const u={};
+    if(p.language) u.lang=p.language; if(p.adminView) u.view=p.adminView;
+    if(p.dashboardState) u.dash=p.dashboardState; if(p.captainsState) u.capState=p.captainsState; if(p.facilitiesState) u.facState=p.facilitiesState;
+    if(Object.keys(u).length) this.setState(u);
+    document.title="TB-Screen — Admin";
+  }
+  componentDidUpdate(prev){
+    const p=this.props||{}, q=prev||{};
+    if(p.language&&p.language!==q.language) this.setState({lang:p.language});
+    if(p.adminView&&p.adminView!==q.adminView) this.setState({view:p.adminView});
+    if(p.dashboardState&&p.dashboardState!==q.dashboardState) this.setState({dash:p.dashboardState});
+    if(p.captainsState&&p.captainsState!==q.captainsState) this.setState({capState:p.captainsState});
+    if(p.facilitiesState&&p.facilitiesState!==q.facilitiesState) this.setState({facState:p.facilitiesState});
+  }
+
+  setLang = code => this.setState({lang:code});
+  setView = v => this.setState({view:v});
+  dashRefresh = () => { if(this.state.dash==="loading") return; this.setState({dash:"loading"}); clearTimeout(this._dt); this._dt=setTimeout(()=>this.setState({dash:"idle"}),750); };
+  dashRetry = () => this.dashRefresh();
+  capRefresh = () => { this.setState({capSpin:true}); clearTimeout(this._ct); this._ct=setTimeout(()=>this.setState({capSpin:false}),650); };
+  facRefresh = () => { this.setState({facSpin:true}); clearTimeout(this._ft); this._ft=setTimeout(()=>this.setState({facSpin:false}),650); };
+  capRetry = () => this.setState({capState:"idle"});
+  facRetry = () => this.setState({facState:"idle"});
+
+  stChip(active,L){ return active?{bg:"#dff0ea",fg:"#12735f",label:L.st_active}:{bg:"#eae7df",fg:"#6b6357",label:L.st_deactivated}; }
+
+  setCapSearch = e => this.setState({capSearch:e.target.value});
+  setCapFilter = e => this.setState({capFilter:e.target.value});
+  selectCaptain = id => { const c=this.state.captains.find(x=>x.id===id); if(!c) return; this.setState({capSelId:id, capNew:false, capConfirm:false, capSaved:false, capShowPw:false, capDraft:{name:c.name, barangay:c.barangay, email:c.email, password:""}}); };
+  newCaptain = () => this.setState({capNew:true, capSelId:null, capConfirm:false, capShowPw:false, capSaved:false, capDraft:{name:"", barangay:"", email:"", password:""}});
+  cancelCaptain = () => { const first=this.state.captains[0]; if(first){ this.selectCaptain(first.id); } else { this.setState({capNew:false}); } };
+  setCapField = (k,v) => this.setState(s=>({capDraft:{...s.capDraft,[k]:v}}));
+  setCapName = e => this.setCapField("name",e.target.value);
+  setCapBarangay = e => this.setCapField("barangay",e.target.value);
+  setCapEmail = e => this.setCapField("email",e.target.value);
+  setCapPassword = e => this.setCapField("password",e.target.value);
+  toggleCapPw = () => this.setState(s=>({capShowPw:!s.capShowPw}));
+  capValid(){ const d=this.state.capDraft; return d.name.trim()&&d.barangay.trim()&&d.email.trim(); }
+  createCaptain = () => { if(!this.capValid()) return; const d=this.state.capDraft; const id="c"+Date.now(); const nc={id, name:d.name.trim(), barangay:d.barangay.trim(), email:d.email.trim(), facilityId:null, active:true, bhws:0}; this.setState(s=>({captains:[nc,...s.captains], capNew:false, capSelId:id, capShowPw:false, capDraft:{name:nc.name,barangay:nc.barangay,email:nc.email,password:""}, capSaved:true})); clearTimeout(this._cf); this._cf=setTimeout(()=>this.setState({capSaved:false}),1600); };
+  saveCaptain = () => { const d=this.state.capDraft, id=this.state.capSelId; this.setState(s=>({captains:s.captains.map(c=>c.id===id?{...c,name:d.name.trim()||c.name,barangay:d.barangay.trim()||c.barangay,email:d.email.trim()||c.email}:c), capSaved:true})); clearTimeout(this._cf); this._cf=setTimeout(()=>this.setState({capSaved:false}),1600); };
+  askDeactivateCaptain = () => this.setState({capConfirm:true});
+  cancelConfirmCaptain = () => this.setState({capConfirm:false});
+  confirmDeactivateCaptain = () => { const id=this.state.capSelId; this.setState(s=>({captains:s.captains.map(c=>c.id===id?{...c,active:false}:c), capConfirm:false})); };
+  reactivateCaptain = () => { const id=this.state.capSelId; this.setState(s=>({captains:s.captains.map(c=>c.id===id?{...c,active:true}:c)})); };
+
+  setFacSearch = e => this.setState({facSearch:e.target.value});
+  setFacFilter = e => this.setState({facFilter:e.target.value});
+  selectFacility = id => { const f=this.state.facilities.find(x=>x.id===id); if(!f) return; this.setState({facSelId:id, facNew:false, facConfirm:false, facSaved:false, facShowPw:false, facDraft:{name:f.name, muni:f.muni, email:f.email, password:""}}); };
+  newFacility = () => this.setState({facNew:true, facSelId:null, facConfirm:false, facShowPw:false, facSaved:false, facDraft:{name:"", muni:"", email:"", password:""}});
+  cancelFacility = () => { const first=this.state.facilities[0]; if(first){ this.selectFacility(first.id); } else { this.setState({facNew:false}); } };
+  setFacField = (k,v) => this.setState(s=>({facDraft:{...s.facDraft,[k]:v}}));
+  setFacName = e => this.setFacField("name",e.target.value);
+  setFacMuni = e => this.setFacField("muni",e.target.value);
+  setFacEmail = e => this.setFacField("email",e.target.value);
+  setFacPassword = e => this.setFacField("password",e.target.value);
+  toggleFacPw = () => this.setState(s=>({facShowPw:!s.facShowPw}));
+  facValid(){ const d=this.state.facDraft; return d.name.trim()&&d.muni.trim()&&d.email.trim(); }
+  createFacility = () => { if(!this.facValid()) return; const d=this.state.facDraft; const id="f"+Date.now(); const nf={id, name:d.name.trim(), muni:d.muni.trim(), email:d.email.trim(), active:true, open:0}; this.setState(s=>({facilities:[nf,...s.facilities], facNew:false, facSelId:id, facShowPw:false, facDraft:{name:nf.name,muni:nf.muni,email:nf.email,password:""}, facSaved:true})); clearTimeout(this._ff2); this._ff2=setTimeout(()=>this.setState({facSaved:false}),1600); };
+  saveFacility = () => { const d=this.state.facDraft, id=this.state.facSelId; this.setState(s=>({facilities:s.facilities.map(f=>f.id===id?{...f,name:d.name.trim()||f.name,muni:d.muni.trim()||f.muni,email:d.email.trim()||f.email}:f), facSaved:true})); clearTimeout(this._ff2); this._ff2=setTimeout(()=>this.setState({facSaved:false}),1600); };
+  askDeactivateFacility = () => this.setState({facConfirm:true});
+  cancelConfirmFacility = () => this.setState({facConfirm:false});
+  confirmDeactivateFacility = () => { const id=this.state.facSelId; this.setState(s=>({facilities:s.facilities.map(f=>f.id===id?{...f,active:false}:f), facConfirm:false})); };
+  reactivateFacility = () => { const id=this.state.facSelId; this.setState(s=>({facilities:s.facilities.map(f=>f.id===id?{...f,active:true}:f)})); };
+
+  renderVals(){
+    const s=this.state, lang=s.lang, L=this.dict[lang]||this.dict.en;
+
+    const navDefs=[["dashboard","space_dashboard",L.nav_dashboard],["captains","supervisor_account",L.nav_captains],["facilities","domain",L.nav_facilities]];
+    const navItems=navDefs.map(([key,icon,label])=>{const on=s.view===key; return {icon,label,onClick:()=>this.setView(key),bg:on?"rgba(255,255,255,0.10)":"transparent",color:on?"#ffffff":"rgba(255,255,255,0.72)",weight:on?"600":"500",shadow:on?"inset 3px 0 0 #00a896":"inset 3px 0 0 transparent",iconColor:on?"#5fd0c4":"rgba(255,255,255,0.72)"};});
+    const langButtons=[["en","EN"],["tl","TL"],["ceb","CEB"]].map(([code,label])=>({label,onClick:()=>this.setLang(code),bg:lang===code?"#0B2E33":"transparent",fg:lang===code?"#ffffff":"#6d7a76"}));
+    let headerTitle=L.adm_dash_title, headerSub=L.adm_dash_sub;
+    if(s.view==="captains"){ headerTitle=L.cap_title; headerSub=L.cap_sub; }
+    else if(s.view==="facilities"){ headerTitle=L.fac_title; headerSub=L.fac_sub; }
+    const statusOptions=[["all",L.status_all],["active",L.st_active],["deactivated",L.st_deactivated]].map(([value,label])=>({value,label}));
+
+    const dashEmptyState=s.dash==="empty";
+    const facTotal=s.facilities.length, facActive=s.facilities.filter(f=>f.active).length;
+    const capTotal=s.captains.length, capActive=s.captains.filter(c=>c.active).length;
+    const bhwTotal=s.captains.reduce((n,c)=>n+(c.bhws||0),0);
+    const openTotal=s.facilities.reduce((n,f)=>n+(f.open||0),0);
+    const nz=v=>dashEmptyState?0:v;
+    const tiles=[
+      {value:nz(facTotal),label:L.tile_facilities,sub:dashEmptyState?L.tile_facilities_sub:(facActive+" "+L.active_lc),icon:"domain",iconBg:"#e6f2f2",iconColor:"#028090",valueColor:"#028090"},
+      {value:nz(capTotal),label:L.tile_captains,sub:dashEmptyState?L.tile_facilities_sub:(capActive+" "+L.active_lc),icon:"supervisor_account",iconBg:"#eef4f4",iconColor:"#046a78",valueColor:"#14302f"},
+      {value:nz(bhwTotal),label:L.tile_bhws,sub:L.tile_bhws_sub,icon:"groups",iconBg:"#dff0ea",iconColor:"#17876e",valueColor:"#12735f"},
+      {value:nz(openTotal),label:L.tile_open,sub:L.tile_open_sub,icon:"move_to_inbox",iconBg:"#f7ecd8",iconColor:"#8a5e00",valueColor:"#8a5e00"}
+    ];
+    const coverage=s.facilities.map(f=>{ const caps=s.captains.filter(c=>c.facilityId===f.id); const capN=caps.length; const bhwN=caps.reduce((n,c)=>n+(c.bhws||0),0); return {name:f.name, muni:f.muni, statusChip:this.stChip(f.active,L), captains:capN, bhws:bhwN, open:f.open, openColor:f.open>0?"#a5382f":"#14302f"}; });
+    const dashCardTitle=L.today_word+" · 22 Jul 2026";
+
+    const capTerm=s.capSearch.trim().toLowerCase();
+    const capMatch=c=> !capTerm || [c.name,c.barangay,c.email].some(x=>(x||"").toLowerCase().includes(capTerm));
+    const capStatusMatch=c=> s.capFilter==="all"?true : s.capFilter==="active"?c.active===true : c.active===false;
+    const capList=s.captains.filter(c=>capMatch(c)&&capStatusMatch(c));
+    const capRows=capList.map(c=>{ const isSel=c.id===s.capSelId&&!s.capNew; return {name:c.name, barangay:c.barangay, statusChip:this.stChip(c.active,L), rowBg:isSel?"#eef7f7":"#ffffff", rowShadow:isSel?"inset 3px 0 0 #028090":"inset 3px 0 0 transparent", onSelect:()=>this.selectCaptain(c.id)}; });
+    const capSel=s.captains.find(c=>c.id===s.capSelId)||null;
+    const capIsNew=s.capNew, capIsEdit=!s.capNew&&!!capSel;
+    const capFacName=capSel&&capSel.facilityId ? (s.facilities.find(f=>f.id===capSel.facilityId)||{}).name||"—" : "—";
+    const capV=this.capValid();
+    const cap={
+      isNew:capIsNew, isEdit:capIsEdit,
+      title: capIsNew?L.form_new_captain:(capSel?capSel.name:""),
+      subline: capIsNew?L.cap_new_sub:(capSel?capSel.email:""),
+      name:s.capDraft.name, barangay:s.capDraft.barangay, email:s.capDraft.email, password:s.capDraft.password,
+      statusChip: capSel?this.stChip(capSel.active,L):this.stChip(true,L),
+      facility:capFacName, bhws:capSel?capSel.bhws:0,
+      saveBg:capV?"#028090":"#9cc3c8", saveOpacity:capV?"1":"0.65", saveCursor:capV?"pointer":"default",
+      saved:s.capSaved, showConfirm:s.capConfirm,
+      showDeactivate: capIsEdit && capSel && capSel.active && !s.capConfirm,
+      showReactivate: capIsEdit && capSel && !capSel.active
+    };
+
+    const facTerm=s.facSearch.trim().toLowerCase();
+    const facMatch=f=> !facTerm || [f.name,f.muni,f.email].some(x=>(x||"").toLowerCase().includes(facTerm));
+    const facStatusMatch=f=> s.facFilter==="all"?true : s.facFilter==="active"?f.active===true : f.active===false;
+    const facList=s.facilities.filter(f=>facMatch(f)&&facStatusMatch(f));
+    const facRows=facList.map(f=>{ const isSel=f.id===s.facSelId&&!s.facNew; return {name:f.name, muni:f.muni, statusChip:this.stChip(f.active,L), rowBg:isSel?"#eef7f7":"#ffffff", rowShadow:isSel?"inset 3px 0 0 #028090":"inset 3px 0 0 transparent", onSelect:()=>this.selectFacility(f.id)}; });
+    const facSel=s.facilities.find(f=>f.id===s.facSelId)||null;
+    const facIsNew=s.facNew, facIsEdit=!s.facNew&&!!facSel;
+    const facCapN=facSel?s.captains.filter(c=>c.facilityId===facSel.id).length:0;
+    const facBhwN=facSel?s.captains.filter(c=>c.facilityId===facSel.id).reduce((n,c)=>n+(c.bhws||0),0):0;
+    const facV=this.facValid();
+    const fac={
+      isNew:facIsNew, isEdit:facIsEdit,
+      title: facIsNew?L.form_new_fac:(facSel?facSel.name:""),
+      subline: facIsNew?L.fac_new_sub:(facSel?facSel.email:""),
+      name:s.facDraft.name, muni:s.facDraft.muni, email:s.facDraft.email, password:s.facDraft.password,
+      statusChip: facSel?this.stChip(facSel.active,L):this.stChip(true,L),
+      captains:facCapN, bhws:facBhwN, open:facSel?facSel.open:0,
+      saveBg:facV?"#028090":"#9cc3c8", saveOpacity:facV?"1":"0.65", saveCursor:facV?"pointer":"default",
+      saved:s.facSaved, showConfirm:s.facConfirm,
+      showDeactivate: facIsEdit && facSel && facSel.active && !s.facConfirm,
+      showReactivate: facIsEdit && facSel && !facSel.active
+    };
+
+    return {
+      L, navItems, langButtons, headerTitle, headerSub, statusOptions,
+      isDashboard:s.view==="dashboard", isCaptains:s.view==="captains", isFacilities:s.view==="facilities",
+      dashError:s.dash==="error", dashOk:s.dash!=="error", dashLoading:s.dash==="loading",
+      dashTiles:(s.dash==="idle"||s.dash==="empty"), dashList:s.dash==="idle", dashEmpty:s.dash==="empty",
+      dashRefresh:this.dashRefresh, dashRetry:this.dashRetry, dashSpinStyle:s.dash==="loading"?"animation:tbspin 0.65s linear":"",
+      dashCardTitle, tiles, coverage, tileSkel:this.tileSkel, covSkel:this.covSkel, rowSkel:this.rowSkel,
+
+      capSearch:s.capSearch, setCapSearch:this.setCapSearch, capFilter:s.capFilter, setCapFilter:this.setCapFilter,
+      capRefresh:this.capRefresh, capSpinStyle:s.capSpin?"animation:tbspin 0.65s linear":"", capRetry:this.capRetry,
+      newCaptain:this.newCaptain, capCountText:capList.length+" "+L.results_word,
+      capErr:s.capState==="error", capLoading:s.capState==="loading", capEmptyData:s.capState==="empty",
+      capHasRows:s.capState==="idle"&&capRows.length>0, capNoMatch:s.capState==="idle"&&capRows.length===0,
+      capRows, cap, capHasPanel: capIsNew||capIsEdit, capNoPanel: !capIsNew&&!capIsEdit,
+      setCapName:this.setCapName, setCapBarangay:this.setCapBarangay, setCapEmail:this.setCapEmail, setCapPassword:this.setCapPassword,
+      capPwType:s.capShowPw?"text":"password", capPwIcon:s.capShowPw?"visibility_off":"visibility", capPwAria:s.capShowPw?L.hide_pw:L.show_pw, toggleCapPw:this.toggleCapPw,
+      createCaptain:this.createCaptain, cancelCaptain:this.cancelCaptain, saveCaptain:this.saveCaptain,
+      askDeactivateCaptain:this.askDeactivateCaptain, confirmDeactivateCaptain:this.confirmDeactivateCaptain, cancelConfirmCaptain:this.cancelConfirmCaptain, reactivateCaptain:this.reactivateCaptain,
+
+      facSearch:s.facSearch, setFacSearch:this.setFacSearch, facFilter:s.facFilter, setFacFilter:this.setFacFilter,
+      facRefresh:this.facRefresh, facSpinStyle:s.facSpin?"animation:tbspin 0.65s linear":"", facRetry:this.facRetry,
+      newFacility:this.newFacility, facCountText:facList.length+" "+L.results_word,
+      facErr:s.facState==="error", facLoading:s.facState==="loading", facEmptyData:s.facState==="empty",
+      facHasRows:s.facState==="idle"&&facRows.length>0, facNoMatch:s.facState==="idle"&&facRows.length===0,
+      facRows, fac, facHasPanel: facIsNew||facIsEdit, facNoPanel: !facIsNew&&!facIsEdit,
+      setFacName:this.setFacName, setFacMuni:this.setFacMuni, setFacEmail:this.setFacEmail, setFacPassword:this.setFacPassword,
+      facPwType:s.facShowPw?"text":"password", facPwIcon:s.facShowPw?"visibility_off":"visibility", facPwAria:s.facShowPw?L.hide_pw:L.show_pw, toggleFacPw:this.toggleFacPw,
+      createFacility:this.createFacility, cancelFacility:this.cancelFacility, saveFacility:this.saveFacility,
+      askDeactivateFacility:this.askDeactivateFacility, confirmDeactivateFacility:this.confirmDeactivateFacility, cancelConfirmFacility:this.cancelConfirmFacility, reactivateFacility:this.reactivateFacility
+    };
+  }
+}
+</script>
+</body>
+</html>
