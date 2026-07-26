@@ -30,6 +30,10 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
   const [resultText, setResultText] = useState('');
   const [outcome, setOutcome] = useState<'positive' | 'negative' | null>(null);
   const [busy, setBusy] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduling, setScheduling] = useState(false);
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -114,6 +118,32 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
   const s = referral.screenings;
   const flags = s.symptom_flags;
   const status = referral.status;
+
+  // Reopen restores the last meaningful stage: tested if an outcome was recorded,
+  // otherwise received (the referral had to be received to be worked and closed).
+  const reopenStatus: 'tested' | 'received' = referral.result_outcome ? 'tested' : 'received';
+  const patientId = referral.patient_id;
+  const minScheduleDate = toDateOnly(new Date(Date.now() + 86_400_000)); // tomorrow (future only)
+
+  // Schedule a follow-up check-up (RLS: appointments_tbdots_insert, migration 0011 —
+  // staff may insert only for a patient referred to their own facility).
+  const scheduleCheckup = async () => {
+    if (!scheduleDate) return;
+    setScheduling(true);
+    setScheduleError(null);
+    const { error: err } = await supabase
+      .from('appointments')
+      .insert({ patient_id: patientId, scheduled_date: scheduleDate });
+    if (err) {
+      setScheduleError(err.message);
+      setScheduling(false);
+      return;
+    }
+    setScheduling(false);
+    setScheduleOpen(false);
+    setScheduleDate('');
+    await load();
+  };
 
   return (
     <div className="rdetail">
@@ -344,6 +374,13 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
                 </span>
                 {t('detail.closedTag')}
               </span>
+              <button
+                className="reopen-btn"
+                disabled={busy}
+                onClick={() => void updateReferral({ status: reopenStatus })}
+              >
+                {t('detail.reopen')}
+              </button>
             </div>
           )}
         </div>
@@ -356,7 +393,81 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
             calendar_month
           </span>
           <h3>{t('detail.appointmentsSection')}</h3>
+          <button
+            className="appt-schedbtn"
+            onClick={() => {
+              setScheduleError(null);
+              setScheduleOpen((o) => !o);
+            }}
+          >
+            <span className="msym" aria-hidden="true">
+              add
+            </span>
+            {t('detail.scheduleBtn')}
+          </button>
         </div>
+
+        {scheduleOpen ? (
+          <div className="sched-form">
+            <div className="sched-row">
+              <label className="sched-field">
+                <span>{t('detail.scheduleDateLabel')}</span>
+                <input
+                  type="date"
+                  min={minScheduleDate}
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                />
+              </label>
+              <div className="sched-actions">
+                <button
+                  className="sched-confirm"
+                  disabled={scheduling || !scheduleDate}
+                  onClick={() => void scheduleCheckup()}
+                >
+                  {scheduling ? (
+                    <>
+                      <span className="msym" aria-hidden="true">
+                        progress_activity
+                      </span>
+                      {t('detail.scheduling')}
+                    </>
+                  ) : (
+                    t('detail.scheduleConfirm')
+                  )}
+                </button>
+                <button
+                  className="sched-cancel"
+                  disabled={scheduling}
+                  onClick={() => {
+                    setScheduleOpen(false);
+                    setScheduleError(null);
+                  }}
+                >
+                  {t('detail.cancel')}
+                </button>
+              </div>
+            </div>
+            <div className="sched-hint">
+              <span className="msym" aria-hidden="true">
+                event_upcoming
+              </span>
+              {t('detail.dateFutureHint')}
+            </div>
+            {scheduleError ? (
+              <div className="sched-error">
+                <span className="msym" aria-hidden="true">
+                  error
+                </span>
+                <span className="se-msg">{t('detail.scheduleError')}</span>
+                <button className="se-retry" onClick={() => void scheduleCheckup()}>
+                  {t('detail.retry')}
+                </button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
         {appointments.length === 0 ? (
           <div className="appt-empty">
             <span className="msym" aria-hidden="true">

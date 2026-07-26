@@ -267,6 +267,15 @@ export const ceb: Translation = {
     selectTitle: 'Pagpili ug referral',
     selectBody:
       'Pagpili ug pasyente gikan sa sudlanan aron makita ang ilang screening ug irekord ang mga resulta.',
+    reopen: 'Ablihi pag-usab ang referral',
+    scheduleBtn: 'Mag-iskedyul ug check-up',
+    scheduleDateLabel: 'Petsa sa check-up',
+    scheduleConfirm: 'I-iskedyul',
+    cancel: 'Kanselahon',
+    scheduling: 'Gi-iskedyul…',
+    scheduleError: 'Wala ma-save ang check-up. Palihug sulayi pag-usab.',
+    dateFutureHint: 'Umaabot nga petsa lamang',
+    retry: 'Sulayi pag-usab',
   },
   address: {
     region: 'Rehiyon',

@@ -266,6 +266,15 @@ export const en = {
     selectTitle: 'Select a referral',
     selectBody:
       'Choose a patient from the inbox to view their screening and record outcomes.',
+    reopen: 'Reopen referral',
+    scheduleBtn: 'Schedule check-up',
+    scheduleDateLabel: 'Check-up date',
+    scheduleConfirm: 'Schedule',
+    cancel: 'Cancel',
+    scheduling: 'Scheduling…',
+    scheduleError: 'Couldn’t save the check-up. Please try again.',
+    dateFutureHint: 'Future dates only',
+    retry: 'Retry',
   },
   address: {
     region: 'Region',

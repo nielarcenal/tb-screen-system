@@ -267,6 +267,15 @@ export const tl: Translation = {
     selectTitle: 'Pumili ng referral',
     selectBody:
       'Pumili ng pasyente mula sa kahon upang makita ang kanilang screening at itala ang mga resulta.',
+    reopen: 'Buksang muli ang referral',
+    scheduleBtn: 'Mag-iskedyul ng check-up',
+    scheduleDateLabel: 'Petsa ng check-up',
+    scheduleConfirm: 'I-iskedyul',
+    cancel: 'Kanselahin',
+    scheduling: 'Ini-iskedyul…',
+    scheduleError: 'Hindi na-save ang check-up. Pakisubukang muli.',
+    dateFutureHint: 'Mga darating na petsa lamang',
+    retry: 'Subukang muli',
   },
   address: {
     region: 'Rehiyon',
