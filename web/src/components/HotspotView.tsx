@@ -1,13 +1,13 @@
 /**
- * Barangay Hotspot View (design 1b): ranked presumptive-case counts by
- * barangay with "Last 30 / 60 / 90 days" range pills, from the
- * hotspot_counts() SECURITY DEFINER function (counts only — the portal never
- * sees the rows behind them). Bar color by rank: 1 deep teal, 2–3 seafoam,
- * the rest light teal.
+ * Barangay Hotspot View (redesign §4): ranked presumptive-case counts by
+ * barangay with Last 30 / 60 / 90 day range pills, from the hotspot_counts()
+ * SECURITY DEFINER function (counts only — the portal never sees the rows
+ * behind them). Bar colour by rank: 1 teal, 2–3 seafoam, the rest light teal.
  *
- * SURVEILLANCE, NOT CONTACT TRACING: no household/sitio/per-patient drill-down
- * exists here by design. The bar is just the count relative to the period's
- * maximum.
+ * SURVEILLANCE, NOT CONTACT TRACING (§1): no household/sitio/per-patient
+ * drill-down exists here by design. The bar is just the count relative to the
+ * period's maximum. All four states: loading (skeleton rows), error
+ * (retryable), empty, and the ranked list.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -54,54 +54,103 @@ export default function HotspotView() {
     i === 0 ? 'var(--teal)' : i < 3 ? 'var(--seafoam)' : 'var(--teal-border)';
 
   return (
-    <div className="card">
-      <h2>{t('hotspot.title')}</h2>
-      <p className="mutedline">{t('hotspot.intro')}</p>
-
-      <div className="pillrow">
-        {RANGES.map((r) => (
-          <button
-            key={r}
-            className={days === r ? '' : 'secondary'}
-            onClick={() => setDays(r)}
-          >
-            {t('hotspot.rangeLast', { days: r })}
-          </button>
-        ))}
+    <div className="dcard">
+      <div className="hs-head">
+        <p className="hs-intro">{t('hotspot.intro')}</p>
+        <div className="range-pills">
+          {RANGES.map((r) => (
+            <button
+              key={r}
+              className={days === r ? 'active' : ''}
+              aria-pressed={days === r}
+              onClick={() => setDays(r)}
+            >
+              {t('hotspot.rangeLast', { days: r })}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {error ? <p className="error">{t('hotspot.loadError', { message: error })}</p> : null}
-      {loading ? (
-        <p>{t('common.loading')}</p>
-      ) : rows.length === 0 ? (
-        <p className="mutedline">{t('hotspot.empty')}</p>
-      ) : (
-        <div className="hotlist">
-          {rows.map((r, i) => (
-            <div key={r.barangay_code} className="hotrow">
-              <span className="rank">{String(i + 1).padStart(2, '0')}</span>
-              <span className="name">
-                {r.barangay_name}
-                <div className="city">{r.city_name}</div>
+      {error ? (
+        <div className="dstate">
+          <div className="badge">
+            <span className="msym" aria-hidden="true">
+              cloud_off
+            </span>
+          </div>
+          <div className="st-title">{t('hotspot.errorTitle')}</div>
+          <div className="st-body">{t('hotspot.errorBody')}</div>
+          <button className="retry" onClick={() => void load(days)}>
+            <span className="msym" aria-hidden="true">
+              refresh
+            </span>
+            {t('hotspot.retry')}
+          </button>
+        </div>
+      ) : loading ? (
+        <div className="hs-list" aria-busy="true">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="hs-row skel" aria-hidden="true">
+              <span className="hs-rank">
+                <span className="b rk" />
               </span>
-              <span className="track">
-                <span
-                  className="heatbar"
-                  style={{
-                    display: 'block',
-                    width: max ? `${(r.presumptive_count / max) * 100}%` : 0,
-                    background: barColor(i),
-                  }}
-                />
-              </span>
-              <span className="count">{r.presumptive_count}</span>
+              <div className="hs-main">
+                <div className="hs-toprow">
+                  <span className="b nm" />
+                  <span className="b ct" />
+                </div>
+                <div className="b tr" />
+              </div>
             </div>
           ))}
-          <p className="mutedline" style={{ borderTop: '1px solid #f0ede7', paddingTop: 10, margin: 0 }}>
-            {t('hotspot.countsNote')}
-          </p>
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="dstate ok">
+          <div className="badge">
+            <span className="msym" aria-hidden="true">
+              bar_chart
+            </span>
+          </div>
+          <div className="st-title">{t('hotspot.empty')}</div>
+          <div className="st-body">{t('hotspot.emptyBody')}</div>
+        </div>
+      ) : (
+        <div className="hs-list">
+          {rows.map((r, i) => (
+            <div key={r.barangay_code} className="hs-row">
+              <span className="hs-rank">{String(i + 1).padStart(2, '0')}</span>
+              <div className="hs-main">
+                <div className="hs-toprow">
+                  <div style={{ minWidth: 0 }}>
+                    <div className="hs-b">{r.barangay_name}</div>
+                    <div className="hs-muni">{r.city_name}</div>
+                  </div>
+                  <div className="hs-countwrap">
+                    <span className="hs-count">{r.presumptive_count}</span>
+                    <span className="hs-unit">{t('hotspot.unit')}</span>
+                  </div>
+                </div>
+                <div className="hs-track">
+                  <div
+                    className="hs-fill"
+                    style={{
+                      width: max ? `${(r.presumptive_count / max) * 100}%` : '0%',
+                      background: barColor(i),
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
+
+      <div className="dcard-foot">
+        <span className="msym" aria-hidden="true">
+          info
+        </span>
+        <p>{t('hotspot.countsNote')}</p>
+      </div>
     </div>
   );
 }

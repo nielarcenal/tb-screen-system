@@ -1174,3 +1174,60 @@ button.amber:hover { background: var(--amber-container); }
 .rd-empty .badge .msym.spin { animation: tbspin 0.8s linear infinite; }
 .rd-empty.err .badge { background: var(--red-container); }
 .rd-empty.err .badge .msym { color: #b0473b; }
+
+/* ---------- barangay hotspots + four states (§4) ---------- */
+/* teal "ok" variant of the shared card state (empty, non-error) */
+.dstate.ok .badge { background: #eef4f4; }
+.dstate.ok .badge .msym { color: #4f9aa1; }
+
+.hs-head { padding: 15px 18px; border-bottom: 1px solid #f0ece4; }
+.hs-intro { margin: 0 0 12px; font-size: 12.5px; color: #6d7a76; line-height: 1.5; max-width: 640px; }
+.range-pills { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.range-pills button {
+  margin: 0;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #fff;
+  color: #4a5754;
+  border: 1px solid var(--line);
+}
+.range-pills button:hover { background: var(--subtle); }
+.range-pills button.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.range-pills button.active:hover { background: var(--navy); }
+
+.hs-list { padding: 6px 18px 10px; }
+.hs-row { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid #f4f1ea; }
+.hs-row:last-child { border-bottom: none; }
+.hs-rank {
+  flex: 0 0 auto;
+  width: 22px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #b3bbb4;
+  font-variant-numeric: tabular-nums;
+}
+.hs-main { flex: 1; min-width: 0; }
+.hs-toprow { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.hs-b {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #14302f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hs-muni { font-size: 11px; color: #9aa39c; margin-top: 1px; }
+.hs-countwrap { flex: 0 0 auto; display: flex; align-items: baseline; gap: 5px; }
+.hs-count { font-size: 16px; font-weight: 700; color: #14302f; font-variant-numeric: tabular-nums; }
+.hs-unit { font-size: 11px; color: #9aa39c; }
+.hs-track { margin-top: 8px; height: 8px; border-radius: 999px; background: #f0ece4; overflow: hidden; }
+.hs-fill { height: 100%; border-radius: 999px; }
+
+/* loading skeleton rows */
+.hs-row.skel .b { display: block; background: #eee9df; border-radius: 5px; animation: tbpulse 1.2s ease-in-out infinite; }
+.hs-row.skel .b.rk { width: 22px; height: 13px; border-radius: 4px; }
+.hs-row.skel .b.nm { width: 130px; height: 12px; }
+.hs-row.skel .b.ct { width: 46px; height: 12px; }
+.hs-row.skel .b.tr { margin-top: 10px; height: 8px; border-radius: 999px; width: 60%; background: #efeae0; }

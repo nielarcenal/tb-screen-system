@@ -156,6 +156,11 @@ export const tl: Translation = {
     colCount: 'Mga presumptive case',
     empty: 'Walang presumptive case sa panahong ito.',
     loadError: 'Hindi ma-load ang mga bilang: {{message}}',
+    errorTitle: 'Hindi ma-load ang mga hotspot',
+    errorBody: 'Hindi maabot ang server. Suriin ang koneksyon at subukang muli.',
+    emptyBody: 'Walang barangay na na-flag para sa referral sa panahong ito. Subukan ang mas mahabang saklaw.',
+    unit: 'kaso',
+    retry: 'Subukan muli',
   },
   login: {
     title: 'Pag-sign in ng TB-DOTS staff',

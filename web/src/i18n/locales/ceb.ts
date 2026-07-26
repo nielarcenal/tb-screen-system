@@ -156,6 +156,11 @@ export const ceb: Translation = {
     colCount: 'Mga presumptive case',
     empty: 'Walay presumptive case sulod niini nga panahon.',
     loadError: 'Dili ma-load ang mga ihap: {{message}}',
+    errorTitle: 'Wala ma-load ang mga hotspot',
+    errorBody: 'Wala maabot ang server. Susiha ang koneksyon ug sulayi pag-usab.',
+    emptyBody: 'Walay barangay nga na-flag alang sa referral niini nga panahon. Sulayi ang mas taas nga range.',
+    unit: 'kaso',
+    retry: 'Sulayi pag-usab',
   },
   login: {
     title: 'Pag-sign in sa TB-DOTS staff',

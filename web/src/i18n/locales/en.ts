@@ -155,6 +155,11 @@ export const en = {
     colCount: 'Presumptive cases',
     empty: 'No presumptive cases in this period.',
     loadError: 'Could not load counts: {{message}}',
+    errorTitle: 'Couldn’t load hotspots',
+    errorBody: 'We couldn’t reach the server. Check your connection and try again.',
+    emptyBody: 'No barangay has been flagged for referral in this period. Try a longer range.',
+    unit: 'cases',
+    retry: 'Retry',
   },
   login: {
     title: 'TB-DOTS staff sign-in',
