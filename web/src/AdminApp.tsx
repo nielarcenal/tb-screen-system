@@ -15,11 +15,12 @@ import { supabase } from './lib/supabase';
 import { PortalUser } from './lib/types';
 import AppShell, { ShellNavItem } from './components/AppShell';
 import LangToggle from './components/LangToggle';
+import AdminDashboard from './components/AdminDashboard';
 import CaptainManagement from './components/CaptainManagement';
 import StaffManagement from './components/StaffManagement';
 import PasswordField from './components/PasswordField';
 
-type Page = 'captains' | 'staff';
+type Page = 'dashboard' | 'captains' | 'staff';
 
 export default function AdminApp() {
   const { t } = useTranslation();
@@ -27,7 +28,7 @@ export default function AdminApp() {
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [me, setMe] = useState<PortalUser | null>(null);
   const [meLoaded, setMeLoaded] = useState(false);
-  const [page, setPage] = useState<Page>('captains');
+  const [page, setPage] = useState<Page>('dashboard');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -144,6 +145,13 @@ export default function AdminApp() {
 
   const nav: ShellNavItem[] = [
     {
+      key: 'dashboard',
+      icon: 'space_dashboard',
+      label: t('nav.dashboard'),
+      active: page === 'dashboard',
+      onClick: () => setPage('dashboard'),
+    },
+    {
       key: 'captains',
       icon: 'badge',
       label: t('nav.captains'),
@@ -159,6 +167,15 @@ export default function AdminApp() {
     },
   ];
 
+  const headerTitle =
+    page === 'dashboard' ? t('nav.dashboard') : page === 'staff' ? t('nav.staff') : t('nav.captains');
+  const headerSub =
+    page === 'dashboard'
+      ? t('adminDash.headerSub')
+      : page === 'staff'
+        ? t('shell.staffSub')
+        : t('shell.captainsSub');
+
   return (
     <AppShell
       portalLabel={t('shell.adminPortal')}
@@ -168,11 +185,17 @@ export default function AdminApp() {
         name: me.full_name ?? session.user.email ?? '',
         roleLabel: t('shell.roleAdmin'),
       }}
-      headerTitle={page === 'staff' ? t('nav.staff') : t('nav.captains')}
-      headerSub={page === 'staff' ? t('shell.staffSub') : t('shell.captainsSub')}
+      headerTitle={headerTitle}
+      headerSub={headerSub}
       footnote={t('admin.footnote')}
     >
-      {page === 'staff' ? <StaffManagement /> : <CaptainManagement />}
+      {page === 'dashboard' ? (
+        <AdminDashboard />
+      ) : page === 'staff' ? (
+        <StaffManagement />
+      ) : (
+        <CaptainManagement />
+      )}
     </AppShell>
   );
 }
