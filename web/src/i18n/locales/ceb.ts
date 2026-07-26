@@ -94,6 +94,10 @@ export const ceb: Translation = {
     missed: 'Wala mitambong sa check-up',
     missedSub: 'Na-update ang follow-up list sa mga BHW',
     loadError: 'Dili ma-load ang mga ihap: {{message}}',
+    cardTitle: 'Kalihokan karong adlawa',
+    errorTitle: 'Wala ma-load ang dashboard',
+    errorBody: 'Wala maabot ang server. Susiha ang koneksyon ug sulayi pag-usab.',
+    retry: 'Sulayi pag-usab',
   },
   bhw: {
     title: 'Mga BHW account',

@@ -94,6 +94,10 @@ export const tl: Translation = {
     missed: 'Hindi dumalo sa check-up',
     missedSub: 'Na-update ang follow-up list ng mga BHW',
     loadError: 'Hindi ma-load ang mga bilang: {{message}}',
+    cardTitle: 'Aktibidad ngayong araw',
+    errorTitle: 'Hindi ma-load ang dashboard',
+    errorBody: 'Hindi maabot ang server. Suriin ang koneksyon at subukang muli.',
+    retry: 'Subukan muli',
   },
   bhw: {
     title: 'Mga BHW account',

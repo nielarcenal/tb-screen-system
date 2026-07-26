@@ -94,6 +94,10 @@ export const en = {
     missed: 'Missed check-up',
     missedSub: 'BHW follow-up lists updated',
     loadError: 'Could not load counts: {{message}}',
+    cardTitle: 'Today’s activity',
+    errorTitle: 'Couldn’t load the dashboard',
+    errorBody: 'We couldn’t reach the server. Check your connection and try again.',
+    retry: 'Retry',
   },
   bhw: {
     title: 'BHW accounts',
