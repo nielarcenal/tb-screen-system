@@ -5,7 +5,7 @@
     "scheme": "tbscreen",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icons/icon-1024.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true
@@ -13,22 +13,29 @@
     "android": {
       "package": "com.tbscreen.bhw",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/icons/adaptive-foreground-1024.png",
+        "backgroundColor": "#0B2E33"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png",
+      "favicon": "./assets/icons/favicon-32.png",
       "bundler": "metro"
     },
     "plugins": [
       "expo-sqlite",
       "expo-router",
       "expo-status-bar",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icons/splash-1024.png",
+          "imageWidth": 300,
+          "resizeMode": "contain",
+          "backgroundColor": "#0B2E33"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
