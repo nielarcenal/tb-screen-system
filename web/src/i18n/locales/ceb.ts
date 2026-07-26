@@ -188,6 +188,11 @@ export const ceb: Translation = {
     loadError: 'Dili ma-load ang mga referral: {{message}}',
     count: '{{count}} ka referral',
     selectPrompt: 'Pagpili og referral aron makita ang detalye',
+    filterEmptyTitle: 'Walay referral nga nahaom',
+    filterEmptyBody: 'Sulayi hawaan ang pagpangita o filter sa kahimtang.',
+    errorTitle: 'Wala ma-load ang mga referral',
+    errorBody: 'Wala maabot ang server. Susiha ang koneksyon ug sulayi pag-usab.',
+    retry: 'Sulayi pag-usab',
   },
   status: {
     submitted: 'Gisumite',

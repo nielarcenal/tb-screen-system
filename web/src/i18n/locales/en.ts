@@ -187,6 +187,11 @@ export const en = {
     loadError: 'Could not load referrals: {{message}}',
     count: '{{count}} referrals',
     selectPrompt: 'Select a referral to view details',
+    filterEmptyTitle: 'No referrals match',
+    filterEmptyBody: 'Try clearing the search or status filter.',
+    errorTitle: 'Couldn’t load referrals',
+    errorBody: 'We couldn’t reach the server. Check your connection and try again.',
+    retry: 'Retry',
   },
   status: {
     submitted: 'Submitted',

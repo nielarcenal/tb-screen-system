@@ -188,6 +188,11 @@ export const tl: Translation = {
     loadError: 'Hindi ma-load ang mga referral: {{message}}',
     count: '{{count}} referral',
     selectPrompt: 'Pumili ng referral upang makita ang detalye',
+    filterEmptyTitle: 'Walang tumugmang referral',
+    filterEmptyBody: 'Subukang alisin ang paghahanap o filter ng status.',
+    errorTitle: 'Hindi ma-load ang mga referral',
+    errorBody: 'Hindi maabot ang server. Suriin ang koneksyon at subukang muli.',
+    retry: 'Subukan muli',
   },
   status: {
     submitted: 'Naisumite',
