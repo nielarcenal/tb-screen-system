@@ -142,6 +142,13 @@ export const tl: Translation = {
     empty: 'Wala pang BHW account sa inyong pasilidad.',
     loadError: 'Hindi ma-load ang mga BHW account: {{message}}',
     actionError: 'Nabigo ang aksyon: {{message}}',
+    searchPlaceholder: 'Maghanap ng pangalan',
+    errorTitle: 'Hindi ma-load ang mga BHW',
+    errorBody: 'Hindi maabot ang server. Subukang muli.',
+    retry: 'Subukang muli',
+    emptyDataBody: 'Magdagdag ng BHW upang simulan ang inyong pangkat.',
+    filterEmptyTitle: 'Walang tumugmang BHW',
+    filterEmptyBody: 'Subukang alisin ang paghahanap o filter ng status.',
   },
   hotspot: {
     title: 'Mga hotspot ng barangay',

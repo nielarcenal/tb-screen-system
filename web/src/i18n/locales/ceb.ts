@@ -142,6 +142,13 @@ export const ceb: Translation = {
     empty: 'Wala pay BHW account sa inyong pasilidad.',
     loadError: 'Dili ma-load ang mga BHW account: {{message}}',
     actionError: 'Napakyas ang aksyon: {{message}}',
+    searchPlaceholder: 'Pangitaa ang ngalan',
+    errorTitle: 'Wala ma-load ang mga BHW',
+    errorBody: 'Wala maabot ang server. Sulayi pag-usab.',
+    retry: 'Sulayi pag-usab',
+    emptyDataBody: 'Pagdugang ug BHW aron masugdan ang imong grupo.',
+    filterEmptyTitle: 'Walay BHW nga nahaom',
+    filterEmptyBody: 'Sulayi hawaan ang pagpangita o filter sa kahimtang.',
   },
   hotspot: {
     title: 'Mga hotspot sa barangay',

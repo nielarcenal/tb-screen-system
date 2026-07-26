@@ -142,6 +142,13 @@ export const en = {
     empty: 'No BHW accounts in your facility yet.',
     loadError: 'Could not load BHW accounts: {{message}}',
     actionError: 'Action failed: {{message}}',
+    searchPlaceholder: 'Search name',
+    errorTitle: 'Couldn’t load BHWs',
+    errorBody: 'We couldn’t reach the server. Try again.',
+    retry: 'Retry',
+    emptyDataBody: 'Add a BHW to start building your team.',
+    filterEmptyTitle: 'No BHWs match',
+    filterEmptyBody: 'Try clearing the search or status filter.',
   },
   hotspot: {
     title: 'Barangay hotspots',
