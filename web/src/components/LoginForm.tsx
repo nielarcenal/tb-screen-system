@@ -10,6 +10,7 @@ import { FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
+import PasswordField from './PasswordField';
 
 export default function LoginForm() {
   const { t } = useTranslation();
@@ -62,17 +63,14 @@ export default function LoginForm() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder={role === 'captain' ? 'captain@barangay.ph' : 'staff@rhu.ph'}
           autoComplete="username"
           required
         />
         <label htmlFor="password">{t('login.password')}</label>
-        <input
+        <PasswordField
           id="password"
-          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
           autoComplete="current-password"
           required
         />

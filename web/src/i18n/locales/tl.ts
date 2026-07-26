@@ -154,6 +154,8 @@ export const tl: Translation = {
       'Para sa mga staff ng pasilidad ng TB-DOTS: tumanggap ng mga referral, magtala ng resulta ng laboratoryo, at subaybayan ang pagdalo sa check-up.',
     email: 'Email',
     password: 'Password',
+    showPassword: 'Ipakita ang password',
+    hidePassword: 'Itago ang password',
     cta: 'Mag-sign in',
     error: 'Nabigo ang pag-sign in: {{message}}',
   },

@@ -154,6 +154,8 @@ export const ceb: Translation = {
       'Alang sa mga staff sa pasilidad sa TB-DOTS: dawata ang mga referral, itala ang resulta sa laboratoryo, ug bantayi ang pagtambong sa check-up.',
     email: 'Email',
     password: 'Password',
+    showPassword: 'Ipakita ang password',
+    hidePassword: 'Tagoi ang password',
     cta: 'Pag-sign in',
     error: 'Napakyas ang pag-sign in: {{message}}',
   },

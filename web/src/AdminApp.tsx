@@ -15,6 +15,7 @@ import { PortalUser } from './lib/types';
 import { AppLanguage, changeLanguage, SUPPORTED_LANGUAGES } from './i18n';
 import CaptainManagement from './components/CaptainManagement';
 import StaffManagement from './components/StaffManagement';
+import PasswordField from './components/PasswordField';
 
 type Page = 'captains' | 'staff';
 
@@ -136,9 +137,8 @@ export default function AdminApp() {
                 required
               />
               <label htmlFor="adm-password">{t('login.password')}</label>
-              <input
+              <PasswordField
                 id="adm-password"
-                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"

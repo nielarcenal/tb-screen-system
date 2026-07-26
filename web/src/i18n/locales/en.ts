@@ -153,6 +153,8 @@ export const en = {
       'For TB-DOTS facility staff: receive referrals, record laboratory results, and track check-up attendance.',
     email: 'Email',
     password: 'Password',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
     cta: 'Sign in',
     error: 'Sign-in failed: {{message}}',
   },
