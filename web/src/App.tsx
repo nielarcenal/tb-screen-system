@@ -18,6 +18,7 @@ import AppShell, { ShellNavItem } from './components/AppShell';
 import LangToggle from './components/LangToggle';
 import LoginForm from './components/LoginForm';
 import Dashboard from './components/Dashboard';
+import CaptainDashboard from './components/CaptainDashboard';
 import ReferralInbox from './components/ReferralInbox';
 import ReferralDetail from './components/ReferralDetail';
 import HotspotView from './components/HotspotView';
@@ -66,7 +67,7 @@ export default function App() {
           return;
         }
         setMe(user);
-        setPage(user?.role === 'captain' ? 'bhw' : 'dashboard');
+        setPage('dashboard');
         if (user) {
           const { data: fac } = await supabase
             .from('facilities')
@@ -113,7 +114,10 @@ export default function App() {
   });
 
   const nav: ShellNavItem[] = isCaptain
-    ? [navItem('bhw', 'groups', t('nav.bhw'))]
+    ? [
+        navItem('dashboard', 'space_dashboard', t('nav.dashboard')),
+        navItem('bhw', 'groups', t('nav.bhw')),
+      ]
     : [
         navItem('dashboard', 'space_dashboard', t('nav.dashboard')),
         navItem('inbox', 'move_to_inbox', t('nav.inbox')),
@@ -121,7 +125,10 @@ export default function App() {
       ];
 
   const headers: Record<Page, { title: string; sub: string }> = {
-    dashboard: { title: t('nav.dashboard'), sub: t('shell.dashboardSub') },
+    dashboard: {
+      title: t('nav.dashboard'),
+      sub: isCaptain ? t('shell.captainDashSub') : t('shell.dashboardSub'),
+    },
     inbox: { title: t('nav.inbox'), sub: t('shell.referralsSub') },
     hotspot: { title: t('nav.hotspot'), sub: t('shell.hotspotsSub') },
     bhw: { title: t('nav.bhw'), sub: t('shell.bhwSub') },
@@ -140,7 +147,11 @@ export default function App() {
       headerSub={headers[page].sub}
     >
       {isCaptain ? (
-        <BhwManagement />
+        page === 'bhw' ? (
+          <BhwManagement />
+        ) : (
+          <CaptainDashboard />
+        )
       ) : page === 'dashboard' ? (
         <Dashboard />
       ) : page === 'hotspot' ? (

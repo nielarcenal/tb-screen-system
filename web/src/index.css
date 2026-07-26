@@ -1419,3 +1419,66 @@ button.amber:hover { background: var(--amber-container); }
 .bhw-row.skel .bhw-info .sk.n { width: 55%; height: 12px; }
 .bhw-row.skel .bhw-info .sk.s { width: 32%; height: 10px; margin-top: 7px; background: #f2ede4; }
 .bhw-row.skel .sk.ch { width: 54px; height: 18px; border-radius: 999px; background: #f2ede4; flex: 0 0 auto; }
+
+/* ---------- captain dashboard: per-BHW activity list (§4) ---------- */
+.capdash { display: flex; flex-direction: column; gap: 18px; }
+.dcard-head .titlebox { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.dcard-head .titlebox > .msym { font-size: 20px; color: var(--teal); }
+.dcard-head .titlebox h2 {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #14302f;
+  letter-spacing: -0.01em;
+}
+.dcard-head .titlebox .capact-sub { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+.dcard-head .ro-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+  background: #f2f4f1;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.capact-list { display: flex; flex-direction: column; }
+.capact-row { display: flex; align-items: center; gap: 13px; padding: 13px 18px; border-bottom: 1px solid #f4f1ea; }
+.capact-row:last-child { border-bottom: none; }
+.capact-row.inactive .capact-avatar,
+.capact-row.inactive .capact-info,
+.capact-row.inactive .capact-nums { opacity: 0.6; }
+.capact-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e6f2f2;
+  color: #046a78;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.capact-info { flex: 1; min-width: 0; }
+.capact-namerow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.capact-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #14302f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.capact-brgy { font-size: 11.5px; color: #9aa39c; margin-top: 2px; }
+.capact-nums { flex: 0 0 auto; display: flex; align-items: center; gap: 18px; }
+.capact-num { text-align: right; min-width: 52px; }
+.capact-num .n { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; color: #14302f; }
+.capact-num .n.ref { color: #12735f; }
+.capact-num .w { font-size: 10px; color: #9aa39c; margin-top: 3px; }
+
+.capact-row.skel .sk { background: #eee9df; border-radius: 6px; animation: tbpulse 1.2s ease-in-out infinite; }
+.capact-row.skel .sk.av { width: 38px; height: 38px; border-radius: 50%; flex: 0 0 auto; }
+.capact-row.skel .capact-info .sk.n { width: 45%; height: 12px; }
+.capact-row.skel .capact-info .sk.b { width: 28%; height: 10px; margin-top: 7px; background: #f2ede4; }
+.capact-row.skel .sk.num { width: 120px; height: 10px; border-radius: 5px; background: #f2ede4; flex: 0 0 auto; }
