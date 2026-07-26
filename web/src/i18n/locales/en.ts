@@ -31,6 +31,14 @@ export const en = {
     captains: 'Captain management',
     staff: 'Staff management',
   },
+  shell: {
+    facilityPortal: 'Facility Portal',
+    captainPortal: 'Captain Portal',
+    dashboardSub: 'Today’s activity at your facility',
+    referralsSub: 'Referrals addressed to your facility',
+    hotspotsSub: 'Presumptive cases by barangay',
+    bhwSub: 'Health workers in your barangay',
+  },
   admin: {
     portalTitle: 'TB-Screen Developer Portal',
     sub: 'Account provisioning — developer access only',

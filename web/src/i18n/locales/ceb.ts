@@ -31,6 +31,14 @@ export const ceb: Translation = {
     captains: 'Pagdumala sa kapitan',
     staff: 'Pagdumala sa staff',
   },
+  shell: {
+    facilityPortal: 'Portal sa Pasilidad',
+    captainPortal: 'Portal sa Kapitan',
+    dashboardSub: 'Kalihokan karong adlawa sa inyong pasilidad',
+    referralsSub: 'Mga referral nga gipadala sa inyong pasilidad',
+    hotspotsSub: 'Mga presumptive nga kaso matag barangay',
+    bhwSub: 'Mga health worker sa inyong barangay',
+  },
   admin: {
     portalTitle: 'TB-Screen Developer Portal',
     sub: 'Paghimo og mga account — alang lamang sa developer',

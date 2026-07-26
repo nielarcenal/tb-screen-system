@@ -31,6 +31,14 @@ export const tl: Translation = {
     captains: 'Pamamahala ng kapitan',
     staff: 'Pamamahala ng staff',
   },
+  shell: {
+    facilityPortal: 'Portal ng Pasilidad',
+    captainPortal: 'Portal ng Kapitan',
+    dashboardSub: 'Aktibidad ngayong araw sa inyong pasilidad',
+    referralsSub: 'Mga referral na nakatalaga sa inyong pasilidad',
+    hotspotsSub: 'Mga presumptive na kaso ayon sa barangay',
+    bhwSub: 'Mga health worker sa inyong barangay',
+  },
   admin: {
     portalTitle: 'TB-Screen Developer Portal',
     sub: 'Paggawa ng mga account — para lamang sa developer',
