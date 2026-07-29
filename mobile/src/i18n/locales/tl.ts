@@ -36,7 +36,10 @@ export const tl: Translation = {
     syncChipNever: 'Pindutin para mag-sync',
     lastSync: 'Huling na-sync {{date}}',
     neverSynced: 'Hindi pa nakapag-sync — pindutin ang button sa itaas kapag online.',
-    syncError: 'Hindi maka-sync: {{message}}',
+    syncOffline:
+      'Hindi maka-sync ngayon — walang internet. Nakasave sa telepono na ito ang mga tala mo at awtomatikong magsi-sync kapag online ka na.',
+    syncError:
+      'Hindi maka-sync — pakisubukan ulit. Kung paulit-ulit, sabihin sa iyong coordinator: {{message}}',
     primaryCta: 'Mag-enroll at mag-screen ng pasyente',
     attentionHeading: 'Kailangan ng atensyon',
     tiles: {

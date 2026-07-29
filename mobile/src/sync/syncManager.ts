@@ -31,6 +31,18 @@ function deriveOnline(state: NetInfoState): boolean {
 }
 
 /**
+ * A sync error is a connectivity problem — the device is offline, DNS cannot
+ * resolve the Supabase host, or the request timed out — rather than a server or
+ * data error. These get a plain "you're offline" message instead of a raw
+ * technical string (e.g. "fetch failed: java.net.UnknownHostException…").
+ */
+function isConnectivityError(message: string): boolean {
+  return /fetch failed|failed to fetch|network request failed|unable to resolve host|unknownhostexception|no address associated|enotfound|econnrefused|econnreset|etimedout|timeout|timed out|socketexception|network/i.test(
+    message,
+  );
+}
+
+/**
  * Run one sync pass, guarded. Safe to call from anywhere (button, reconnect,
  * app-foreground). No-ops (queues a rerun) if a sync is already running.
  */
@@ -56,7 +68,10 @@ export async function triggerSync(): Promise<void> {
     useAppStore.getState().setLastSyncAt(new Date().toISOString());
     store.set({ lastResult: `pushed ${pushed}, pulled ${pulled}` });
   } catch (e) {
-    store.set({ lastError: e instanceof Error ? e.message : String(e) });
+    const detail = e instanceof Error ? e.message : String(e);
+    store.set({
+      lastError: { kind: isConnectivityError(detail) ? 'offline' : 'unknown', detail },
+    });
   } finally {
     inFlight = false;
     store.set({ phase: 'idle' });

@@ -34,7 +34,9 @@ export const en = {
     syncChipNever: 'Tap to sync',
     lastSync: 'Last synced {{date}}',
     neverSynced: 'Not synced yet — tap the button above when online.',
-    syncError: 'Could not sync: {{message}}',
+    syncOffline:
+      "Can't sync right now — no internet connection. Your records are saved on this phone and will sync automatically once you're back online.",
+    syncError: "Couldn't sync — please try again. If it keeps happening, tell your coordinator: {{message}}",
     primaryCta: 'Enroll & screen a patient',
     attentionHeading: 'Needs attention',
     tiles: {

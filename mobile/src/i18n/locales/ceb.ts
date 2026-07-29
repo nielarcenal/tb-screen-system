@@ -36,7 +36,10 @@ export const ceb: Translation = {
     syncChipNever: 'Pinduta aron mag-sync',
     lastSync: 'Kataposang na-sync {{date}}',
     neverSynced: 'Wala pa naka-sync — pinduta ang button sa taas kung online na.',
-    syncError: 'Dili maka-sync: {{message}}',
+    syncOffline:
+      'Dili maka-sync karon — walay internet. Naka-save niining telepono ang imong mga tala ug awtomatikong mag-sync kung online na ka.',
+    syncError:
+      'Dili maka-sync — palihug sulayi pag-usab. Kung magpadayon, sultihi ang imong coordinator: {{message}}',
     primaryCta: 'Pag-enroll ug pag-screen og pasyente',
     attentionHeading: 'Nagkinahanglan og atensyon',
     tiles: {
