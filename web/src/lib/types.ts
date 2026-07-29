@@ -110,12 +110,23 @@ export interface DashboardCounts {
   scheduled_today: number;
 }
 
-/** One row of the bhw_activity() RPC (0006) — accounts + counts, no patients. */
+/** One row of the bhw_activity() RPC (0006, extended 0014) — accounts + counts,
+ *  no patients. Name parts / purok / email are the BHW's own account fields. */
 export interface BhwActivityRow {
   user_id: string;
   full_name: string;
+  /** Name parts (0014). Null on rows created before the split. */
+  first_name: string | null;
+  middle_name: string | null;
+  last_name: string | null;
+  /** BHW coverage area within the barangay (0014). */
+  purok: string | null;
+  /** The BHW's own account email (auth.users), surfaced for the edit drawer. */
+  email: string | null;
   barangay_code: string | null;
   barangay_name: string | null;
+  /** Account creation date (users.created_at) — shown as "Joined". */
+  joined_at: string | null;
   active: boolean;
   screenings_n: number;
   referrals_n: number;

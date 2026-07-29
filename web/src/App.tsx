@@ -46,9 +46,13 @@ export default function App() {
   }, []);
 
   // Load the account's own users row — its role decides which portal shows —
-  // and the facility name for the sidebar context.
+  // and the facility name for the sidebar context. Keyed on the user id (not the
+  // whole session): token refreshes / tab-visibility re-emit a new session object
+  // for the SAME signed-in user, and we must not reload — nor snap the view back
+  // to the dashboard — on those. Only a genuine identity change should reset here.
+  const userId = session?.user.id ?? null;
   useEffect(() => {
-    if (!session) {
+    if (!userId) {
       setMe(null);
       setFacilityName(null);
       return;
@@ -56,7 +60,7 @@ export default function App() {
     void supabase
       .from('users')
       .select('user_id, role, full_name, facility_id, active')
-      .eq('user_id', session.user.id)
+      .eq('user_id', userId)
       .maybeSingle()
       .then(async ({ data }) => {
         const user = (data ?? null) as PortalUser | null;
@@ -76,7 +80,7 @@ export default function App() {
           setFacilityName((fac as { name: string } | null)?.name ?? null);
         }
       });
-  }, [session]);
+  }, [userId]);
 
   // Not signed in: the sidebar shell is hidden; the two-panel sign-in (§4)
   // carries its own brand panel and language toggle.

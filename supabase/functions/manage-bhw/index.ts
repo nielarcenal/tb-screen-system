@@ -13,8 +13,8 @@
  *             facility from it.
  *
  * Actions (POST JSON { action, ... }):
- *   create         captain: { first_name, last_name }
- *                  admin:   { first_name, last_name, barangay_code } — the
+ *   create         captain: { first_name, middle_name?, last_name, purok }
+ *                  admin:   { first_name, middle_name?, last_name, barangay_code } — the
  *                  facility is derived from the barangay's LGU default DOTS
  *                  center (ref_cities.default_facility_id, 0009); an explicit
  *                  facility_id in the body overrides it.
@@ -49,11 +49,20 @@ interface Body {
   target_role?: 'captain' | 'tb_dots';
   user_id?: string;
   first_name?: string;
+  /** Optional middle name (0014) — part of the composed full_name. */
+  middle_name?: string;
   last_name?: string;
+  /** captain → BHW only (0014): the BHW's coverage area within the barangay. */
+  purok?: string;
   barangay_code?: string;
   facility_id?: string;
   /** deactivate only (captain → BHW): successor to receive the enrolled patients. */
   reassign_to?: string;
+}
+
+/** Composed display name "First Middle Last" from parts (blank parts dropped). */
+function composeName(first: string, middle: string, last: string): string {
+  return [first, middle, last].map((p) => p.trim()).filter(Boolean).join(' ');
 }
 
 const CORS = {
@@ -150,14 +159,20 @@ Deno.serve(async (req) => {
     switch (body.action) {
       case 'create': {
         const first = (body.first_name ?? '').trim();
+        const middle = (body.middle_name ?? '').trim();
         const last = (body.last_name ?? '').trim();
+        const purok = (body.purok ?? '').trim();
         if (!first || !last) {
           return json(400, { error: 'first_name and last_name required' });
+        }
+        // Captain-created BHWs carry a coverage area (redesigned form; 0014).
+        if (managedRole === 'bhw' && !purok) {
+          return json(400, { error: 'purok (coverage area) required' });
         }
         // TB-DOTS staff (admin only): a facility, no barangay.
         if (managedRole === 'tb_dots') {
           if (!body.facility_id) return json(400, { error: 'facility_id required' });
-          const name = `${first} ${last}`;
+          const name = composeName(first, middle, last);
           const slug = `${slugPart(first)}.${slugPart(last)}`;
           if (slug === '.') return json(400, { error: 'name must contain letters' });
           let email = `${slug}@tbscreen.ph`;
@@ -173,8 +188,12 @@ Deno.serve(async (req) => {
                 user_id: created.user.id,
                 role: 'tb_dots',
                 full_name: name,
+                first_name: first,
+                middle_name: middle || null,
+                last_name: last,
                 facility_id: body.facility_id,
                 assigned_barangay_code: null,
+                must_change_password: true,
               });
               if (rowErr) {
                 await admin.auth.admin.deleteUser(created.user.id);
@@ -209,7 +228,7 @@ Deno.serve(async (req) => {
             error: 'no default facility mapped for this barangay (apply migration 0009)',
           });
         }
-        const name = `${first} ${last}`;
+        const name = composeName(first, middle, last);
         // Unique email: firstname.lastname@tbscreen.ph, then .2, .3, … on clash.
         const slug = `${slugPart(first)}.${slugPart(last)}`;
         if (slug === '.') return json(400, { error: 'name must contain letters' });
@@ -226,8 +245,14 @@ Deno.serve(async (req) => {
               user_id: created.user.id,
               role: managedRole,
               full_name: name,
+              first_name: first,
+              middle_name: middle || null,
+              last_name: last,
+              // Coverage area applies to BHWs only; captains have none.
+              purok: managedRole === 'bhw' ? purok : null,
               facility_id: facility,
               assigned_barangay_code: barangay,
+              must_change_password: true,
             });
             if (rowErr) {
               // Roll back the orphan auth account so a retry can reuse the email.
@@ -248,8 +273,18 @@ Deno.serve(async (req) => {
         if (!target) return notFound();
         const fields: Record<string, unknown> = {};
         const first = (body.first_name ?? '').trim();
+        const middle = (body.middle_name ?? '').trim();
         const last = (body.last_name ?? '').trim();
-        if (first && last) fields.full_name = `${first} ${last}`;
+        if (first && last) {
+          fields.full_name = composeName(first, middle, last);
+          fields.first_name = first;
+          fields.middle_name = middle || null;
+          fields.last_name = last;
+        }
+        // Coverage area edits (captain → BHW only). '' clears it back to null.
+        if (managedRole === 'bhw' && body.purok !== undefined) {
+          fields.purok = body.purok.trim() || null;
+        }
         // Only admins may move an account between barangays; a captain's BHWs
         // stay in the captain's barangay by definition.
         if (isAdmin && managedRole !== 'tb_dots' && body.barangay_code) {
@@ -275,6 +310,12 @@ Deno.serve(async (req) => {
           { password },
         );
         if (pwErr) return json(500, { error: pwErr.message });
+        // Force the account to set its own password again on next sign-in (0014).
+        const { error: flagErr } = await admin
+          .from('users')
+          .update({ must_change_password: true })
+          .eq('user_id', target.user_id);
+        if (flagErr) return json(500, { error: flagErr.message });
         return json(200, { email: authUser?.user?.email ?? null, temp_password: password });
       }
 

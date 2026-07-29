@@ -214,7 +214,10 @@ export default function CaptainDashboard() {
                       {r.active ? t('bhw.active') : t('bhw.deactivated')}
                     </span>
                   </div>
-                  <div className="capact-brgy">{r.barangay_name ?? r.barangay_code ?? '—'}</div>
+                  <div className="capact-brgy">
+                    {[r.purok, r.barangay_name ?? r.barangay_code].filter(Boolean).join(' · ') ||
+                      '—'}
+                  </div>
                 </div>
                 <div className="capact-nums">
                   <div className="capact-num">
