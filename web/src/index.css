@@ -2030,3 +2030,99 @@ button.amber:hover { background: var(--amber-container); }
   .brandpanel { display: none; }
   .formcard .topbrand { display: flex; }
 }
+
+/* ===========================================================================
+   MOBILE LAYOUT (<= 760px) — phones and small tablets.
+
+   The shell is desktop-first: a fixed-width navy sidebar beside a content
+   column. On a phone that sidebar eats most of the viewport and clips the
+   content mid-card, so below 760px it becomes a compact TOP BAR (brand +
+   account + sign out) with the nav as a horizontally scrollable strip
+   underneath. Content keeps its own scroll, so the page body never scrolls
+   sideways.
+
+   Presentation only — no component knows the viewport width, so every portal
+   (facility, captain, admin) picks this up from the shared shell.
+   =========================================================================== */
+@media (max-width: 760px) {
+  /* dvh tracks the collapsing browser chrome; 100vh stays as the fallback. */
+  .shell { flex-direction: column; height: 100dvh; }
+
+  /* ---- sidebar -> top bar ---- */
+  .sidebar {
+    flex: 0 0 auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px 0;
+  }
+  .sidebar .brand { order: 0; flex: 1 1 auto; min-width: 0; padding: 0; gap: 9px; }
+  .sidebar .brand img { width: 32px; height: 32px; border-radius: 8px; }
+  .side-spacer { display: none; }
+
+  /* Account and sign out ride on the brand row. The facility line is dropped:
+     it cannot fit beside them at this width, and the facility is already named
+     in the content below. */
+  .side-foot {
+    /* Ordered ahead of the nav so it shares the brand row — in DOM order it
+       follows the nav, which would otherwise push it onto a third row. */
+    order: 1;
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border-top: none;
+  }
+  .side-foot .ctx.facility { display: none; }
+  .side-foot .ctx.account { padding: 0; }
+  .side-foot .ctx.account .ctx-text { display: none; } /* initials carry it */
+  .side-foot .signout { width: auto; padding: 8px 9px; }
+  .side-foot .signout span:not(.msym) { display: none; } /* aria-label names it */
+
+  /* Nav gets its own full-width row and scrolls sideways rather than
+     wrapping or squeezing — the bleed margins let it run edge to edge. */
+  .side-nav {
+    order: 2;
+    flex: 1 0 100%;
+    flex-direction: row;
+    gap: 6px;
+    margin: 4px -12px 0;
+    padding: 0 12px 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .side-nav::-webkit-scrollbar { display: none; }
+  .side-nav button { width: auto; flex: 0 0 auto; padding: 8px 12px; box-shadow: none; }
+  /* Active marker moves from the left edge to the bottom edge. */
+  .side-nav button.active { box-shadow: inset 0 -3px 0 var(--seafoam); }
+
+  /* ---- content column ---- */
+  .content-head { align-items: flex-start; padding: 14px 15px 10px; }
+  .content-head h1 { font-size: 19px; }
+  .content-main { padding: 4px 15px 20px; }
+  .content > .footnote { padding: 9px 15px; }
+
+  /* ---- overlays: there is no left gutter to clear any more ---- */
+  .drawer-scrim { left: 0; }
+  .cap-modal-scrim { left: 0; padding: 16px; }
+  .drawer { width: 100%; }
+
+  /* ---- forms and cards: one column, full-width touch targets ---- */
+  /* Stat tiles pair up two-across instead of one huge column per tile. */
+  .dgrid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .dfield-row .dfield { flex: 1 1 100%; }
+  .ctx-tile { flex: 1 1 calc(50% - 5px); }
+  .bhw-tools { flex-wrap: wrap; }
+  .bhw-tools .search-wrap { flex: 1 1 100%; }
+  .drawer-actions button { flex: 1 1 auto; justify-content: center; }
+
+  /* Ranked hotspot bars: give the track room by trimming the name column. */
+  .hotrow { grid-template-columns: 20px minmax(90px, 120px) 1fr 34px; gap: 8px; }
+
+  /* Admin key/value tables scroll inside themselves instead of forcing the
+     whole page sideways. */
+  table.kv { display: block; overflow-x: auto; }
+}

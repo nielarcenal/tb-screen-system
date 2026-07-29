@@ -91,7 +91,7 @@ export default function AppShell({
 
         <div className="side-foot">
           {facility ? (
-            <div className="ctx">
+            <div className="ctx facility">
               <span className="msym" aria-hidden="true">
                 local_hospital
               </span>
@@ -102,7 +102,7 @@ export default function AppShell({
             </div>
           ) : null}
 
-          <div className="ctx">
+          <div className="ctx account">
             <span className="avatar">{initials(user.name)}</span>
             <div className="ctx-text">
               <div className="ctx-name">{user.name}</div>
@@ -110,7 +110,14 @@ export default function AppShell({
             </div>
           </div>
 
-          <button className="signout" type="button" onClick={() => void supabase.auth.signOut()}>
+          {/* The label is hidden on phones (icon-only bar), so name it here too. */}
+          <button
+            className="signout"
+            type="button"
+            aria-label={t('common.signOut')}
+            title={t('common.signOut')}
+            onClick={() => void supabase.auth.signOut()}
+          >
             <span className="msym" aria-hidden="true">
               logout
             </span>
