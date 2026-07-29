@@ -167,6 +167,13 @@ const MIGRATIONS: string[] = [
   ALTER TABLE patients ADD COLUMN middle_name TEXT;
   ALTER TABLE patients ADD COLUMN last_name TEXT;
   `,
+
+  // v8 — per-patient SMS language (server migration 0015): which language this
+  // patient's reminders are sent in (en/tl/ceb), chosen on the SMS opt-in card.
+  // Nullable: SMS-declined patients and pre-0015 rows have none.
+  `
+  ALTER TABLE patients ADD COLUMN preferred_language TEXT;
+  `,
 ];
 
 // Bundled PSGC dataset — Bukidnon only (documented delimitation, §6). Generated

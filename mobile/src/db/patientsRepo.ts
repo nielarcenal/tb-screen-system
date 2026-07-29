@@ -26,6 +26,7 @@ interface PatientSqlRow {
   contact_number: string | null;
   sms_consent: number;
   consent_date: string | null;
+  preferred_language: string | null;
   created_at: string;
   updated_at: string;
   sync_status: string;
@@ -48,6 +49,7 @@ function fromSql(r: PatientSqlRow): LocalPatientRow {
     contact_number: r.contact_number,
     sms_consent: r.sms_consent === 1,
     consent_date: r.consent_date,
+    preferred_language: r.preferred_language as LocalPatientRow['preferred_language'],
     created_at: r.created_at,
     updated_at: r.updated_at,
     sync_status: r.sync_status as SyncStatus,
@@ -68,9 +70,9 @@ export async function insertLocalPatient(
     `INSERT INTO patients
        (patient_id, display_code, enrolled_by, full_name, first_name, middle_name,
         last_name, birthdate, age, sex,
-        barangay_code, sitio, contact_number, sms_consent, consent_date,
+        barangay_code, sitio, contact_number, sms_consent, consent_date, preferred_language,
         created_at, updated_at, sync_status)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending')`,
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending')`,
     [
       p.patient_id,
       p.display_code,
@@ -87,6 +89,7 @@ export async function insertLocalPatient(
       p.contact_number,
       p.sms_consent ? 1 : 0,
       p.consent_date,
+      p.preferred_language,
       ts,
       ts,
     ],
@@ -202,9 +205,9 @@ export async function upsertPulledPatient(server: PatientRow): Promise<void> {
     `INSERT INTO patients
        (patient_id, display_code, enrolled_by, full_name, first_name, middle_name,
         last_name, birthdate, age, sex,
-        barangay_code, sitio, contact_number, sms_consent, consent_date,
+        barangay_code, sitio, contact_number, sms_consent, consent_date, preferred_language,
         created_at, updated_at, sync_status)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'synced')
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'synced')
      ON CONFLICT(patient_id) DO UPDATE SET
        display_code   = excluded.display_code,
        enrolled_by    = excluded.enrolled_by,
@@ -220,6 +223,7 @@ export async function upsertPulledPatient(server: PatientRow): Promise<void> {
        contact_number = excluded.contact_number,
        sms_consent    = excluded.sms_consent,
        consent_date   = excluded.consent_date,
+       preferred_language = excluded.preferred_language,
        created_at     = excluded.created_at,
        updated_at     = excluded.updated_at,
        sync_status    = 'synced'`,
@@ -239,6 +243,7 @@ export async function upsertPulledPatient(server: PatientRow): Promise<void> {
       server.contact_number,
       server.sms_consent ? 1 : 0,
       server.consent_date,
+      server.preferred_language ?? null,
       server.created_at,
       server.updated_at,
     ],

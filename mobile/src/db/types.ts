@@ -81,6 +81,8 @@ export interface PatientRow {
   contact_number: string | null;
   sms_consent: boolean;
   consent_date: string | null;
+  /** Language for this patient's SMS reminders (en/tl/ceb). Null when SMS declined. */
+  preferred_language: 'en' | 'tl' | 'ceb' | null;
   created_at: string;
   updated_at: string;
 }

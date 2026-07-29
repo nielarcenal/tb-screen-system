@@ -135,6 +135,7 @@ export const tl: Translation = {
     smsOptInLabel: 'Magpadala ng SMS reminders para sa check-up sa pasyenteng ito',
     smsHint: 'Kung sumang-ayon lamang ang pasyente. Kailangan ng mobile number para makapagpadala ng SMS.',
     contactNumberLabel: 'Mobile number',
+    smsLanguageLabel: 'Wika ng mga SMS reminder',
     contactNumberPlaceholder: '09XXXXXXXXX',
     contactNumberError: 'Maglagay ng wastong mobile number, o i-off ang SMS reminders.',
     nonDiagnosticReminder: 'Paalala: sinusuportahan lamang ng tool na ito ang referral. Hindi ito nagdidiyagnos ng TB.',

@@ -13,11 +13,13 @@
  * and decides when enrollment may proceed (e.g. requires consentGiven).
  */
 import { Pressable, View } from 'react-native';
-import { HelperText, Switch, Text, TextInput } from 'react-native-paper';
+import { HelperText, SegmentedButtons, Switch, Text, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { palette } from '../ui/tokens';
+
+export type SmsLanguage = 'en' | 'tl' | 'ceb';
 
 export interface ConsentValue {
   /** Patient consents to pre-screening + referral. */
@@ -26,13 +28,19 @@ export interface ConsentValue {
   smsOptIn: boolean;
   /** Only meaningful when smsOptIn is true; otherwise kept empty. */
   contactNumber: string;
+  /** Language the patient's SMS reminders are sent in (only used when smsOptIn). */
+  smsLanguage: SmsLanguage;
 }
 
 export const emptyConsent: ConsentValue = {
   consentGiven: false,
   smsOptIn: false,
   contactNumber: '',
+  smsLanguage: 'en',
 };
+
+/** Coerce an app language code to a supported SMS language (default English). */
+const asSmsLanguage = (l: string): SmsLanguage => (l === 'tl' || l === 'ceb' ? l : 'en');
 
 interface Props {
   value: ConsentValue;
@@ -45,7 +53,7 @@ export function isValidPhMobile(n: string): boolean {
 }
 
 export default function ConsentFields({ value, onChange }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const toggleSms = (smsOptIn: boolean) =>
     onChange({
@@ -53,6 +61,8 @@ export default function ConsentFields({ value, onChange }: Props) {
       smsOptIn,
       // Privacy: no SMS opt-in ⇒ no stored number.
       contactNumber: smsOptIn ? value.contactNumber : '',
+      // Default the reminder language to the app's current language on opt-in.
+      smsLanguage: smsOptIn ? asSmsLanguage(i18n.language) : value.smsLanguage,
     });
 
   const showNumberError =
@@ -157,6 +167,24 @@ export default function ConsentFields({ value, onChange }: Props) {
             <HelperText type="error" visible={showNumberError}>
               {t('consent.contactNumberError')}
             </HelperText>
+
+            {/* Language for this patient's reminder texts (defaults to app language). */}
+            <View style={{ marginTop: 8, gap: 8 }}>
+              <Text variant="bodySmall" style={{ color: palette.muted }}>
+                {t('consent.smsLanguageLabel')}
+              </Text>
+              <SegmentedButtons
+                value={value.smsLanguage}
+                onValueChange={(smsLanguage) =>
+                  onChange({ ...value, smsLanguage: smsLanguage as SmsLanguage })
+                }
+                buttons={[
+                  { value: 'en', label: 'English' },
+                  { value: 'tl', label: 'Tagalog' },
+                  { value: 'ceb', label: 'Bisaya' },
+                ]}
+              />
+            </View>
           </View>
         ) : null}
       </View>

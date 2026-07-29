@@ -135,6 +135,7 @@ export const ceb: Translation = {
     smsOptInLabel: 'Pagpadala og SMS reminders para sa check-up niini nga pasyente',
     smsHint: 'Kung miuyon lamang ang pasyente. Kinahanglan og mobile number aron makapadala og SMS.',
     contactNumberLabel: 'Mobile number',
+    smsLanguageLabel: 'Pinulongan sa mga SMS reminder',
     contactNumberPlaceholder: '09XXXXXXXXX',
     contactNumberError: 'Pagbutang og husto nga mobile number, o i-off ang SMS reminders.',
     nonDiagnosticReminder: 'Pahinumdom: kini nga tool nagsuporta lamang sa referral. Dili kini mag-diagnose sa TB.',

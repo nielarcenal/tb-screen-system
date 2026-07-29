@@ -127,6 +127,7 @@ export const en = {
     smsOptInLabel: 'Send SMS check-up reminders to this patient',
     smsHint: 'Only if the patient agrees. A mobile number is required to send SMS.',
     contactNumberLabel: 'Mobile number',
+    smsLanguageLabel: 'Language for reminder texts',
     contactNumberPlaceholder: '09XXXXXXXXX',
     contactNumberError: 'Enter a valid mobile number, or turn off SMS reminders.',
     nonDiagnosticReminder: 'Reminder: this tool supports referral only. It does not diagnose TB.',

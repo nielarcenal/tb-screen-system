@@ -144,6 +144,8 @@ export default function EnrollScreen() {
         contact_number: consent.smsOptIn ? consent.contactNumber.trim() : null,
         sms_consent: consent.smsOptIn,
         consent_date: consent.smsOptIn ? nowIso() : null,
+        // Language is only meaningful alongside SMS consent; cleared otherwise.
+        preferred_language: consent.smsOptIn ? consent.smsLanguage : null,
       });
       void triggerSync(); // best-effort; row stays queued if offline
       router.replace(`/patients/${patientId}`);

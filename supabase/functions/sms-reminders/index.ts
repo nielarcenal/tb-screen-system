@@ -1,21 +1,30 @@
 /**
  * sms-reminders — Supabase Edge Function (Feature 9, brief §8.9).
  *
- * Runs daily (pg_cron, see migrations/0003_sms_reminders_cron.sql): finds
- * appointments scheduled for TOMORROW (Asia/Manila) whose patient opted into
- * SMS (sms_consent = true), sends one reminder through the swappable gateway
- * module, and logs every attempt to sms_log.
+ * Runs daily (pg_cron, see migrations/0003_sms_reminders_cron.sql) and does two
+ * things, both only for patients who opted into SMS (sms_consent = true):
+ *
+ *   1. REMINDERS — for check-ups still 'scheduled' that fall on one of the lead
+ *      days ahead (REMINDER_OFFSETS, Asia/Manila): 3 days out AND the day before.
+ *      Idempotent per day: an appointment gets at most one reminder per calendar
+ *      day, so re-runs never double-send and the 3-day / 1-day reminders (on
+ *      different days) both go out.
+ *   2. FOLLOW-UPS — for check-ups recently marked 'missed' (updated in the last
+ *      FOLLOWUP_WINDOW_DAYS), a one-time neutral nudge to reschedule — UNLESS the
+ *      patient already has another upcoming 'scheduled' appointment (rebooked).
+ *
+ * Each patient is messaged in THEIR language (patients.preferred_language, 0015);
+ * when unset (pre-0015 / SMS declined path) a combined English+Tagalog message is
+ * sent. Every send is logged to sms_log with message_kind ('reminder'|'follow_up').
  *
  * PRIVACY (§4):
- *  - Only patients with sms_consent = true are even queried; the DB CHECK
- *    guarantees a contact_number exists only alongside consent.
- *  - The message text is deliberately NEUTRAL — no "TB", no patient details —
- *    because SMS can be read by anyone holding the phone.
- *  - Uses the service role (bypasses RLS) — this function is the ONLY writer
- *    of sms_log; clients have no policies on it at all.
+ *  - Only sms_consent = true patients are queried; the DB CHECK guarantees a
+ *    contact_number exists only alongside consent.
+ *  - Message text is NEUTRAL — no "TB", no patient details — SMS is readable by
+ *    anyone holding the phone.
+ *  - Service role (bypasses RLS): this function is the ONLY writer of sms_log.
  *
- * Auth: callers must present the X-Cron-Secret header matching the CRON_SECRET
- * secret (defense in depth on top of the platform JWT check).
+ * Auth: callers must present X-Cron-Secret matching the CRON_SECRET secret.
  *
  * Secrets (supabase secrets set ...):
  *   CRON_SECRET            required — shared secret for the cron caller
@@ -27,16 +36,37 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 
 import { createGateway } from './gateway.ts';
 
-/**
- * Reminder text — bilingual English/Tagalog, neutral wording (see PRIVACY
- * above). TODO i18n verify: the app does not store a per-patient language, so
- * one combined message is sent. {date} is YYYY-MM-DD.
- */
-function reminderMessage(date: string): string {
-  return (
-    `Reminder: you have a health check-up appointment tomorrow, ${date}. ` +
-    `Paalala: may check-up appointment kayo bukas, ${date}. - TB-Screen`
-  );
+/** Lead days before a check-up on which to remind (Asia/Manila). */
+const REMINDER_OFFSETS = [3, 1];
+/** Only follow up on check-ups marked missed within this many days. */
+const FOLLOWUP_WINDOW_DAYS = 14;
+
+type Lang = 'en' | 'tl' | 'ceb';
+// Neutral signature — no "TB" (§4: SMS is readable by anyone holding the phone).
+const SIGN = '- Health Reminder';
+
+/** Neutral reminder text per language ({date} = YYYY-MM-DD). */
+const REMINDER: Record<Lang, (d: string) => string> = {
+  en: (d) => `Reminder: you have a health check-up on ${d}. Please visit your health center. ${SIGN}`,
+  tl: (d) => `Paalala: may health check-up kayo sa ${d}. Pakibisita ang inyong health center. ${SIGN}`,
+  ceb: (d) => `Pahinumdom: naa kay health check-up sa ${d}. Palihug bisitaha ang health center. ${SIGN}`,
+};
+
+/** Neutral missed-appointment follow-up per language. */
+const FOLLOWUP: Record<Lang, () => string> = {
+  en: () => `You missed your health check-up. Please visit your health worker to set a new date. ${SIGN}`,
+  tl: () => `Hindi kayo nakadalo sa inyong health check-up. Pakibisita ang inyong health worker para sa bagong petsa. ${SIGN}`,
+  ceb: () => `Wala ka nakatambong sa imong health check-up. Palihug bisitaha ang imong health worker para sa bag-ong petsa. ${SIGN}`,
+};
+
+function asLang(l: string | null | undefined): Lang | null {
+  return l === 'en' || l === 'tl' || l === 'ceb' ? l : null;
+}
+function reminderMessage(lang: Lang | null, date: string): string {
+  return lang ? REMINDER[lang](date) : `${REMINDER.en(date)} / ${REMINDER.tl(date)}`;
+}
+function followUpMessage(lang: Lang | null): string {
+  return lang ? FOLLOWUP[lang]() : `${FOLLOWUP.en()} / ${FOLLOWUP.tl()}`;
 }
 
 /** Calendar date in Asia/Manila, offset by N days (en-CA ⇒ YYYY-MM-DD). */
@@ -49,10 +79,11 @@ function manilaDate(offsetDays: number): string {
   }).format(new Date(Date.now() + offsetDays * 86_400_000));
 }
 
-interface DueAppointment {
+interface ApptRow {
   appointment_id: string;
+  patient_id: string;
   scheduled_date: string;
-  patients: { contact_number: string | null; sms_consent: boolean };
+  patients: { contact_number: string | null; preferred_language: string | null };
 }
 
 Deno.serve(async (req) => {
@@ -67,62 +98,111 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, // service role: server-side only
   );
   const gateway = createGateway(Deno.env);
-  const tomorrow = manilaDate(1);
 
-  // --- appointments one day out, still scheduled, with SMS consent ---
-  const { data, error } = await supabase
+  const fail = (msg: string) => {
+    console.error(`[sms-reminders] ${msg}`);
+    return new Response(JSON.stringify({ error: msg }), { status: 500 });
+  };
+
+  // ======================= 1. REMINDERS =======================
+  const reminderDates = REMINDER_OFFSETS.map(manilaDate);
+  const todayMidnight = `${manilaDate(0)}T00:00:00+08:00`; // start of today, Manila
+  const rem = { dates: reminderDates, due: 0, sent: 0, failed: 0, skipped: 0 };
+
+  const { data: dueData, error: dueErr } = await supabase
     .from('appointments')
-    .select('appointment_id, scheduled_date, patients!inner(contact_number, sms_consent)')
+    .select('appointment_id, patient_id, scheduled_date, patients!inner(contact_number, sms_consent, preferred_language)')
     .eq('status', 'scheduled')
-    .eq('scheduled_date', tomorrow)
+    .in('scheduled_date', reminderDates)
     .eq('patients.sms_consent', true);
+  if (dueErr) return fail(`reminder query failed: ${dueErr.message}`);
+  const due = (dueData ?? []) as unknown as ApptRow[];
+  rem.due = due.length;
 
-  if (error) {
-    console.error(`[sms-reminders] query failed: ${error.message}`);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-  }
-
-  const due = (data ?? []) as unknown as DueAppointment[];
-
-  // --- skip appointments already reminded (idempotent re-runs) ---
-  const ids = due.map((a) => a.appointment_id);
-  const already = new Set<string>();
-  if (ids.length > 0) {
+  // Skip appointments already reminded TODAY (idempotent same-day re-runs; the
+  // 3-day and 1-day reminders land on different days, so both still go out).
+  const remindedToday = new Set<string>();
+  if (due.length > 0) {
     const { data: logged, error: logErr } = await supabase
       .from('sms_log')
       .select('appointment_id')
-      .in('appointment_id', ids)
-      .in('delivery_status', ['sent', 'stubbed']);
-    if (logErr) {
-      console.error(`[sms-reminders] sms_log lookup failed: ${logErr.message}`);
-      return new Response(JSON.stringify({ error: logErr.message }), { status: 500 });
-    }
-    for (const row of logged ?? []) already.add(row.appointment_id as string);
+      .in('appointment_id', due.map((a) => a.appointment_id))
+      .eq('message_kind', 'reminder')
+      .gte('sent_at', todayMidnight);
+    if (logErr) return fail(`reminder sms_log lookup failed: ${logErr.message}`);
+    for (const r of logged ?? []) remindedToday.add(r.appointment_id as string);
   }
 
-  // --- send + log, one row per attempt ---
-  let sent = 0;
-  let failed = 0;
-  let skipped = 0;
-  for (const appt of due) {
-    if (already.has(appt.appointment_id) || !appt.patients.contact_number) {
-      skipped++;
+  for (const a of due) {
+    if (remindedToday.has(a.appointment_id) || !a.patients.contact_number) {
+      rem.skipped++;
       continue;
     }
     const outcome = await gateway.send(
-      appt.patients.contact_number,
-      reminderMessage(appt.scheduled_date),
+      a.patients.contact_number,
+      reminderMessage(asLang(a.patients.preferred_language), a.scheduled_date),
     );
-    const { error: insErr } = await supabase.from('sms_log').insert({
-      appointment_id: appt.appointment_id,
-      delivery_status: outcome,
-    });
-    if (insErr) console.error(`[sms-reminders] log insert failed: ${insErr.message}`);
-    if (outcome === 'failed') failed++;
-    else sent++;
+    const { error: insErr } = await supabase
+      .from('sms_log')
+      .insert({ appointment_id: a.appointment_id, delivery_status: outcome, message_kind: 'reminder' });
+    if (insErr) console.error(`[sms-reminders] reminder log insert failed: ${insErr.message}`);
+    outcome === 'failed' ? rem.failed++ : rem.sent++;
   }
 
-  const summary = { gateway: gateway.name, date: tomorrow, due: due.length, sent, failed, skipped };
+  // ======================= 2. MISSED FOLLOW-UPS =======================
+  const windowStart = new Date(Date.now() - FOLLOWUP_WINDOW_DAYS * 86_400_000).toISOString();
+  const fup = { window_days: FOLLOWUP_WINDOW_DAYS, candidates: 0, sent: 0, failed: 0, skipped: 0 };
+
+  const { data: missedData, error: missedErr } = await supabase
+    .from('appointments')
+    .select('appointment_id, patient_id, scheduled_date, patients!inner(contact_number, sms_consent, preferred_language)')
+    .eq('status', 'missed')
+    .gte('updated_at', windowStart)
+    .eq('patients.sms_consent', true);
+  if (missedErr) return fail(`missed query failed: ${missedErr.message}`);
+  const missed = (missedData ?? []) as unknown as ApptRow[];
+  fup.candidates = missed.length;
+
+  if (missed.length > 0) {
+    const apptIds = missed.map((a) => a.appointment_id);
+    const patientIds = [...new Set(missed.map((a) => a.patient_id))];
+
+    // Already followed up (send once, ever).
+    const { data: doneLogs, error: dErr } = await supabase
+      .from('sms_log')
+      .select('appointment_id')
+      .in('appointment_id', apptIds)
+      .eq('message_kind', 'follow_up');
+    if (dErr) return fail(`follow-up sms_log lookup failed: ${dErr.message}`);
+    const alreadyFollowed = new Set((doneLogs ?? []).map((r) => r.appointment_id as string));
+
+    // Rebooked patients — those with an upcoming scheduled check-up — are skipped.
+    const { data: upcoming, error: uErr } = await supabase
+      .from('appointments')
+      .select('patient_id')
+      .in('patient_id', patientIds)
+      .eq('status', 'scheduled');
+    if (uErr) return fail(`upcoming lookup failed: ${uErr.message}`);
+    const rebooked = new Set((upcoming ?? []).map((r) => r.patient_id as string));
+
+    for (const a of missed) {
+      if (alreadyFollowed.has(a.appointment_id) || rebooked.has(a.patient_id) || !a.patients.contact_number) {
+        fup.skipped++;
+        continue;
+      }
+      const outcome = await gateway.send(
+        a.patients.contact_number,
+        followUpMessage(asLang(a.patients.preferred_language)),
+      );
+      const { error: insErr } = await supabase
+        .from('sms_log')
+        .insert({ appointment_id: a.appointment_id, delivery_status: outcome, message_kind: 'follow_up' });
+      if (insErr) console.error(`[sms-reminders] follow-up log insert failed: ${insErr.message}`);
+      outcome === 'failed' ? fup.failed++ : fup.sent++;
+    }
+  }
+
+  const summary = { gateway: gateway.name, reminders: rem, followUps: fup };
   console.log(`[sms-reminders] ${JSON.stringify(summary)}`);
   return new Response(JSON.stringify(summary), {
     headers: { 'Content-Type': 'application/json' },
