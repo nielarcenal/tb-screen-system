@@ -21,6 +21,13 @@ interface Props {
   onBack: () => void;
 }
 
+/** Whole-day difference toIso − fromIso for local YYYY-MM-DD strings. */
+function dayDiff(fromIso: string, toIso: string): number {
+  const [ay, am, ad] = fromIso.split('-').map(Number);
+  const [by, bm, bd] = toIso.split('-').map(Number);
+  return Math.round((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / 86_400_000);
+}
+
 export default function ReferralDetail({ referralId, onBack }: Props) {
   const { t } = useTranslation();
   const [referral, setReferral] = useState<ReferralJoined | null>(null);
@@ -34,6 +41,10 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduling, setScheduling] = useState(false);
   const [scheduleError, setScheduleError] = useState<string | null>(null);
+  // Inline "record attendance" editor: which appointment, and the date the
+  // patient ACTUALLY came (may differ from the scheduled date — early or late).
+  const [attendId, setAttendId] = useState<string | null>(null);
+  const [attendDate, setAttendDate] = useState('');
 
   const load = useCallback(async () => {
     setError(null);
@@ -123,7 +134,51 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
   // otherwise received (the referral had to be received to be worked and closed).
   const reopenStatus: 'tested' | 'received' = referral.result_outcome ? 'tested' : 'received';
   const patientId = referral.patient_id;
-  const minScheduleDate = toDateOnly(new Date(Date.now() + 86_400_000)); // tomorrow (future only)
+  const todayStr = toDateOnly(new Date());
+  const minScheduleDate = todayStr; // today or later — same-day check-ups allowed
+
+  // Record attendance on the day the patient actually came (default today, never
+  // future). Handles early, on-time, and late arrivals, and recovers a row that
+  // was previously marked missed. `on` pre-fills when correcting an existing date.
+  const openAttend = (id: string, on?: string | null) => {
+    setAttendId(id);
+    setAttendDate(on ?? todayStr);
+  };
+  const confirmAttend = async (id: string) => {
+    if (!attendDate) return;
+    await updateAppointment(id, { attended_date: attendDate, status: 'attended' });
+    setAttendId(null);
+  };
+  // Undo a mistaken attended/missed back to an open 'scheduled' appointment.
+  const undoAppointment = (id: string) =>
+    updateAppointment(id, { attended_date: null, status: 'scheduled' });
+
+  /** Neutral early / on-time / late note from the two dates — descriptive, not scored (§1). */
+  const timingNote = (a: AppointmentRow): string | null => {
+    if (a.status !== 'attended' || !a.attended_date) return null;
+    const d = dayDiff(a.scheduled_date, a.attended_date);
+    if (d === 0) return t('detail.apptOnTime');
+    return d < 0 ? t('detail.apptEarly', { count: -d }) : t('detail.apptLate', { count: d });
+  };
+
+  /** Human relative date vs today: today/yesterday/tomorrow, else N days/months/years ago or ahead. */
+  const relativeDate = (iso: string): string => {
+    const d = dayDiff(todayStr, iso); // signed: iso − today
+    if (d === 0) return t('detail.relToday');
+    if (d === -1) return t('detail.relYesterday');
+    if (d === 1) return t('detail.relTomorrow');
+    const ad = Math.abs(d);
+    const past = d < 0;
+    if (ad < 30) {
+      return past ? t('detail.relDaysAgo', { count: ad }) : t('detail.relInDays', { count: ad });
+    }
+    if (ad < 365) {
+      const m = Math.round(ad / 30.44);
+      return past ? t('detail.relMonthsAgo', { count: m }) : t('detail.relInMonths', { count: m });
+    }
+    const y = Math.round(ad / 365.25);
+    return past ? t('detail.relYearsAgo', { count: y }) : t('detail.relInYears', { count: y });
+  };
 
   // Schedule a follow-up check-up (RLS: appointments_tbdots_insert, migration 0011 —
   // staff may insert only for a patient referred to their own facility).
@@ -479,7 +534,8 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
           <div className="appt-list">
             {appointments.map((a) => (
               <div key={a.appointment_id} className="appt-row">
-                <span className="appt-date">{a.scheduled_date}</span>
+                <span className="appt-date">{relativeDate(a.scheduled_date)}</span>
+                <span className="appt-exactdate">{a.scheduled_date}</span>
                 <span className={`chip a-${a.status}`}>
                   {a.status === 'scheduled'
                     ? t('detail.apptScheduled')
@@ -487,29 +543,85 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
                       ? t('detail.apptAttended')
                       : t('detail.apptMissed')}
                 </span>
-                {a.status === 'scheduled' ? (
-                  <span className="appt-actions">
+                {timingNote(a) ? <span className="appt-timing">{timingNote(a)}</span> : null}
+                {attendId === a.appointment_id ? (
+                  <span className="appt-attendform">
+                    <input
+                      type="date"
+                      max={todayStr}
+                      aria-label={t('detail.attendDateLabel')}
+                      value={attendDate}
+                      onChange={(e) => setAttendDate(e.target.value)}
+                    />
                     <button
                       className="appt-attend"
-                      disabled={busy}
-                      onClick={() =>
-                        void updateAppointment(a.appointment_id, {
-                          attended_date: toDateOnly(new Date()),
-                          status: 'attended',
-                        })
-                      }
+                      disabled={busy || !attendDate}
+                      onClick={() => void confirmAttend(a.appointment_id)}
                     >
-                      {t('detail.markAttended')}
+                      {t('detail.attendConfirm')}
                     </button>
-                    <button
-                      className="appt-miss"
-                      disabled={busy}
-                      onClick={() => void updateAppointment(a.appointment_id, { status: 'missed' })}
-                    >
-                      {t('detail.markMissed')}
+                    <button className="appt-undo" disabled={busy} onClick={() => setAttendId(null)}>
+                      {t('detail.cancel')}
                     </button>
                   </span>
-                ) : null}
+                ) : (
+                  <span className="appt-actions">
+                    {a.status === 'scheduled' ? (
+                      <>
+                        <button
+                          className="appt-attend"
+                          disabled={busy}
+                          onClick={() => openAttend(a.appointment_id)}
+                        >
+                          {t('detail.markAttended')}
+                        </button>
+                        <button
+                          className="appt-miss"
+                          disabled={busy}
+                          onClick={() =>
+                            void updateAppointment(a.appointment_id, { status: 'missed' })
+                          }
+                        >
+                          {t('detail.markMissed')}
+                        </button>
+                      </>
+                    ) : a.status === 'attended' ? (
+                      <>
+                        <button
+                          className="appt-editdate"
+                          disabled={busy}
+                          onClick={() => openAttend(a.appointment_id, a.attended_date)}
+                        >
+                          {t('detail.editAttendDate')}
+                        </button>
+                        <button
+                          className="appt-undo"
+                          disabled={busy}
+                          onClick={() => void undoAppointment(a.appointment_id)}
+                        >
+                          {t('detail.apptUndo')}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className="appt-attend"
+                          disabled={busy}
+                          onClick={() => openAttend(a.appointment_id)}
+                        >
+                          {t('detail.recordAttendance')}
+                        </button>
+                        <button
+                          className="appt-undo"
+                          disabled={busy}
+                          onClick={() => void undoAppointment(a.appointment_id)}
+                        >
+                          {t('detail.apptUndo')}
+                        </button>
+                      </>
+                    )}
+                  </span>
+                )}
               </div>
             ))}
           </div>
