@@ -45,12 +45,39 @@ type Lang = 'en' | 'tl' | 'ceb';
 // Neutral signature — no "TB" (§4: SMS is readable by anyone holding the phone).
 const SIGN = '- Health Reminder';
 
-/** Neutral reminder text per language ({date} = YYYY-MM-DD). */
-const REMINDER: Record<Lang, (d: string) => string> = {
-  en: (d) => `Reminder: you have a health check-up on ${d}. Please visit your health center. ${SIGN}`,
-  tl: (d) => `Paalala: may health check-up kayo sa ${d}. Pakibisita ang inyong health center. ${SIGN}`,
-  ceb: (d) => `Pahinumdom: naa kay health check-up sa ${d}. Palihug bisitaha ang health center. ${SIGN}`,
+// Localized FULL weekday + month names. Deno's Intl has no reliable Cebuano data,
+// so map them explicitly (like the rest of the app's i18n). Index 0 = Sunday / January.
+const WEEKDAYS: Record<Lang, string[]> = {
+  en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+  tl: ['Linggo', 'Lunes', 'Martes', 'Miyerkoles', 'Huwebes', 'Biyernes', 'Sabado'],
+  ceb: ['Dominggo', 'Lunes', 'Martes', 'Miyerkules', 'Huwebes', 'Biyernes', 'Sabado'],
 };
+const MONTHS: Record<Lang, string[]> = {
+  en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+  tl: ['Enero', 'Pebrero', 'Marso', 'Abril', 'Mayo', 'Hunyo', 'Hulyo', 'Agosto', 'Setyembre', 'Oktubre', 'Nobyembre', 'Disyembre'],
+  ceb: ['Enero', 'Pebrero', 'Marso', 'Abril', 'Mayo', 'Hunyo', 'Hulyo', 'Agosto', 'Septyembre', 'Oktubre', 'Nobyembre', 'Disyembre'],
+};
+
+/** "Weekday, Month D, YYYY" in the given language, from a YYYY-MM-DD string. */
+function formatDate(lang: Lang, iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  return `${WEEKDAYS[lang][dow]}, ${MONTHS[lang][m - 1]} ${d}, ${y}`;
+}
+
+/** Drop the TB-identifying "DOTS" token so the SMS names the place without outing the patient (§4). */
+function neutralFacility(name: string): string {
+  return name.replace(/\bDOTS\b/gi, '').replace(/\s{2,}/g, ' ').trim();
+}
+
+/** Enriched neutral reminder: weekday + full date + where to go. */
+function buildReminder(lang: Lang, iso: string, facility: string | null): string {
+  const when = formatDate(lang, iso);
+  const at = facility ? (lang === 'en' ? ` at ${facility}` : ` sa ${facility}`) : '';
+  if (lang === 'en') return `Reminder: it's important to go to your health check-up on ${when}${at}. Please don't miss it. ${SIGN}`;
+  if (lang === 'tl') return `Paalala: mahalagang pumunta sa inyong health check-up sa ${when}${at}. Huwag pong kalimutan. ${SIGN}`;
+  return `Pahinumdom: importante nga moadto ka sa imong health check-up sa ${when}${at}. Palihug ayaw kalimti. ${SIGN}`;
+}
 
 /** Neutral missed-appointment follow-up per language. */
 const FOLLOWUP: Record<Lang, () => string> = {
@@ -62,8 +89,10 @@ const FOLLOWUP: Record<Lang, () => string> = {
 function asLang(l: string | null | undefined): Lang | null {
   return l === 'en' || l === 'tl' || l === 'ceb' ? l : null;
 }
-function reminderMessage(lang: Lang | null, date: string): string {
-  return lang ? REMINDER[lang](date) : `${REMINDER.en(date)} / ${REMINDER.tl(date)}`;
+function reminderMessage(lang: Lang | null, iso: string, facility: string | null): string {
+  return lang
+    ? buildReminder(lang, iso, facility)
+    : `${buildReminder('en', iso, facility)} / ${buildReminder('tl', iso, facility)}`;
 }
 function followUpMessage(lang: Lang | null): string {
   return lang ? FOLLOWUP[lang]() : `${FOLLOWUP.en()} / ${FOLLOWUP.tl()}`;
@@ -133,6 +162,36 @@ Deno.serve(async (req) => {
     for (const r of logged ?? []) remindedToday.add(r.appointment_id as string);
   }
 
+  // Map each due patient to the (neutral) facility they were referred to — the
+  // "where to go". Appointments carry no facility; the referral does.
+  const facilityByPatient = new Map<string, string | null>();
+  if (due.length > 0) {
+    const pids = [...new Set(due.map((a) => a.patient_id))];
+    const { data: refs, error: refErr } = await supabase
+      .from('referrals')
+      .select('patient_id, facility_id, created_at')
+      .in('patient_id', pids)
+      .order('created_at', { ascending: false });
+    if (refErr) return fail(`referral lookup failed: ${refErr.message}`);
+    const facIdByPatient = new Map<string, string>();
+    for (const r of refs ?? []) {
+      if (!facIdByPatient.has(r.patient_id as string)) {
+        facIdByPatient.set(r.patient_id as string, r.facility_id as string);
+      }
+    }
+    const fids = [...new Set(facIdByPatient.values())];
+    const nameByFacility = new Map<string, string>();
+    if (fids.length > 0) {
+      const { data: facs, error: facErr } = await supabase
+        .from('facilities')
+        .select('facility_id, name')
+        .in('facility_id', fids);
+      if (facErr) return fail(`facility lookup failed: ${facErr.message}`);
+      for (const f of facs ?? []) nameByFacility.set(f.facility_id as string, neutralFacility(f.name as string));
+    }
+    for (const [pid, fid] of facIdByPatient) facilityByPatient.set(pid, nameByFacility.get(fid) ?? null);
+  }
+
   for (const a of due) {
     if (remindedToday.has(a.appointment_id) || !a.patients.contact_number) {
       rem.skipped++;
@@ -140,7 +199,11 @@ Deno.serve(async (req) => {
     }
     const outcome = await gateway.send(
       a.patients.contact_number,
-      reminderMessage(asLang(a.patients.preferred_language), a.scheduled_date),
+      reminderMessage(
+        asLang(a.patients.preferred_language),
+        a.scheduled_date,
+        facilityByPatient.get(a.patient_id) ?? null,
+      ),
     );
     const { error: insErr } = await supabase
       .from('sms_log')
