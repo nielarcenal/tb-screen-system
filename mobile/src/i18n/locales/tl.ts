@@ -42,6 +42,14 @@ export const tl: Translation = {
       'Hindi maka-sync ngayon — walang internet. Nakasave sa telepono na ito ang mga tala mo at awtomatikong magsi-sync kapag online ka na.',
     syncError:
       'Hindi maka-sync — pakisubukan ulit. Kung paulit-ulit, sabihin sa iyong coordinator: {{message}}',
+    // Intl.PluralRules returns "one" for EVERY count in tl, so _one must carry
+    // {{count}} — a hardcoded "1" here would be shown for any number.
+    syncPartial:
+      'May {{count}} talang hindi na-upload. Nai-sync naman ang iba. Nakasave pa rin ito sa teleponong ito at susubukan ulit — kung paulit-ulit ito, sabihin sa iyong coordinator.',
+    syncPartial_one:
+      'May {{count}} talang hindi na-upload. Nai-sync naman ang iba. Nakasave pa rin ito sa teleponong ito at susubukan ulit — kung paulit-ulit ito, sabihin sa iyong coordinator.',
+    syncPartial_other:
+      'May {{count}} talang hindi na-upload. Nai-sync naman ang iba. Nakasave pa rin ito sa teleponong ito at susubukan ulit — kung paulit-ulit ito, sabihin sa iyong coordinator.',
     primaryCta: 'Mag-enroll at mag-screen ng pasyente',
     attentionHeading: 'Kailangan ng atensyon',
     tiles: {

@@ -18,6 +18,7 @@ import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { supabase } from '../lib/supabase';
 import { isSupabaseConfigured } from '../lib/env';
 import { syncAll } from './syncEngine';
+import { isConnectivityError } from './syncErrors';
 import { useSyncStore } from '../store/syncStore';
 import { useAppStore } from '../store/appStore';
 
@@ -42,18 +43,6 @@ function deriveOnline(state: NetInfoState): boolean {
 }
 
 /**
- * A sync error is a connectivity problem — the device is offline, DNS cannot
- * resolve the Supabase host, or the request timed out — rather than a server or
- * data error. These get a plain "you're offline" message instead of a raw
- * technical string (e.g. "fetch failed: java.net.UnknownHostException…").
- */
-function isConnectivityError(message: string): boolean {
-  return /fetch failed|failed to fetch|network request failed|unable to resolve host|unknownhostexception|no address associated|enotfound|econnrefused|econnreset|etimedout|timeout|timed out|socketexception|network/i.test(
-    message,
-  );
-}
-
-/**
  * Run one sync pass, guarded. Safe to call from anywhere (button, reconnect,
  * app-foreground). No-ops (queues a rerun) if a sync is already running.
  */
@@ -74,10 +63,23 @@ export async function triggerSync(): Promise<void> {
   inFlight = true;
   store.set({ phase: 'syncing', lastError: null });
   try {
-    const { pushed, pulled } = await syncAll();
+    const { pushed, pulled, failures } = await syncAll();
     await pushAssignedBarangayIfDirty(data.session.user.id);
     useAppStore.getState().setLastSyncAt(new Date().toISOString());
     store.set({ lastResult: `pushed ${pushed}, pulled ${pulled}` });
+
+    // The pass finished, but the server refused some rows (D-10). They are
+    // still queued and will be retried, so this is not a failed sync — but it
+    // must not read as a clean one either.
+    if (failures.length > 0) {
+      store.set({
+        lastError: {
+          kind: 'partial',
+          count: failures.length,
+          detail: failures.map((f) => `${f.row ?? f.table}: ${f.message}`).join('; '),
+        },
+      });
+    }
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
     store.set({

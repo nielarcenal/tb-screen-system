@@ -42,6 +42,14 @@ export const ceb: Translation = {
       'Dili maka-sync karon — walay internet. Naka-save niining telepono ang imong mga tala ug awtomatikong mag-sync kung online na ka.',
     syncError:
       'Dili maka-sync — palihug sulayi pag-usab. Kung magpadayon, sultihi ang imong coordinator: {{message}}',
+    // Intl.PluralRules returns "one" for EVERY count in ceb, so _one must carry
+    // {{count}} — a hardcoded "1" here would be shown for any number.
+    syncPartial:
+      'Naay {{count}} ka rekord nga wala ma-upload. Na-sync ra ang uban. Naa pa gihapon kini niining telepono ug sulayan pag-usab — kung magbalik-balik kini, sultihi ang imong coordinator.',
+    syncPartial_one:
+      'Naay {{count}} ka rekord nga wala ma-upload. Na-sync ra ang uban. Naa pa gihapon kini niining telepono ug sulayan pag-usab — kung magbalik-balik kini, sultihi ang imong coordinator.',
+    syncPartial_other:
+      'Naay {{count}} ka rekord nga wala ma-upload. Na-sync ra ang uban. Naa pa gihapon kini niining telepono ug sulayan pag-usab — kung magbalik-balik kini, sultihi ang imong coordinator.',
     primaryCta: 'Pag-enroll ug pag-screen og pasyente',
     attentionHeading: 'Nagkinahanglan og atensyon',
     tiles: {

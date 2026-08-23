@@ -39,6 +39,12 @@ export const en = {
     syncOffline:
       "Can't sync right now — no internet connection. Your records are saved on this phone and will sync automatically once you're back online.",
     syncError: "Couldn't sync — please try again. If it keeps happening, tell your coordinator: {{message}}",
+    syncPartial:
+      '{{count}} record(s) could not be uploaded. Everything else synced. They are still saved on this phone and will be tried again — if this keeps happening, tell your coordinator.',
+    syncPartial_one:
+      '1 record could not be uploaded. Everything else synced. It is still saved on this phone and will be tried again — if this keeps happening, tell your coordinator.',
+    syncPartial_other:
+      '{{count}} records could not be uploaded. Everything else synced. They are still saved on this phone and will be tried again — if this keeps happening, tell your coordinator.',
     primaryCta: 'Enroll & screen a patient',
     attentionHeading: 'Needs attention',
     tiles: {

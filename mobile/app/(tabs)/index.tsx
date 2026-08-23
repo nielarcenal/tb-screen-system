@@ -313,7 +313,9 @@ export default function HomeScreen() {
           <Text variant="bodySmall" style={{ color: palette.red }}>
             {lastError.kind === 'offline'
               ? t('home.syncOffline')
-              : t('home.syncError', { message: lastError.detail })}
+              : lastError.kind === 'partial'
+                ? t('home.syncPartial', { count: lastError.count ?? 0 })
+                : t('home.syncError', { message: lastError.detail })}
           </Text>
         ) : null}
 
