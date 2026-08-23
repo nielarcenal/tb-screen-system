@@ -36,6 +36,15 @@ mobile/android/
 *.keystore
 *.mobileprovision
 
+# Test-account credentials. reset_fresh_accounts.sql carries the plaintext
+# shared password for four LIVE Supabase accounts; it has never been committed
+# (history checked) and must stay that way. A bare `git add .` would have
+# staged it. Give any future credential script one of these suffixes so it is
+# covered by name rather than relying on someone remembering.
+supabase/reset_fresh_accounts.sql
+*.local.sql
+*.secret.sql
+
 # Claude Code local settings
 .claude/settings.local.json
 
