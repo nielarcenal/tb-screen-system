@@ -7,7 +7,7 @@
  *  - Starts auto-sync (fires on reconnect) for the app's lifetime.
  */
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, AppState, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { MD3LightTheme, PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -95,6 +95,25 @@ export default function RootLayout() {
     return () => stopAutoSync();
   }, []);
 
+  // Supabase's token auto-refresh is a JS timer, and JS timers don't run
+  // reliably once React Native is backgrounded. Left alone, the access token
+  // (1h) quietly expires while the phone is asleep, so the app comes back with
+  // only the refresh token — the one state where a single rejected refresh
+  // ends the session. Tie the ticker to the foreground instead, as the
+  // Supabase React Native setup requires: refresh while the BHW is using the
+  // app, stop while they aren't.
+  useEffect(() => {
+    if (AppState.currentState === 'active') void supabase.auth.startAutoRefresh();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void supabase.auth.startAutoRefresh();
+      else void supabase.auth.stopAutoRefresh();
+    });
+    return () => {
+      sub.remove();
+      void supabase.auth.stopAutoRefresh();
+    };
+  }, []);
+
   // Restore the auth session into the transient sessionStore on launch (works
   // offline — Supabase caches the session in AsyncStorage) and keep it in step
   // with later sign-ins/outs. Feature 8: this replaces the sync-test bootstrap.
@@ -119,13 +138,22 @@ export default function RootLayout() {
         fetchOwnName(data.session.user.id);
       }
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (__DEV__) {
+        // eslint-disable-next-line no-console
+        console.log('[auth]', event, session ? 'session' : 'no session');
+      }
       if (session) {
         useSessionStore.getState().setSession(session.user.id, session.user.email ?? null);
         if (!useSessionStore.getState().fullName) fetchOwnName(session.user.id);
-      } else {
-        useSessionStore.getState().clearSession();
+        return;
       }
+      // A null session is NOT always a sign-out. Supabase also emits
+      // INITIAL_SESSION with null when its own start-up failed (e.g. the first
+      // request after a network change), and clearing on that made the app
+      // demand a sign-in the BHW never asked for. Only SIGNED_OUT means the
+      // stored session is really gone.
+      if (event === 'SIGNED_OUT') useSessionStore.getState().clearSession();
     });
     return () => sub.subscription.unsubscribe();
   }, []);

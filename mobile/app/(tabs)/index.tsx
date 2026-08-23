@@ -48,6 +48,7 @@ export default function HomeScreen() {
   const termsAcceptedAt = useAppStore((s) => s.termsAcceptedAt);
   const lastSyncAt = useAppStore((s) => s.lastSyncAt);
   const userId = useSessionStore((s) => s.userId);
+  const sessionExpired = useSessionStore((s) => s.expired);
   const { isOnline, phase, lastError } = useSyncStore();
 
   const [upcoming, setUpcoming] = useState<DashboardAppointment[]>([]);
@@ -206,12 +207,15 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 8, paddingBottom: 32, gap: 14 }}>
+        {/* Two different situations, two different messages: never signed in
+            on this phone, vs. a session that ended on its own. The second one
+            has to say the patients are still here — the list below it is. */}
         <Banner
           visible={!userId}
-          icon="account-alert"
+          icon={sessionExpired ? 'clock-alert-outline' : 'account-alert'}
           actions={[{ label: t('home.signInCta'), onPress: () => router.push('/sign-in') }]}
         >
-          {t('home.signInBanner')}
+          {sessionExpired ? t('home.sessionExpiredBanner') : t('home.signInBanner')}
         </Banner>
 
         {/* Offline note — calm, informational, never alarming (§7). */}

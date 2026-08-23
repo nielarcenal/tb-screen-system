@@ -137,7 +137,11 @@ export default function AdminApp() {
       <div className="loginpage">
         <div className="loginpage-top">
           <LangToggle />
-          <button className="secondary" onClick={() => void supabase.auth.signOut()}>
+          {/* scope: 'local' — this browser only; see AppShell. */}
+          <button
+            className="secondary"
+            onClick={() => void supabase.auth.signOut({ scope: 'local' })}
+          >
             {t('common.signOut')}
           </button>
         </div>

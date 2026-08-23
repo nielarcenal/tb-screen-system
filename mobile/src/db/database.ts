@@ -266,6 +266,24 @@ export async function clearSyncableCache(): Promise<void> {
   `);
 }
 
+/**
+ * How many locally-created rows have not yet reached the server. Sign-out
+ * wipes the cache (clearSyncableCache above), so this is exactly the number of
+ * records that would be destroyed — the BHW is asked before that happens
+ * rather than losing a day's enrolments to a bad signal.
+ */
+export async function countPendingRows(): Promise<number> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ n: number }>(`
+    SELECT
+        (SELECT count(*) FROM patients     WHERE sync_status = 'pending')
+      + (SELECT count(*) FROM screenings   WHERE sync_status = 'pending')
+      + (SELECT count(*) FROM referrals    WHERE sync_status = 'pending')
+      + (SELECT count(*) FROM appointments WHERE sync_status = 'pending') AS n
+  `);
+  return row?.n ?? 0;
+}
+
 /** Opens (once) and migrates the local database, returning the shared handle. */
 export function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (!dbPromise) {

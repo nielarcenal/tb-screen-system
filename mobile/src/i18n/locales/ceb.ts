@@ -29,6 +29,8 @@ export const ceb: Translation = {
     title: 'TB-Screen BHW',
     signInBanner:
       'Pag-sign in aron maka-sync ug maka-enroll og pasyente. Magpabilin niining device ang mga natala na.',
+    sessionExpiredBanner:
+      'Natapos ang imong session — pag-sign in pag-usab aron makapadayon sa pag-sync. Anaa pa gihapon niining telepono ang imong mga pasyente ug natala nga trabaho.',
     signInCta: 'Pag-sign in',
     syncChipSynced: 'Naka-sync',
     syncChipSyncing: 'Nagsi-sync…',
@@ -106,7 +108,17 @@ export const ceb: Translation = {
     // TODO i18n verify
     signOutConfirmTitle: 'Pag-sign out?',
     signOutConfirmBody:
-      'Papason ang mga offline nga rekord niining telepono aron dili makita sa sunod nga account. Kung online ka, iduso una ang wala pa ma-sync — kung dili, mawala kini.',
+      'Papason ang mga offline nga rekord niining telepono aron dili makita sa sunod nga account. Ipadala una ang wala pa ma-sync — kung naay dili mapadala, pangutan-on ka una sa dili pa kini papason.',
+    signOutSyncing: 'Nag-sync…',
+    signOutPendingTitle: 'Naay wala pa maipadala',
+    signOutPendingBody:
+      'Naay {{count}} ka rekord nga wala pa makaabot sa server. Kung mo-sign out ka, permanente kining mawala. Kung mahimo, konektar sa internet ug mag-sync una sa dili pa mo-sign out.',
+    signOutPendingBody_one:
+      'Naay {{count}} ka rekord nga wala pa makaabot sa server. Kung mo-sign out ka, permanente kining mawala. Kung mahimo, konektar sa internet ug mag-sync una sa dili pa mo-sign out.',
+    signOutPendingBody_other:
+      'Naay {{count}} ka rekord nga wala pa makaabot sa server. Kung mo-sign out ka, permanente kining mawala. Kung mahimo, konektar sa internet ug mag-sync una sa dili pa mo-sign out.',
+    staySignedIn: 'Magpabilin nga naka-sign in',
+    signOutDiscard: 'Mag-sign out ug papason',
     languageSection: 'Pinulongan',
     legalSection: 'Legal',
     viewTerms: 'Tan-awa ang mga termino ug disclaimer',

@@ -23,7 +23,7 @@ import AddressCascade, {
   emptyAddress,
 } from '../../src/components/AddressCascade';
 import { cascadeForBarangay } from '../../src/db/psgcRepo';
-import { clearSyncableCache } from '../../src/db/database';
+import { clearSyncableCache, countPendingRows } from '../../src/db/database';
 import { triggerSync } from '../../src/sync/syncManager';
 import { palette } from '../../src/ui/tokens';
 
@@ -55,9 +55,11 @@ export default function SettingsScreen() {
   const assignedBarangayCode = useAppStore((s) => s.assignedBarangayCode);
   const assignedBarangayDirty = useAppStore((s) => s.assignedBarangayDirty);
   const setAssignedBarangay = useAppStore((s) => s.setAssignedBarangay);
-  const { userId, email, clearSession } = useSessionStore();
+  const { userId, email, beginSignOut, clearSession } = useSessionStore();
 
   const [address, setAddress] = useState<AddressSelection>(emptyAddress);
+  // True while the pre-sign-out sync runs, so the button can't be tapped twice.
+  const [signingOut, setSigningOut] = useState(false);
 
   // Pre-fill the cascade from the stored assigned barangay (if set).
   useEffect(() => {
@@ -69,10 +71,32 @@ export default function SettingsScreen() {
   }, []);
 
   /**
-   * Sign out = end this BHW's session AND wipe the offline cache, so another
-   * account on the same phone can never read the previous account's patients
-   * (the server scopes each pull; the cache must not outlive the session).
-   * Best-effort final sync first so pending work isn't lost when online.
+   * End the session and wipe the offline cache, so another account on the same
+   * phone can never read the previous account's patients (the server scopes
+   * each pull; the cache must not outlive the session that fetched it).
+   *
+   * Only ever called once we know nothing unsynced is about to be destroyed,
+   * or once the BHW has explicitly agreed to discard it.
+   */
+  const performSignOut = async () => {
+    beginSignOut(); // marks the SIGNED_OUT below as deliberate, not expiry
+    // scope: 'local' ends THIS device's session only. The default ('global')
+    // revokes the account everywhere, which signed the same BHW out of their
+    // other phone or the web portal mid-shift.
+    await supabase.auth.signOut({ scope: 'local' }); // listener clears the store too
+    clearSession();
+    await clearSyncableCache();
+  };
+
+  /**
+   * Sign out, with a final push first so a day's work isn't lost when online.
+   *
+   * The cache wipe is irreversible, so it must not run on a guess: triggerSync()
+   * never throws (it records failures in useSyncStore.lastError), so wrapping it
+   * in try/catch proves nothing. Instead we ask the database afterwards how many
+   * rows are still pending, and only wipe when the answer is zero — otherwise
+   * the BHW is told exactly how many records would be destroyed and can stay
+   * signed in until they find a signal.
    */
   const confirmSignOut = () => {
     Alert.alert(t('settings.signOutConfirmTitle'), t('settings.signOutConfirmBody'), [
@@ -82,14 +106,29 @@ export default function SettingsScreen() {
         style: 'destructive',
         onPress: () => {
           void (async () => {
+            setSigningOut(true);
             try {
               await triggerSync(); // push pending rows if we're online
-            } catch {
-              // offline / failed — proceed; the user was warned in the dialog
+              const pending = await countPendingRows();
+              if (pending === 0) {
+                await performSignOut();
+                return;
+              }
+              Alert.alert(
+                t('settings.signOutPendingTitle'),
+                t('settings.signOutPendingBody', { count: pending }),
+                [
+                  { text: t('settings.staySignedIn'), style: 'cancel' },
+                  {
+                    text: t('settings.signOutDiscard'),
+                    style: 'destructive',
+                    onPress: () => void performSignOut(),
+                  },
+                ],
+              );
+            } finally {
+              setSigningOut(false);
             }
-            await supabase.auth.signOut(); // _layout's auth listener clears the store too
-            clearSession();
-            await clearSyncableCache();
           })();
         },
       },
@@ -211,11 +250,13 @@ export default function SettingsScreen() {
                 icon="logout"
                 textColor={palette.red}
                 onPress={confirmSignOut}
+                loading={signingOut}
+                disabled={signingOut}
                 contentStyle={{ height: 52 }}
                 labelStyle={{ fontWeight: '600' }}
                 style={{ marginTop: 12, borderRadius: 26, borderColor: palette.outline }}
               >
-                {t('settings.signOut')}
+                {signingOut ? t('settings.signOutSyncing') : t('settings.signOut')}
               </Button>
             </>
           ) : (

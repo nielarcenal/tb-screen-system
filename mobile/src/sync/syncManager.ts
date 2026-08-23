@@ -24,6 +24,17 @@ import { useAppStore } from '../store/appStore';
 let inFlight = false;
 let rerunRequested = false;
 let netInfoUnsub: (() => void) | null = null;
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * How long to let a new connection settle before syncing. NetInfo reports
+ * "online" the moment the phone associates with a Wi-Fi network, which is
+ * before DNS and routing are actually usable — and the first thing a sync does
+ * is refresh the auth token. A refresh sent into a half-up network can reach
+ * the server and lose the reply, which burns the refresh token and signs the
+ * BHW out. Waiting a few seconds costs nothing and avoids that window.
+ */
+const RECONNECT_SETTLE_MS = 4000;
 
 /** Treat "connected AND internet reachable (or unknown)" as online. */
 function deriveOnline(state: NetInfoState): boolean {
@@ -109,7 +120,16 @@ export function startAutoSync(): () => void {
     const online = deriveOnline(state);
     useSyncStore.getState().set({ isOnline: online });
     if (online && wasOnline === false) {
-      void triggerSync(); // just came back online
+      // Just came back online (or moved to another Wi-Fi). Let it settle, and
+      // restart the wait if connectivity flaps again in the meantime.
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        void triggerSync();
+      }, RECONNECT_SETTLE_MS);
+    } else if (!online && reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
     }
     wasOnline = online;
   });
@@ -117,6 +137,10 @@ export function startAutoSync(): () => void {
 }
 
 export function stopAutoSync(): void {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
   if (netInfoUnsub) {
     netInfoUnsub();
     netInfoUnsub = null;

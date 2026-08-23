@@ -29,6 +29,8 @@ export const tl: Translation = {
     title: 'TB-Screen BHW',
     signInBanner:
       'Mag-sign in para maka-sync at makapag-enroll ng pasyente. Mananatili sa device na ito ang mga naitala na.',
+    sessionExpiredBanner:
+      'Natapos ang session mo — mag-sign in ulit para makapag-sync. Nasa telepono pa rin ang mga pasyente at naitala mong trabaho.',
     signInCta: 'Mag-sign in',
     syncChipSynced: 'Naka-sync',
     syncChipSyncing: 'Nagsi-sync…',
@@ -106,7 +108,17 @@ export const tl: Translation = {
     // TODO i18n verify
     signOutConfirmTitle: 'Mag-sign out?',
     signOutConfirmBody:
-      'Buburahin ang mga offline na tala sa teleponong ito upang hindi makita ng susunod na account. Kung online ka, itutulak muna ang mga hindi pa nai-sync — kung hindi, mawawala ang mga ito.',
+      'Buburahin ang mga offline na tala sa teleponong ito upang hindi makita ng susunod na account. Ita-upload muna ang mga hindi pa nai-sync — kung may hindi maita-upload, tatanungin ka muna bago ito burahin.',
+    signOutSyncing: 'Nagsi-sync…',
+    signOutPendingTitle: 'May hindi pa nai-upload',
+    signOutPendingBody:
+      'May {{count}} talang hindi pa nakakarating sa server. Kapag nag-sign out ka, permanente itong mabubura. Kung kaya, kumonekta muna sa internet at mag-sync bago mag-sign out.',
+    signOutPendingBody_one:
+      'May {{count}} talang hindi pa nakakarating sa server. Kapag nag-sign out ka, permanente itong mabubura. Kung kaya, kumonekta muna sa internet at mag-sync bago mag-sign out.',
+    signOutPendingBody_other:
+      'May {{count}} talang hindi pa nakakarating sa server. Kapag nag-sign out ka, permanente itong mabubura. Kung kaya, kumonekta muna sa internet at mag-sync bago mag-sign out.',
+    staySignedIn: 'Manatiling naka-sign in',
+    signOutDiscard: 'Mag-sign out at burahin',
     languageSection: 'Wika',
     legalSection: 'Legal',
     viewTerms: 'Tingnan ang mga tuntunin at disclaimer',

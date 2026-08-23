@@ -27,6 +27,8 @@ export const en = {
   home: {
     title: 'TB-Screen BHW',
     signInBanner: 'Sign in to sync and enroll patients. Already-saved work stays on this device.',
+    sessionExpiredBanner:
+      'Your session ended — sign in again to keep syncing. Your patients and saved work are still on this phone.',
     signInCta: 'Sign in',
     syncChipSynced: 'Synced',
     syncChipSyncing: 'Syncing…',
@@ -99,7 +101,17 @@ export const en = {
     signOut: 'Sign out',
     signOutConfirmTitle: 'Sign out?',
     signOutConfirmBody:
-      'Offline records on this phone will be cleared so the next account cannot see them. Anything not yet synced will be pushed first if you are online — otherwise it will be lost.',
+      'Offline records on this phone will be cleared so the next account cannot see them. Anything not yet synced is uploaded first — if something cannot be uploaded, you will be asked before it is cleared.',
+    signOutSyncing: 'Syncing…',
+    signOutPendingTitle: 'Not everything is uploaded',
+    signOutPendingBody:
+      '{{count}} record(s) on this phone have not reached the server yet. Signing out deletes them permanently. If you can, connect to the internet and sync before signing out.',
+    signOutPendingBody_one:
+      '1 record on this phone has not reached the server yet. Signing out deletes it permanently. If you can, connect to the internet and sync before signing out.',
+    signOutPendingBody_other:
+      '{{count}} records on this phone have not reached the server yet. Signing out deletes them permanently. If you can, connect to the internet and sync before signing out.',
+    staySignedIn: 'Stay signed in',
+    signOutDiscard: 'Sign out and delete',
     languageSection: 'Language',
     legalSection: 'Legal',
     viewTerms: 'View terms and disclaimer',
