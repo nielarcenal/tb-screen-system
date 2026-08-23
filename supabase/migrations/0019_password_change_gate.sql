@@ -63,7 +63,20 @@ comment on function public.clear_password_change_flag() is
 -- Functions are executable by PUBLIC by default; take that back and hand it to
 -- signed-in callers only. `anon` never needs it — an anonymous caller has no
 -- row to clear.
+--
+-- The revoke from PUBLIC is NOT sufficient on its own here. Supabase ships
+-- default privileges on this schema (pg_default_acl, defaclobjtype 'f') that
+-- GRANT EXECUTE on every newly created public function to anon, authenticated
+-- and service_role explicitly. Those are real per-role grants, not PUBLIC, so
+-- `revoke ... from public` leaves them standing — verified on the live project,
+-- where every function in public carries an anon EXECUTE grant. anon must be
+-- named to be removed.
+--
+-- service_role is left in place on purpose: auth.uid() is null there too, so
+-- the call is the same no-op, and revoking it would only set a trap for a
+-- future Edge Function.
 revoke all on function public.clear_password_change_flag() from public;
+revoke all on function public.clear_password_change_flag() from anon;
 grant execute on function public.clear_password_change_flag() to authenticated;
 
 -- ---------------------------------------------------------------------------
@@ -78,7 +91,8 @@ grant execute on function public.clear_password_change_flag() to authenticated;
 --   select grantee, privilege_type
 --     from information_schema.routine_privileges
 --    where routine_name = 'clear_password_change_flag';
---   -- expect: authenticated / EXECUTE, and NOT PUBLIC
+--   -- expect: authenticated / EXECUTE, plus postgres and service_role.
+--   -- anon must NOT appear (see the revoke note above) and neither must PUBLIC.
 --
 -- No backfill is needed. Every account on the live project currently has
 -- must_change_password = false (checked before writing this), so turning the
