@@ -294,6 +294,28 @@ export const en = {
     accessHelp:
       'Access is provisioned by your administrator. Contact them if you can’t sign in.',
   },
+  /**
+   * Forced password change (D-06). Shown while the signed-in account still
+   * holds the password manage-bhw generated for it.
+   */
+  password: {
+    gateTitle: 'Set your own password',
+    gateSub:
+      'This account is still using the password your administrator gave you. Choose a password only you know to continue.',
+    signedInAs: 'Signed in as {{email}}',
+    newLabel: 'New password',
+    confirmLabel: 'Confirm new password',
+    hint: 'At least {{min}} characters. Do not reuse the password you were given.',
+    cta: 'Save password and continue',
+    saving: 'Saving…',
+    signOut: 'Sign out instead',
+    errTooShort: 'Use at least {{min}} characters.',
+    errLooksProvisioned: 'That is a password the system generated. Choose one of your own.',
+    errMismatch: 'The two passwords do not match.',
+    errApi: 'Could not save the password: {{message}}',
+    errFlag:
+      'Your password was changed, but this browser could not finish. Sign in again using your new password.',
+  },
   inbox: {
     title: 'Referral inbox',
     empty: 'No referrals for your facility yet.',

@@ -79,6 +79,28 @@ export const en = {
     cta: 'Sign in',
     error: 'Sign-in failed: {{message}}',
   },
+  /**
+   * Forced password change (D-06). Shown over the whole app while the account
+   * still holds the password its captain or admin provisioned.
+   */
+  password: {
+    gateTitle: 'Set your own password',
+    gateSub:
+      'This account is still using the password your coordinator gave you. Choose a password only you know before you continue.',
+    signedInAs: 'Signed in as {{email}}',
+    newLabel: 'New password',
+    confirmLabel: 'Confirm new password',
+    hint: 'At least {{min}} characters. Do not reuse the password you were given.',
+    cta: 'Save password and continue',
+    saving: 'Saving…',
+    signOut: 'Sign out instead',
+    errTooShort: 'Use at least {{min}} characters.',
+    errLooksProvisioned: 'That is a password the system generated. Choose one of your own.',
+    errMismatch: 'The two passwords do not match.',
+    errApi: 'Could not save the password: {{message}}',
+    errFlag:
+      'Your password was changed, but this phone could not finish. Sign in again using your new password.',
+  },
   status: {
     submitted: 'Submitted',
     received: 'Received',

@@ -18,6 +18,7 @@ import { palette } from '../src/ui/tokens';
 import '../src/i18n/paperDates'; // side-effect: register date-picker locales
 import { changeLanguage } from '../src/i18n';
 import { supabase } from '../src/lib/supabase';
+import ChangePasswordGate from '../src/components/ChangePasswordGate';
 import { useAppStore } from '../src/store/appStore';
 import { useSessionStore } from '../src/store/sessionStore';
 import { startAutoSync, stopAutoSync } from '../src/sync/syncManager';
@@ -76,6 +77,18 @@ export const appTheme = {
   },
 };
 
+/**
+ * Shows the forced-password-change overlay (D-06) only when we KNOW the account
+ * still holds a provisioned password. A null flag — nobody signed in, or the
+ * users row could not be read offline — renders nothing.
+ */
+function PasswordGate() {
+  const userId = useSessionStore((s) => s.userId);
+  const mustChange = useSessionStore((s) => s.mustChangePassword);
+  if (!userId || mustChange !== true) return null;
+  return <ChangePasswordGate />;
+}
+
 export default function RootLayout() {
   const [hydrated, setHydrated] = useState(useAppStore.persist.hasHydrated());
   const language = useAppStore((s) => s.language);
@@ -118,16 +131,20 @@ export default function RootLayout() {
   // offline — Supabase caches the session in AsyncStorage) and keep it in step
   // with later sign-ins/outs. Feature 8: this replaces the sync-test bootstrap.
   useEffect(() => {
-    // Best-effort: the BHW's own name for form attribution. Fails silently
-    // offline; retried on the next auth event.
-    const fetchOwnName = (userId: string) => {
+    // Best-effort: the BHW's own name for form attribution, plus the D-06
+    // forced-password-change flag. Fails silently offline — mustChangePassword
+    // stays null, which does not gate — and is retried on the next auth event.
+    const fetchOwnProfile = (userId: string) => {
       void supabase
         .from('users')
-        .select('full_name')
+        .select('full_name, must_change_password')
         .eq('user_id', userId)
         .maybeSingle()
         .then(({ data }) => {
-          if (data?.full_name) useSessionStore.getState().setFullName(data.full_name);
+          if (!data) return;
+          const session = useSessionStore.getState();
+          if (data.full_name) session.setFullName(data.full_name);
+          session.setMustChangePassword(data.must_change_password === true);
         });
     };
     void supabase.auth.getSession().then(({ data }) => {
@@ -135,7 +152,7 @@ export default function RootLayout() {
         useSessionStore
           .getState()
           .setSession(data.session.user.id, data.session.user.email ?? null);
-        fetchOwnName(data.session.user.id);
+        fetchOwnProfile(data.session.user.id);
       }
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
@@ -145,7 +162,12 @@ export default function RootLayout() {
       }
       if (session) {
         useSessionStore.getState().setSession(session.user.id, session.user.email ?? null);
-        if (!useSessionStore.getState().fullName) fetchOwnName(session.user.id);
+        // Refetch while EITHER answer is still missing. Keyed on both because
+        // a token refresh re-emits a session for the same user: refetching every
+        // time would be wasteful, but skipping on the name alone would leave the
+        // password flag permanently unknown for a session restored offline.
+        const { fullName, mustChangePassword } = useSessionStore.getState();
+        if (fullName === null || mustChangePassword === null) fetchOwnProfile(session.user.id);
         return;
       }
       // A null session is NOT always a sign-out. Supabase also emits
@@ -171,6 +193,10 @@ export default function RootLayout() {
       <PaperProvider settings={paperSettings} theme={appTheme}>
         {/* Screens render their own Paper Appbars; the native header is off. */}
         <Stack screenOptions={{ headerShown: false }} />
+        {/* D-06: covers the whole app while the account still holds the
+            password it was provisioned with. Rendered as a sibling of the
+            navigator, not a route, so it cannot be navigated away from. */}
+        <PasswordGate />
       </PaperProvider>
     </SafeAreaProvider>
   );

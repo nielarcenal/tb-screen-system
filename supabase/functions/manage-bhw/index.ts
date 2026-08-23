@@ -86,12 +86,31 @@ function slugPart(name: string): string {
     .replace(/[^a-z]/g, '');
 }
 
-/** Random temp password like TBS-4829-kfmq (letters avoid ambiguous chars). */
+/** Alphabet for the temp password — no i/l/o, which are misread off a slip of
+ *  paper as 1/1/0 by the BHW typing them in. */
+const TEMP_PW_ALPHABET = 'abcdefghjkmnpqrstuvwxyz';
+
+/**
+ * Random temp password like TBS-4829-kfmq.
+ *
+ * crypto.getRandomValues, NOT Math.random: this string is the account's only
+ * credential until the holder passes the D-06 change gate, and Math.random is
+ * a fast non-cryptographic PRNG whose future output is recoverable from a
+ * handful of observed values — and a captain provisioning a batch of BHWs sees
+ * exactly that, a run of consecutive outputs. Deno exposes the Web Crypto API
+ * globally, so no import is needed.
+ *
+ * The modulo is very slightly biased (2^32 is not a multiple of 9000 or of 23),
+ * by about one part in a million. That is far below the ~31 bits of entropy the
+ * format carries and does not warrant rejection sampling.
+ */
 function tempPassword(): string {
-  const digits = Math.floor(1000 + Math.random() * 9000);
+  const buf = new Uint32Array(5);
+  crypto.getRandomValues(buf);
+  const digits = 1000 + (buf[0] % 9000);
   const letters = Array.from(
     { length: 4 },
-    () => 'abcdefghjkmnpqrstuvwxyz'[Math.floor(Math.random() * 23)],
+    (_, i) => TEMP_PW_ALPHABET[buf[i + 1] % TEMP_PW_ALPHABET.length],
   ).join('');
   return `TBS-${digits}-${letters}`;
 }

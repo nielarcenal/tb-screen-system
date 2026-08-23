@@ -295,6 +295,29 @@ export const tl: Translation = {
     accessHelp:
       'Ang access ay ibinibigay ng inyong administrator. Makipag-ugnayan sa kanila kung hindi kayo makapag-sign in.',
   },
+  /**
+   * Forced password change (D-06). Shown while the signed-in account still
+   * holds the password manage-bhw generated for it.
+   */
+  password: {
+    gateTitle: 'Gumawa ng sarili mong password',
+    gateSub:
+      'Ginagamit pa ng account na ito ang password na ibinigay ng iyong administrator. Pumili ng password na ikaw lang ang nakakaalam para makapagpatuloy.',
+    signedInAs: 'Naka-sign in bilang {{email}}',
+    newLabel: 'Bagong password',
+    confirmLabel: 'Kumpirmahin ang bagong password',
+    hint: 'Hindi bababa sa {{min}} karakter. Huwag gamitin muli ang password na ibinigay sa iyo.',
+    cta: 'I-save ang password at magpatuloy',
+    saving: 'Nagse-save…',
+    signOut: 'Mag-sign out na lang',
+    errTooShort: 'Gumamit ng hindi bababa sa {{min}} karakter.',
+    errLooksProvisioned:
+      'Iyan ay password na ginawa ng sistema. Pumili ng sarili mong password.',
+    errMismatch: 'Hindi magkatugma ang dalawang password.',
+    errApi: 'Hindi na-save ang password: {{message}}',
+    errFlag:
+      'Napalitan ang iyong password, ngunit hindi natapos ang browser na ito. Mag-sign in muli gamit ang bagong password.',
+  },
   inbox: {
     title: 'Inbox ng mga referral',
     empty: 'Wala pang referral para sa inyong pasilidad.',

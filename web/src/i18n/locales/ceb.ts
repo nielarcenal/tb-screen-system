@@ -295,6 +295,29 @@ export const ceb: Translation = {
     accessHelp:
       'Ang access gihatag sa imong administrator. Kontaka sila kung dili ka maka-sign in.',
   },
+  /**
+   * Forced password change (D-06). Shown while the signed-in account still
+   * holds the password manage-bhw generated for it.
+   */
+  password: {
+    gateTitle: 'Paghimo og kaugalingong password',
+    gateSub:
+      'Kini nga account naggamit pa sa password nga gihatag sa imong administrator. Pagpili og password nga ikaw ra ang nakahibalo aron makapadayon.',
+    signedInAs: 'Naka-sign in isip {{email}}',
+    newLabel: 'Bag-ong password',
+    confirmLabel: 'Kumpirmaha ang bag-ong password',
+    hint: 'Labing menos {{min}} ka karakter. Ayaw gamita pag-usab ang password nga gihatag kanimo.',
+    cta: 'I-save ang password ug padayon',
+    saving: 'Nag-save…',
+    signOut: 'Mag-sign out na lang',
+    errTooShort: 'Gamit og labing menos {{min}} ka karakter.',
+    errLooksProvisioned:
+      'Kana usa ka password nga gihimo sa sistema. Pagpili og imong kaugalingon.',
+    errMismatch: 'Wala magkatugma ang duha ka password.',
+    errApi: 'Wala ma-save ang password: {{message}}',
+    errFlag:
+      'Nausab ang imong password, apan wala nahuman kini nga browser. Mag-sign in pag-usab gamit ang bag-ong password.',
+  },
   inbox: {
     title: 'Inbox sa mga referral',
     empty: 'Wala pay referral alang sa inyong pasilidad.',

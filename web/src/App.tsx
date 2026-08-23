@@ -22,6 +22,7 @@ import ReferralInbox from './components/ReferralInbox';
 import ReferralDetail from './components/ReferralDetail';
 import HotspotView from './components/HotspotView';
 import BhwManagement from './components/BhwManagement';
+import ChangePasswordGate from './components/ChangePasswordGate';
 
 type Page = 'dashboard' | 'inbox' | 'hotspot' | 'bhw';
 
@@ -33,6 +34,9 @@ export default function App() {
   const [facilityName, setFacilityName] = useState<string | null>(null);
   const [page, setPage] = useState<Page>('dashboard');
   const [openReferralId, setOpenReferralId] = useState<string | null>(null);
+  // Bumped when the password gate finishes, to re-read the users row (and with
+  // it the now-cleared must_change_password) without disturbing the session.
+  const [meVersion, setMeVersion] = useState(0);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => {
@@ -59,7 +63,7 @@ export default function App() {
     }
     void supabase
       .from('users')
-      .select('user_id, role, full_name, facility_id, active')
+      .select('user_id, role, full_name, facility_id, active, must_change_password')
       .eq('user_id', userId)
       .maybeSingle()
       .then(async ({ data }) => {
@@ -80,7 +84,7 @@ export default function App() {
           setFacilityName((fac as { name: string } | null)?.name ?? null);
         }
       });
-  }, [userId]);
+  }, [userId, meVersion]);
 
   // Not signed in: the sidebar shell is hidden; the two-panel sign-in (§4)
   // carries its own brand panel and language toggle.
@@ -92,6 +96,19 @@ export default function App() {
   }
   if (!me) {
     return <p style={{ padding: 24, textAlign: 'center' }}>{t('common.loading')}</p>;
+  }
+
+  // D-06: the account is still on the password whoever provisioned it chose,
+  // and that person can sign in as them until it is replaced. Nothing else
+  // opens until it is. Placed after the admin redirect above, so an admin is
+  // gated in their own portal rather than this one.
+  if (me.must_change_password) {
+    return (
+      <ChangePasswordGate
+        email={session.user.email ?? null}
+        onDone={() => setMeVersion((v) => v + 1)}
+      />
+    );
   }
 
   const isCaptain = me.role === 'captain';

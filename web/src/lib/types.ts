@@ -45,6 +45,10 @@ export interface PortalUser {
   full_name: string;
   facility_id: string;
   active: boolean;
+  /** True while the account still holds the password manage-bhw generated for
+   *  it (0014). Both portal shells gate on this before rendering anything —
+   *  see ChangePasswordGate and migration 0019 (D-06). */
+  must_change_password: boolean;
 }
 
 export interface PatientRow {

@@ -86,6 +86,29 @@ export const tl: Translation = {
     cta: 'Mag-sign in',
     error: 'Nabigo ang pag-sign in: {{message}}',
   },
+  /**
+   * Forced password change (D-06). Shown over the whole app while the account
+   * still holds the password its captain or admin provisioned.
+   */
+  password: {
+    gateTitle: 'Gumawa ng sarili mong password',
+    gateSub:
+      'Ginagamit pa ng account na ito ang password na ibinigay ng iyong coordinator. Pumili ng password na ikaw lang ang nakakaalam bago magpatuloy.',
+    signedInAs: 'Naka-sign in bilang {{email}}',
+    newLabel: 'Bagong password',
+    confirmLabel: 'Kumpirmahin ang bagong password',
+    hint: 'Hindi bababa sa {{min}} karakter. Huwag gamitin muli ang password na ibinigay sa iyo.',
+    cta: 'I-save ang password at magpatuloy',
+    saving: 'Nagse-save…',
+    signOut: 'Mag-sign out na lang',
+    errTooShort: 'Gumamit ng hindi bababa sa {{min}} karakter.',
+    errLooksProvisioned:
+      'Iyan ay password na ginawa ng sistema. Pumili ng sarili mong password.',
+    errMismatch: 'Hindi magkatugma ang dalawang password.',
+    errApi: 'Hindi na-save ang password: {{message}}',
+    errFlag:
+      'Napalitan ang iyong password, ngunit hindi natapos ang telepono na ito. Mag-sign in muli gamit ang bagong password.',
+  },
   status: {
     submitted: 'Naisumite',
     received: 'Natanggap',
