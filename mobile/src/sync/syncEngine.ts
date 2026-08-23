@@ -257,16 +257,6 @@ async function pullCityFacilityDefaults(): Promise<number> {
   return rows.length;
 }
 
-/** Full patients sync: push queued local writes, then pull server changes. */
-export async function syncPatients(): Promise<SyncResult> {
-  const failures: SyncFailure[] = [];
-  const pushed = await runStep('patients', failures, () => pushTable(PATIENTS_PUSH, failures));
-  const pulled = await runStep('patients', failures, () =>
-    pullTable<PatientRow>('patients', upsertPulledPatient),
-  );
-  return { pushed, pulled, failures };
-}
-
 /**
  * Sync everything, parents before children (a row must exist on the server
  * before rows referencing it arrive — FK order): facilities are pulled first
