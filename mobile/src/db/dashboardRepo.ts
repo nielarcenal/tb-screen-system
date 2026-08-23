@@ -10,7 +10,7 @@
  *  - results  = referral with a recorded result (free text from the lab)
  */
 import { getDb } from './database';
-import { toDateOnly } from '../lib/dates';
+import { manilaToday } from '../lib/dates';
 
 export interface DashboardAppointment {
   appointment_id: string;
@@ -42,7 +42,7 @@ export async function listUpcomingAppointments(): Promise<DashboardAppointment[]
      FROM appointments a JOIN patients p ON p.patient_id = a.patient_id
      WHERE a.status = 'scheduled' AND a.scheduled_date >= ?
      ORDER BY a.scheduled_date ASC`,
-    [toDateOnly(new Date())],
+    [manilaToday()],
   );
 }
 

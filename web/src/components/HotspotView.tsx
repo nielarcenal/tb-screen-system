@@ -13,7 +13,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
-import { toDateOnly } from '../lib/types';
+import { manilaDaysAgo, manilaToday } from '../lib/types';
 
 interface HotspotRow {
   barangay_code: string;
@@ -22,7 +22,6 @@ interface HotspotRow {
   presumptive_count: number;
 }
 
-const DAY_MS = 86_400_000;
 const RANGES = [30, 60, 90] as const;
 type RangeDays = (typeof RANGES)[number];
 
@@ -37,8 +36,8 @@ export default function HotspotView() {
     setLoading(true);
     setError(null);
     const { data, error: err } = await supabase.rpc('hotspot_counts', {
-      from_date: toDateOnly(new Date(Date.now() - (rangeDays - 1) * DAY_MS)),
-      to_date: toDateOnly(new Date()),
+      from_date: manilaDaysAgo(rangeDays - 1),
+      to_date: manilaToday(),
     });
     if (err) setError(err.message);
     else setRows((data ?? []) as HotspotRow[]);

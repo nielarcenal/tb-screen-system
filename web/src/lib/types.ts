@@ -159,7 +159,27 @@ export interface ReferralJoined extends ReferralRow {
   screenings: ScreeningRow;
 }
 
-/** Local-time date-only string (YYYY-MM-DD) — never via toISOString (UTC+8 shift). */
+/** Asia/Manila is UTC+8 and has had no DST since 1978, so offset arithmetic is
+ *  exact and needs no Intl timeZone support. Mirrors mobile/src/lib/dates.ts and
+ *  manila_today() in migration 0018 — portal, app and database must agree on
+ *  which day "today" is regardless of where the machine reading them is set. */
+const MANILA_OFFSET_MS = 8 * 60 * 60 * 1000;
+
+/** Today's calendar date (YYYY-MM-DD) on the Asia/Manila business calendar.
+ *  Use this for anything meaning "today"; use toDateOnly only to format a date
+ *  the user picked. */
+export function manilaToday(): string {
+  return new Date(Date.now() + MANILA_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+/** The calendar date (YYYY-MM-DD) n days before today, on the Manila calendar.
+ *  No DST means whole-day arithmetic on the shifted instant is exact. */
+export function manilaDaysAgo(n: number): string {
+  return new Date(Date.now() + MANILA_OFFSET_MS - n * 86_400_000).toISOString().slice(0, 10);
+}
+
+/** A picked Date as YYYY-MM-DD in the machine's own local time — never via
+ *  toISOString, which converts to UTC and can shift the calendar day. */
 export function toDateOnly(d: Date): string {
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');

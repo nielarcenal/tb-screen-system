@@ -14,7 +14,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
-import { AppointmentRow, ReferralJoined, SYMPTOM_KEYS, toDateOnly } from '../lib/types';
+import { AppointmentRow, ReferralJoined, SYMPTOM_KEYS, manilaToday } from '../lib/types';
 
 interface Props {
   referralId: string;
@@ -134,7 +134,7 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
   // otherwise received (the referral had to be received to be worked and closed).
   const reopenStatus: 'tested' | 'received' = referral.result_outcome ? 'tested' : 'received';
   const patientId = referral.patient_id;
-  const todayStr = toDateOnly(new Date());
+  const todayStr = manilaToday();
   const minScheduleDate = todayStr; // today or later — same-day check-ups allowed
 
   // Record attendance on the day the patient actually came (default today, never
