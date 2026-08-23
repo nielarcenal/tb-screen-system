@@ -164,11 +164,14 @@ async function pushTable<T extends { sync_status: SyncStatus }>(
 async function pullTable<T extends { updated_at: string }>(
   table: string,
   upsertLocal: (row: T) => Promise<void>,
+  /** Columns to request. Defaults to everything; pass an explicit list to keep
+   *  a column off the device entirely — see REFERRAL_COLUMNS (D-05). */
+  columns = '*',
 ): Promise<number> {
   const since = await getCursor(table);
   const { data, error } = await supabase
     .from(table)
-    .select('*')
+    .select(columns)
     .gt('updated_at', since)
     .order('updated_at', { ascending: true });
 
@@ -177,7 +180,9 @@ async function pullTable<T extends { updated_at: string }>(
     throw isTransientError(error) ? new TransientSyncError(message) : new Error(message);
   }
 
-  const rows = (data ?? []) as T[];
+  // `columns` is a runtime string, so supabase-js cannot infer the row shape and
+  // falls back to GenericStringError[]. The caller names the real type.
+  const rows = (data ?? []) as unknown as T[];
   let maxSeen = since;
   for (const server of rows) {
     await upsertLocal(server);
@@ -212,6 +217,17 @@ const SCREENINGS_PUSH: PushSpec<LocalScreeningRow> = {
   markSynced: markScreeningSynced,
   idOf: (r) => r.screening_id,
 };
+
+/**
+ * Referrals are pulled by explicit column list, not `*`, so the server's
+ * free-text `result` notes never reach the device at all (D-05). RLS cannot
+ * restrict columns and a column GRANT cannot separate BHWs from TB-DOTS staff —
+ * both authenticate as `authenticated` — so this is a client-side boundary, not
+ * an enforced one. Do not "tidy" it back to `*`.
+ */
+const REFERRAL_COLUMNS =
+  'referral_id, patient_id, screening_id, facility_id, specimen_id, status, ' +
+  'result_outcome, result_date, presented, created_at, updated_at';
 
 const REFERRALS_PUSH: PushSpec<LocalReferralRow> = {
   table: 'referrals',
@@ -289,7 +305,7 @@ export async function syncAll(): Promise<SyncResult> {
 
   pushed += await runStep('referrals', failures, () => pushTable(REFERRALS_PUSH, failures));
   pulled += await runStep('referrals', failures, () =>
-    pullTable<ReferralRow>('referrals', upsertPulledReferral),
+    pullTable<ReferralRow>('referrals', upsertPulledReferral, REFERRAL_COLUMNS),
   );
 
   pushed += await runStep('appointments', failures, () => pushTable(APPOINTMENTS_PUSH, failures));

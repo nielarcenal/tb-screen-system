@@ -19,6 +19,8 @@ export const ceb: Translation = {
     yes: 'Oo',
     no: 'Dili',
     unsure: 'Dili sigurado',
+    outcomePositive: 'Positibo',
+    outcomeNegative: 'Negatibo',
   },
   languages: {
     en: 'Iningles',
@@ -215,7 +217,12 @@ export const ceb: Translation = {
     createReferral: 'Paghimo og referral',
     viewSpecimen: 'Specimen form',
     noShowChip: 'No-show',
-    resultLine: 'Resulta ({{date}}): {{result}}',
+    resultRecorded: 'Narekord ang resulta niadtong {{date}}',
+    resultPositive:
+      'POSITIBO ang narekord nga resulta sa pasilidad. Siguroha nga mobalik ang pasyente sa TB-DOTS nga pasilidad aron magsugod og tambal.',
+    resultNegative:
+      'NEGATIBO ang narekord nga resulta sa pasilidad. Ang pasilidad maoy mosulti sa sunod nga mga lakang.',
+    resultAskFacility: 'Para sa detalye, pangutana sa TB-DOTS nga pasilidad.',
     // TODO i18n verify
     appt: {
       scheduled: 'Umaabot',

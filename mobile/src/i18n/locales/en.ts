@@ -18,6 +18,8 @@ export const en = {
     yes: 'Yes',
     no: 'No',
     unsure: 'Unsure',
+    outcomePositive: 'Positive',
+    outcomeNegative: 'Negative',
   },
   languages: {
     en: 'English',
@@ -203,7 +205,15 @@ export const en = {
     createReferral: 'Create referral',
     viewSpecimen: 'Specimen form',
     noShowChip: 'No-show',
-    resultLine: 'Result ({{date}}): {{result}}',
+    // D-05: the facility's free-text notes are deliberately NOT shown here (or
+    // pulled to the device). A BHW sees the outcome the facility recorded, plus
+    // what to do about it — displayed, never computed (§1).
+    resultRecorded: 'Result recorded {{date}}',
+    resultPositive:
+      'The facility recorded a POSITIVE result. Make sure this patient goes back to the TB-DOTS facility to start treatment.',
+    resultNegative:
+      'The facility recorded a NEGATIVE result. The facility will advise on any next steps.',
+    resultAskFacility: 'For any details, ask the TB-DOTS facility.',
     appt: {
       scheduled: 'Upcoming',
       attended: 'Attended',

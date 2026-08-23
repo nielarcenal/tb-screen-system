@@ -335,9 +335,20 @@ export default function HomeScreen() {
               rowCard(
                 r.referral_id,
                 r.full_name ?? r.display_code,
-                r.result_date
-                  ? `${new Date(r.result_date).toLocaleDateString()} — ${r.result ?? ''}`
-                  : (r.result ?? undefined),
+                // Outcome only — the facility's free-text notes are not pulled
+                // to this device (D-05).
+                [
+                  r.result_date ? new Date(r.result_date).toLocaleDateString() : null,
+                  r.result_outcome
+                    ? t(
+                        r.result_outcome === 'positive'
+                          ? 'common.outcomePositive'
+                          : 'common.outcomeNegative',
+                      )
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(' — ') || undefined,
                 'file-check',
                 () => openPatient(r.patient_id),
               ),

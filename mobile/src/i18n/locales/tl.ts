@@ -19,6 +19,8 @@ export const tl: Translation = {
     yes: 'Oo',
     no: 'Hindi',
     unsure: 'Hindi sigurado',
+    outcomePositive: 'Positibo',
+    outcomeNegative: 'Negatibo',
   },
   languages: {
     en: 'Ingles',
@@ -215,7 +217,12 @@ export const tl: Translation = {
     createReferral: 'Gumawa ng referral',
     viewSpecimen: 'Specimen form',
     noShowChip: 'No-show',
-    resultLine: 'Resulta ({{date}}): {{result}}',
+    resultRecorded: 'Naitala ang resulta noong {{date}}',
+    resultPositive:
+      'POSITIBO ang naitalang resulta ng pasilidad. Siguraduhing bumalik ang pasyente sa TB-DOTS na pasilidad para magsimula ng gamutan.',
+    resultNegative:
+      'NEGATIBO ang naitalang resulta ng pasilidad. Ang pasilidad ang magsasabi ng mga susunod na hakbang.',
+    resultAskFacility: 'Para sa detalye, magtanong sa TB-DOTS na pasilidad.',
     // TODO i18n verify
     appt: {
       scheduled: 'Paparating',

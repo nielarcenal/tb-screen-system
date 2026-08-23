@@ -174,6 +174,30 @@ const MIGRATIONS: string[] = [
   `
   ALTER TABLE patients ADD COLUMN preferred_language TEXT;
   `,
+
+  // v9 — D-05: the lab's free-text result must not reach a BHW device.
+  //
+  // referrals.result is the portal's OPTIONAL "Result notes" box, typed by
+  // TB-DOTS staff (placeholder "e.g. GeneXpert: MTB not detected"). Whatever
+  // goes in it — lab methodology, diagnosis wording, treatment plans, another
+  // patient's details — was pulled down and shown verbatim to a BHW, who is not
+  // a clinician, under the label "Result". The column is dropped here and the
+  // sync no longer requests it, so it never crosses the wire again; the UPDATE
+  // first clears what devices already cached, since DROP COLUMN alone leaves
+  // the values recoverable in freed pages until the file is vacuumed.
+  //
+  // result_outcome replaces it: the structured positive/negative the portal
+  // already REQUIRES before a result can be saved. Mobile never stored it, so
+  // until now a BHW's only outcome signal was the optional free text — and a
+  // result saved with the notes left blank showed them nothing at all.
+  //
+  // DROP COLUMN needs SQLite 3.35+ (2021); expo-sqlite is far past that, and
+  // `result` carries no index, trigger or view that would block it.
+  `
+  UPDATE referrals SET result = NULL;
+  ALTER TABLE referrals DROP COLUMN result;
+  ALTER TABLE referrals ADD COLUMN result_outcome TEXT;
+  `,
 ];
 
 // Bundled PSGC dataset — Bukidnon only (documented delimitation, §6). Generated
