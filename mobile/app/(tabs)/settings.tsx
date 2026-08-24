@@ -67,8 +67,11 @@ export default function SettingsScreen() {
     void cascadeForBarangay(assignedBarangayCode).then((sel) => {
       if (sel) setAddress(sel);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // Depends on the code, NOT []: useAppStore is persisted over AsyncStorage and
+    // hydrates asynchronously, so on first render this is still null. With [] the
+    // effect bailed out and never re-ran, leaving the cascade blank forever.
+    // enroll.tsx has always had it right — this now matches.
+  }, [assignedBarangayCode]);
 
   const onAddressChange = (next: AddressSelection) => {
     setAddress(next);
