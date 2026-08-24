@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../src/lib/supabase';
 import { useSessionStore } from '../src/store/sessionStore';
+import { isConnectivityError } from '../src/sync/syncErrors';
 import { triggerSync } from '../src/sync/syncManager';
 import { palette } from '../src/ui/tokens';
 
@@ -26,7 +27,11 @@ export default function SignInScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Split so a connectivity failure can show a plain translated line. Supabase's
+  // raw message names the project URL ("...supabase.co"), which is noise to a BHW
+  // in the field and leaks the backend onto the screen. Reuses D-10's classifier
+  // rather than adding a second network-detection path.
+  const [error, setError] = useState<{ offline: boolean; message: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
   const signIn = async () => {
@@ -38,7 +43,7 @@ export default function SignInScreen() {
     });
     setBusy(false);
     if (err) {
-      setError(err.message);
+      setError({ offline: isConnectivityError(err.message), message: err.message });
       return;
     }
     setSession(data.user.id, data.user.email ?? null);
@@ -100,7 +105,11 @@ export default function SignInScreen() {
           />
         </View>
         <HelperText type="error" visible={!!error}>
-          {error ? t('signIn.error', { message: error }) : ''}
+          {error
+            ? error.offline
+              ? t('signIn.errorOffline')
+              : t('signIn.error', { message: error.message })
+            : ''}
         </HelperText>
         <Button
           mode="contained"

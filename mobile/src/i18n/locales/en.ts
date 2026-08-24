@@ -78,6 +78,8 @@ export const en = {
     helper: 'Access is provisioned by your administrator. Contact them if you can’t sign in.',
     cta: 'Sign in',
     error: 'Sign-in failed: {{message}}',
+    errorOffline:
+      'You need an internet connection to sign in. Once you are signed in, the app works offline.',
   },
   /**
    * Forced password change (D-06). Shown over the whole app while the account

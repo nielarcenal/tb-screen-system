@@ -85,6 +85,9 @@ export const ceb: Translation = {
     helper: 'Ang access gihatag sa inyong administrator. Kontaka sila kung dili kamo maka-sign in.',
     cta: 'Pag-sign in',
     error: 'Napakyas ang pag-sign in: {{message}}',
+    // TODO i18n verify
+    errorOffline:
+      'Kinahanglan og koneksyon sa internet aron maka-sign in. Human ka maka-sign in, mogana ang app bisan offline.',
   },
   /**
    * Forced password change (D-06). Shown over the whole app while the account

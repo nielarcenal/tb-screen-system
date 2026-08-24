@@ -85,6 +85,9 @@ export const tl: Translation = {
     helper: 'Ang access ay ibinibigay ng inyong administrator. Makipag-ugnayan sa kanila kung hindi kayo makakapag-sign in.',
     cta: 'Mag-sign in',
     error: 'Nabigo ang pag-sign in: {{message}}',
+    // TODO i18n verify
+    errorOffline:
+      'Kailangan ng koneksyon sa internet para makapag-sign in. Kapag naka-sign in na, gumagana ang app kahit offline.',
   },
   /**
    * Forced password change (D-06). Shown over the whole app while the account
