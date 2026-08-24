@@ -317,6 +317,8 @@ export const en = {
       'Your password was changed, but this browser could not finish. Sign in again using your new password.',
   },
   inbox: {
+    repeatReferral: 'Repeat',
+    repeatReferralHint: 'Referral {{ordinal}} for this patient at your facility.',
     title: 'Referral inbox',
     empty: 'No referrals for your facility yet.',
     searchPlaceholder: 'Search patient or specimen code…',

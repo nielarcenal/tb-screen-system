@@ -610,6 +610,20 @@ tbody tr.rowlink.selected { background: #f0f7f7; }
 .result-pill.positive { background: #fbe7e5; color: #a5382f; }
 .result-pill.negative { background: #eef2f1; color: #46514e; }
 
+/* Repeat-referral marker. Deliberately an outline in the neutral ink, not a
+   status colour: a return visit is a fact about the queue, not a clinical
+   signal, and must not read as an alert. */
+.repeat-pill {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: transparent;
+  color: var(--ink-mid);
+  border: 1px solid #ddd8cd;
+}
+
 /* loading skeleton rows */
 .inbox-row.skel { pointer-events: none; }
 .inbox-row.skel .b {

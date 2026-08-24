@@ -319,6 +319,9 @@ export const tl: Translation = {
       'Napalitan ang iyong password, ngunit hindi natapos ang browser na ito. Mag-sign in muli gamit ang bagong password.',
   },
   inbox: {
+    repeatReferral: 'Ulit', // TODO i18n verify
+    repeatReferralHint:
+      'Ika-{{ordinal}} referral ng pasyenteng ito sa inyong pasilidad.', // TODO i18n verify
     title: 'Inbox ng mga referral',
     empty: 'Wala pang referral para sa inyong pasilidad.',
     searchPlaceholder: 'Maghanap ng code ng pasyente o specimen…',

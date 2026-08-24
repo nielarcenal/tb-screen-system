@@ -319,6 +319,9 @@ export const ceb: Translation = {
       'Nausab ang imong password, apan wala nahuman kini nga browser. Mag-sign in pag-usab gamit ang bag-ong password.',
   },
   inbox: {
+    repeatReferral: 'Balik', // TODO i18n verify
+    repeatReferralHint:
+      'Ika-{{ordinal}} nga referral sa maong pasyente sa inyong pasilidad.', // TODO i18n verify
     title: 'Inbox sa mga referral',
     empty: 'Wala pay referral alang sa inyong pasilidad.',
     searchPlaceholder: 'Pangitaa ang code sa pasyente o specimen…',

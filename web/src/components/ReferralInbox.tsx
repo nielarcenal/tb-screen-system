@@ -1,7 +1,8 @@
 /**
  * Referral inbox (redesign §4): the master pane of the master-detail split.
  * Compact rows — patient name, code, barangay · date, and a status chip (plus
- * a small result pill once an outcome is recorded) — clicking a row opens it in
+ * a small result pill once an outcome is recorded, and a "repeat" marker when
+ * the patient has an earlier referral here) — clicking a row opens it in
  * the detail pane (selected row keeps a teal edge). Every referral addressed to
  * the signed-in staff's facility; the RLS policy (referrals_tbdots_read) does
  * the scoping, so the query has no facility filter. Client-side status filter +
@@ -10,7 +11,7 @@
  * All four list states: loading (skeleton rows), error (retryable), empty
  * (nothing yet, or nothing matching the filter), and the rows themselves.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
@@ -60,6 +61,45 @@ export default function ReferralInbox({ onOpen, selectedId }: Props) {
       (r.patients.full_name ?? '').toLowerCase().includes(q)
     );
   });
+
+  /**
+   * Which referral this is for its patient — 1 for their first, 2 for the next,
+   * and so on. The inbox is a referral QUEUE, one row per referral, so a patient
+   * screened twice legitimately appears twice and the facility needs both rows
+   * as separate work items; this only labels the later ones so a return visit
+   * cannot be misread as a duplicated patient.
+   *
+   * Counted over `rows`, never `visible` — a status filter must not renumber a
+   * referral. Ordered by created_at rather than trusting the query's order, and
+   * tie-broken on the id so equal timestamps still number deterministically.
+   *
+   * Scope caveat: only referrals this facility can see are counted. An earlier
+   * referral sent elsewhere is invisible under referrals_tbdots_read, so its
+   * successor here still shows as the first. Display only — §5, nothing here
+   * feeds the referral decision.
+   */
+  const ordinalOf = useMemo(() => {
+    const byPatient = new Map<string, ReferralJoined[]>();
+    for (const r of rows) {
+      const list = byPatient.get(r.patient_id);
+      if (list) list.push(r);
+      else byPatient.set(r.patient_id, [r]);
+    }
+    const ord = new Map<string, number>();
+    for (const list of byPatient.values()) {
+      if (list.length < 2) continue;
+      [...list]
+        .sort((a, b) =>
+          a.created_at === b.created_at
+            ? a.referral_id.localeCompare(b.referral_id)
+            : a.created_at < b.created_at
+              ? -1
+              : 1,
+        )
+        .forEach((r, i) => ord.set(r.referral_id, i + 1));
+    }
+    return ord;
+  }, [rows]);
 
   const statusChip = (r: ReferralJoined) =>
     r.presented === false ? (
@@ -183,6 +223,16 @@ export default function ReferralInbox({ onOpen, selectedId }: Props) {
                 </div>
                 <div className="row-side">
                   {statusChip(r)}
+                  {(ordinalOf.get(r.referral_id) ?? 1) > 1 ? (
+                    <span
+                      className="repeat-pill"
+                      title={t('inbox.repeatReferralHint', {
+                        ordinal: ordinalOf.get(r.referral_id),
+                      })}
+                    >
+                      {t('inbox.repeatReferral')}
+                    </span>
+                  ) : null}
                   {r.result_outcome ? (
                     <span className={`result-pill ${r.result_outcome}`}>
                       {t(`detail.outcome${r.result_outcome === 'positive' ? 'Positive' : 'Negative'}`)}
