@@ -117,11 +117,19 @@ export default function SettingsScreen() {
                     {opt.native}
                   </Text>
                   <View style={{ flex: 1 }} />
-                  <MaterialCommunityIcons
-                    name="check-circle"
-                    size={22}
-                    color={selected ? palette.teal : 'transparent'}
-                  />
+                  {/* Rendered only when selected. It used to be drawn always
+                      with color 'transparent', but MaterialCommunityIcons does
+                      not honour that here — it falls back to black, so all
+                      three cards showed a check mark and every language looked
+                      selected. The spacer above right-aligns the mark, so
+                      leaving it out shifts nothing else. */}
+                  {selected ? (
+                    <MaterialCommunityIcons
+                      name="check-circle"
+                      size={22}
+                      color={palette.teal}
+                    />
+                  ) : null}
                 </Pressable>
               );
             })}
