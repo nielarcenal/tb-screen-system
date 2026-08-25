@@ -19,6 +19,7 @@ import '../src/i18n/paperDates'; // side-effect: register date-picker locales
 import { changeLanguage } from '../src/i18n';
 import { supabase } from '../src/lib/supabase';
 import ChangePasswordGate from '../src/components/ChangePasswordGate';
+import ConfirmDialogHost from '../src/components/ConfirmDialogHost';
 import { useAppStore } from '../src/store/appStore';
 import { useSessionStore } from '../src/store/sessionStore';
 import { startAutoSync, stopAutoSync } from '../src/sync/syncManager';
@@ -197,6 +198,10 @@ export default function RootLayout() {
             password it was provisioned with. Rendered as a sibling of the
             navigator, not a route, so it cannot be navigated away from. */}
         <PasswordGate />
+        {/* Draws the app's own confirmation dialogs. Mounted last, and on a
+            native modal window, so it sits above the password gate too — the
+            gate offers the same guarded sign-out. */}
+        <ConfirmDialogHost />
       </PaperProvider>
     </SafeAreaProvider>
   );

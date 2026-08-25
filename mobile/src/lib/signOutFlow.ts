@@ -8,9 +8,15 @@
  * "1 record could not be uploaded" question that exists to prevent exactly
  * that. The behaviour here is unchanged from the Settings version it came
  * from — same order, same two dialogs, same wording.
+ *
+ * The dialogs are drawn by the app (showConfirm) rather than by
+ * `Alert.alert`, because Android renders a stacked AlertDialog's POSITIVE
+ * button on top and the Tagalog/Cebuano labels are long enough to stack —
+ * which put "sign out and delete" in the first-read position. The full
+ * reasoning, and why shortening the translations was rejected, is in
+ * confirmDialog.ts.
  */
-import { Alert } from 'react-native';
-
+import { showConfirm } from './confirmDialog';
 import { supabase } from './supabase';
 import { clearSyncableCache, countPendingRows } from '../db/database';
 import { useSessionStore } from '../store/sessionStore';
@@ -48,41 +54,42 @@ async function performSignOut(): Promise<void> {
  * BHW is told exactly how many records would be destroyed and can stay signed
  * in until they find a signal.
  *
- * `onBusyChange` brackets the sync, so the caller can disable its button.
+ * `onBusyChange` brackets the sync, so the caller can disable its button. It is
+ * cleared before the second question is asked: the BHW is being asked to read
+ * something, not waited on.
+ *
+ * Returns void rather than the promise it runs, because both callers are
+ * `onPress` handlers with nothing to await.
  */
 export function confirmSignOut(t: Translate, onBusyChange?: (busy: boolean) => void): void {
-  Alert.alert(t('settings.signOutConfirmTitle'), t('settings.signOutConfirmBody'), [
-    { text: t('common.cancel'), style: 'cancel' },
-    {
-      text: t('settings.signOut'),
-      style: 'destructive',
-      onPress: () => {
-        void (async () => {
-          onBusyChange?.(true);
-          try {
-            await triggerSync(); // push pending rows if we're online
-            const pending = await countPendingRows();
-            if (pending === 0) {
-              await performSignOut();
-              return;
-            }
-            Alert.alert(
-              t('settings.signOutPendingTitle'),
-              t('settings.signOutPendingBody', { count: pending }),
-              [
-                { text: t('settings.staySignedIn'), style: 'cancel' },
-                {
-                  text: t('settings.signOutDiscard'),
-                  style: 'destructive',
-                  onPress: () => void performSignOut(),
-                },
-              ],
-            );
-          } finally {
-            onBusyChange?.(false);
-          }
-        })();
-      },
-    },
-  ]);
+  void (async () => {
+    const goAhead = await showConfirm({
+      title: t('settings.signOutConfirmTitle'),
+      body: t('settings.signOutConfirmBody'),
+      cancelLabel: t('common.cancel'),
+      confirmLabel: t('settings.signOut'),
+    });
+    if (!goAhead) return;
+
+    let stillPending = 0;
+    onBusyChange?.(true);
+    try {
+      await triggerSync(); // push pending rows if we're online
+      stillPending = await countPendingRows();
+      if (stillPending === 0) {
+        await performSignOut();
+        return;
+      }
+    } finally {
+      onBusyChange?.(false);
+    }
+
+    const discard = await showConfirm({
+      title: t('settings.signOutPendingTitle'),
+      body: t('settings.signOutPendingBody', { count: stillPending }),
+      cancelLabel: t('settings.staySignedIn'),
+      confirmLabel: t('settings.signOutDiscard'),
+    });
+    if (discard) await performSignOut();
+  })();
 }
