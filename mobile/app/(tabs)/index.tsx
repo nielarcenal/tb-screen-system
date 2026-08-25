@@ -30,6 +30,7 @@ import { useAppStore } from '../../src/store/appStore';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useSyncStore } from '../../src/store/syncStore';
 import { triggerSync } from '../../src/sync/syncManager';
+import { SyncNotice, syncNotices } from '../../src/sync/syncNotice';
 import { palette } from '../../src/ui/tokens';
 
 type TileKey = 'upcoming' | 'missed' | 'noShow';
@@ -86,6 +87,14 @@ export default function HomeScreen() {
     noShow: noShows.length,
   };
   const allClear = counts.upcoming + counts.missed + counts.noShow === 0;
+
+  // What the offline note and the last-pass line say, and how loud. Decided in
+  // src/sync/syncNotice.ts so the rules can be tested — see that module for why
+  // the offline note is NOT home.neverSynced.
+  const notices = syncNotices({ isOnline, lastError });
+
+  /** Notice ink. Offline is a calm neutral, never red (tokens.ts, §7). */
+  const noticeColor = (n: SyncNotice) => (n.tone === 'alarm' ? palette.red : palette.inkSoft);
 
   // Calm sync chip (design: teal = synced, amber = pending, neutral = offline).
   const syncChip = () => {
@@ -219,7 +228,7 @@ export default function HomeScreen() {
         </Banner>
 
         {/* Offline note — calm, informational, never alarming (§7). */}
-        {isOnline === false ? (
+        {notices.offline ? (
           <View
             style={{
               flexDirection: 'row',
@@ -233,7 +242,7 @@ export default function HomeScreen() {
           >
             <MaterialCommunityIcons name="cloud-off-outline" size={18} color={palette.muted} />
             <Text variant="bodySmall" style={{ color: palette.inkSoft, flex: 1, lineHeight: 18 }}>
-              {t('home.neverSynced')}
+              {t(notices.offline.key)}
             </Text>
           </View>
         ) : null}
@@ -309,13 +318,9 @@ export default function HomeScreen() {
             ? t('home.lastSync', { date: new Date(lastSyncAt).toLocaleString() })
             : t('home.neverSynced')}
         </Text>
-        {lastError ? (
-          <Text variant="bodySmall" style={{ color: palette.red }}>
-            {lastError.kind === 'offline'
-              ? t('home.syncOffline')
-              : lastError.kind === 'partial'
-                ? t('home.syncPartial', { count: lastError.count ?? 0 })
-                : t('home.syncError', { message: lastError.detail })}
+        {notices.error ? (
+          <Text variant="bodySmall" style={{ color: noticeColor(notices.error) }}>
+            {t(notices.error.key, notices.error.params)}
           </Text>
         ) : null}
 
