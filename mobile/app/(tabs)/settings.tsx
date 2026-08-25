@@ -6,7 +6,7 @@
  * Assigned barangay: saved locally at once (works offline) and pushed to the
  * BHW's own users row on the next sync (users_update_self RLS policy).
  */
-import { useEffect, useState } from 'react';
+import { SetStateAction, useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, HelperText, Text } from 'react-native-paper';
@@ -73,7 +73,15 @@ export default function SettingsScreen() {
     // enroll.tsx has always had it right — this now matches.
   }, [assignedBarangayCode]);
 
-  const onAddressChange = (next: AddressSelection) => {
+  const onAddressChange = (next: SetStateAction<AddressSelection>) => {
+    // The updater form comes from the cascade's own auto-select merging into
+    // the latest selection (it only ever fills region/province, never a
+    // barangay), so there is no new assignment to save and nothing to push.
+    // Only a plain object carries a BHW's choice.
+    if (typeof next === 'function') {
+      setAddress(next);
+      return;
+    }
     setAddress(next);
     if (next.barangayCode && next.barangayCode !== assignedBarangayCode) {
       setAssignedBarangay(next.barangayCode);
