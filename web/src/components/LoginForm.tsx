@@ -1,10 +1,22 @@
 /**
  * Facility portal sign-in (redesign §4): the two-panel brand + form shell with
  * the staff/captain role toggle and a pill CTA that shows a spinner while
- * signing in. The toggle mirrors the design; the account's users row is what
- * actually decides which portal opens after sign-in (a captain lands on their
- * dashboard regardless of the pill picked here). Accounts are provisioned by
- * the admin (see supabase/seed.sql) — there is deliberately no self-registration.
+ * signing in. Accounts are provisioned by the admin (see supabase/seed.sql) —
+ * there is deliberately no self-registration.
+ *
+ * WHAT THE ROLE TOGGLE DOES, and what it must never do (D-11): it selects the
+ * explanatory note under the pills, and nothing else. Sign-in stays entirely
+ * role-agnostic — `signInWithPassword` is given an email and a password, and
+ * the account's own users row decides which portal opens, so a captain who
+ * picked "TB-DOTS staff" still lands on the captain dashboard.
+ *
+ * That is deliberate. Gating sign-in on the pill would refuse correct
+ * credentials over a cosmetic mis-tap, and would also turn the control into a
+ * probe telling an anonymous visitor which role an email belongs to. But the
+ * pills carry `aria-pressed`, which promises a screen-reader user that they
+ * select SOMETHING — so before this fix, when `role` was set and never read,
+ * the control was announcing a state that had no effect anywhere. Either the
+ * promise or the control had to go; the note is what makes the promise true.
  */
 import { FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -55,6 +67,13 @@ export default function LoginForm() {
           {t('login.roleCaptain')}
         </button>
       </div>
+
+      {/* D-11: the visible effect of the pills. `aria-live` so a screen-reader
+          user who toggles hears the note change rather than only the pressed
+          state flipping on a control with no consequence. */}
+      <p className="login-rolenote" aria-live="polite">
+        {t(role === 'staff' ? 'login.noteStaff' : 'login.noteCaptain')}
+      </p>
 
       {error ? (
         <div className="login-err">

@@ -18,6 +18,19 @@ export const en = {
     nonDiagnostic:
       'Screening answers shown here are pre-screening information gathered by a BHW — not a diagnosis. Diagnosis happens at the TB-DOTS facility through laboratory testing.',
   },
+  /** D-12: the portal's terminal account states. Shown by AccountStateGate
+   *  instead of the portal, each with a way back to the sign-in screen. */
+  account: {
+    errorTitle: 'Could not load your account',
+    errorBody:
+      'You are signed in, but your account details could not be reached. Check your connection and try again.',
+    missingTitle: 'This account is not set up yet',
+    missingBody:
+      'Your sign-in worked, but no portal account is linked to it yet. Ask your administrator to finish setting it up, then sign in again.',
+    inactiveTitle: 'This account has been deactivated',
+    inactiveBody:
+      'Access to the portal has been turned off for this account. Contact your administrator if you think this is a mistake.',
+  },
   languages: {
     en: 'English',
     tl: 'Tagalog',
@@ -293,6 +306,10 @@ export const en = {
     signinSub: 'Welcome back. Enter your credentials to continue.',
     accessHelp:
       'Access is provisioned by your administrator. Contact them if you can’t sign in.',
+    noteStaff:
+      'TB-DOTS staff receive referrals, record laboratory results, and track check-up attendance.',
+    noteCaptain:
+      'Barangay Captains manage the health workers assigned to their own barangay.',
   },
   /**
    * Forced password change (D-06). Shown while the signed-in account still
@@ -380,7 +397,9 @@ export const en = {
     markPresented: 'Presented',
     markNoShow: 'No-show',
     closeReferral: 'Close referral',
-    appointmentsSection: 'Check-up appointments',
+    appointmentsSection: 'Patient check-up appointments',
+    appointmentsScope:
+      'Every check-up recorded for this patient, including any arranged for an earlier referral.',
     noAppointments: 'No appointments recorded for this patient.',
     colScheduled: 'Scheduled',
     colAttended: 'Attended',

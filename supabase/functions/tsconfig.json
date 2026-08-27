@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    /* Deno requires the explicit .ts extension on relative imports, and both
+       functions use it. This lets tsc typecheck the shared modules and their
+       suites without asking us to write a second, Node-shaped import form. */
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": false,
+    "skipLibCheck": true,
+    "types": ["vitest/globals"],
+    "noEmit": true
+  },
+  /* _shared only — the index.ts files are Deno source and are typechecked by
+     the Supabase CLI on deploy, not here. */
+  "include": ["_shared/**/*.ts", "vitest.config.mts"]
+}

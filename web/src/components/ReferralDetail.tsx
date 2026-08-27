@@ -65,6 +65,12 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
     setResultText(r?.result ?? '');
     setOutcome(r?.result_outcome ?? null);
     if (r) {
+      // D-13: PATIENT-scoped, deliberately, and the heading now says so.
+      // `appointments` has no referral_id (0001) — a check-up belongs to the
+      // person, not to the referral that prompted it — so a patient referred
+      // twice shows both episodes' check-ups in both panels. Filtering by date
+      // would only guess; renaming the section states the truth, and the full
+      // attendance history is what staff want in front of them anyway.
       const { data: appts, error: aErr } = await supabase
         .from('appointments')
         .select('*')
@@ -441,7 +447,7 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
         </div>
       </div>
 
-      {/* Check-up appointments. */}
+      {/* Check-up appointments — the patient's, not this referral's (D-13). */}
       <div className="rd-section">
         <div className="rd-sectionhead">
           <span className="msym" aria-hidden="true">
@@ -461,6 +467,8 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
             {t('detail.scheduleBtn')}
           </button>
         </div>
+
+        <p className="rd-note">{t('detail.appointmentsScope')}</p>
 
         {scheduleOpen ? (
           <div className="sched-form">

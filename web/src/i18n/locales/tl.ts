@@ -18,6 +18,17 @@ export const tl: Translation = {
     nonDiagnostic:
       'Ang mga sagot sa screening dito ay impormasyon mula sa pre-screening ng BHW — hindi diagnosis. Ang diagnosis ay ginagawa sa pasilidad ng TB-DOTS sa pamamagitan ng laboratory testing.',
   },
+  account: {
+    errorTitle: 'Hindi ma-load ang iyong account',
+    errorBody:
+      'Naka-sign in ka na, pero hindi maabot ang mga detalye ng iyong account. Suriin ang iyong koneksyon at subukang muli.',
+    missingTitle: 'Hindi pa naka-set up ang account na ito',
+    missingBody:
+      'Gumana ang iyong sign-in, pero wala pang portal account na naka-link dito. Hilingin sa iyong administrator na tapusin ang pag-set up, pagkatapos ay mag-sign in muli.',
+    inactiveTitle: 'Na-deactivate ang account na ito',
+    inactiveBody:
+      'Naka-off na ang access sa portal para sa account na ito. Makipag-ugnayan sa iyong administrator kung sa tingin mo ay mali ito.',
+  },
   languages: {
     en: 'Ingles',
     tl: 'Tagalog',
@@ -294,6 +305,10 @@ export const tl: Translation = {
     signinSub: 'Maligayang pagbabalik. Ilagay ang inyong kredensyal upang magpatuloy.',
     accessHelp:
       'Ang access ay ibinibigay ng inyong administrator. Makipag-ugnayan sa kanila kung hindi kayo makapag-sign in.',
+    noteStaff:
+      'Tumatanggap ang TB-DOTS staff ng mga referral, nagtatala ng resulta ng laboratory, at sinusubaybayan ang pagdalo sa check-up.',
+    noteCaptain:
+      'Pinamamahalaan ng Kapitan ng Barangay ang mga health worker na nakatalaga sa sarili nilang barangay.',
   },
   /**
    * Forced password change (D-06). Shown while the signed-in account still
@@ -383,7 +398,9 @@ export const tl: Translation = {
     markPresented: 'Dumating',
     markNoShow: 'No-show',
     closeReferral: 'Isara ang referral',
-    appointmentsSection: 'Mga appointment para sa check-up',
+    appointmentsSection: 'Mga check-up appointment ng pasyente',
+    appointmentsScope:
+      'Lahat ng check-up na naitala para sa pasyenteng ito, kasama ang mga inayos para sa naunang referral.',
     noAppointments: 'Walang naitalang appointment para sa pasyenteng ito.',
     colScheduled: 'Nakatakda',
     colAttended: 'Dumalo',

@@ -1,7 +1,25 @@
 /* TB-Screen portal styling — matches the approved design canvas
    ("TB-Screen BHW.dc.html", section 1b): deep teal primary, warm off-white
    surfaces, pill buttons and tonal status chips. The portal stays tables and
-   forms (§2) — this is presentation only. */
+   forms (§2) — this is presentation only.
+
+   D-14 (contrast): every text colour in this file was measured against the
+   surface it actually renders on. Body text clears 4.5:1; the near-duplicate
+   greys #6d7a76 / #9aa39c / #a0a89f / #a7b0aa / #b3bbb4 were folded into
+   --ink-soft and --muted rather than nudged one at a time, so a new rule
+   inherits a passing colour instead of inventing another failing one.
+
+   Four things are DELIBERATELY still below 4.5:1 — do not "fix" them:
+     * button:disabled (#9c948a) — WCAG 1.4.3 exempts inactive controls, and
+       darkening it would make disabled read as enabled.
+     * the empty-state badge icons (#c7cec9 at 24-32px, #4f9aa1) — decorative,
+       aria-hidden, and every one sits directly above a full-contrast title
+       that carries the same meaning.
+     * .ho-point .msym.keep (#17876e, 4.44) — an icon; icons are held to the
+       3:1 non-text bar.
+     * everything inside .brandpanel and .side-* — those render on --navy, not
+       on white, and measure 4.8-12.6:1 there. A sweep that assumes a light
+       background will keep flagging them. */
 :root {
   --teal: #028090;
   --teal-dark: #016575;
@@ -26,7 +44,13 @@
   --ink: #20302e;
   --ink-mid: #4a5754;
   --ink-soft: #5a6b68;
-  --muted: #8a968f;
+  /* D-14: was #8a968f, which measured 3.07:1 on white and BELOW 3:1 on every
+     other surface in this palette — under the large-text floor, let alone the
+     4.5:1 body-text bar, and it carries real body copy (.st-body, .rd-note,
+     table sub-labels). Darkened along the same hue to clear 4.5:1 on the three
+     surfaces it actually sits on: paper 5.19, bg 4.77, subtle 4.56. Kept
+     lighter than --ink-soft (5.62 on paper) so the type hierarchy survives. */
+  --muted: #666f6a;
 
   --red: #96362e;
   --red-container: #fbe7e5;
@@ -182,7 +206,7 @@ body {
   letter-spacing: -0.02em;
   color: #14302f;
 }
-.content-head .head-title p { margin: 0; font-size: 13px; color: #6d7a76; }
+.content-head .head-title p { margin: 0; font-size: 13px; color: var(--ink-soft); }
 
 .content-main {
   flex: 1;
@@ -506,7 +530,7 @@ tbody tr.rowlink.selected { background: #f0f7f7; }
   top: 50%;
   transform: translateY(-50%);
   font-size: 18px;
-  color: #a7b0aa;
+  color: var(--muted);
   pointer-events: none;
 }
 .search-wrap input {
@@ -551,7 +575,7 @@ tbody tr.rowlink.selected { background: #f0f7f7; }
   border: 1px solid var(--line);
   border-radius: 9px;
   background: #faf9f6;
-  color: #6d7a76;
+  color: var(--ink-soft);
 }
 .inbox-tools .icon-btn:hover { background: #f0efe9; }
 .inbox-tools .icon-btn .msym { font-size: 18px; }
@@ -593,7 +617,7 @@ tbody tr.rowlink.selected { background: #f0f7f7; }
 }
 .inbox-row .row-meta {
   font-size: 12px;
-  color: #6d7a76;
+  color: var(--ink-soft);
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -825,7 +849,7 @@ button.amber:hover { background: var(--amber-container); }
   align-items: flex-start;
   gap: 8px;
 }
-.dcard-foot .msym { font-size: 16px; color: #a0a89f; flex: 0 0 auto; margin-top: 1px; }
+.dcard-foot .msym { font-size: 16px; color: var(--muted); flex: 0 0 auto; margin-top: 1px; }
 .dcard-foot p { margin: 0; font-size: 11.5px; color: var(--muted); line-height: 1.5; }
 
 .dgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
@@ -848,7 +872,7 @@ button.amber:hover { background: var(--amber-container); }
   line-height: 1;
 }
 .dtile .lbl { font-size: 12.5px; font-weight: 600; color: #3f4b48; margin-top: 7px; }
-.dtile .sub { font-size: 11px; color: #9aa39c; margin-top: 2px; }
+.dtile .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
 /* loading skeleton tiles */
 .dtile.skel { background: #fbfaf7; border-color: #f0ece4; }
@@ -894,6 +918,34 @@ button.amber:hover { background: var(--amber-container); }
 }
 .dstate .retry:hover { background: var(--teal-dark); }
 .dstate .retry .msym { font-size: 18px; }
+
+/* D-12: the account-state gate reuses .dstate inside the sign-in card, and
+   needs two things the in-card error states never did — the stuck account's
+   email, and a low-emphasis secondary action beside (or instead of) Retry. */
+.dstate .st-who {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: #f4f1ea;
+  border-radius: 7px;
+  padding: 5px 11px;
+  word-break: break-all;
+}
+.dstate .altaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  padding: 9px 16px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: transparent;
+  color: #2c3a37;
+  font-size: 13px;
+  font-weight: 600;
+}
+.dstate .altaction:hover { background: #f4f1ea; }
+.dstate .altaction .msym { font-size: 17px; }
 
 /* ---------- login ---------- */
 .login {
@@ -959,7 +1011,7 @@ button.amber:hover { background: var(--amber-container); }
 .rd-headrow { display: flex; align-items: flex-start; gap: 12px; }
 .rd-hinfo { flex: 1; min-width: 0; }
 .rd-name { font-size: 18px; font-weight: 700; color: #14302f; letter-spacing: -0.01em; }
-.rd-meta { font-size: 12.5px; color: #6d7a76; margin-top: 3px; }
+.rd-meta { font-size: 12.5px; color: var(--ink-soft); margin-top: 3px; }
 .rd-screened { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .rd-close {
   flex: 0 0 auto;
@@ -970,7 +1022,7 @@ button.amber:hover { background: var(--amber-container); }
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
-  color: #6d7a76;
+  color: var(--ink-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1023,7 +1075,7 @@ button.amber:hover { background: var(--amber-container); }
 .ans.yes { background: #fbe7e5; color: #a5382f; }
 .ans.no { background: #eef2f1; color: #46514e; }
 .ans.unsure { background: #f7ecd8; color: #8a5e00; }
-.ans.none { background: #f2f4f1; color: #9aa39c; }
+.ans.none { background: #f2f4f1; color: var(--muted); }
 .ans.neutral { background: #eef2f1; color: #46514e; }
 .pgis-row {
   display: flex;
@@ -1041,7 +1093,7 @@ button.amber:hover { background: var(--amber-container); }
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: #5f8f8f;
+  color: var(--teal-dark);
   background: #e6f2f2;
   padding: 3px 9px;
   border-radius: 999px;
@@ -1051,7 +1103,7 @@ button.amber:hover { background: var(--amber-container); }
 .act-stack { display: flex; flex-direction: column; gap: 13px; }
 .act-card { border: 1px solid #efeadf; border-radius: 11px; padding: 13px 14px; background: #fdfcfa; }
 .act-cardhead { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; }
-.act-cardhead > .msym { font-size: 16px; color: #6d7a76; }
+.act-cardhead > .msym { font-size: 16px; color: var(--ink-soft); }
 .act-cardhead .act-cardlabel { font-size: 12px; font-weight: 600; color: var(--ink-mid); }
 .act-cardpill { margin-left: auto; }
 .act-hint { margin: 0 0 10px; font-size: 11.5px; color: var(--muted); line-height: 1.45; }
@@ -1073,12 +1125,12 @@ button.amber:hover { background: var(--amber-container); }
   border-radius: 8px;
   border: 1px solid var(--line);
   background: #fff;
-  color: #6d7a76;
+  color: var(--ink-soft);
   font-size: 12px;
   font-weight: 500;
 }
 .act-undo:hover { background: #f5f4f0; }
-.act-locked { font-size: 11.5px; color: #a0a89f; display: flex; align-items: center; gap: 4px; }
+.act-locked { font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
 .act-locked .msym { font-size: 14px; }
 
 .toggle-pair { display: flex; gap: 8px; }
@@ -1116,8 +1168,8 @@ button.amber:hover { background: var(--amber-container); }
 }
 .act-card textarea:focus { border-color: var(--teal); outline: none; }
 .act-saverow { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-.act-savedon { font-size: 11.5px; color: #a0a89f; }
-.act-saverow .act-none { font-size: 11.5px; color: #a0a89f; margin-left: auto; }
+.act-savedon { font-size: 11.5px; color: var(--muted); }
+.act-saverow .act-none { font-size: 11.5px; color: var(--muted); margin-left: auto; }
 
 .act-close {
   width: 100%;
@@ -1140,7 +1192,7 @@ button.amber:hover { background: var(--amber-container); }
   border-radius: 8px;
   border: 1px solid var(--line);
   background: #fff;
-  color: #6d7a76;
+  color: var(--ink-soft);
   font-size: 12px;
   font-weight: 500;
 }
@@ -1191,7 +1243,7 @@ button.amber:hover { background: var(--amber-container); }
   font-size: 12.5px;
   font-weight: 600;
   background: #fff;
-  color: #6d7a76;
+  color: var(--ink-soft);
   border: 1px solid var(--line);
 }
 .sched-cancel:hover { background: #f5f4f0; }
@@ -1268,7 +1320,7 @@ button.amber:hover { background: var(--amber-container); }
 .appt-undo:hover { background: #f5f4f0; }
 
 .rd-footer { padding: 13px 20px; background: #fbfaf7; display: flex; align-items: flex-start; gap: 8px; }
-.rd-footer > .msym { font-size: 16px; color: #a0a89f; flex: 0 0 auto; margin-top: 1px; }
+.rd-footer > .msym { font-size: 16px; color: var(--muted); flex: 0 0 auto; margin-top: 1px; }
 .rd-footer p { margin: 0; font-size: 11.5px; color: var(--muted); line-height: 1.5; }
 
 .rd-empty {
@@ -1303,7 +1355,7 @@ button.amber:hover { background: var(--amber-container); }
 .dstate.ok .badge .msym { color: #4f9aa1; }
 
 .hs-head { padding: 15px 18px; border-bottom: 1px solid #f0ece4; }
-.hs-intro { margin: 0 0 12px; font-size: 12.5px; color: #6d7a76; line-height: 1.5; max-width: 640px; }
+.hs-intro { margin: 0 0 12px; font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; max-width: 640px; }
 .range-pills { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
 .range-pills button {
   margin: 0;
@@ -1327,7 +1379,7 @@ button.amber:hover { background: var(--amber-container); }
   width: 22px;
   font-size: 13px;
   font-weight: 700;
-  color: #b3bbb4;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 .hs-main { flex: 1; min-width: 0; }
@@ -1340,10 +1392,10 @@ button.amber:hover { background: var(--amber-container); }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.hs-muni { font-size: 11px; color: #9aa39c; margin-top: 1px; }
+.hs-muni { font-size: 11px; color: var(--muted); margin-top: 1px; }
 .hs-countwrap { flex: 0 0 auto; display: flex; align-items: baseline; gap: 5px; }
 .hs-count { font-size: 16px; font-weight: 700; color: #14302f; font-variant-numeric: tabular-nums; }
-.hs-unit { font-size: 11px; color: #9aa39c; }
+.hs-unit { font-size: 11px; color: var(--muted); }
 .hs-track { margin-top: 8px; height: 8px; border-radius: 999px; background: #f0ece4; overflow: hidden; }
 .hs-fill { height: 100%; border-radius: 999px; }
 
@@ -1416,7 +1468,7 @@ button.amber:hover { background: var(--amber-container); }
 }
 .bhw-sub {
   font-size: 12px;
-  color: #6d7a76;
+  color: var(--ink-soft);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1436,7 +1488,7 @@ button.amber:hover { background: var(--amber-container); }
   font-size: 11.5px;
   font-weight: 600;
   background: #fff;
-  color: #6d7a76;
+  color: var(--ink-soft);
   border: 1px solid var(--line);
 }
 .bhw-actions button:hover { background: #f5f4f0; }
@@ -1445,7 +1497,7 @@ button.amber:hover { background: var(--amber-container); }
 .bhw-actions .danger:hover { background: #fbe7e5; }
 
 .chip.active { background: #dff0ea; color: #12735f; }
-.chip.inactive { background: #f2f4f1; color: #8a968f; }
+.chip.inactive { background: #f2f4f1; color: var(--muted); }
 
 /* loading skeleton rows */
 .bhw-row.skel { pointer-events: none; }
@@ -1505,12 +1557,12 @@ button.amber:hover { background: var(--amber-container); }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.capact-brgy { font-size: 11.5px; color: #9aa39c; margin-top: 2px; }
+.capact-brgy { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
 .capact-nums { flex: 0 0 auto; display: flex; align-items: center; gap: 18px; }
 .capact-num { text-align: right; min-width: 52px; }
 .capact-num .n { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; color: #14302f; }
 .capact-num .n.ref { color: #12735f; }
-.capact-num .w { font-size: 10px; color: #9aa39c; margin-top: 3px; }
+.capact-num .w { font-size: 10px; color: var(--muted); margin-top: 3px; }
 
 .capact-row.skel .sk { background: #eee9df; border-radius: 6px; animation: tbpulse 1.2s ease-in-out infinite; }
 .capact-row.skel .sk.av { width: 38px; height: 38px; border-radius: 50%; flex: 0 0 auto; }
@@ -1570,7 +1622,7 @@ button.amber:hover { background: var(--amber-container); }
 .drawer-title { font-size: 18px; font-weight: 700; color: #14302f; letter-spacing: -0.01em; }
 .drawer-sub {
   font-size: 12.5px;
-  color: #6d7a76;
+  color: var(--ink-soft);
   margin-top: 3px;
   white-space: nowrap;
   overflow: hidden;
@@ -1588,7 +1640,7 @@ button.amber:hover { background: var(--amber-container); }
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: #9aa39c;
+  color: var(--muted);
   cursor: pointer;
 }
 .drawer-close:hover { background: #f2f0ea; color: var(--ink-mid); }
@@ -1620,7 +1672,7 @@ button.amber:hover { background: var(--amber-container); }
   align-items: center;
   gap: 6px;
 }
-.dfield-opt { font-weight: 500; color: #a0a89f; }
+.dfield-opt { font-weight: 500; color: var(--muted); }
 .dfield input {
   width: 100%;
   padding: 9px 11px;
@@ -1651,7 +1703,7 @@ button.amber:hover { background: var(--amber-container); }
   font-size: 13px;
   color: var(--ink);
 }
-.email-box span.pending { color: #a0a89f; }
+.email-box span.pending { color: var(--muted); }
 
 .ctx-tiles { display: flex; gap: 10px; flex-wrap: wrap; }
 .ctx-tile {
@@ -1678,7 +1730,7 @@ button.amber:hover { background: var(--amber-container); }
 .drawer-actions button .msym,
 .deact-btn .msym,
 .react-btn .msym { font-size: 17px; }
-.req-note { font-size: 11px; color: #a0a89f; margin-left: auto; }
+.req-note { font-size: 11px; color: var(--muted); margin-left: auto; }
 .saved-flash {
   display: inline-flex;
   align-items: center;
@@ -1751,7 +1803,7 @@ button.amber:hover { background: var(--amber-container); }
 .cap-modal-ic.ok .msym { color: #12735f; }
 .cap-modal-titlebox { flex: 1; min-width: 0; }
 .cap-modal-title { font-size: 16px; font-weight: 700; color: #14302f; letter-spacing: -0.01em; }
-.cap-modal-sub { font-size: 12.5px; color: #6d7a76; margin-top: 3px; }
+.cap-modal-sub { font-size: 12.5px; color: var(--ink-soft); margin-top: 3px; }
 .cap-modal-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
 .cap-modal-foot {
   padding: 14px 20px 18px;
@@ -1767,7 +1819,7 @@ button.amber:hover { background: var(--amber-container); }
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #9aa39c;
+  color: var(--muted);
 }
 .ho-stats { display: flex; gap: 10px; }
 .ho-stat {
@@ -1929,7 +1981,7 @@ button.amber:hover { background: var(--amber-container); }
   align-items: center;
   gap: 8px;
   font-size: 11.5px;
-  color: #6f8a8d;
+  color: #8fa8ab;
 }
 .brandpanel .copyright .msym { font-size: 15px; }
 
@@ -1952,12 +2004,12 @@ button.amber:hover { background: var(--amber-container); }
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #4f9aa1;
+  color: var(--teal-dark);
 }
 
 .login-head { display: flex; flex-direction: column; gap: 5px; margin-bottom: 22px; }
 .login-head h2 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: #14302f; }
-.login-head p { margin: 0; font-size: 13.5px; color: #6d7a76; line-height: 1.5; }
+.login-head p { margin: 0; font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; }
 
 .login-roles { display: flex; gap: 8px; margin-bottom: 18px; }
 .login-roles button {
@@ -1973,6 +2025,15 @@ button.amber:hover { background: var(--amber-container); }
 }
 .login-roles button:hover { background: var(--subtle); }
 .login-roles button.on { background: var(--teal-container); color: var(--teal-deep); border-color: var(--teal-border); }
+
+/* D-11: the note the role pills actually select. Sits in the margin the pills
+   used to own, so adding it does not push the form down. */
+.login-rolenote {
+  margin: -12px 0 16px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
 
 .login-err {
   display: flex;
@@ -2073,7 +2134,7 @@ button.amber:hover { background: var(--amber-container); }
   gap: 8px;
   text-align: center;
 }
-.access-help .msym { font-size: 16px; color: #a0a89f; flex: 0 0 auto; }
+.access-help .msym { font-size: 16px; color: var(--muted); flex: 0 0 auto; }
 .access-help span { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
 
 @media (max-width: 880px) {

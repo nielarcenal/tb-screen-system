@@ -13,7 +13,8 @@
  *      FOLLOWUP_WINDOW_DAYS), a neutral nudge to reschedule — UNLESS the patient
  *      already has an upcoming 'scheduled' appointment (rebooked; UPCOMING means
  *      dated today or later, not merely still carrying that status). Sent once,
- *      except that a FAILED send is retried up to FOLLOWUP_MAX_ATTEMPTS.
+ *      except that a FAILED send — or a reservation abandoned by a run that
+ *      died mid-send — is retried up to FOLLOWUP_MAX_ATTEMPTS.
  *
  * Every send is RESERVED in sms_log before the gateway is called, then settled to
  * its outcome afterwards — see sendLogged(). A text cannot be un-sent, so the
@@ -41,6 +42,13 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 import { createGateway, type SendOutcome } from './gateway.ts';
+import {
+  classifyFollowUpLogs,
+  shouldFollowUp,
+  shouldRemind,
+  staleQueuedCutoff,
+  type SmsLogRow,
+} from '../_shared/selection.ts';
 
 /** Lead days before a check-up on which to remind (Asia/Manila). */
 const REMINDER_OFFSETS = [3, 1];
@@ -161,10 +169,17 @@ Deno.serve(async (req) => {
    * and if THAT insert fails, skip the row WITHOUT sending. Then send. Then
    * settle the row to the real outcome.
    *
-   * A crash between the reserve and the settle leaves a 'queued' row behind, and
-   * both idempotency checks read that as handled — so the nudge is dropped. That
-   * is deliberate: a missed nudge is cheaper than a duplicate one, and the BHW
-   * still sees the patient in the app either way.
+   * A crash between the reserve and the settle leaves a 'queued' row behind
+   * that nothing will ever settle, because the next run is a fresh invocation
+   * with no memory of it. Within one calendar day that is the intended
+   * outcome for a REMINDER — a missed nudge is cheaper than a duplicate one,
+   * and the BHW still sees the patient in the app either way.
+   *
+   * For a FOLLOW-UP it was not, and that was the bug: nothing bounds how long
+   * the row suppresses the nudge, so one crashed run retired it permanently.
+   * classifyFollowUpLogs() now ages those reservations out — see
+   * _shared/selection.ts, which explains why they are aged at read time
+   * rather than swept with an UPDATE.
    *
    * sms_log.sent_at therefore stamps the ATTEMPT, not the delivery. The two
    * differ by one gateway round-trip, and the reminder idempotency window is a
@@ -264,7 +279,11 @@ Deno.serve(async (req) => {
   }
 
   for (const a of due) {
-    if (remindedToday.has(a.appointment_id) || !a.patients.contact_number) {
+    const candidate = {
+      appointment_id: a.appointment_id,
+      contact_number: a.patients.contact_number,
+    };
+    if (!shouldRemind(candidate, remindedToday)) {
       rem.skipped++;
       continue;
     }
@@ -292,6 +311,9 @@ Deno.serve(async (req) => {
     sent: 0,
     failed: 0,
     skipped: 0,
+    /** Reservations aged out this run — a crash between reserve and settle.
+     *  Non-zero means runs are dying mid-send; worth watching in the logs. */
+    abandoned: 0,
   };
 
   const { data: missedData, error: missedErr } = await supabase
@@ -308,25 +330,30 @@ Deno.serve(async (req) => {
     const apptIds = missed.map((a) => a.appointment_id);
     const patientIds = [...new Set(missed.map((a) => a.patient_id))];
 
-    // Already followed up. DONE means a row that is NOT 'failed' — 'sent',
-    // 'stubbed', or a 'queued' reservation. Treating a failed attempt as done
-    // (what counting rows regardless of status did) let a single gateway hiccup
-    // retire the nudge permanently; treating it as not-done and retrying freely
-    // would burn a send a day on a dead number. So failures are counted here and
-    // capped at FOLLOWUP_MAX_ATTEMPTS below.
+    // Already followed up. DONE means a settled, non-failed row — 'sent' or
+    // 'stubbed' — plus a 'queued' reservation young enough that the run which
+    // made it may still be mid-send. A failed attempt is NOT done: treating it
+    // as done let a single gateway hiccup retire the nudge permanently, while
+    // retrying failures freely would burn a send a day on a dead number, so
+    // they are counted and capped at FOLLOWUP_MAX_ATTEMPTS instead.
+    //
+    // sent_at is selected for the age test: a 'queued' row older than the
+    // cutoff belongs to a run that died between reserve and settle and will
+    // never be settled by anyone, so it counts as a spent attempt rather than
+    // as a delivery. classifyFollowUpLogs owns that rule — see
+    // _shared/selection.ts for why it is read at selection time rather than
+    // swept with an UPDATE.
     const { data: doneLogs, error: dErr } = await supabase
       .from('sms_log')
-      .select('appointment_id, delivery_status')
+      .select('appointment_id, delivery_status, sent_at')
       .in('appointment_id', apptIds)
       .eq('message_kind', 'follow_up');
     if (dErr) return fail(`follow-up sms_log lookup failed: ${dErr.message}`);
-    const alreadyFollowed = new Set<string>();
-    const failedAttempts = new Map<string, number>();
-    for (const r of doneLogs ?? []) {
-      const id = r.appointment_id as string;
-      if (r.delivery_status === 'failed') failedAttempts.set(id, (failedAttempts.get(id) ?? 0) + 1);
-      else alreadyFollowed.add(id);
-    }
+    const history = classifyFollowUpLogs(
+      (doneLogs ?? []) as unknown as SmsLogRow[],
+      staleQueuedCutoff(Date.now()),
+    );
+    fup.abandoned = history.abandoned;
 
     // Rebooked patients — those with an UPCOMING scheduled check-up — are
     // skipped. The date bound is the whole point: without it a single stale
@@ -342,12 +369,12 @@ Deno.serve(async (req) => {
     const rebooked = new Set((upcoming ?? []).map((r) => r.patient_id as string));
 
     for (const a of missed) {
-      if (
-        alreadyFollowed.has(a.appointment_id) ||
-        (failedAttempts.get(a.appointment_id) ?? 0) >= FOLLOWUP_MAX_ATTEMPTS ||
-        rebooked.has(a.patient_id) ||
-        !a.patients.contact_number
-      ) {
+      const candidate = {
+        appointment_id: a.appointment_id,
+        patient_id: a.patient_id,
+        contact_number: a.patients.contact_number,
+      };
+      if (!shouldFollowUp(candidate, history, rebooked, FOLLOWUP_MAX_ATTEMPTS)) {
         fup.skipped++;
         continue;
       }

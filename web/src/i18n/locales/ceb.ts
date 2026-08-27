@@ -18,6 +18,17 @@ export const ceb: Translation = {
     nonDiagnostic:
       'Ang mga tubag sa screening dinhi kay impormasyon gikan sa pre-screening sa BHW — dili diagnosis. Ang diagnosis himoon sa pasilidad sa TB-DOTS pinaagi sa laboratory testing.',
   },
+  account: {
+    errorTitle: 'Dili ma-load ang imong account',
+    errorBody:
+      'Naka-sign in ka na, apan dili maabot ang mga detalye sa imong account. Susiha ang imong koneksyon ug sulayi pag-usab.',
+    missingTitle: 'Wala pa na-set up kini nga account',
+    missingBody:
+      'Milihok ang imong sign-in, apan wala pay portal account nga naka-link niini. Pangayoa sa imong administrator nga humanon ang pag-set up, dayon pag-sign in pag-usab.',
+    inactiveTitle: 'Gi-deactivate kini nga account',
+    inactiveBody:
+      'Gipalong na ang access sa portal para niini nga account. Kontaka ang imong administrator kung sa imong hunahuna sayop kini.',
+  },
   languages: {
     en: 'Iningles',
     tl: 'Tagalog',
@@ -294,6 +305,10 @@ export const ceb: Translation = {
     signinSub: 'Maayong pagbalik. Isulod ang imong kredensyal aron magpadayon.',
     accessHelp:
       'Ang access gihatag sa imong administrator. Kontaka sila kung dili ka maka-sign in.',
+    noteStaff:
+      'Ang TB-DOTS staff modawat og mga referral, morekord sa resulta sa laboratoryo, ug mosubay sa pagtambong sa check-up.',
+    noteCaptain:
+      'Ang Kapitan sa Barangay modumala sa mga health worker nga gitakda sa ilang kaugalingong barangay.',
   },
   /**
    * Forced password change (D-06). Shown while the signed-in account still
@@ -383,7 +398,9 @@ export const ceb: Translation = {
     markPresented: 'Miabot',
     markNoShow: 'No-show',
     closeReferral: 'Sirad-i ang referral',
-    appointmentsSection: 'Mga appointment alang sa check-up',
+    appointmentsSection: 'Mga check-up appointment sa pasyente',
+    appointmentsScope:
+      'Tanang check-up nga narekord para niini nga pasyente, apil ang mga giandam para sa naunang referral.',
     noAppointments: 'Walay natala nga appointment alang niining pasyente.',
     colScheduled: 'Gitakda',
     colAttended: 'Mitambong',
