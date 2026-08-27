@@ -360,6 +360,7 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
             <textarea
               rows={2}
               placeholder={t('detail.resultPlaceholder')}
+              aria-label={t('detail.resultLabel')}
               value={resultText}
               onChange={(e) => setResultText(e.target.value)}
             />

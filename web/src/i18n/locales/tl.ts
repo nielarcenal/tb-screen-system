@@ -283,7 +283,7 @@ export const tl: Translation = {
   login: {
     title: 'Pag-sign in ng TB-DOTS staff',
     sub: 'Staff ng pasilidad ng TB-DOTS',
-    roleStaff: 'TB-DOTS staff',
+    roleStaff: 'Staff ng TB-DOTS',
     roleCaptain: 'Kapitan ng Barangay',
     intro:
       'Para sa mga staff ng pasilidad ng TB-DOTS: tumanggap ng mga referral, magtala ng resulta ng laboratoryo, at subaybayan ang pagdalo sa check-up.',
@@ -349,7 +349,7 @@ export const tl: Translation = {
     colPresented: 'Dumating',
     colResult: 'Resulta',
     presentedYes: 'Oo',
-    presentedNo: 'No-show',
+    presentedNo: 'Hindi dumalo',
     loadError: 'Hindi ma-load ang mga referral: {{message}}',
     count: '{{count}} referral',
     selectPrompt: 'Pumili ng referral upang makita ang detalye',
@@ -396,7 +396,7 @@ export const tl: Translation = {
     resultSavedOn: 'Naitala ang resulta noong {{date}}',
     presentedLabel: 'Dumating ba ang pasyente sa pasilidad?',
     markPresented: 'Dumating',
-    markNoShow: 'No-show',
+    markNoShow: 'Hindi dumalo',
     closeReferral: 'Isara ang referral',
     appointmentsSection: 'Mga check-up appointment ng pasyente',
     appointmentsScope:
@@ -416,8 +416,8 @@ export const tl: Translation = {
     attendConfirm: 'I-save ang pagdalo',
     attendDateLabel: 'Petsa ng pagdalo ng pasyente (ngayon o mas maaga)',
     apptOnTime: 'nasa oras',
-    apptEarly: '{{count}}d maaga',
-    apptLate: '{{count}}d huli',
+    apptEarly: '{{count}} araw maaga',
+    apptLate: '{{count}} araw huli',
     relToday: 'ngayon',
     relYesterday: 'kahapon',
     relTomorrow: 'bukas',

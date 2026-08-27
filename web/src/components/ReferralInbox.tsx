@@ -123,6 +123,7 @@ export default function ReferralInbox({ onOpen, selectedId }: Props) {
             <input
               type="search"
               placeholder={t('inbox.searchPlaceholder')}
+              aria-label={t('inbox.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />

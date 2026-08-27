@@ -147,6 +147,7 @@ export default function FacilityManagement() {
             <input
               type="search"
               placeholder={t('facilities.searchPlaceholder')}
+              aria-label={t('facilities.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />

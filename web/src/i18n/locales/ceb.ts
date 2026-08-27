@@ -283,7 +283,7 @@ export const ceb: Translation = {
   login: {
     title: 'Pag-sign in sa TB-DOTS staff',
     sub: 'Staff sa pasilidad sa TB-DOTS',
-    roleStaff: 'TB-DOTS staff',
+    roleStaff: 'Staff sa TB-DOTS',
     roleCaptain: 'Kapitan sa Barangay',
     intro:
       'Alang sa mga staff sa pasilidad sa TB-DOTS: dawata ang mga referral, itala ang resulta sa laboratoryo, ug bantayi ang pagtambong sa check-up.',
@@ -349,7 +349,7 @@ export const ceb: Translation = {
     colPresented: 'Miabot',
     colResult: 'Resulta',
     presentedYes: 'Oo',
-    presentedNo: 'No-show',
+    presentedNo: 'Wala mitambong',
     loadError: 'Dili ma-load ang mga referral: {{message}}',
     count: '{{count}} ka referral',
     selectPrompt: 'Pagpili og referral aron makita ang detalye',
@@ -396,7 +396,7 @@ export const ceb: Translation = {
     resultSavedOn: 'Natala ang resulta niadtong {{date}}',
     presentedLabel: 'Miabot ba ang pasyente sa pasilidad?',
     markPresented: 'Miabot',
-    markNoShow: 'No-show',
+    markNoShow: 'Wala mitambong',
     closeReferral: 'Sirad-i ang referral',
     appointmentsSection: 'Mga check-up appointment sa pasyente',
     appointmentsScope:
@@ -416,8 +416,8 @@ export const ceb: Translation = {
     attendConfirm: 'I-save ang pagtambong',
     attendDateLabel: 'Petsa nga mitambong ang pasyente (karon o mas sayo)',
     apptOnTime: 'sa oras',
-    apptEarly: '{{count}}d sayo',
-    apptLate: '{{count}}d ulahi',
+    apptEarly: '{{count}} ka adlaw sayo',
+    apptLate: '{{count}} ka adlaw ulahi',
     relToday: 'karon',
     relYesterday: 'gahapon',
     relTomorrow: 'ugma',
