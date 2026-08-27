@@ -9,7 +9,9 @@
 
 // --- small fixed value sets (mirror the SQL CHECK constraints) ---
 export type FacilityType = 'barangay_health_station' | 'tb_dots';
-export type UserRole = 'bhw' | 'tb_dots';
+// Mirrors the users_role_check constraint: 'captain' was added by 0006 and
+// 'admin' by 0008. The app itself only ever runs as 'bhw' (D-07).
+export type UserRole = 'bhw' | 'tb_dots' | 'captain' | 'admin';
 export type Sex = 'male' | 'female';
 export type PgisSeverity = 'none' | 'mild' | 'moderate' | 'severe';
 export type ReferralStatus = 'submitted' | 'received' | 'tested' | 'closed';

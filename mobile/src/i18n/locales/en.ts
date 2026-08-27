@@ -80,6 +80,34 @@ export const en = {
     error: 'Sign-in failed: {{message}}',
     errorOffline:
       'You need an internet connection to sign in. Once you are signed in, the app works offline.',
+    refusedInactive:
+      'This account has been deactivated. Ask your barangay captain or program coordinator to reactivate it.',
+    refusedWrongRole:
+      'This app is for Barangay Health Workers. Your account is {{destination}} — please sign in on the TB-Screen portal on a computer.',
+    refusedNoAccount:
+      'This account is not set up for the app yet. Please contact your program coordinator.',
+  },
+  /**
+   * Blocked account (D-07). Shown over the whole app when the server says this
+   * account may no longer use it.
+   */
+  blocked: {
+    inactiveTitle: 'This account has been deactivated',
+    inactiveBody:
+      'You can no longer use the app with this account. Ask your barangay captain or program coordinator to reactivate it.',
+    wrongRoleTitle: 'This app is for Barangay Health Workers',
+    wrongRoleBody:
+      'Your account is {{destination}}. Please sign in on the TB-Screen portal on a computer instead.',
+    noAccountTitle: 'This account is not set up',
+    noAccountBody:
+      'We could not find the details for this account. Please contact your program coordinator.',
+    roleFacility: 'a health facility account',
+    roleCaptain: 'a barangay captain account',
+    roleAdmin: 'an administrator account',
+    roleOther: 'not a Barangay Health Worker account',
+    pendingNote:
+      'Signing out uploads anything still waiting first. If some records cannot be uploaded, you will be asked before anything is removed from this phone.',
+    signOut: 'Sign out',
   },
   /**
    * Forced password change (D-06). Shown over the whole app while the account

@@ -16,6 +16,7 @@
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 
 import { supabase } from '../lib/supabase';
+import { isAccountDenied, refreshAccountAccess } from '../lib/accountGate';
 import { isSupabaseConfigured } from '../lib/env';
 import { syncAll } from './syncEngine';
 import { isConnectivityError } from './syncErrors';
@@ -46,7 +47,16 @@ function deriveOnline(state: NetInfoState): boolean {
  * Run one sync pass, guarded. Safe to call from anywhere (button, reconnect,
  * app-foreground). No-ops (queues a rerun) if a sync is already running.
  */
-export async function triggerSync(): Promise<void> {
+export async function triggerSync(options?: {
+  /**
+   * Run even when the account has been refused (D-07). Set by the guarded
+   * sign-out ONLY: that pass is the last chance to get a BHW's unsynced
+   * patients to the server before the cache is wiped, and skipping it would
+   * make the "N records could not be uploaded" count a lie — it would name
+   * rows that were never even offered.
+   */
+  allowBlockedAccount?: boolean;
+}): Promise<void> {
   if (inFlight) {
     rerunRequested = true;
     return;
@@ -59,6 +69,15 @@ export async function triggerSync(): Promise<void> {
   const { data } = await supabase.auth.getSession();
   if (!data.session) return;
 
+  // D-07: a refused account must not PULL patient data, and the sign-out that
+  // follows a refusal is not instantaneous — the mid-session path waits on a
+  // BHW reading a dialog. Without this guard, startAutoSync's reconnect timer
+  // could fire a pass inside that window. Belt and braces: the refusal itself
+  // already returns before triggerSync at sign-in, and ends the session after.
+  //
+  // The guarded sign-out opts out (above), because its pass exists to PUSH.
+  if (!options?.allowBlockedAccount && isAccountDenied()) return;
+
   const store = useSyncStore.getState();
   inFlight = true;
   store.set({ phase: 'syncing', lastError: null });
@@ -67,6 +86,19 @@ export async function triggerSync(): Promise<void> {
     await pushAssignedBarangayIfDirty(data.session.user.id);
     useAppStore.getState().setLastSyncAt(new Date().toISOString());
     store.set({ lastResult: `pushed ${pushed}, pulled ${pulled}` });
+
+    // D-07: re-ask who this is on every pass that got through. A BHW who is
+    // deactivated, or whose role is changed, keeps a working session until the
+    // access token expires, and nothing else on the device would notice —
+    // manage-bhw changes the server row, not the phone. This is the cheapest
+    // honest signal: the pass has already proved connectivity, so the answer
+    // costs one small query and lands within one sync cycle.
+    //
+    // 'unknown' on a missing row here, not 'deny': mid-session a null cannot be
+    // told apart from RLS declining to show the row, and refreshAccountAccess
+    // discards an 'unknown' rather than storing it, so a failed check leaves an
+    // existing session exactly as it was. It never revokes.
+    await refreshAccountAccess(data.session.user.id, 'unknown');
 
     // The pass finished, but the server refused some rows (D-10). They are
     // still queued and will be retried, so this is not a failed sync — but it

@@ -88,6 +88,36 @@ export const ceb: Translation = {
     // TODO i18n verify
     errorOffline:
       'Kinahanglan og koneksyon sa internet aron maka-sign in. Human ka maka-sign in, mogana ang app bisan offline.',
+    // TODO i18n verify
+    refusedInactive:
+      'Kini nga account gi-deactivate na. Hangyoa ang imong barangay captain o program coordinator nga i-activate kini pag-usab.',
+    refusedWrongRole:
+      'Kini nga app para sa mga Barangay Health Worker. Ang imong account usa ka {{destination}} — palihug pag-sign in sa TB-Screen portal sa computer.',
+    refusedNoAccount:
+      'Kini nga account wala pa ma-andam para sa app. Palihug kontaka ang imong program coordinator.',
+  },
+  /**
+   * Blocked account (D-07). Shown over the whole app when the server says this
+   * account may no longer use it.
+   */
+  // TODO i18n verify
+  blocked: {
+    inactiveTitle: 'Kini nga account gi-deactivate na',
+    inactiveBody:
+      'Dili na nimo magamit ang app gamit kini nga account. Hangyoa ang imong barangay captain o program coordinator nga i-activate kini pag-usab.',
+    wrongRoleTitle: 'Kini nga app para sa mga Barangay Health Worker',
+    wrongRoleBody:
+      'Ang imong account usa ka {{destination}}. Palihug pag-sign in sa TB-Screen portal sa computer.',
+    noAccountTitle: 'Wala ma-andam kini nga account',
+    noAccountBody:
+      'Wala namo makita ang mga detalye niini nga account. Palihug kontaka ang imong program coordinator.',
+    roleFacility: 'account sa health facility',
+    roleCaptain: 'account sa barangay captain',
+    roleAdmin: 'account sa administrator',
+    roleOther: 'dili account sa Barangay Health Worker',
+    pendingNote:
+      'Kung mag-sign out, i-upload una ang mga naghulat pa. Kung adunay mga record nga dili ma-upload, pangutan-on ka una una pa may mapapas niini nga telepono.',
+    signOut: 'Mag-sign out',
   },
   /**
    * Forced password change (D-06). Shown over the whole app while the account

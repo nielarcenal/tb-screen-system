@@ -88,6 +88,36 @@ export const tl: Translation = {
     // TODO i18n verify
     errorOffline:
       'Kailangan ng koneksyon sa internet para makapag-sign in. Kapag naka-sign in na, gumagana ang app kahit offline.',
+    // TODO i18n verify
+    refusedInactive:
+      'Na-deactivate na ang account na ito. Hilingin sa inyong barangay captain o program coordinator na i-activate itong muli.',
+    refusedWrongRole:
+      'Ang app na ito ay para sa mga Barangay Health Worker. Ang account ninyo ay {{destination}} — mag-sign in po sa TB-Screen portal sa computer.',
+    refusedNoAccount:
+      'Hindi pa nakahanda ang account na ito para sa app. Makipag-ugnayan po sa inyong program coordinator.',
+  },
+  /**
+   * Blocked account (D-07). Shown over the whole app when the server says this
+   * account may no longer use it.
+   */
+  // TODO i18n verify
+  blocked: {
+    inactiveTitle: 'Na-deactivate na ang account na ito',
+    inactiveBody:
+      'Hindi na ninyo magagamit ang app gamit ang account na ito. Hilingin sa inyong barangay captain o program coordinator na i-activate itong muli.',
+    wrongRoleTitle: 'Ang app na ito ay para sa mga Barangay Health Worker',
+    wrongRoleBody:
+      'Ang account ninyo ay {{destination}}. Mag-sign in po sa TB-Screen portal sa computer.',
+    noAccountTitle: 'Hindi nakahanda ang account na ito',
+    noAccountBody:
+      'Hindi namin makita ang mga detalye ng account na ito. Makipag-ugnayan po sa inyong program coordinator.',
+    roleFacility: 'isang account ng health facility',
+    roleCaptain: 'isang account ng barangay captain',
+    roleAdmin: 'isang account ng administrator',
+    roleOther: 'hindi account ng Barangay Health Worker',
+    pendingNote:
+      'Kapag nag-sign out, iuupload muna ang mga naghihintay pa. Kung may mga record na hindi maiupload, tatanungin muna kayo bago may burahin sa telepono na ito.',
+    signOut: 'Mag-sign out',
   },
   /**
    * Forced password change (D-06). Shown over the whole app while the account

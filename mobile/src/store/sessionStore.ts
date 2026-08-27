@@ -6,6 +6,9 @@
  */
 import { create } from 'zustand';
 
+import type { AccountAccess, SettledAccountAccess } from '../domain/accountAccess';
+import { useAppStore } from './appStore';
+
 interface SessionState {
   userId: string | null;
   email: string | null;
@@ -34,6 +37,15 @@ interface SessionState {
    */
   mustChangePassword: boolean | null;
   /**
+   * Whether this account may use the BHW app at all (D-07 — users.role must be
+   * 'bhw' and users.active must not be false). null means NOT YET KNOWN, and
+   * like mustChangePassword above, unknown deliberately does not block: the
+   * answer lives on the server, and a session restored while offline cannot
+   * read it. Only a verdict the server actually gave is ever stored here —
+   * see setAccountAccess.
+   */
+  accountAccess: SettledAccountAccess | null;
+  /**
    * Set by Settings immediately before supabase.auth.signOut(), so the
    * SIGNED_OUT event that follows is recognised as deliberate (expired stays
    * false). A latch, not a one-shot: Settings clears the store again after
@@ -44,6 +56,7 @@ interface SessionState {
   setSession: (userId: string, email: string | null) => void;
   setFullName: (name: string | null) => void;
   setMustChangePassword: (value: boolean | null) => void;
+  setAccountAccess: (value: AccountAccess) => void;
   beginSignOut: () => void;
   clearSession: () => void;
 }
@@ -54,6 +67,7 @@ export const useSessionStore = create<SessionState>((set) => ({
   fullName: null,
   expired: false,
   mustChangePassword: null,
+  accountAccess: null,
   signingOut: false,
   // NOTE: mustChangePassword is deliberately NOT reset here. onAuthStateChange
   // fires setSession again on every token refresh for the SAME user, and
@@ -62,17 +76,34 @@ export const useSessionStore = create<SessionState>((set) => ({
   setSession: (userId, email) => set({ userId, email, expired: false, signingOut: false }),
   setFullName: (fullName) => set({ fullName }),
   setMustChangePassword: (mustChangePassword) => set({ mustChangePassword }),
+  // An 'unknown' verdict is DISCARDED rather than stored, and that is the whole
+  // safety property of D-07 expressed in one line: a lookup that failed can
+  // never downgrade a verdict the server already gave, so no dropped signal and
+  // no server hiccup can revoke a session or raise the block screen. Leaving
+  // the field null also keeps the re-fetch condition in _layout.tsx honest —
+  // null means "still never answered", so it is retried.
+  setAccountAccess: (value) => {
+    if (value.kind === 'unknown') return;
+    set({ accountAccess: value });
+  },
   beginSignOut: () => set({ signingOut: true }),
-  clearSession: () =>
+  clearSession: () => {
+    // D-07: a remembered refusal belongs to the session that earned it. Clearing
+    // it here — rather than only on a deliberate sign-out — means it can never
+    // greet the next account signed in on this phone, and covers the expiry
+    // path too.
+    useAppStore.getState().rememberAccountDenial(null);
     set((s) => ({
       userId: null,
       email: null,
       fullName: null,
       mustChangePassword: null,
+      accountAccess: null,
       // Supabase only emits SIGNED_OUT when there was a stored session to
       // lose, so "cleared without asking" always means the session ended on
       // its own — including when it dies during launch, before setSession()
       // ever ran.
       expired: !s.signingOut,
-    })),
+    }));
+  },
 }));

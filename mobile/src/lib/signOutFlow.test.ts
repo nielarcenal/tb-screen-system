@@ -102,6 +102,22 @@ describe('when everything is uploaded', () => {
   });
 });
 
+describe('the final push is exempt from the D-07 account block', () => {
+  it('asks for the pass to run even when the account has been refused', async () => {
+    // The block screen offers this same flow. Ordinary syncs are suppressed for
+    // a refused account so it cannot pull patient data, but THIS pass exists to
+    // push — it is the last chance to get a BHW's unsynced patients to the
+    // server before the cache is wiped. Without the opt-out the rows would
+    // never be offered, and the count in the next question would name records
+    // as unuploadable that had simply never been tried.
+    mocks.countPendingRows.mockResolvedValue(0);
+    confirmSignOut(t);
+    await answerShown(true);
+
+    expect(mocks.triggerSync).toHaveBeenCalledWith({ allowBlockedAccount: true });
+  });
+});
+
 describe('when rows could not be uploaded', () => {
   it('asks again, naming the count, with staying signed in as the safe answer', async () => {
     mocks.countPendingRows.mockResolvedValue(2);

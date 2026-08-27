@@ -74,7 +74,12 @@ export function confirmSignOut(t: Translate, onBusyChange?: (busy: boolean) => v
     let stillPending = 0;
     onBusyChange?.(true);
     try {
-      await triggerSync(); // push pending rows if we're online
+      // allowBlockedAccount: this runs from the D-07 block screen too, where
+      // the account has been refused and ordinary syncs are suppressed. This
+      // pass is the one that must still go: it is the last chance to get a
+      // BHW's unsynced patients to the server before the cache is wiped, and
+      // the count below is only truthful if the rows were actually offered.
+      await triggerSync({ allowBlockedAccount: true }); // push pending rows if online
       stillPending = await countPendingRows();
       if (stillPending === 0) {
         await performSignOut();
