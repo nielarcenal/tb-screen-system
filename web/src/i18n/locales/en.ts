@@ -32,6 +32,10 @@ export const en = {
       'Access to the portal has been turned off for this account. Contact your administrator if you think this is a mistake.',
   },
   languages: {
+    /** Accessible group name for the EN/TL/CEB switcher. The pills themselves
+     *  read 'EN'/'TL'/'CEB', so this label is the only thing a screen reader
+     *  announces for the control. */
+    label: 'Language',
     en: 'English',
     tl: 'Tagalog',
     ceb: 'Cebuano',

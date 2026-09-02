@@ -30,6 +30,7 @@ export const tl: Translation = {
       'Naka-off na ang access sa portal para sa account na ito. Makipag-ugnayan sa iyong administrator kung sa tingin mo ay mali ito.',
   },
   languages: {
+    label: 'Wika',
     en: 'Ingles',
     tl: 'Tagalog',
     ceb: 'Cebuano',

@@ -30,6 +30,7 @@ export const ceb: Translation = {
       'Gipalong na ang access sa portal para niini nga account. Kontaka ang imong administrator kung sa imong hunahuna sayop kini.',
   },
   languages: {
+    label: 'Pinulongan',
     en: 'Iningles',
     tl: 'Tagalog',
     ceb: 'Binisaya',

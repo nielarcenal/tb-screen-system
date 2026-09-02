@@ -88,6 +88,100 @@ describe('locale bundles', () => {
   });
 });
 
+/**
+ * Every key the portal actually asks for must exist in en.
+ *
+ * i18next renders a missing key as the key itself, which is loud and gets
+ * caught the moment anyone opens the screen -- EXCEPT when the call site
+ * passes a default value, which renders plausible English instead and so is
+ * invisible in every language. That is exactly how the language switcher
+ * shipped announcing "Language" to Tagalog and Cebuano screen-reader users:
+ * t('languages.label', 'Language'), with no bundle defining the key.
+ *
+ * Scans source rather than trusting the types, because t() takes a string and
+ * TypeScript never checks it against the bundle. Only single-quoted literal
+ * keys are collected; the template-literal call sites build their keys at
+ * runtime (`status.${...}`, `symptoms.${...}` and four more prefixes) and
+ * cannot be checked this way.
+ */
+describe('translation keys used in source', () => {
+  /**
+   * Read with Vite's import.meta.glob rather than node:fs: the portal's tsconfig
+   * is deliberately browser-only (lib ES2022 + DOM, no @types/node), and pulling
+   * Node's types in for one test would hand the whole app `process` and Node
+   * timer types it must never see.
+   */
+  const modules = import.meta.glob('../**/*.{ts,tsx}', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  }) as Record<string, string>;
+
+  function flatten(value: unknown, prefix = ''): Record<string, string> {
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      const key = prefix ? `${prefix}.${k}` : k;
+      if (v && typeof v === 'object') Object.assign(out, flatten(v, key));
+      else out[key] = String(v);
+    }
+    return out;
+  }
+
+  /**
+   * Comments are stripped before scanning. Both guards below describe the
+   * defect they exist for by quoting the offending call, and a key named only
+   * in prose is not a key the portal asks for -- without this the guards fail
+   * on their own documentation. Block comments go entirely; line comments go
+   * only when they start the line, so a trailing comment quoting a t() call
+   * would still be read as code.
+   */
+  function stripComments(code: string): string {
+    const NL = String.fromCharCode(10);
+    return code
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      .split(NL)
+      .map((line) => (line.trimStart().startsWith('//') ? '' : line))
+      .join(NL);
+  }
+
+  // The bundles themselves are excluded: they DEFINE keys, they do not ask for any.
+  const files = Object.entries(modules).filter(([p]) => !p.includes('/locales/'));
+  const source = files.map(([, code]) => stripComments(code)).join(String.fromCharCode(10));
+
+  it('finds the source to scan', () => {
+    // A broken path would make every assertion below vacuously pass.
+    expect(files.length).toBeGreaterThan(20);
+    expect(source).toContain("t('languages.label')");
+  });
+
+  it('defines every key the source asks for', () => {
+    const defined = flatten(en);
+    const missing = [...source.matchAll(/(?<![A-Za-z0-9_$.])t\(\s*'([^'${}]+\.[^'${}]+)'/g)]
+      .map((m) => m[1])
+      // A counted key is stored as key_one / key_other, never bare.
+      .filter((k) => defined[k] === undefined && defined[`${k}_one`] === undefined);
+    expect([...new Set(missing)]).toEqual([]);
+  });
+
+  it('never hides a missing key behind a default value', () => {
+    // t('some.key', 'Some English') silences the check above at the call site
+    // and pins the string to English for every language. There is no legitimate
+    // use for it here: en IS the fallback bundle.
+    const DEFAULTED = /(?<![A-Za-z0-9_$.])t\(\s*'[^'${}]+\.[^'${}]+'\s*,\s*'/g;
+    const withDefault = [...source.matchAll(DEFAULTED)].map((m) => m[0]);
+    expect(withDefault).toEqual([]);
+  });
+
+  it('translates the group label on the language switcher', () => {
+    // The pills read EN/TL/CEB in every language, so this aria-label is the
+    // only thing a screen reader can announce for the control.
+    for (const [name, bundle] of [['tl', tl], ['ceb', ceb]] as const) {
+      expect(bundle.languages.label, `${name}.languages.label`).not.toBe(en.languages.label);
+      expect(bundle.languages.label.length, `${name}.languages.label`).toBeGreaterThan(0);
+    }
+  });
+});
+
 describe('<html lang>', () => {
   it('tracks the selected language', () => {
     for (const lng of SUPPORTED_LANGUAGES) {
