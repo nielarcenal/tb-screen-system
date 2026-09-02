@@ -45,6 +45,40 @@ describe('locale bundles', () => {
     }
   });
 
+  it('agrees in number on the two counted labels', () => {
+    // Both call sites pass { count }, which makes i18next look for _one/_other
+    // and ignore a bare key. With only the plural spelling defined, the BHW
+    // list read "1 results" and the inbox would read "1 referrals".
+    //
+    // en is the only bundle that inflects. fil (which tl resolves to) and ceb
+    // put EVERY count in the 'one' category -- 0, 1, 2 and 5 all select _one --
+    // so their _one carries the general text and _other is there for key parity.
+    expect(en.bhw.resultsCount_one).not.toBe(en.bhw.resultsCount_other);
+    expect(en.inbox.count_one).not.toBe(en.inbox.count_other);
+    expect(en.bhw.resultsCount_one).not.toMatch(/results/);
+    expect(en.inbox.count_one).not.toMatch(/referrals/);
+
+    for (const [name, bundle] of [['tl', tl], ['ceb', ceb]] as const) {
+      // The rendered form for every count, so it must not be a singular-only
+      // phrasing -- and it must still interpolate.
+      expect(bundle.bhw.resultsCount_one, `${name}.bhw`).toContain('{{count}}');
+      expect(bundle.inbox.count_one, `${name}.inbox`).toContain('{{count}}');
+    }
+  });
+
+  it('selects the one/other category the runtime actually asks for', () => {
+    // Guards the assumption above rather than the strings: if a runtime ever
+    // stopped resolving tl -> fil, _one would silently stop being the form
+    // that renders in Tagalog.
+    expect(new Intl.PluralRules('en').select(1)).toBe('one');
+    expect(new Intl.PluralRules('en').select(4)).toBe('other');
+    for (const lng of ['tl', 'ceb'] as const) {
+      for (const n of [0, 1, 2, 5]) {
+        expect(new Intl.PluralRules(lng).select(n), `${lng} ${n}`).toBe('one');
+      }
+    }
+  });
+
   it('keeps the result-notes label, which is the textarea accessible name', () => {
     // Orphaned for a while: translated in all three bundles, rendered nowhere,
     // leaving the textarea with no accessible name at all.

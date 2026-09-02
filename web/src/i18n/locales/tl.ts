@@ -106,6 +106,7 @@ export const tl: Translation = {
     addressLabel: 'Address',
     addTitle: 'Bagong pasilidad',
     editTitle: 'I-edit ang pasilidad',
+    create: 'Gumawa ng pasilidad', // TODO i18n verify
     typeChip: 'TB-DOTS',
     empty: 'Wala pang pasilidad.',
     emptyDataBody: 'Magdagdag ng pasilidad ng TB-DOTS upang magsimula.',
@@ -238,7 +239,11 @@ export const tl: Translation = {
     emptyDataBody: 'Magdagdag ng BHW upang simulan ang inyong pangkat.',
     filterEmptyTitle: 'Walang tumugmang BHW',
     filterEmptyBody: 'Subukang alisin ang paghahanap o filter ng status.',
-    resultsCount: '{{count}} resulta',
+    // fil/ceb CLDR resolve EVERY count to the 'one' category (0, 1, 2, 5 all
+    // -> one), so _one is the form that actually renders; _other exists only
+    // for key parity with en. Both must carry the general, uninflected text.
+    resultsCount_one: '{{count}} resulta',
+    resultsCount_other: '{{count}} resulta',
     newTitle: 'Bagong BHW',
     newSub: 'Gumawa ng BHW account sa {{barangay}}',
     middleNameLabel: 'Gitnang pangalan',
@@ -351,7 +356,11 @@ export const tl: Translation = {
     presentedYes: 'Oo',
     presentedNo: 'Hindi dumalo',
     loadError: 'Hindi ma-load ang mga referral: {{message}}',
-    count: '{{count}} referral',
+    // fil/ceb CLDR resolve EVERY count to the 'one' category (0, 1, 2, 5 all
+    // -> one), so _one is the form that actually renders; _other exists only
+    // for key parity with en. Both must carry the general, uninflected text.
+    count_one: '{{count}} referral',
+    count_other: '{{count}} referral',
     selectPrompt: 'Pumili ng referral upang makita ang detalye',
     filterEmptyTitle: 'Walang tumugmang referral',
     filterEmptyBody: 'Subukang alisin ang paghahanap o filter ng status.',

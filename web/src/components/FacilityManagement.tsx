@@ -109,7 +109,8 @@ export default function FacilityManagement() {
         />
         <p>
           <button disabled={busy || !formName.trim()} onClick={() => void submitForm(editing)}>
-            {editing ? t('bhw.save') : t('bhw.create')}
+            {/* bhw.create is "Create account"; this form creates a facility. */}
+            {editing ? t('bhw.save') : t('facilities.create')}
           </button>
           <button className="secondary" disabled={busy} onClick={() => setView({ kind: 'list' })}>
             {t('bhw.cancel')}

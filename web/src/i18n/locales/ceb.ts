@@ -106,6 +106,7 @@ export const ceb: Translation = {
     addressLabel: 'Address',
     addTitle: 'Bag-ong pasilidad',
     editTitle: 'I-edit ang pasilidad',
+    create: 'Paghimo og pasilidad', // TODO i18n verify
     typeChip: 'TB-DOTS',
     empty: 'Wala pay pasilidad.',
     emptyDataBody: 'Pagdugang og TB-DOTS nga pasilidad aron magsugod.',
@@ -238,7 +239,11 @@ export const ceb: Translation = {
     emptyDataBody: 'Pagdugang ug BHW aron masugdan ang imong grupo.',
     filterEmptyTitle: 'Walay BHW nga nahaom',
     filterEmptyBody: 'Sulayi hawaan ang pagpangita o filter sa kahimtang.',
-    resultsCount: '{{count}} nga resulta',
+    // fil/ceb CLDR resolve EVERY count to the 'one' category (0, 1, 2, 5 all
+    // -> one), so _one is the form that actually renders; _other exists only
+    // for key parity with en. Both must carry the general, uninflected text.
+    resultsCount_one: '{{count}} nga resulta',
+    resultsCount_other: '{{count}} nga resulta',
     newTitle: 'Bag-ong BHW',
     newSub: 'Paghimo ug BHW account sa {{barangay}}',
     middleNameLabel: 'Tunga nga ngalan',
@@ -351,7 +356,11 @@ export const ceb: Translation = {
     presentedYes: 'Oo',
     presentedNo: 'Wala mitambong',
     loadError: 'Dili ma-load ang mga referral: {{message}}',
-    count: '{{count}} ka referral',
+    // fil/ceb CLDR resolve EVERY count to the 'one' category (0, 1, 2, 5 all
+    // -> one), so _one is the form that actually renders; _other exists only
+    // for key parity with en. Both must carry the general, uninflected text.
+    count_one: '{{count}} ka referral',
+    count_other: '{{count}} ka referral',
     selectPrompt: 'Pagpili og referral aron makita ang detalye',
     filterEmptyTitle: 'Walay referral nga nahaom',
     filterEmptyBody: 'Sulayi hawaan ang pagpangita o filter sa kahimtang.',
