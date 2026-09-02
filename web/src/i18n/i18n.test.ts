@@ -144,6 +144,28 @@ describe('translation keys used in source', () => {
       .join(NL);
   }
 
+  /** Any quoted string shaped like a translation key -- see the orphan test. */
+  const KEY_LIKE_STRING = /['"`]([A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+)['"`]/g;
+
+  /**
+   * The key prefixes the ten template-literal call sites build at runtime:
+   * t(`status.${r.status}`), t(`symptoms.${k}`), t(`common.${flags[k]}`) and so
+   * on. Keys under these are reachable without any literal in the source, so
+   * the orphan check must not claim them. Narrow entries where the dynamic part
+   * is a closed set of two -- detail.outcome takes only Positive or Negative.
+   */
+  const RUNTIME_BUILT = [
+    'status.',
+    'sex.',
+    'symptoms.',
+    'pgis.',
+    'common.yes',
+    'common.no',
+    'common.unsure',
+    'detail.outcomePositive',
+    'detail.outcomeNegative',
+  ];
+
   // The bundles themselves are excluded: they DEFINE keys, they do not ask for any.
   const files = Object.entries(modules).filter(([p]) => !p.includes('/locales/'));
   const source = files.map(([, code]) => stripComments(code)).join(String.fromCharCode(10));
@@ -170,6 +192,42 @@ describe('translation keys used in source', () => {
     const DEFAULTED = /(?<![A-Za-z0-9_$.])t\(\s*'[^'${}]+\.[^'${}]+'\s*,\s*'/g;
     const withDefault = [...source.matchAll(DEFAULTED)].map((m) => m[0]);
     expect(withDefault).toEqual([]);
+  });
+
+  /**
+   * Nothing may be translated into all three bundles and then rendered nowhere.
+   *
+   * The Teal Trust redesign replaced the portal's data tables with cards and
+   * drawers and left 61 keys behind -- whole sets of column headers, section
+   * headings and per-screen loadError strings that no component had asked for
+   * since. Dead weight is not merely untidy here: every orphan is a string a
+   * native speaker has to read and sign off during the tl/ceb review, and the
+   * review is the expensive step.
+   *
+   * The reverse defect is real too and this guard does NOT catch it: a key can
+   * be orphaned because a render was DROPPED rather than replaced, which is
+   * what happened to detail.resultLabel (see above -- it left the textarea with
+   * no accessible name at all). When this fails, decide which of the two it is
+   * before deleting anything.
+   *
+   * Matches keys as bare quoted strings, not just inside t(): components also
+   * hold keys in lookup tables and render them indirectly, e.g. AccountStateGate
+   * has `title: 'account.errorTitle'` and calls t(copy.title). Scanning only
+   * t(...) reports all six account.* keys as orphans, and deleting them would
+   * blank the D-12 terminal account screens.
+   */
+  it('renders every key it defines', () => {
+    const referenced = new Set(
+      [...source.matchAll(KEY_LIKE_STRING)].map((m) => m[1]),
+    );
+    const orphans = Object.keys(flatten(en)).filter((key) => {
+      const base = key.replace(/_(one|other)$/, '');
+      if (referenced.has(key) || referenced.has(base)) return false;
+      // Built at runtime by the template-literal call sites, so no literal of
+      // the full key exists anywhere in source.
+      return !RUNTIME_BUILT.some((prefix) => key.startsWith(prefix));
+    });
+    expect(orphans).toEqual([]);
   });
 
   it('translates the group label on the language switcher', () => {
