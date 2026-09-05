@@ -6,7 +6,6 @@ import type { Translation } from './en';
 
 export const ceb: Translation = {
   common: {
-    appName: 'TB-Screen Portal',
     loading: 'Nagkarga…',
     refresh: 'I-refresh',
     signOut: 'Pag-sign out',
@@ -18,10 +17,19 @@ export const ceb: Translation = {
     nonDiagnostic:
       'Ang mga tubag sa screening dinhi kay impormasyon gikan sa pre-screening sa BHW — dili diagnosis. Ang diagnosis himoon sa pasilidad sa TB-DOTS pinaagi sa laboratory testing.',
   },
+  account: {
+    errorTitle: 'Dili ma-load ang imong account',
+    errorBody:
+      'Naka-sign in ka na, apan dili maabot ang mga detalye sa imong account. Susiha ang imong koneksyon ug sulayi pag-usab.',
+    missingTitle: 'Wala pa na-set up kini nga account',
+    missingBody:
+      'Milihok ang imong sign-in, apan wala pay portal account nga naka-link niini. Pangayoa sa imong administrator nga humanon ang pag-set up, dayon pag-sign in pag-usab.',
+    inactiveTitle: 'Gi-deactivate kini nga account',
+    inactiveBody:
+      'Gipalong na ang access sa portal para niini nga account. Kontaka ang imong administrator kung sa imong hunahuna sayop kini.',
+  },
   languages: {
-    en: 'Iningles',
-    tl: 'Tagalog',
-    ceb: 'Binisaya',
+    label: 'Pinulongan',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -95,17 +103,16 @@ export const ceb: Translation = {
     addressLabel: 'Address',
     addTitle: 'Bag-ong pasilidad',
     editTitle: 'I-edit ang pasilidad',
+    create: 'Paghimo og pasilidad', // TODO i18n verify
     typeChip: 'TB-DOTS',
     empty: 'Wala pay pasilidad.',
     emptyDataBody: 'Pagdugang og TB-DOTS nga pasilidad aron magsugod.',
     filterEmptyTitle: 'Walay pasilidad nga nahaom',
     errorTitle: 'Wala ma-load ang mga pasilidad',
-    loadError: 'Dili ma-load ang mga pasilidad: {{message}}',
     saveError: 'Dili ma-save ang pasilidad: {{message}}',
     noAddress: 'Walay address nga natala',
   },
   admin: {
-    portalTitle: 'TB-Screen Developer Portal',
     sub: 'Paghimo og mga account — alang lamang sa developer',
     notAdmin: 'Kini nga account dili developer account.',
     goMain: 'Adto sa portal sa pasilidad',
@@ -114,12 +121,10 @@ export const ceb: Translation = {
   },
   staff: {
     title: 'Mga account sa TB-DOTS staff',
-    subtitle: '{{count}} ka staff account',
     addCta: 'Pagdugang og staff',
     addTitle: 'Pagdugang og TB-DOTS staff',
     editTitle: 'Usba ang staff',
     facilityLabel: 'Pasilidad',
-    colFacility: 'Pasilidad',
     filterLabel: 'Pasilidad',
     createdTitle: 'Nabuhat ang staff account',
     scopeNote:
@@ -132,7 +137,6 @@ export const ceb: Translation = {
   },
   captains: {
     title: 'Mga account sa Kapitan sa Barangay',
-    subtitle: '{{count}} ka kapitan',
     privacyNote:
       'Ang admin maghimo lamang og mga account sa kapitan. Walay ngalan sa pasyente, rekord, o resulta nga mogawas bisan asa niini nga view.',
     addCta: 'Pagdugang og kapitan',
@@ -149,8 +153,6 @@ export const ceb: Translation = {
     emptyDataBody: 'Pagdugang og kapitan aron magsugod.',
   },
   dashboard: {
-    title: 'Dashboard',
-    intro: 'Karon · {{date}} · inyong pasilidad',
     outcomeNote:
       'Ang mga resulta (positibo / negatibo) gitala ug makita lamang sa pasilidad. Makita sa mga BHW ang progreso sa referral — gisumite, nadawat, nasusi, natala ang resulta — dili gayod ang mismong resulta.',
     screened: 'Na-screen karong adlawa',
@@ -165,7 +167,6 @@ export const ceb: Translation = {
     attendedSub: 'Gikan sa {{total}} nga nakatakda karong adlawa',
     missed: 'Wala mitambong sa check-up',
     missedSub: 'Na-update ang follow-up list sa mga BHW',
-    loadError: 'Dili ma-load ang mga ihap: {{message}}',
     cardTitle: 'Kalihokan karong adlawa',
     errorTitle: 'Wala ma-load ang dashboard',
     errorBody: 'Wala maabot ang server. Susiha ang koneksyon ug sulayi pag-usab.',
@@ -173,31 +174,18 @@ export const ceb: Translation = {
   },
   bhw: {
     title: 'Mga BHW account',
-    subtitle: '{{count}} ka Barangay Health Worker · inyong pasilidad',
     privacyNote:
       'Mga account ug ihap sa aktibidad lamang ang makita sa mga kapitan. Walay ngalan sa pasyente, rekord, o resulta nga mogawas bisan asa niini nga view.',
     addCta: 'Bag-ong BHW',
-    colName: 'Ngalan',
-    colEmail: 'Email',
-    colBarangay: 'Barangay',
-    colActivity: 'Aktibidad sa 30 ka adlaw',
     colStatus: 'Status',
-    colActions: 'Mga aksyon',
-    activityLine: '{{screenings}} ka screening · {{referrals}} ka referral',
     active: 'Aktibo',
     deactivated: 'Na-deactivate',
     edit: 'Usba',
     deactivate: 'I-deactivate',
     reactivate: 'I-reactivate',
-    addTitle: 'Pagdugang og BHW',
     editTitle: 'Usba ang BHW',
-    nameLabel: 'Tibuok nga ngalan',
     firstNameLabel: 'Ngalan',
     lastNameLabel: 'Apelyido',
-    barangayLabel: 'Gitahas nga barangay',
-    ownBarangayNote: 'Ang bag-ong BHW account itahas sa imong barangay.',
-    emailNote:
-      'Awtomatikong mabuo ang email (ngalan.apelyido@tbscreen.ph) ug ipakita uban sa temporaryo nga password human mabuhat — personal nga ipaambit ang duha sa BHW.',
     cancel: 'Kanselahon',
     create: 'Paghimo og account',
     save: 'I-save ang mga kausaban',
@@ -215,10 +203,7 @@ export const ceb: Translation = {
     activityLabel: 'Kalihokan sa milabay nga 30 ka adlaw',
     reassignLabel: 'Ibalhin ang saklaw ngadto kang',
     reassignNone: 'Pasagdi una nga walay assigned',
-    reassignNote:
-      'Ang ilang mga naka-enroll nga pasyente mobalhin ngadto sa napiling BHW aron magpadayon ang follow-up. Pasagdi nga walay assigned aron magpabilin sila niini nga account.',
     empty: 'Wala pay BHW account sa inyong pasilidad.',
-    loadError: 'Dili ma-load ang mga BHW account: {{message}}',
     actionError: 'Napakyas ang aksyon: {{message}}',
     searchPlaceholder: 'Pangitaa ang ngalan',
     errorTitle: 'Wala ma-load ang mga BHW',
@@ -227,7 +212,11 @@ export const ceb: Translation = {
     emptyDataBody: 'Pagdugang ug BHW aron masugdan ang imong grupo.',
     filterEmptyTitle: 'Walay BHW nga nahaom',
     filterEmptyBody: 'Sulayi hawaan ang pagpangita o filter sa kahimtang.',
-    resultsCount: '{{count}} nga resulta',
+    // fil/ceb CLDR resolve EVERY count to the 'one' category (0, 1, 2, 5 all
+    // -> one), so _one is the form that actually renders; _other exists only
+    // for key parity with en. Both must carry the general, uninflected text.
+    resultsCount_one: '{{count}} nga resulta',
+    resultsCount_other: '{{count}} nga resulta',
     newTitle: 'Bag-ong BHW',
     newSub: 'Paghimo ug BHW account sa {{barangay}}',
     middleNameLabel: 'Tunga nga ngalan',
@@ -251,18 +240,12 @@ export const ceb: Translation = {
     hoConfirm: 'I-deactivate ang BHW',
   },
   hotspot: {
-    title: 'Mga hotspot sa barangay',
     intro:
       'Ihap sa mga presumptive case matag barangay — mga pasyenteng gi-flag alang sa referral sa DOH-NTP checklist sulod sa gipili nga panahon, kausa ra giihap ang matag usa, gikan sa tanang BHW. Ihap lamang; katingbanan alang sa surveillance, dili contact tracing.',
     rangeLast: 'Miaging {{days}} ka adlaw',
     countsNote:
       'Ang mga ihap mga presumptive referral lamang — dili kumpirmadong kaso, dili diagnosis.',
-    colRank: '#',
-    colBarangay: 'Barangay',
-    colCity: 'Siyudad / Munisipyo',
-    colCount: 'Mga presumptive case',
     empty: 'Walay presumptive case sulod niini nga panahon.',
-    loadError: 'Dili ma-load ang mga ihap: {{message}}',
     errorTitle: 'Wala ma-load ang mga hotspot',
     errorBody: 'Wala maabot ang server. Susiha ang koneksyon ug sulayi pag-usab.',
     emptyBody: 'Walay barangay nga na-flag alang sa referral niini nga panahon. Sulayi ang mas taas nga range.',
@@ -270,12 +253,9 @@ export const ceb: Translation = {
     retry: 'Sulayi pag-usab',
   },
   login: {
-    title: 'Pag-sign in sa TB-DOTS staff',
     sub: 'Staff sa pasilidad sa TB-DOTS',
-    roleStaff: 'TB-DOTS staff',
+    roleStaff: 'Staff sa TB-DOTS',
     roleCaptain: 'Kapitan sa Barangay',
-    intro:
-      'Alang sa mga staff sa pasilidad sa TB-DOTS: dawata ang mga referral, itala ang resulta sa laboratoryo, ug bantayi ang pagtambong sa check-up.',
     email: 'Email',
     password: 'Password',
     showPassword: 'Ipakita ang password',
@@ -294,24 +274,48 @@ export const ceb: Translation = {
     signinSub: 'Maayong pagbalik. Isulod ang imong kredensyal aron magpadayon.',
     accessHelp:
       'Ang access gihatag sa imong administrator. Kontaka sila kung dili ka maka-sign in.',
+    noteStaff:
+      'Ang TB-DOTS staff modawat og mga referral, morekord sa resulta sa laboratoryo, ug mosubay sa pagtambong sa check-up.',
+    noteCaptain:
+      'Ang Kapitan sa Barangay modumala sa mga health worker nga gitakda sa ilang kaugalingong barangay.',
+  },
+  /**
+   * Forced password change (D-06). Shown while the signed-in account still
+   * holds the password manage-bhw generated for it.
+   */
+  password: {
+    gateTitle: 'Paghimo og kaugalingong password',
+    gateSub:
+      'Kini nga account naggamit pa sa password nga gihatag sa imong administrator. Pagpili og password nga ikaw ra ang nakahibalo aron makapadayon.',
+    signedInAs: 'Naka-sign in isip {{email}}',
+    newLabel: 'Bag-ong password',
+    confirmLabel: 'Kumpirmaha ang bag-ong password',
+    hint: 'Labing menos {{min}} ka karakter. Ayaw gamita pag-usab ang password nga gihatag kanimo.',
+    cta: 'I-save ang password ug padayon',
+    saving: 'Nag-save…',
+    signOut: 'Mag-sign out na lang',
+    errTooShort: 'Gamit og labing menos {{min}} ka karakter.',
+    errLooksProvisioned:
+      'Kana usa ka password nga gihimo sa sistema. Pagpili og imong kaugalingon.',
+    errMismatch: 'Wala magkatugma ang duha ka password.',
+    errApi: 'Wala ma-save ang password: {{message}}',
+    errFlag:
+      'Nausab ang imong password, apan wala nahuman kini nga browser. Mag-sign in pag-usab gamit ang bag-ong password.',
   },
   inbox: {
+    repeatReferral: 'Balik', // TODO i18n verify
+    repeatReferralHint:
+      'Ika-{{ordinal}} nga referral sa maong pasyente sa inyong pasilidad.', // TODO i18n verify
     title: 'Inbox sa mga referral',
     empty: 'Wala pay referral alang sa inyong pasilidad.',
     searchPlaceholder: 'Pangitaa ang code sa pasyente o specimen…',
     statusFilter: 'Status',
-    colSpecimen: 'Specimen ID',
-    colPatient: 'Pasyente',
-    colBarangay: 'Barangay',
-    colReferredOn: 'Gi-refer niadtong',
-    colStatus: 'Status',
-    colPresented: 'Miabot',
-    colResult: 'Resulta',
-    presentedYes: 'Oo',
-    presentedNo: 'No-show',
-    loadError: 'Dili ma-load ang mga referral: {{message}}',
-    count: '{{count}} ka referral',
-    selectPrompt: 'Pagpili og referral aron makita ang detalye',
+    presentedNo: 'Wala mitambong',
+    // fil/ceb CLDR resolve EVERY count to the 'one' category (0, 1, 2, 5 all
+    // -> one), so _one is the form that actually renders; _other exists only
+    // for key parity with en. Both must carry the general, uninflected text.
+    count_one: '{{count}} ka referral',
+    count_other: '{{count}} ka referral',
     filterEmptyTitle: 'Walay referral nga nahaom',
     filterEmptyBody: 'Sulayi hawaan ang pagpangita o filter sa kahimtang.',
     errorTitle: 'Wala ma-load ang mga referral',
@@ -329,39 +333,24 @@ export const ceb: Translation = {
     female: 'Babaye',
   },
   detail: {
-    patientSection: 'Pasyente',
-    ageSex: 'Edad / sekso',
-    barangay: 'Barangay',
-    sitio: 'Sitio',
-    screeningSection: 'Screening (DOH-NTP checklist)',
-    screeningDate: 'Petsa sa screening',
-    pgisLine: 'Kabug-at sa ubo sumala sa pasyente (PGI-S, dugang lamang): {{value}}',
-    pgisNotRecorded: 'Kabug-at sa ubo sumala sa pasyente (PGI-S, dugang lamang): wala natala',
-    referralSection: 'Pagdumala sa referral',
     screeningSummary: 'Katingbanan sa screening',
     actionsSection: 'Mga aksyon',
     patientReportedTag: 'tubag sa pasyente',
     screenedBy: 'Gisusi ni {{name}} (BHW)',
     markReceived: 'Markahi nga nadawat',
-    receivedDone: '✓ Nadawat — pisliton aron i-undo',
-    dnpNote:
-      'Ang pag-flag og "no-show" mag-update sa follow-up list sa nag-refer nga BHW. Walay resulta nga gipakita sa mga BHW — progreso lamang sa referral.',
-    outcomeLabel: 'Resulta sa laboratoryo (itala sa TB-DOTS staff — dili kwentahon sa sistema)',
     outcomePositive: 'Positibo',
     outcomeNegative: 'Negatibo',
     resultLabel: 'Mga nota sa resulta (free text, opsyonal)',
     resultPlaceholder: 'pananglitan GeneXpert: MTB not detected',
     saveResult: 'I-save ang resulta (markahan nga nasusi)',
     resultSavedOn: 'Natala ang resulta niadtong {{date}}',
-    presentedLabel: 'Miabot ba ang pasyente sa pasilidad?',
     markPresented: 'Miabot',
-    markNoShow: 'No-show',
+    markNoShow: 'Wala mitambong',
     closeReferral: 'Sirad-i ang referral',
-    appointmentsSection: 'Mga appointment alang sa check-up',
+    appointmentsSection: 'Mga check-up appointment sa pasyente',
+    appointmentsScope:
+      'Tanang check-up nga narekord para niini nga pasyente, apil ang mga giandam para sa naunang referral.',
     noAppointments: 'Walay natala nga appointment alang niining pasyente.',
-    colScheduled: 'Gitakda',
-    colAttended: 'Mitambong',
-    colStatus: 'Status',
     apptScheduled: 'Gitakda',
     apptAttended: 'Mitambong',
     apptMissed: 'Wala mitambong',
@@ -373,8 +362,8 @@ export const ceb: Translation = {
     attendConfirm: 'I-save ang pagtambong',
     attendDateLabel: 'Petsa nga mitambong ang pasyente (karon o mas sayo)',
     apptOnTime: 'sa oras',
-    apptEarly: '{{count}}d sayo',
-    apptLate: '{{count}}d ulahi',
+    apptEarly: '{{count}} ka adlaw sayo',
+    apptLate: '{{count}} ka adlaw ulahi',
     relToday: 'karon',
     relYesterday: 'gahapon',
     relTomorrow: 'ugma',
@@ -394,7 +383,6 @@ export const ceb: Translation = {
     recvLocked: 'Na-lock human sa pagsulay',
     labTitle: 'Resulta sa laboratoryo',
     labHint: 'Girekord sa staff human sa pagsulay — dili kalkulahon sa sistema.',
-    savedFlash: 'Na-save',
     resultNone: 'Wala pa na-rekord',
     attendLabel: 'Pagtambong',
     closedTag: 'Sirado',

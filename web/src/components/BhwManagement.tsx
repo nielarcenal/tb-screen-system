@@ -288,6 +288,7 @@ export default function BhwManagement() {
               <input
                 type="search"
                 placeholder={t('bhw.searchPlaceholder')}
+              aria-label={t('bhw.searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />

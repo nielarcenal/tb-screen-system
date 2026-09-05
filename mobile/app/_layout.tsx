@@ -7,7 +7,7 @@
  *  - Starts auto-sync (fires on reconnect) for the app's lifetime.
  */
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, AppState, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { MD3LightTheme, PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -18,6 +18,11 @@ import { palette } from '../src/ui/tokens';
 import '../src/i18n/paperDates'; // side-effect: register date-picker locales
 import { changeLanguage } from '../src/i18n';
 import { supabase } from '../src/lib/supabase';
+import AccountBlockedGate from '../src/components/AccountBlockedGate';
+import ChangePasswordGate from '../src/components/ChangePasswordGate';
+import ConfirmDialogHost from '../src/components/ConfirmDialogHost';
+import { evaluateAccountAccess } from '../src/domain/accountAccess';
+import { recordAccountAccess } from '../src/lib/accountGate';
 import { useAppStore } from '../src/store/appStore';
 import { useSessionStore } from '../src/store/sessionStore';
 import { startAutoSync, stopAutoSync } from '../src/sync/syncManager';
@@ -76,6 +81,48 @@ export const appTheme = {
   },
 };
 
+/**
+ * Shows the forced-password-change overlay (D-06) only when we KNOW the account
+ * still holds a provisioned password. A null flag — nobody signed in, or the
+ * users row could not be read offline — renders nothing.
+ */
+function PasswordGate() {
+  const userId = useSessionStore((s) => s.userId);
+  const mustChange = useSessionStore((s) => s.mustChangePassword);
+  const access = useSessionStore((s) => s.accountAccess);
+  // A refused account gets AccountGate instead. Asking someone to choose a new
+  // password for an account they may no longer use would be busywork ending in
+  // the same block screen.
+  if (!userId || access?.kind === 'denied' || mustChange !== true) return null;
+  return <ChangePasswordGate />;
+}
+
+/**
+ * Shows the blocked-account overlay (D-07) on a definite refusal from the
+ * server. A verdict never asked for, or one whose every attempt failed, renders
+ * nothing — that is the offline-first half of the design: an unread answer
+ * never blocks.
+ *
+ * The remembered refusal is the fallback, and it is what closes the bypass
+ * found on the A54: with the verdict held only in memory, a refused BHW could
+ * force-stop the app, go offline and relaunch straight back into a working app,
+ * because the launch lookup failed and 'unknown' does not block. It is consulted
+ * ONLY while the live verdict is still null, so a fresh 'allowed' always wins.
+ */
+function AccountGate() {
+  const userId = useSessionStore((s) => s.userId);
+  const access = useSessionStore((s) => s.accountAccess);
+  const remembered = useAppStore((s) => s.deniedAccount);
+  if (!userId) return null;
+  if (access?.kind === 'denied') {
+    return <AccountBlockedGate reason={access.reason} role={access.role} />;
+  }
+  if (access === null && remembered) {
+    return <AccountBlockedGate reason={remembered.reason} role={remembered.role} />;
+  }
+  return null;
+}
+
 export default function RootLayout() {
   const [hydrated, setHydrated] = useState(useAppStore.persist.hasHydrated());
   const language = useAppStore((s) => s.language);
@@ -95,20 +142,53 @@ export default function RootLayout() {
     return () => stopAutoSync();
   }, []);
 
+  // Supabase's token auto-refresh is a JS timer, and JS timers don't run
+  // reliably once React Native is backgrounded. Left alone, the access token
+  // (1h) quietly expires while the phone is asleep, so the app comes back with
+  // only the refresh token — the one state where a single rejected refresh
+  // ends the session. Tie the ticker to the foreground instead, as the
+  // Supabase React Native setup requires: refresh while the BHW is using the
+  // app, stop while they aren't.
+  useEffect(() => {
+    if (AppState.currentState === 'active') void supabase.auth.startAutoRefresh();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void supabase.auth.startAutoRefresh();
+      else void supabase.auth.stopAutoRefresh();
+    });
+    return () => {
+      sub.remove();
+      void supabase.auth.stopAutoRefresh();
+    };
+  }, []);
+
   // Restore the auth session into the transient sessionStore on launch (works
   // offline — Supabase caches the session in AsyncStorage) and keep it in step
   // with later sign-ins/outs. Feature 8: this replaces the sync-test bootstrap.
   useEffect(() => {
-    // Best-effort: the BHW's own name for form attribution. Fails silently
-    // offline; retried on the next auth event.
-    const fetchOwnName = (userId: string) => {
+    // Best-effort: the BHW's own name for form attribution, the D-06
+    // forced-password-change flag, and the D-07 role/active verdict. Fails
+    // silently offline — mustChangePassword stays null and the verdict stays
+    // unrecorded, neither of which gates — and is retried on the next auth
+    // event. One query answers all three; role and active ride along on a
+    // select this screen was already making.
+    const fetchOwnProfile = (userId: string) => {
       void supabase
         .from('users')
-        .select('full_name')
+        .select('full_name, must_change_password, role, active')
         .eq('user_id', userId)
         .maybeSingle()
-        .then(({ data }) => {
-          if (data?.full_name) useSessionStore.getState().setFullName(data.full_name);
+        .then(({ data, error }) => {
+          const session = useSessionStore.getState();
+          // 'unknown' on a missing row, not 'deny': this is a session that is
+          // already running, and .maybeSingle() cannot tell an absent row from
+          // one RLS declined to show. Only sign-in fails closed. An 'unknown'
+          // is discarded, so a failure here changes nothing — including the
+          // remembered refusal, which is exactly why a cold start while offline
+          // still shows the block screen.
+          recordAccountAccess(evaluateAccountAccess({ data, error }, 'unknown'));
+          if (!data) return;
+          if (data.full_name) session.setFullName(data.full_name);
+          session.setMustChangePassword(data.must_change_password === true);
         });
     };
     void supabase.auth.getSession().then(({ data }) => {
@@ -116,16 +196,32 @@ export default function RootLayout() {
         useSessionStore
           .getState()
           .setSession(data.session.user.id, data.session.user.email ?? null);
-        fetchOwnName(data.session.user.id);
+        fetchOwnProfile(data.session.user.id);
       }
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (__DEV__) {
+        // eslint-disable-next-line no-console
+        console.log('[auth]', event, session ? 'session' : 'no session');
+      }
       if (session) {
         useSessionStore.getState().setSession(session.user.id, session.user.email ?? null);
-        if (!useSessionStore.getState().fullName) fetchOwnName(session.user.id);
-      } else {
-        useSessionStore.getState().clearSession();
+        // Refetch while EITHER answer is still missing. Keyed on both because
+        // a token refresh re-emits a session for the same user: refetching every
+        // time would be wasteful, but skipping on the name alone would leave the
+        // password flag permanently unknown for a session restored offline.
+        const { fullName, mustChangePassword, accountAccess } = useSessionStore.getState();
+        if (fullName === null || mustChangePassword === null || accountAccess === null) {
+          fetchOwnProfile(session.user.id);
+        }
+        return;
       }
+      // A null session is NOT always a sign-out. Supabase also emits
+      // INITIAL_SESSION with null when its own start-up failed (e.g. the first
+      // request after a network change), and clearing on that made the app
+      // demand a sign-in the BHW never asked for. Only SIGNED_OUT means the
+      // stored session is really gone.
+      if (event === 'SIGNED_OUT') useSessionStore.getState().clearSession();
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -143,6 +239,17 @@ export default function RootLayout() {
       <PaperProvider settings={paperSettings} theme={appTheme}>
         {/* Screens render their own Paper Appbars; the native header is off. */}
         <Stack screenOptions={{ headerShown: false }} />
+        {/* D-06: covers the whole app while the account still holds the
+            password it was provisioned with. Rendered as a sibling of the
+            navigator, not a route, so it cannot be navigated away from. */}
+        <PasswordGate />
+        {/* D-07: covers the whole app when the server says this account may not
+            use it. Mounted after the password gate so it paints above one. */}
+        <AccountGate />
+        {/* Draws the app's own confirmation dialogs. Mounted last, and on a
+            native modal window, so it sits above both gates — each offers the
+            same guarded sign-out. */}
+        <ConfirmDialogHost />
       </PaperProvider>
     </SafeAreaProvider>
   );

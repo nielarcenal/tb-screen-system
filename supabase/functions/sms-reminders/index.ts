@@ -10,8 +10,15 @@
  *      day, so re-runs never double-send and the 3-day / 1-day reminders (on
  *      different days) both go out.
  *   2. FOLLOW-UPS — for check-ups recently marked 'missed' (updated in the last
- *      FOLLOWUP_WINDOW_DAYS), a one-time neutral nudge to reschedule — UNLESS the
- *      patient already has another upcoming 'scheduled' appointment (rebooked).
+ *      FOLLOWUP_WINDOW_DAYS), a neutral nudge to reschedule — UNLESS the patient
+ *      already has an upcoming 'scheduled' appointment (rebooked; UPCOMING means
+ *      dated today or later, not merely still carrying that status). Sent once,
+ *      except that a FAILED send — or a reservation abandoned by a run that
+ *      died mid-send — is retried up to FOLLOWUP_MAX_ATTEMPTS.
+ *
+ * Every send is RESERVED in sms_log before the gateway is called, then settled to
+ * its outcome afterwards — see sendLogged(). A text cannot be un-sent, so the
+ * record has to exist first.
  *
  * Each patient is messaged in THEIR language (patients.preferred_language, 0015);
  * when unset (pre-0015 / SMS declined path) a combined English+Tagalog message is
@@ -34,12 +41,28 @@
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
-import { createGateway } from './gateway.ts';
+import { createGateway, type SendOutcome } from './gateway.ts';
+import {
+  classifyFollowUpLogs,
+  shouldFollowUp,
+  shouldRemind,
+  staleQueuedCutoff,
+  type SmsLogRow,
+} from '../_shared/selection.ts';
 
 /** Lead days before a check-up on which to remind (Asia/Manila). */
 const REMINDER_OFFSETS = [3, 1];
 /** Only follow up on check-ups marked missed within this many days. */
 const FOLLOWUP_WINDOW_DAYS = 14;
+/**
+ * Give up on a missed check-up after this many FAILED follow-up attempts.
+ *
+ * Uncapped, a dead number is retried on every run for the whole window — ~14
+ * paid sends — and each retry is another chance to duplicate a message that did
+ * arrive but was reported failed. Three rides out a gateway outage and is cheap
+ * enough to be wrong about.
+ */
+const FOLLOWUP_MAX_ATTEMPTS = 3;
 
 type Lang = 'en' | 'tl' | 'ceb';
 // Neutral signature — no "TB" (§4: SMS is readable by anyone holding the phone).
@@ -133,6 +156,65 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: msg }), { status: 500 });
   };
 
+  /**
+   * Send one message, recording the attempt BEFORE the gateway is called.
+   *
+   * The obvious order — send, then log — loses the record whenever the insert
+   * fails, and the next run re-sends a message the patient already received. A
+   * text cannot be un-sent, so a log failure discovered afterwards has no remedy
+   * at all; the only place a hard stop can work is before the send.
+   *
+   * So reserve first: insert a 'queued' row (that value has been the column's
+   * own default and permitted by its CHECK since 0001, and was never once used),
+   * and if THAT insert fails, skip the row WITHOUT sending. Then send. Then
+   * settle the row to the real outcome.
+   *
+   * A crash between the reserve and the settle leaves a 'queued' row behind
+   * that nothing will ever settle, because the next run is a fresh invocation
+   * with no memory of it. Within one calendar day that is the intended
+   * outcome for a REMINDER — a missed nudge is cheaper than a duplicate one,
+   * and the BHW still sees the patient in the app either way.
+   *
+   * For a FOLLOW-UP it was not, and that was the bug: nothing bounds how long
+   * the row suppresses the nudge, so one crashed run retired it permanently.
+   * classifyFollowUpLogs() now ages those reservations out — see
+   * _shared/selection.ts, which explains why they are aged at read time
+   * rather than swept with an UPDATE.
+   *
+   * sms_log.sent_at therefore stamps the ATTEMPT, not the delivery. The two
+   * differ by one gateway round-trip, and the reminder idempotency window is a
+   * whole calendar day, so nothing depends on the distinction.
+   */
+  const sendLogged = async (
+    appointmentId: string,
+    kind: 'reminder' | 'follow_up',
+    number: string,
+    message: string,
+  ): Promise<SendOutcome | 'unreserved'> => {
+    const { data: reserved, error: resErr } = await supabase
+      .from('sms_log')
+      .insert({ appointment_id: appointmentId, delivery_status: 'queued', message_kind: kind })
+      .select('sms_id')
+      .single();
+    if (resErr || !reserved) {
+      console.error(
+        `[sms-reminders] ${kind} reserve failed, NOT sending: ${resErr?.message ?? 'no row returned'}`,
+      );
+      return 'unreserved';
+    }
+
+    const outcome = await gateway.send(number, message);
+
+    const { error: updErr } = await supabase
+      .from('sms_log')
+      .update({ delivery_status: outcome })
+      .eq('sms_id', reserved.sms_id);
+    // The message has already gone; the row simply stays 'queued', which reads
+    // as handled. There is nothing to roll back — log it and move on.
+    if (updErr) console.error(`[sms-reminders] ${kind} settle to '${outcome}' failed: ${updErr.message}`);
+    return outcome;
+  };
+
   // ======================= 1. REMINDERS =======================
   const reminderDates = REMINDER_OFFSETS.map(manilaDate);
   const todayMidnight = `${manilaDate(0)}T00:00:00+08:00`; // start of today, Manila
@@ -150,6 +232,10 @@ Deno.serve(async (req) => {
 
   // Skip appointments already reminded TODAY (idempotent same-day re-runs; the
   // 3-day and 1-day reminders land on different days, so both still go out).
+  // ANY attempt counts here, a 'failed' one included — unlike the follow-up
+  // path below, which retries failures. A reminder is anchored to a date: the
+  // cron runs once a day, so retrying would mean the next offset day regardless,
+  // and the 1-day reminder is already the backstop for a 3-day one that missed.
   const remindedToday = new Set<string>();
   if (due.length > 0) {
     const { data: logged, error: logErr } = await supabase
@@ -193,11 +279,17 @@ Deno.serve(async (req) => {
   }
 
   for (const a of due) {
-    if (remindedToday.has(a.appointment_id) || !a.patients.contact_number) {
+    const candidate = {
+      appointment_id: a.appointment_id,
+      contact_number: a.patients.contact_number,
+    };
+    if (!shouldRemind(candidate, remindedToday)) {
       rem.skipped++;
       continue;
     }
-    const outcome = await gateway.send(
+    const outcome = await sendLogged(
+      a.appointment_id,
+      'reminder',
       a.patients.contact_number,
       reminderMessage(
         asLang(a.patients.preferred_language),
@@ -205,16 +297,24 @@ Deno.serve(async (req) => {
         facilityByPatient.get(a.patient_id) ?? null,
       ),
     );
-    const { error: insErr } = await supabase
-      .from('sms_log')
-      .insert({ appointment_id: a.appointment_id, delivery_status: outcome, message_kind: 'reminder' });
-    if (insErr) console.error(`[sms-reminders] reminder log insert failed: ${insErr.message}`);
-    outcome === 'failed' ? rem.failed++ : rem.sent++;
+    if (outcome === 'unreserved') rem.skipped++;
+    else if (outcome === 'failed') rem.failed++;
+    else rem.sent++;
   }
 
   // ======================= 2. MISSED FOLLOW-UPS =======================
   const windowStart = new Date(Date.now() - FOLLOWUP_WINDOW_DAYS * 86_400_000).toISOString();
-  const fup = { window_days: FOLLOWUP_WINDOW_DAYS, candidates: 0, sent: 0, failed: 0, skipped: 0 };
+  const fup = {
+    window_days: FOLLOWUP_WINDOW_DAYS,
+    max_attempts: FOLLOWUP_MAX_ATTEMPTS,
+    candidates: 0,
+    sent: 0,
+    failed: 0,
+    skipped: 0,
+    /** Reservations aged out this run — a crash between reserve and settle.
+     *  Non-zero means runs are dying mid-send; worth watching in the logs. */
+    abandoned: 0,
+  };
 
   const { data: missedData, error: missedErr } = await supabase
     .from('appointments')
@@ -230,38 +330,63 @@ Deno.serve(async (req) => {
     const apptIds = missed.map((a) => a.appointment_id);
     const patientIds = [...new Set(missed.map((a) => a.patient_id))];
 
-    // Already followed up (send once, ever).
+    // Already followed up. DONE means a settled, non-failed row — 'sent' or
+    // 'stubbed' — plus a 'queued' reservation young enough that the run which
+    // made it may still be mid-send. A failed attempt is NOT done: treating it
+    // as done let a single gateway hiccup retire the nudge permanently, while
+    // retrying failures freely would burn a send a day on a dead number, so
+    // they are counted and capped at FOLLOWUP_MAX_ATTEMPTS instead.
+    //
+    // sent_at is selected for the age test: a 'queued' row older than the
+    // cutoff belongs to a run that died between reserve and settle and will
+    // never be settled by anyone, so it counts as a spent attempt rather than
+    // as a delivery. classifyFollowUpLogs owns that rule — see
+    // _shared/selection.ts for why it is read at selection time rather than
+    // swept with an UPDATE.
     const { data: doneLogs, error: dErr } = await supabase
       .from('sms_log')
-      .select('appointment_id')
+      .select('appointment_id, delivery_status, sent_at')
       .in('appointment_id', apptIds)
       .eq('message_kind', 'follow_up');
     if (dErr) return fail(`follow-up sms_log lookup failed: ${dErr.message}`);
-    const alreadyFollowed = new Set((doneLogs ?? []).map((r) => r.appointment_id as string));
+    const history = classifyFollowUpLogs(
+      (doneLogs ?? []) as unknown as SmsLogRow[],
+      staleQueuedCutoff(Date.now()),
+    );
+    fup.abandoned = history.abandoned;
 
-    // Rebooked patients — those with an upcoming scheduled check-up — are skipped.
+    // Rebooked patients — those with an UPCOMING scheduled check-up — are
+    // skipped. The date bound is the whole point: without it a single stale
+    // 'scheduled' row, however old, suppresses that patient's follow-ups
+    // forever. The comment said upcoming; the query said ever.
     const { data: upcoming, error: uErr } = await supabase
       .from('appointments')
       .select('patient_id')
       .in('patient_id', patientIds)
-      .eq('status', 'scheduled');
+      .eq('status', 'scheduled')
+      .gte('scheduled_date', manilaDate(0));
     if (uErr) return fail(`upcoming lookup failed: ${uErr.message}`);
     const rebooked = new Set((upcoming ?? []).map((r) => r.patient_id as string));
 
     for (const a of missed) {
-      if (alreadyFollowed.has(a.appointment_id) || rebooked.has(a.patient_id) || !a.patients.contact_number) {
+      const candidate = {
+        appointment_id: a.appointment_id,
+        patient_id: a.patient_id,
+        contact_number: a.patients.contact_number,
+      };
+      if (!shouldFollowUp(candidate, history, rebooked, FOLLOWUP_MAX_ATTEMPTS)) {
         fup.skipped++;
         continue;
       }
-      const outcome = await gateway.send(
+      const outcome = await sendLogged(
+        a.appointment_id,
+        'follow_up',
         a.patients.contact_number,
         followUpMessage(asLang(a.patients.preferred_language)),
       );
-      const { error: insErr } = await supabase
-        .from('sms_log')
-        .insert({ appointment_id: a.appointment_id, delivery_status: outcome, message_kind: 'follow_up' });
-      if (insErr) console.error(`[sms-reminders] follow-up log insert failed: ${insErr.message}`);
-      outcome === 'failed' ? fup.failed++ : fup.sent++;
+      if (outcome === 'unreserved') fup.skipped++;
+      else if (outcome === 'failed') fup.failed++;
+      else fup.sent++;
     }
   }
 

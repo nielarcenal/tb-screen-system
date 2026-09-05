@@ -7,12 +7,23 @@ import { create } from 'zustand';
 export type SyncPhase = 'idle' | 'syncing';
 
 /**
- * A failed sync, classified for the UI. 'offline' = a connectivity problem
- * (no internet / DNS can't resolve the host / timeout) — shown as a plain,
- * reassuring message. 'unknown' = an unexpected failure, where `detail` (the
- * raw error) is surfaced so it can be diagnosed in the field.
+ * A failed sync, classified for the UI.
+ *  - 'offline'  — a connectivity problem (no internet / DNS can't resolve the
+ *    host / timeout). Shown as a plain, reassuring message.
+ *  - 'partial'  — the pass ran to the end but the server refused some rows
+ *    (D-10). Everything else went through and the refused rows stay queued.
+ *    `count` is how many. This must stay visible: a partial failure that looks
+ *    like a clean sync is the dangerous case, because a BHW would believe
+ *    records had been uploaded when they had not.
+ *  - 'unknown'  — an unexpected failure, where `detail` (the raw error) is
+ *    surfaced so it can be diagnosed in the field.
  */
-export type SyncError = { kind: 'offline' | 'unknown'; detail: string };
+export type SyncError = {
+  kind: 'offline' | 'partial' | 'unknown';
+  detail: string;
+  /** Number of rows refused. Only set when kind is 'partial'. */
+  count?: number;
+};
 
 interface SyncState {
   isOnline: boolean | null; // null = unknown until first NetInfo event

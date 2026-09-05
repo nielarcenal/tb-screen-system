@@ -19,6 +19,8 @@ export const ceb: Translation = {
     yes: 'Oo',
     no: 'Dili',
     unsure: 'Dili sigurado',
+    outcomePositive: 'Positibo',
+    outcomeNegative: 'Negatibo',
   },
   languages: {
     en: 'Iningles',
@@ -29,6 +31,8 @@ export const ceb: Translation = {
     title: 'TB-Screen BHW',
     signInBanner:
       'Pag-sign in aron maka-sync ug maka-enroll og pasyente. Magpabilin niining device ang mga natala na.',
+    sessionExpiredBanner:
+      'Natapos ang imong session — pag-sign in pag-usab aron makapadayon sa pag-sync. Anaa pa gihapon niining telepono ang imong mga pasyente ug natala nga trabaho.',
     signInCta: 'Pag-sign in',
     syncChipSynced: 'Naka-sync',
     syncChipSyncing: 'Nagsi-sync…',
@@ -40,6 +44,14 @@ export const ceb: Translation = {
       'Dili maka-sync karon — walay internet. Naka-save niining telepono ang imong mga tala ug awtomatikong mag-sync kung online na ka.',
     syncError:
       'Dili maka-sync — palihug sulayi pag-usab. Kung magpadayon, sultihi ang imong coordinator: {{message}}',
+    // Intl.PluralRules returns "one" for EVERY count in ceb, so _one must carry
+    // {{count}} — a hardcoded "1" here would be shown for any number.
+    syncPartial:
+      'Naay {{count}} ka rekord nga wala ma-upload. Na-sync ra ang uban. Naa pa gihapon kini niining telepono ug sulayan pag-usab — kung magbalik-balik kini, sultihi ang imong coordinator.',
+    syncPartial_one:
+      'Naay {{count}} ka rekord nga wala ma-upload. Na-sync ra ang uban. Naa pa gihapon kini niining telepono ug sulayan pag-usab — kung magbalik-balik kini, sultihi ang imong coordinator.',
+    syncPartial_other:
+      'Naay {{count}} ka rekord nga wala ma-upload. Na-sync ra ang uban. Naa pa gihapon kini niining telepono ug sulayan pag-usab — kung magbalik-balik kini, sultihi ang imong coordinator.',
     primaryCta: 'Pag-enroll ug pag-screen og pasyente',
     attentionHeading: 'Nagkinahanglan og atensyon',
     tiles: {
@@ -73,6 +85,62 @@ export const ceb: Translation = {
     helper: 'Ang access gihatag sa inyong administrator. Kontaka sila kung dili kamo maka-sign in.',
     cta: 'Pag-sign in',
     error: 'Napakyas ang pag-sign in: {{message}}',
+    // TODO i18n verify
+    errorOffline:
+      'Kinahanglan og koneksyon sa internet aron maka-sign in. Human ka maka-sign in, mogana ang app bisan offline.',
+    // TODO i18n verify
+    refusedInactive:
+      'Kini nga account gi-deactivate na. Hangyoa ang imong barangay captain o program coordinator nga i-activate kini pag-usab.',
+    refusedWrongRole:
+      'Kini nga app para sa mga Barangay Health Worker. Ang imong account usa ka {{destination}} — palihug pag-sign in sa TB-Screen portal sa computer.',
+    refusedNoAccount:
+      'Kini nga account wala pa ma-andam para sa app. Palihug kontaka ang imong program coordinator.',
+  },
+  /**
+   * Blocked account (D-07). Shown over the whole app when the server says this
+   * account may no longer use it.
+   */
+  // TODO i18n verify
+  blocked: {
+    inactiveTitle: 'Kini nga account gi-deactivate na',
+    inactiveBody:
+      'Dili na nimo magamit ang app gamit kini nga account. Hangyoa ang imong barangay captain o program coordinator nga i-activate kini pag-usab.',
+    wrongRoleTitle: 'Kini nga app para sa mga Barangay Health Worker',
+    wrongRoleBody:
+      'Ang imong account usa ka {{destination}}. Palihug pag-sign in sa TB-Screen portal sa computer.',
+    noAccountTitle: 'Wala ma-andam kini nga account',
+    noAccountBody:
+      'Wala namo makita ang mga detalye niini nga account. Palihug kontaka ang imong program coordinator.',
+    roleFacility: 'account sa health facility',
+    roleCaptain: 'account sa barangay captain',
+    roleAdmin: 'account sa administrator',
+    roleOther: 'dili account sa Barangay Health Worker',
+    pendingNote:
+      'Kung mag-sign out, i-upload una ang mga naghulat pa. Kung adunay mga record nga dili ma-upload, pangutan-on ka una una pa may mapapas niini nga telepono.',
+    signOut: 'Mag-sign out',
+  },
+  /**
+   * Forced password change (D-06). Shown over the whole app while the account
+   * still holds the password its captain or admin provisioned.
+   */
+  password: {
+    gateTitle: 'Paghimo og kaugalingong password',
+    gateSub:
+      'Kini nga account naggamit pa sa password nga gihatag sa imong coordinator. Pagpili og password nga ikaw ra ang nakahibalo una ka magpadayon.',
+    signedInAs: 'Naka-sign in isip {{email}}',
+    newLabel: 'Bag-ong password',
+    confirmLabel: 'Kumpirmaha ang bag-ong password',
+    hint: 'Labing menos {{min}} ka karakter. Ayaw gamita pag-usab ang password nga gihatag kanimo.',
+    cta: 'I-save ang password ug padayon',
+    saving: 'Nag-save…',
+    signOut: 'Mag-sign out na lang',
+    errTooShort: 'Gamit og labing menos {{min}} ka karakter.',
+    errLooksProvisioned:
+      'Kana usa ka password nga gihimo sa sistema. Pagpili og imong kaugalingon.',
+    errMismatch: 'Wala magkatugma ang duha ka password.',
+    errApi: 'Wala ma-save ang password: {{message}}',
+    errFlag:
+      'Nausab ang imong password, apan wala nahuman kini nga telepono. Mag-sign in pag-usab gamit ang bag-ong password.',
   },
   status: {
     submitted: 'Gisumite',
@@ -106,7 +174,17 @@ export const ceb: Translation = {
     // TODO i18n verify
     signOutConfirmTitle: 'Pag-sign out?',
     signOutConfirmBody:
-      'Papason ang mga offline nga rekord niining telepono aron dili makita sa sunod nga account. Kung online ka, iduso una ang wala pa ma-sync — kung dili, mawala kini.',
+      'Papason ang mga offline nga rekord niining telepono aron dili makita sa sunod nga account. Ipadala una ang wala pa ma-sync — kung naay dili mapadala, pangutan-on ka una sa dili pa kini papason.',
+    signOutSyncing: 'Nag-sync…',
+    signOutPendingTitle: 'Naay wala pa maipadala',
+    signOutPendingBody:
+      'Naay {{count}} ka rekord nga wala pa makaabot sa server. Kung mo-sign out ka, permanente kining mawala. Kung mahimo, konektar sa internet ug mag-sync una sa dili pa mo-sign out.',
+    signOutPendingBody_one:
+      'Naay {{count}} ka rekord nga wala pa makaabot sa server. Kung mo-sign out ka, permanente kining mawala. Kung mahimo, konektar sa internet ug mag-sync una sa dili pa mo-sign out.',
+    signOutPendingBody_other:
+      'Naay {{count}} ka rekord nga wala pa makaabot sa server. Kung mo-sign out ka, permanente kining mawala. Kung mahimo, konektar sa internet ug mag-sync una sa dili pa mo-sign out.',
+    staySignedIn: 'Magpabilin nga naka-sign in',
+    signOutDiscard: 'Mag-sign out ug papason',
     languageSection: 'Pinulongan',
     legalSection: 'Legal',
     viewTerms: 'Tan-awa ang mga termino ug disclaimer',
@@ -195,7 +273,12 @@ export const ceb: Translation = {
     createReferral: 'Paghimo og referral',
     viewSpecimen: 'Specimen form',
     noShowChip: 'No-show',
-    resultLine: 'Resulta ({{date}}): {{result}}',
+    resultRecorded: 'Narekord ang resulta niadtong {{date}}',
+    resultPositive:
+      'POSITIBO ang narekord nga resulta sa pasilidad. Siguroha nga mobalik ang pasyente sa TB-DOTS nga pasilidad aron magsugod og tambal.',
+    resultNegative:
+      'NEGATIBO ang narekord nga resulta sa pasilidad. Ang pasilidad maoy mosulti sa sunod nga mga lakang.',
+    resultAskFacility: 'Para sa detalye, pangutana sa TB-DOTS nga pasilidad.',
     // TODO i18n verify
     appt: {
       scheduled: 'Umaabot',

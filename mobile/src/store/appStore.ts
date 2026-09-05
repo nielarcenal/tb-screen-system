@@ -8,6 +8,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { AppLanguage } from '../i18n/languages';
+import type { DeniedReason } from '../domain/accountAccess';
 
 interface AppState {
   /** ISO timestamp of the last successful sync, for display. Non-personal. */
@@ -50,6 +51,26 @@ interface AppState {
   /** Specimen ids follow the same scheme: SPC-<device>-<seq> (Feature 6). */
   nextSpecimenSeq: number;
   allocateSpecimenId: () => string;
+
+  /**
+   * A definite server refusal of whichever account is signed in on this device
+   * (D-07), remembered across app restarts.
+   *
+   * WHY THIS IS PERSISTED AND THE REST OF THE VERDICT IS NOT. The live verdict
+   * lives in the transient sessionStore and starts null on every cold start, so
+   * a refused BHW who force-stopped the app while offline came back to a fully
+   * usable app: the launch lookup failed, 'unknown' does not block, and the
+   * block screen never appeared. Verified on the A54. Remembering the refusal
+   * closes that, and it does NOT weaken the offline rule — a failed or missing
+   * lookup is still 'unknown' and still changes nothing here. Only an answer
+   * the server actually gave is written, and the next 'allowed' erases it.
+   *
+   * Non-personal, so it belongs in this store: a reason and a role name, never
+   * a user id, an email or a patient. It is cleared on sign-out with the rest
+   * of the session, so it can never greet the next account on this phone.
+   */
+  deniedAccount: { reason: DeniedReason; role: string | null } | null;
+  rememberAccountDenial: (denial: { reason: DeniedReason; role: string | null } | null) => void;
 }
 
 /** No 0/O/1/I — codes get read aloud and handwritten on specimen forms. */
@@ -89,6 +110,9 @@ export const useAppStore = create<AppState>()(
         set({ deviceCode, nextPatientSeq: seq + 1 });
         return `PAT-${deviceCode}-${String(seq).padStart(4, '0')}`;
       },
+
+      deniedAccount: null,
+      rememberAccountDenial: (deniedAccount) => set({ deniedAccount }),
 
       nextSpecimenSeq: 1,
       allocateSpecimenId: () => {

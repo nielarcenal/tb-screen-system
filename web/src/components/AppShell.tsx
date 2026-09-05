@@ -110,13 +110,16 @@ export default function AppShell({
             </div>
           </div>
 
-          {/* The label is hidden on phones (icon-only bar), so name it here too. */}
+          {/* The label is hidden on phones (icon-only bar), so name it here too.
+              scope: 'local' ends this browser's session only — the default
+              revokes the account everywhere, signing the same user out of the
+              BHW app on their phone. */}
           <button
             className="signout"
             type="button"
             aria-label={t('common.signOut')}
             title={t('common.signOut')}
-            onClick={() => void supabase.auth.signOut()}
+            onClick={() => void supabase.auth.signOut({ scope: 'local' })}
           >
             <span className="msym" aria-hidden="true">
               logout

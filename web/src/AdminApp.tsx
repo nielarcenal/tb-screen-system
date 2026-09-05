@@ -21,6 +21,7 @@ import CaptainManagement from './components/CaptainManagement';
 import FacilityManagement from './components/FacilityManagement';
 import StaffManagement from './components/StaffManagement';
 import PasswordField from './components/PasswordField';
+import ChangePasswordGate from './components/ChangePasswordGate';
 
 type Page = 'dashboard' | 'captains' | 'facilities' | 'staff';
 
@@ -31,6 +32,8 @@ export default function AdminApp() {
   const [me, setMe] = useState<PortalUser | null>(null);
   const [meLoaded, setMeLoaded] = useState(false);
   const [page, setPage] = useState<Page>('dashboard');
+  // Bumped when the password gate finishes, to re-read the users row.
+  const [meVersion, setMeVersion] = useState(0);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -56,14 +59,14 @@ export default function AdminApp() {
     }
     void supabase
       .from('users')
-      .select('user_id, role, full_name, facility_id, active')
+      .select('user_id, role, full_name, facility_id, active, must_change_password')
       .eq('user_id', session.user.id)
       .maybeSingle()
       .then(({ data }) => {
         setMe((data ?? null) as PortalUser | null);
         setMeLoaded(true);
       });
-  }, [session]);
+  }, [session, meVersion]);
 
   const signIn = async (e: FormEvent) => {
     e.preventDefault();
@@ -137,7 +140,11 @@ export default function AdminApp() {
       <div className="loginpage">
         <div className="loginpage-top">
           <LangToggle />
-          <button className="secondary" onClick={() => void supabase.auth.signOut()}>
+          {/* scope: 'local' — this browser only; see AppShell. */}
+          <button
+            className="secondary"
+            onClick={() => void supabase.auth.signOut({ scope: 'local' })}
+          >
             {t('common.signOut')}
           </button>
         </div>
@@ -148,6 +155,18 @@ export default function AdminApp() {
           </p>
         </div>
       </div>
+    );
+  }
+
+  // D-06: an admin account provisioned or reset by another admin is gated the
+  // same as everyone else. Checked after the role refusal above so a non-admin
+  // still gets the "wrong portal" page rather than a password form.
+  if (me.must_change_password) {
+    return (
+      <ChangePasswordGate
+        email={session.user.email ?? null}
+        onDone={() => setMeVersion((v) => v + 1)}
+      />
     );
   }
 

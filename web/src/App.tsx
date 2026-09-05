@@ -22,6 +22,8 @@ import ReferralInbox from './components/ReferralInbox';
 import ReferralDetail from './components/ReferralDetail';
 import HotspotView from './components/HotspotView';
 import BhwManagement from './components/BhwManagement';
+import ChangePasswordGate from './components/ChangePasswordGate';
+import AccountStateGate, { AccountState } from './components/AccountStateGate';
 
 type Page = 'dashboard' | 'inbox' | 'hotspot' | 'bhw';
 
@@ -33,6 +35,14 @@ export default function App() {
   const [facilityName, setFacilityName] = useState<string | null>(null);
   const [page, setPage] = useState<Page>('dashboard');
   const [openReferralId, setOpenReferralId] = useState<string | null>(null);
+  // Bumped when the password gate finishes, to re-read the users row (and with
+  // it the now-cleared must_change_password) without disturbing the session.
+  const [meVersion, setMeVersion] = useState(0);
+  // D-12: why `me` is null. 'loading' is the only state that may render a
+  // spinner; the other two are terminal and must offer a way out. Kept beside
+  // `me` rather than derived from it, because "no row" and "lookup failed" are
+  // indistinguishable once both have collapsed into null.
+  const [meState, setMeState] = useState<'loading' | 'ready' | AccountState>('loading');
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => {
@@ -55,32 +65,54 @@ export default function App() {
     if (!userId) {
       setMe(null);
       setFacilityName(null);
+      setMeState('loading');
       return;
     }
+    setMeState('loading');
     void supabase
       .from('users')
-      .select('user_id, role, full_name, facility_id, active')
+      .select('user_id, role, full_name, facility_id, active, must_change_password')
       .eq('user_id', userId)
       .maybeSingle()
-      .then(async ({ data }) => {
+      .then(async ({ data, error }) => {
+        // D-12: `error` used to be dropped on the floor here. A failed lookup
+        // and an absent row both left `me` null, and null rendered a spinner
+        // that nothing would ever clear. Read it, and keep the two apart.
+        if (error) {
+          setMe(null);
+          setMeState('error');
+          return;
+        }
         const user = (data ?? null) as PortalUser | null;
         // Admin accounts live in the separate developer portal.
         if (user?.role === 'admin') {
           window.location.replace('/admin.html');
           return;
         }
-        setMe(user);
-        setPage('dashboard');
-        if (user) {
-          const { data: fac } = await supabase
-            .from('facilities')
-            .select('name')
-            .eq('facility_id', user.facility_id)
-            .maybeSingle();
-          setFacilityName((fac as { name: string } | null)?.name ?? null);
+        if (!user) {
+          setMe(null);
+          setMeState('missing');
+          return;
         }
+        // D-12: `active` was already being selected and never read. The portal
+        // half of the mobile access gate — see AccountStateGate's header for
+        // why a banned account never reaches this branch on a fresh sign-in.
+        if (!user.active) {
+          setMe(null);
+          setMeState('inactive');
+          return;
+        }
+        setMe(user);
+        setMeState('ready');
+        setPage('dashboard');
+        const { data: fac } = await supabase
+          .from('facilities')
+          .select('name')
+          .eq('facility_id', user.facility_id)
+          .maybeSingle();
+        setFacilityName((fac as { name: string } | null)?.name ?? null);
       });
-  }, [userId]);
+  }, [userId, meVersion]);
 
   // Not signed in: the sidebar shell is hidden; the two-panel sign-in (§4)
   // carries its own brand panel and language toggle.
@@ -90,8 +122,32 @@ export default function App() {
   if (!session) {
     return <LoginForm />;
   }
+  // D-12: three terminal states get a gate with a sign-out; only a genuinely
+  // in-flight lookup is allowed to show a spinner, and that one does resolve.
+  if (meState !== 'loading' && meState !== 'ready') {
+    return (
+      <AccountStateGate
+        state={meState}
+        email={session.user.email ?? null}
+        onRetry={() => setMeVersion((v) => v + 1)}
+      />
+    );
+  }
   if (!me) {
     return <p style={{ padding: 24, textAlign: 'center' }}>{t('common.loading')}</p>;
+  }
+
+  // D-06: the account is still on the password whoever provisioned it chose,
+  // and that person can sign in as them until it is replaced. Nothing else
+  // opens until it is. Placed after the admin redirect above, so an admin is
+  // gated in their own portal rather than this one.
+  if (me.must_change_password) {
+    return (
+      <ChangePasswordGate
+        email={session.user.email ?? null}
+        onDone={() => setMeVersion((v) => v + 1)}
+      />
+    );
   }
 
   const isCaptain = me.role === 'captain';

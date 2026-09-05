@@ -7,10 +7,14 @@
  *  - upcoming = appointment status 'scheduled' with scheduled_date >= today
  *  - missed   = appointment status 'missed'   (set by TB-DOTS staff)
  *  - no-show  = referral presented = false    (set by TB-DOTS staff)
- *  - results  = referral with a recorded result (free text from the lab)
+ *  - results  = referral whose facility recorded an outcome (positive/negative).
+ *               Keyed off result_outcome, NOT the free-text notes: those are
+ *               optional in the portal and are not pulled to the device at
+ *               all (D-05), so gating on them hid blank-notes results.
  */
 import { getDb } from './database';
-import { toDateOnly } from '../lib/dates';
+import { ResultOutcome } from './types';
+import { manilaToday } from '../lib/dates';
 
 export interface DashboardAppointment {
   appointment_id: string;
@@ -29,7 +33,7 @@ export interface DashboardReferral {
   full_name: string | null;
   specimen_id: string | null;
   status: string;
-  result: string | null;
+  result_outcome: ResultOutcome | null;
   result_date: string | null;
   presented: number | null;
 }
@@ -42,7 +46,7 @@ export async function listUpcomingAppointments(): Promise<DashboardAppointment[]
      FROM appointments a JOIN patients p ON p.patient_id = a.patient_id
      WHERE a.status = 'scheduled' AND a.scheduled_date >= ?
      ORDER BY a.scheduled_date ASC`,
-    [toDateOnly(new Date())],
+    [manilaToday()],
   );
 }
 
@@ -61,7 +65,7 @@ export async function listNoShowReferrals(): Promise<DashboardReferral[]> {
   const db = await getDb();
   return db.getAllAsync<DashboardReferral>(
     `SELECT r.referral_id, r.patient_id, p.display_code, p.full_name,
-            r.specimen_id, r.status, r.result, r.result_date, r.presented
+            r.specimen_id, r.status, r.result_outcome, r.result_date, r.presented
      FROM referrals r JOIN patients p ON p.patient_id = r.patient_id
      WHERE r.presented = 0
      ORDER BY r.updated_at DESC`,
@@ -72,9 +76,9 @@ export async function listResultReferrals(): Promise<DashboardReferral[]> {
   const db = await getDb();
   return db.getAllAsync<DashboardReferral>(
     `SELECT r.referral_id, r.patient_id, p.display_code, p.full_name,
-            r.specimen_id, r.status, r.result, r.result_date, r.presented
+            r.specimen_id, r.status, r.result_outcome, r.result_date, r.presented
      FROM referrals r JOIN patients p ON p.patient_id = r.patient_id
-     WHERE r.result IS NOT NULL
+     WHERE r.result_outcome IS NOT NULL
      ORDER BY r.result_date DESC`,
   );
 }

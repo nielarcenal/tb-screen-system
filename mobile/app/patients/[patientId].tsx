@@ -590,26 +590,45 @@ export default function PatientDetailScreen() {
                                   fg={followUpChip.noShow.fg}
                                 />
                               ) : null}
-                              {/* Lab result recorded by TB-DOTS staff — displayed, never computed (§1). */}
-                              {referral.result ? (
+                              {/* Outcome recorded by TB-DOTS staff — displayed, never computed
+                                  (§1). The facility's free-text notes are deliberately not
+                                  pulled to this device or shown here (D-05); a BHW gets the
+                                  outcome and what to do about it. */}
+                              {referral.result_outcome ? (
                                 <View
                                   style={{
                                     backgroundColor: statusChip.closed.bg,
                                     borderRadius: 14,
                                     paddingHorizontal: 16,
                                     paddingVertical: 12,
+                                    gap: 4,
                                   }}
                                 >
                                   <Text
                                     variant="bodyMedium"
-                                    style={{ color: statusChip.closed.fg }}
+                                    style={{ color: statusChip.closed.fg, fontWeight: '700' }}
                                   >
-                                    {t('patientDetail.resultLine', {
+                                    {t('patientDetail.resultRecorded', {
                                       date: referral.result_date
                                         ? new Date(referral.result_date).toLocaleDateString()
                                         : '—',
-                                      result: referral.result,
                                     })}
+                                  </Text>
+                                  <Text
+                                    variant="bodyMedium"
+                                    style={{ color: statusChip.closed.fg }}
+                                  >
+                                    {t(
+                                      referral.result_outcome === 'positive'
+                                        ? 'patientDetail.resultPositive'
+                                        : 'patientDetail.resultNegative',
+                                    )}
+                                  </Text>
+                                  <Text
+                                    variant="bodySmall"
+                                    style={{ color: statusChip.closed.fg, opacity: 0.85 }}
+                                  >
+                                    {t('patientDetail.resultAskFacility')}
                                   </Text>
                                 </View>
                               ) : null}

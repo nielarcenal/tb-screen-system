@@ -12,7 +12,7 @@
  *  - Changing a parent clears all levels below it.
  *  - Controlled component; parent owns the selection.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import { Dialog, Divider, List, Portal, Searchbar, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
@@ -25,23 +25,23 @@ import {
   PsgcOption,
 } from '../db/psgcRepo';
 
-export interface AddressSelection {
-  regionCode: string | null;
-  provinceCode: string | null;
-  cityCode: string | null;
-  barangayCode: string | null;
-}
+import { autoSelectSingle, AddressSelection, emptyAddress } from './addressSelection';
 
-export const emptyAddress: AddressSelection = {
-  regionCode: null,
-  provinceCode: null,
-  cityCode: null,
-  barangayCode: null,
-};
+// Re-exported so screens keep importing both from this component.
+export type { AddressSelection };
+export { emptyAddress };
 
 interface Props {
   value: AddressSelection;
-  onChange: (next: AddressSelection) => void;
+  /**
+   * Same shape as a useState setter, and the updater form is load-bearing:
+   * the auto-select below runs from an async callback and MUST merge into
+   * whatever the newest selection is, including one already queued by the
+   * parent's pre-fill but not yet rendered. Passing a plain object there
+   * overwrites that queued value (see autoSelectSingle). User taps stay
+   * plain objects — they carry intent, and the parent may act on them.
+   */
+  onChange: Dispatch<SetStateAction<AddressSelection>>;
   disabled?: boolean;
 }
 
@@ -86,26 +86,25 @@ export default function AddressCascade({ value, onChange, disabled }: Props) {
   const [openLevel, setOpenLevel] = useState<Level | null>(null);
   const [search, setSearch] = useState('');
 
+  // The effects below must not re-run per selection change, so their closures
+  // go stale; onChange is read through a ref to keep them on the live one.
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
   // --- load each level when its parent changes; auto-select single options ---
   useEffect(() => {
     void listRegions().then((r) => {
       setRegions(r);
-      if (r.length === 1 && value.regionCode !== r[0].code) {
-        onChange({ ...emptyAddress, regionCode: r[0].code });
-      }
+      onChangeRef.current((prev) => autoSelectSingle(prev, 'regionCode', r) ?? prev);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!value.regionCode) return setProvinces([]);
     void listProvinces(value.regionCode).then((p) => {
       setProvinces(p);
-      if (p.length === 1 && value.provinceCode !== p[0].code) {
-        onChange({ ...value, provinceCode: p[0].code, cityCode: null, barangayCode: null });
-      }
+      onChangeRef.current((prev) => autoSelectSingle(prev, 'provinceCode', p) ?? prev);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value.regionCode]);
 
   useEffect(() => {

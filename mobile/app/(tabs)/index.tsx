@@ -30,6 +30,7 @@ import { useAppStore } from '../../src/store/appStore';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useSyncStore } from '../../src/store/syncStore';
 import { triggerSync } from '../../src/sync/syncManager';
+import { SyncNotice, syncNotices } from '../../src/sync/syncNotice';
 import { palette } from '../../src/ui/tokens';
 
 type TileKey = 'upcoming' | 'missed' | 'noShow';
@@ -48,6 +49,7 @@ export default function HomeScreen() {
   const termsAcceptedAt = useAppStore((s) => s.termsAcceptedAt);
   const lastSyncAt = useAppStore((s) => s.lastSyncAt);
   const userId = useSessionStore((s) => s.userId);
+  const sessionExpired = useSessionStore((s) => s.expired);
   const { isOnline, phase, lastError } = useSyncStore();
 
   const [upcoming, setUpcoming] = useState<DashboardAppointment[]>([]);
@@ -85,6 +87,14 @@ export default function HomeScreen() {
     noShow: noShows.length,
   };
   const allClear = counts.upcoming + counts.missed + counts.noShow === 0;
+
+  // What the offline note and the last-pass line say, and how loud. Decided in
+  // src/sync/syncNotice.ts so the rules can be tested — see that module for why
+  // the offline note is NOT home.neverSynced.
+  const notices = syncNotices({ isOnline, lastError });
+
+  /** Notice ink. Offline is a calm neutral, never red (tokens.ts, §7). */
+  const noticeColor = (n: SyncNotice) => (n.tone === 'alarm' ? palette.red : palette.inkSoft);
 
   // Calm sync chip (design: teal = synced, amber = pending, neutral = offline).
   const syncChip = () => {
@@ -206,16 +216,19 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 8, paddingBottom: 32, gap: 14 }}>
+        {/* Two different situations, two different messages: never signed in
+            on this phone, vs. a session that ended on its own. The second one
+            has to say the patients are still here — the list below it is. */}
         <Banner
           visible={!userId}
-          icon="account-alert"
+          icon={sessionExpired ? 'clock-alert-outline' : 'account-alert'}
           actions={[{ label: t('home.signInCta'), onPress: () => router.push('/sign-in') }]}
         >
-          {t('home.signInBanner')}
+          {sessionExpired ? t('home.sessionExpiredBanner') : t('home.signInBanner')}
         </Banner>
 
         {/* Offline note — calm, informational, never alarming (§7). */}
-        {isOnline === false ? (
+        {notices.offline ? (
           <View
             style={{
               flexDirection: 'row',
@@ -229,7 +242,7 @@ export default function HomeScreen() {
           >
             <MaterialCommunityIcons name="cloud-off-outline" size={18} color={palette.muted} />
             <Text variant="bodySmall" style={{ color: palette.inkSoft, flex: 1, lineHeight: 18 }}>
-              {t('home.neverSynced')}
+              {t(notices.offline.key)}
             </Text>
           </View>
         ) : null}
@@ -305,11 +318,9 @@ export default function HomeScreen() {
             ? t('home.lastSync', { date: new Date(lastSyncAt).toLocaleString() })
             : t('home.neverSynced')}
         </Text>
-        {lastError ? (
-          <Text variant="bodySmall" style={{ color: palette.red }}>
-            {lastError.kind === 'offline'
-              ? t('home.syncOffline')
-              : t('home.syncError', { message: lastError.detail })}
+        {notices.error ? (
+          <Text variant="bodySmall" style={{ color: noticeColor(notices.error) }}>
+            {t(notices.error.key, notices.error.params)}
           </Text>
         ) : null}
 
@@ -329,9 +340,20 @@ export default function HomeScreen() {
               rowCard(
                 r.referral_id,
                 r.full_name ?? r.display_code,
-                r.result_date
-                  ? `${new Date(r.result_date).toLocaleDateString()} — ${r.result ?? ''}`
-                  : (r.result ?? undefined),
+                // Outcome only — the facility's free-text notes are not pulled
+                // to this device (D-05).
+                [
+                  r.result_date ? new Date(r.result_date).toLocaleDateString() : null,
+                  r.result_outcome
+                    ? t(
+                        r.result_outcome === 'positive'
+                          ? 'common.outcomePositive'
+                          : 'common.outcomeNegative',
+                      )
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(' — ') || undefined,
                 'file-check',
                 () => openPatient(r.patient_id),
               ),

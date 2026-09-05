@@ -18,6 +18,8 @@ export const en = {
     yes: 'Yes',
     no: 'No',
     unsure: 'Unsure',
+    outcomePositive: 'Positive',
+    outcomeNegative: 'Negative',
   },
   languages: {
     en: 'English',
@@ -27,6 +29,8 @@ export const en = {
   home: {
     title: 'TB-Screen BHW',
     signInBanner: 'Sign in to sync and enroll patients. Already-saved work stays on this device.',
+    sessionExpiredBanner:
+      'Your session ended — sign in again to keep syncing. Your patients and saved work are still on this phone.',
     signInCta: 'Sign in',
     syncChipSynced: 'Synced',
     syncChipSyncing: 'Syncing…',
@@ -37,6 +41,12 @@ export const en = {
     syncOffline:
       "Can't sync right now — no internet connection. Your records are saved on this phone and will sync automatically once you're back online.",
     syncError: "Couldn't sync — please try again. If it keeps happening, tell your coordinator: {{message}}",
+    syncPartial:
+      '{{count}} record(s) could not be uploaded. Everything else synced. They are still saved on this phone and will be tried again — if this keeps happening, tell your coordinator.',
+    syncPartial_one:
+      '1 record could not be uploaded. Everything else synced. It is still saved on this phone and will be tried again — if this keeps happening, tell your coordinator.',
+    syncPartial_other:
+      '{{count}} records could not be uploaded. Everything else synced. They are still saved on this phone and will be tried again — if this keeps happening, tell your coordinator.',
     primaryCta: 'Enroll & screen a patient',
     attentionHeading: 'Needs attention',
     tiles: {
@@ -68,6 +78,58 @@ export const en = {
     helper: 'Access is provisioned by your administrator. Contact them if you can’t sign in.',
     cta: 'Sign in',
     error: 'Sign-in failed: {{message}}',
+    errorOffline:
+      'You need an internet connection to sign in. Once you are signed in, the app works offline.',
+    refusedInactive:
+      'This account has been deactivated. Ask your barangay captain or program coordinator to reactivate it.',
+    refusedWrongRole:
+      'This app is for Barangay Health Workers. Your account is {{destination}} — please sign in on the TB-Screen portal on a computer.',
+    refusedNoAccount:
+      'This account is not set up for the app yet. Please contact your program coordinator.',
+  },
+  /**
+   * Blocked account (D-07). Shown over the whole app when the server says this
+   * account may no longer use it.
+   */
+  blocked: {
+    inactiveTitle: 'This account has been deactivated',
+    inactiveBody:
+      'You can no longer use the app with this account. Ask your barangay captain or program coordinator to reactivate it.',
+    wrongRoleTitle: 'This app is for Barangay Health Workers',
+    wrongRoleBody:
+      'Your account is {{destination}}. Please sign in on the TB-Screen portal on a computer instead.',
+    noAccountTitle: 'This account is not set up',
+    noAccountBody:
+      'We could not find the details for this account. Please contact your program coordinator.',
+    roleFacility: 'a health facility account',
+    roleCaptain: 'a barangay captain account',
+    roleAdmin: 'an administrator account',
+    roleOther: 'not a Barangay Health Worker account',
+    pendingNote:
+      'Signing out uploads anything still waiting first. If some records cannot be uploaded, you will be asked before anything is removed from this phone.',
+    signOut: 'Sign out',
+  },
+  /**
+   * Forced password change (D-06). Shown over the whole app while the account
+   * still holds the password its captain or admin provisioned.
+   */
+  password: {
+    gateTitle: 'Set your own password',
+    gateSub:
+      'This account is still using the password your coordinator gave you. Choose a password only you know before you continue.',
+    signedInAs: 'Signed in as {{email}}',
+    newLabel: 'New password',
+    confirmLabel: 'Confirm new password',
+    hint: 'At least {{min}} characters. Do not reuse the password you were given.',
+    cta: 'Save password and continue',
+    saving: 'Saving…',
+    signOut: 'Sign out instead',
+    errTooShort: 'Use at least {{min}} characters.',
+    errLooksProvisioned: 'That is a password the system generated. Choose one of your own.',
+    errMismatch: 'The two passwords do not match.',
+    errApi: 'Could not save the password: {{message}}',
+    errFlag:
+      'Your password was changed, but this phone could not finish. Sign in again using your new password.',
   },
   status: {
     submitted: 'Submitted',
@@ -99,7 +161,17 @@ export const en = {
     signOut: 'Sign out',
     signOutConfirmTitle: 'Sign out?',
     signOutConfirmBody:
-      'Offline records on this phone will be cleared so the next account cannot see them. Anything not yet synced will be pushed first if you are online — otherwise it will be lost.',
+      'Offline records on this phone will be cleared so the next account cannot see them. Anything not yet synced is uploaded first — if something cannot be uploaded, you will be asked before it is cleared.',
+    signOutSyncing: 'Syncing…',
+    signOutPendingTitle: 'Not everything is uploaded',
+    signOutPendingBody:
+      '{{count}} record(s) on this phone have not reached the server yet. Signing out deletes them permanently. If you can, connect to the internet and sync before signing out.',
+    signOutPendingBody_one:
+      '1 record on this phone has not reached the server yet. Signing out deletes it permanently. If you can, connect to the internet and sync before signing out.',
+    signOutPendingBody_other:
+      '{{count}} records on this phone have not reached the server yet. Signing out deletes them permanently. If you can, connect to the internet and sync before signing out.',
+    staySignedIn: 'Stay signed in',
+    signOutDiscard: 'Sign out and delete',
     languageSection: 'Language',
     legalSection: 'Legal',
     viewTerms: 'View terms and disclaimer',
@@ -185,7 +257,15 @@ export const en = {
     createReferral: 'Create referral',
     viewSpecimen: 'Specimen form',
     noShowChip: 'No-show',
-    resultLine: 'Result ({{date}}): {{result}}',
+    // D-05: the facility's free-text notes are deliberately NOT shown here (or
+    // pulled to the device). A BHW sees the outcome the facility recorded, plus
+    // what to do about it — displayed, never computed (§1).
+    resultRecorded: 'Result recorded {{date}}',
+    resultPositive:
+      'The facility recorded a POSITIVE result. Make sure this patient goes back to the TB-DOTS facility to start treatment.',
+    resultNegative:
+      'The facility recorded a NEGATIVE result. The facility will advise on any next steps.',
+    resultAskFacility: 'For any details, ask the TB-DOTS facility.',
     appt: {
       scheduled: 'Upcoming',
       attended: 'Attended',

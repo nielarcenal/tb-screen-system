@@ -1,11 +1,11 @@
 /**
  * Local (offline) CRUD for referrals — same §7 pattern as patients/screenings:
  * local writes queue as sync_status='pending'; the sync engine pushes them and
- * pulls server changes (status/result/no-show updates recorded by TB-DOTS staff)
+ * pulls server changes (status/outcome/no-show updates recorded by TB-DOTS staff)
  * with last-write-wins.
  */
 import { getDb } from './database';
-import { ReferralRow, ReferralStatus, SyncStatus } from './types';
+import { ReferralRow, ReferralStatus, ResultOutcome, SyncStatus } from './types';
 import { nowIso } from '../lib/uuid';
 
 export type LocalReferralRow = ReferralRow & { sync_status: SyncStatus };
@@ -18,7 +18,7 @@ interface ReferralSqlRow {
   facility_id: string;
   specimen_id: string | null;
   status: string;
-  result: string | null;
+  result_outcome: string | null;
   result_date: string | null;
   presented: number | null;
   created_at: string;
@@ -34,7 +34,7 @@ function fromSql(r: ReferralSqlRow): LocalReferralRow {
     facility_id: r.facility_id,
     specimen_id: r.specimen_id,
     status: r.status as ReferralStatus,
-    result: r.result,
+    result_outcome: r.result_outcome as ResultOutcome | null,
     result_date: r.result_date,
     presented: r.presented === null ? null : r.presented === 1,
     created_at: r.created_at,
@@ -51,7 +51,7 @@ export async function insertLocalReferral(
   await db.runAsync(
     `INSERT INTO referrals
        (referral_id, patient_id, screening_id, facility_id, specimen_id,
-        status, result, result_date, presented, created_at, updated_at, sync_status)
+        status, result_outcome, result_date, presented, created_at, updated_at, sync_status)
      VALUES (?,?,?,?,?,?,?,?,?,?,?, 'pending')`,
     [
       r.referral_id,
@@ -60,7 +60,7 @@ export async function insertLocalReferral(
       r.facility_id,
       r.specimen_id,
       r.status,
-      r.result,
+      r.result_outcome,
       r.result_date,
       r.presented === null ? null : r.presented ? 1 : 0,
       ts,
@@ -125,7 +125,7 @@ export async function upsertPulledReferral(server: ReferralRow): Promise<void> {
   await db.runAsync(
     `INSERT INTO referrals
        (referral_id, patient_id, screening_id, facility_id, specimen_id,
-        status, result, result_date, presented, created_at, updated_at, sync_status)
+        status, result_outcome, result_date, presented, created_at, updated_at, sync_status)
      VALUES (?,?,?,?,?,?,?,?,?,?,?, 'synced')
      ON CONFLICT(referral_id) DO UPDATE SET
        patient_id   = excluded.patient_id,
@@ -133,7 +133,7 @@ export async function upsertPulledReferral(server: ReferralRow): Promise<void> {
        facility_id  = excluded.facility_id,
        specimen_id  = excluded.specimen_id,
        status       = excluded.status,
-       result       = excluded.result,
+       result_outcome = excluded.result_outcome,
        result_date  = excluded.result_date,
        presented    = excluded.presented,
        created_at   = excluded.created_at,
@@ -146,7 +146,7 @@ export async function upsertPulledReferral(server: ReferralRow): Promise<void> {
       server.facility_id,
       server.specimen_id,
       server.status,
-      server.result,
+      server.result_outcome,
       server.result_date,
       server.presented === null ? null : server.presented ? 1 : 0,
       server.created_at,

@@ -98,7 +98,7 @@ export default function CreateReferralScreen() {
         facility_id: facilityId,
         specimen_id: allocateSpecimenId(),
         status: 'submitted',
-        result: null,
+        result_outcome: null, // only a TB-DOTS facility ever records this
         result_date: null,
         presented: null,
       });

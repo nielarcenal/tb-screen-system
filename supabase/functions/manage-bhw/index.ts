@@ -42,6 +42,7 @@
  * exposing any patient row. Captains and admins have no patient read policies.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { candidateEmail, isEmailTaken, slugPart } from '../_shared/accountEmail.ts';
 
 interface Body {
   action: 'create' | 'update' | 'deactivate' | 'reactivate' | 'reset_password';
@@ -77,21 +78,31 @@ const json = (status: number, body: unknown) =>
     headers: { 'Content-Type': 'application/json', ...CORS },
   });
 
-/** One name part → lowercase ASCII letters, inner spaces dropped ("Dela Cruz" → "delacruz"). */
-function slugPart(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z]/g, '');
-}
+/** Alphabet for the temp password — no i/l/o, which are misread off a slip of
+ *  paper as 1/1/0 by the BHW typing them in. */
+const TEMP_PW_ALPHABET = 'abcdefghjkmnpqrstuvwxyz';
 
-/** Random temp password like TBS-4829-kfmq (letters avoid ambiguous chars). */
+/**
+ * Random temp password like TBS-4829-kfmq.
+ *
+ * crypto.getRandomValues, NOT Math.random: this string is the account's only
+ * credential until the holder passes the D-06 change gate, and Math.random is
+ * a fast non-cryptographic PRNG whose future output is recoverable from a
+ * handful of observed values — and a captain provisioning a batch of BHWs sees
+ * exactly that, a run of consecutive outputs. Deno exposes the Web Crypto API
+ * globally, so no import is needed.
+ *
+ * The modulo is very slightly biased (2^32 is not a multiple of 9000 or of 23),
+ * by about one part in a million. That is far below the ~31 bits of entropy the
+ * format carries and does not warrant rejection sampling.
+ */
 function tempPassword(): string {
-  const digits = Math.floor(1000 + Math.random() * 9000);
+  const buf = new Uint32Array(5);
+  crypto.getRandomValues(buf);
+  const digits = 1000 + (buf[0] % 9000);
   const letters = Array.from(
     { length: 4 },
-    () => 'abcdefghjkmnpqrstuvwxyz'[Math.floor(Math.random() * 23)],
+    (_, i) => TEMP_PW_ALPHABET[buf[i + 1] % TEMP_PW_ALPHABET.length],
   ).join('');
   return `TBS-${digits}-${letters}`;
 }
@@ -175,14 +186,22 @@ Deno.serve(async (req) => {
           const name = composeName(first, middle, last);
           const slug = `${slugPart(first)}.${slugPart(last)}`;
           if (slug === '.') return json(400, { error: 'name must contain letters' });
-          let email = `${slug}@tbscreen.ph`;
           const password = tempPassword();
-          for (let n = 2; n < 50; n++) {
+          // D-15: advance the suffix ONLY on a real address collision. Any
+          // other createUser failure is that failure, and is returned as
+          // itself — see _shared/accountEmail.ts for what the blanket retry
+          // used to turn a rate limit or an outage into.
+          for (let n = 1; n < 50; n++) {
+            const email = candidateEmail(slug, n);
             const { data: created, error: createErr } = await admin.auth.admin.createUser({
               email,
               password,
               email_confirm: true,
             });
+            if (createErr && !isEmailTaken(createErr)) {
+              console.error(`[manage-bhw] createUser failed for ${email}: ${createErr.message}`);
+              return json(500, { error: createErr.message });
+            }
             if (!createErr && created?.user) {
               const { error: rowErr } = await admin.from('users').insert({
                 user_id: created.user.id,
@@ -201,7 +220,6 @@ Deno.serve(async (req) => {
               }
               return json(200, { email, temp_password: password });
             }
-            email = `${slug}.${n}@tbscreen.ph`;
           }
           return json(409, { error: 'could not allocate a unique email' });
         }
@@ -232,14 +250,19 @@ Deno.serve(async (req) => {
         // Unique email: firstname.lastname@tbscreen.ph, then .2, .3, … on clash.
         const slug = `${slugPart(first)}.${slugPart(last)}`;
         if (slug === '.') return json(400, { error: 'name must contain letters' });
-        let email = `${slug}@tbscreen.ph`;
         const password = tempPassword();
-        for (let n = 2; n < 50; n++) {
+        // D-15: as above — only a genuine collision advances the suffix.
+        for (let n = 1; n < 50; n++) {
+          const email = candidateEmail(slug, n);
           const { data: created, error: createErr } = await admin.auth.admin.createUser({
             email,
             password,
             email_confirm: true,
           });
+          if (createErr && !isEmailTaken(createErr)) {
+            console.error(`[manage-bhw] createUser failed for ${email}: ${createErr.message}`);
+            return json(500, { error: createErr.message });
+          }
           if (!createErr && created?.user) {
             const { error: rowErr } = await admin.from('users').insert({
               user_id: created.user.id,
@@ -261,8 +284,7 @@ Deno.serve(async (req) => {
             }
             return json(200, { email, temp_password: password });
           }
-          // email already taken → try the next suffix
-          email = `${slug}.${n}@tbscreen.ph`;
+          // Genuinely taken → try the next suffix.
         }
         return json(409, { error: 'could not allocate a unique email' });
       }

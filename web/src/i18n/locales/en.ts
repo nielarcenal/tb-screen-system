@@ -6,7 +6,6 @@
  */
 export const en = {
   common: {
-    appName: 'TB-Screen Portal',
     loading: 'Loading…',
     refresh: 'Refresh',
     signOut: 'Sign out',
@@ -18,10 +17,24 @@ export const en = {
     nonDiagnostic:
       'Screening answers shown here are pre-screening information gathered by a BHW — not a diagnosis. Diagnosis happens at the TB-DOTS facility through laboratory testing.',
   },
+  /** D-12: the portal's terminal account states. Shown by AccountStateGate
+   *  instead of the portal, each with a way back to the sign-in screen. */
+  account: {
+    errorTitle: 'Could not load your account',
+    errorBody:
+      'You are signed in, but your account details could not be reached. Check your connection and try again.',
+    missingTitle: 'This account is not set up yet',
+    missingBody:
+      'Your sign-in worked, but no portal account is linked to it yet. Ask your administrator to finish setting it up, then sign in again.',
+    inactiveTitle: 'This account has been deactivated',
+    inactiveBody:
+      'Access to the portal has been turned off for this account. Contact your administrator if you think this is a mistake.',
+  },
   languages: {
-    en: 'English',
-    tl: 'Tagalog',
-    ceb: 'Cebuano',
+    /** Accessible group name for the EN/TL/CEB switcher. The pills themselves
+     *  read 'EN'/'TL'/'CEB', so this label is the only thing a screen reader
+     *  announces for the control. */
+    label: 'Language',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -95,17 +108,16 @@ export const en = {
     addressLabel: 'Address',
     addTitle: 'New facility',
     editTitle: 'Edit facility',
+    create: 'Create facility',
     typeChip: 'TB-DOTS',
     empty: 'No facilities yet.',
     emptyDataBody: 'Add a TB-DOTS facility to get started.',
     filterEmptyTitle: 'No facilities match',
     errorTitle: 'Couldn’t load facilities',
-    loadError: 'Could not load facilities: {{message}}',
     saveError: 'Could not save the facility: {{message}}',
     noAddress: 'No address on file',
   },
   admin: {
-    portalTitle: 'TB-Screen Developer Portal',
     sub: 'Account provisioning — developer access only',
     notAdmin: 'This account is not a developer account.',
     goMain: 'Go to the facility portal',
@@ -114,12 +126,10 @@ export const en = {
   },
   staff: {
     title: 'TB-DOTS staff accounts',
-    subtitle: '{{count}} staff accounts',
     addCta: 'Add staff',
     addTitle: 'Add TB-DOTS staff',
     editTitle: 'Edit staff',
     facilityLabel: 'Facility',
-    colFacility: 'Facility',
     filterLabel: 'Facility',
     createdTitle: 'Staff account created',
     scopeNote:
@@ -132,7 +142,6 @@ export const en = {
   },
   captains: {
     title: 'Barangay Captain accounts',
-    subtitle: '{{count}} captains',
     privacyNote:
       'Admins provision captain accounts only. No patient names, records, or results appear anywhere in this view.',
     addCta: 'Add captain',
@@ -149,8 +158,6 @@ export const en = {
     emptyDataBody: 'Add a captain to get started.',
   },
   dashboard: {
-    title: 'Dashboard',
-    intro: 'Today · {{date}} · your facility',
     outcomeNote:
       'Result outcomes (positive / negative) are recorded and visible only at the facility. BHWs see referral progress — submitted, received, tested, result recorded — never the outcome itself.',
     screened: 'Screened today',
@@ -165,7 +172,6 @@ export const en = {
     attendedSub: 'Of {{total}} scheduled today',
     missed: 'Missed check-up',
     missedSub: 'BHW follow-up lists updated',
-    loadError: 'Could not load counts: {{message}}',
     cardTitle: 'Today’s activity',
     errorTitle: 'Couldn’t load the dashboard',
     errorBody: 'We couldn’t reach the server. Check your connection and try again.',
@@ -173,31 +179,18 @@ export const en = {
   },
   bhw: {
     title: 'BHW accounts',
-    subtitle: '{{count}} Barangay Health Workers · your facility',
     privacyNote:
       'Captains see accounts and activity counts only. No patient names, records, or results appear anywhere in this view.',
     addCta: 'New BHW',
-    colName: 'Name',
-    colEmail: 'Email',
-    colBarangay: 'Barangay',
-    colActivity: '30-day activity',
     colStatus: 'Status',
-    colActions: 'Actions',
-    activityLine: '{{screenings}} screenings · {{referrals}} referrals',
     active: 'Active',
     deactivated: 'Deactivated',
     edit: 'Edit',
     deactivate: 'Deactivate',
     reactivate: 'Reactivate',
-    addTitle: 'Add BHW',
     editTitle: 'Edit BHW',
-    nameLabel: 'Full name',
     firstNameLabel: 'First name',
     lastNameLabel: 'Last name',
-    barangayLabel: 'Assigned barangay',
-    ownBarangayNote: 'The new BHW account will be assigned to your barangay.',
-    emailNote:
-      'The email is auto-generated (firstname.lastname@tbscreen.ph) and shown with a temporary password after creation — share both with the BHW in person.',
     cancel: 'Cancel',
     create: 'Create account',
     save: 'Save changes',
@@ -215,10 +208,7 @@ export const en = {
     activityLabel: 'Activity in the last 30 days',
     reassignLabel: 'Reassign coverage to',
     reassignNone: 'Leave unassigned for now',
-    reassignNote:
-      'Their enrolled patients move to the chosen BHW so follow-ups continue. Leave unassigned to keep them with this account.',
     empty: 'No BHW accounts in your facility yet.',
-    loadError: 'Could not load BHW accounts: {{message}}',
     actionError: 'Action failed: {{message}}',
     searchPlaceholder: 'Search name',
     errorTitle: 'Couldn’t load BHWs',
@@ -227,7 +217,8 @@ export const en = {
     emptyDataBody: 'Add a BHW to start building your team.',
     filterEmptyTitle: 'No BHWs match',
     filterEmptyBody: 'Try clearing the search or status filter.',
-    resultsCount: '{{count}} results',
+    resultsCount_one: '{{count}} result',
+    resultsCount_other: '{{count}} results',
     newTitle: 'New BHW',
     newSub: 'Create a BHW account in {{barangay}}',
     middleNameLabel: 'Middle name',
@@ -251,17 +242,11 @@ export const en = {
     hoConfirm: 'Deactivate BHW',
   },
   hotspot: {
-    title: 'Barangay hotspots',
     intro:
       'Presumptive case counts by barangay — patients flagged for referral by the DOH-NTP checklist in the chosen period, counted once each, across all BHWs. Counts only; surveillance summary, not contact tracing.',
     rangeLast: 'Last {{days}} days',
     countsNote: 'Counts are presumptive referrals only — not confirmed cases, not diagnoses.',
-    colRank: '#',
-    colBarangay: 'Barangay',
-    colCity: 'City / Municipality',
-    colCount: 'Presumptive cases',
     empty: 'No presumptive cases in this period.',
-    loadError: 'Could not load counts: {{message}}',
     errorTitle: 'Couldn’t load hotspots',
     errorBody: 'We couldn’t reach the server. Check your connection and try again.',
     emptyBody: 'No barangay has been flagged for referral in this period. Try a longer range.',
@@ -269,12 +254,9 @@ export const en = {
     retry: 'Retry',
   },
   login: {
-    title: 'TB-DOTS staff sign-in',
     sub: 'TB-DOTS facility staff',
     roleStaff: 'TB-DOTS staff',
     roleCaptain: 'Barangay Captain',
-    intro:
-      'For TB-DOTS facility staff: receive referrals, record laboratory results, and track check-up attendance.',
     email: 'Email',
     password: 'Password',
     showPassword: 'Show password',
@@ -293,24 +275,43 @@ export const en = {
     signinSub: 'Welcome back. Enter your credentials to continue.',
     accessHelp:
       'Access is provisioned by your administrator. Contact them if you can’t sign in.',
+    noteStaff:
+      'TB-DOTS staff receive referrals, record laboratory results, and track check-up attendance.',
+    noteCaptain:
+      'Barangay Captains manage the health workers assigned to their own barangay.',
+  },
+  /**
+   * Forced password change (D-06). Shown while the signed-in account still
+   * holds the password manage-bhw generated for it.
+   */
+  password: {
+    gateTitle: 'Set your own password',
+    gateSub:
+      'This account is still using the password your administrator gave you. Choose a password only you know to continue.',
+    signedInAs: 'Signed in as {{email}}',
+    newLabel: 'New password',
+    confirmLabel: 'Confirm new password',
+    hint: 'At least {{min}} characters. Do not reuse the password you were given.',
+    cta: 'Save password and continue',
+    saving: 'Saving…',
+    signOut: 'Sign out instead',
+    errTooShort: 'Use at least {{min}} characters.',
+    errLooksProvisioned: 'That is a password the system generated. Choose one of your own.',
+    errMismatch: 'The two passwords do not match.',
+    errApi: 'Could not save the password: {{message}}',
+    errFlag:
+      'Your password was changed, but this browser could not finish. Sign in again using your new password.',
   },
   inbox: {
+    repeatReferral: 'Repeat',
+    repeatReferralHint: 'Referral {{ordinal}} for this patient at your facility.',
     title: 'Referral inbox',
     empty: 'No referrals for your facility yet.',
     searchPlaceholder: 'Search patient or specimen code…',
     statusFilter: 'Status',
-    colSpecimen: 'Specimen ID',
-    colPatient: 'Patient',
-    colBarangay: 'Barangay',
-    colReferredOn: 'Referred on',
-    colStatus: 'Status',
-    colPresented: 'Presented',
-    colResult: 'Result',
-    presentedYes: 'Yes',
     presentedNo: 'No-show',
-    loadError: 'Could not load referrals: {{message}}',
-    count: '{{count}} referrals',
-    selectPrompt: 'Select a referral to view details',
+    count_one: '{{count}} referral',
+    count_other: '{{count}} referrals',
     filterEmptyTitle: 'No referrals match',
     filterEmptyBody: 'Try clearing the search or status filter.',
     errorTitle: 'Couldn’t load referrals',
@@ -328,39 +329,24 @@ export const en = {
     female: 'Female',
   },
   detail: {
-    patientSection: 'Patient',
-    ageSex: 'Age / sex',
-    barangay: 'Barangay',
-    sitio: 'Sitio',
-    screeningSection: 'Screening (DOH-NTP checklist)',
-    screeningDate: 'Screening date',
-    pgisLine: 'Patient-rated cough severity (PGI-S, supplementary): {{value}}',
-    pgisNotRecorded: 'Patient-rated cough severity (PGI-S, supplementary): not recorded',
-    referralSection: 'Referral handling',
     screeningSummary: 'Screening summary',
     actionsSection: 'Actions',
     patientReportedTag: 'patient-reported',
     screenedBy: 'Screened by {{name}} (BHW)',
     markReceived: 'Mark received',
-    receivedDone: '✓ Received — tap to undo',
-    dnpNote:
-      'Flagging "no-show" updates the referring BHW’s follow-up list. No outcome data is ever shown to BHWs — only referral progress.',
-    outcomeLabel: 'Laboratory outcome (recorded by TB-DOTS staff — never computed)',
     outcomePositive: 'Positive',
     outcomeNegative: 'Negative',
     resultLabel: 'Result notes (free text, optional)',
     resultPlaceholder: 'e.g. GeneXpert: MTB not detected',
     saveResult: 'Save result (marks as tested)',
     resultSavedOn: 'Result recorded {{date}}',
-    presentedLabel: 'Did the patient present at the facility?',
     markPresented: 'Presented',
     markNoShow: 'No-show',
     closeReferral: 'Close referral',
-    appointmentsSection: 'Check-up appointments',
+    appointmentsSection: 'Patient check-up appointments',
+    appointmentsScope:
+      'Every check-up recorded for this patient, including any arranged for an earlier referral.',
     noAppointments: 'No appointments recorded for this patient.',
-    colScheduled: 'Scheduled',
-    colAttended: 'Attended',
-    colStatus: 'Status',
     apptScheduled: 'Scheduled',
     apptAttended: 'Attended',
     apptMissed: 'Missed',
@@ -393,7 +379,6 @@ export const en = {
     recvLocked: 'Locked after testing',
     labTitle: 'Laboratory outcome',
     labHint: 'Recorded by staff after testing — not computed by the system.',
-    savedFlash: 'Saved',
     resultNone: 'Not yet recorded',
     attendLabel: 'Attendance',
     closedTag: 'Closed',

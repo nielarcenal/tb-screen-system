@@ -9,7 +9,9 @@
 
 // --- small fixed value sets (mirror the SQL CHECK constraints) ---
 export type FacilityType = 'barangay_health_station' | 'tb_dots';
-export type UserRole = 'bhw' | 'tb_dots';
+// Mirrors the users_role_check constraint: 'captain' was added by 0006 and
+// 'admin' by 0008. The app itself only ever runs as 'bhw' (D-07).
+export type UserRole = 'bhw' | 'tb_dots' | 'captain' | 'admin';
 export type Sex = 'male' | 'female';
 export type PgisSeverity = 'none' | 'mild' | 'moderate' | 'severe';
 export type ReferralStatus = 'submitted' | 'received' | 'tested' | 'closed';
@@ -97,6 +99,10 @@ export interface ScreeningRow {
   updated_at: string;
 }
 
+/** What the facility recorded. Structured on purpose — the app displays this,
+ *  it never computes it (§1). */
+export type ResultOutcome = 'positive' | 'negative';
+
 export interface ReferralRow {
   referral_id: string;
   patient_id: string;
@@ -104,7 +110,13 @@ export interface ReferralRow {
   facility_id: string;
   specimen_id: string | null;
   status: ReferralStatus;
-  result: string | null;
+  /**
+   * The facility's recorded outcome. The server also holds a free-text
+   * `result` notes column, which this app deliberately does NOT pull or store
+   * (D-05): it is the facility's own note field and can contain clinical
+   * detail a BHW is not trained to interpret. See migration v9 in database.ts.
+   */
+  result_outcome: ResultOutcome | null;
   result_date: string | null;
   presented: boolean | null;
   created_at: string;

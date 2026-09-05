@@ -19,6 +19,8 @@ export const tl: Translation = {
     yes: 'Oo',
     no: 'Hindi',
     unsure: 'Hindi sigurado',
+    outcomePositive: 'Positibo',
+    outcomeNegative: 'Negatibo',
   },
   languages: {
     en: 'Ingles',
@@ -29,6 +31,8 @@ export const tl: Translation = {
     title: 'TB-Screen BHW',
     signInBanner:
       'Mag-sign in para maka-sync at makapag-enroll ng pasyente. Mananatili sa device na ito ang mga naitala na.',
+    sessionExpiredBanner:
+      'Natapos ang session mo — mag-sign in ulit para makapag-sync. Nasa telepono pa rin ang mga pasyente at naitala mong trabaho.',
     signInCta: 'Mag-sign in',
     syncChipSynced: 'Naka-sync',
     syncChipSyncing: 'Nagsi-sync…',
@@ -40,6 +44,14 @@ export const tl: Translation = {
       'Hindi maka-sync ngayon — walang internet. Nakasave sa telepono na ito ang mga tala mo at awtomatikong magsi-sync kapag online ka na.',
     syncError:
       'Hindi maka-sync — pakisubukan ulit. Kung paulit-ulit, sabihin sa iyong coordinator: {{message}}',
+    // Intl.PluralRules returns "one" for EVERY count in tl, so _one must carry
+    // {{count}} — a hardcoded "1" here would be shown for any number.
+    syncPartial:
+      'May {{count}} talang hindi na-upload. Nai-sync naman ang iba. Nakasave pa rin ito sa teleponong ito at susubukan ulit — kung paulit-ulit ito, sabihin sa iyong coordinator.',
+    syncPartial_one:
+      'May {{count}} talang hindi na-upload. Nai-sync naman ang iba. Nakasave pa rin ito sa teleponong ito at susubukan ulit — kung paulit-ulit ito, sabihin sa iyong coordinator.',
+    syncPartial_other:
+      'May {{count}} talang hindi na-upload. Nai-sync naman ang iba. Nakasave pa rin ito sa teleponong ito at susubukan ulit — kung paulit-ulit ito, sabihin sa iyong coordinator.',
     primaryCta: 'Mag-enroll at mag-screen ng pasyente',
     attentionHeading: 'Kailangan ng atensyon',
     tiles: {
@@ -73,6 +85,62 @@ export const tl: Translation = {
     helper: 'Ang access ay ibinibigay ng inyong administrator. Makipag-ugnayan sa kanila kung hindi kayo makakapag-sign in.',
     cta: 'Mag-sign in',
     error: 'Nabigo ang pag-sign in: {{message}}',
+    // TODO i18n verify
+    errorOffline:
+      'Kailangan ng koneksyon sa internet para makapag-sign in. Kapag naka-sign in na, gumagana ang app kahit offline.',
+    // TODO i18n verify
+    refusedInactive:
+      'Na-deactivate na ang account na ito. Hilingin sa inyong barangay captain o program coordinator na i-activate itong muli.',
+    refusedWrongRole:
+      'Ang app na ito ay para sa mga Barangay Health Worker. Ang account ninyo ay {{destination}} — mag-sign in po sa TB-Screen portal sa computer.',
+    refusedNoAccount:
+      'Hindi pa nakahanda ang account na ito para sa app. Makipag-ugnayan po sa inyong program coordinator.',
+  },
+  /**
+   * Blocked account (D-07). Shown over the whole app when the server says this
+   * account may no longer use it.
+   */
+  // TODO i18n verify
+  blocked: {
+    inactiveTitle: 'Na-deactivate na ang account na ito',
+    inactiveBody:
+      'Hindi na ninyo magagamit ang app gamit ang account na ito. Hilingin sa inyong barangay captain o program coordinator na i-activate itong muli.',
+    wrongRoleTitle: 'Ang app na ito ay para sa mga Barangay Health Worker',
+    wrongRoleBody:
+      'Ang account ninyo ay {{destination}}. Mag-sign in po sa TB-Screen portal sa computer.',
+    noAccountTitle: 'Hindi nakahanda ang account na ito',
+    noAccountBody:
+      'Hindi namin makita ang mga detalye ng account na ito. Makipag-ugnayan po sa inyong program coordinator.',
+    roleFacility: 'isang account ng health facility',
+    roleCaptain: 'isang account ng barangay captain',
+    roleAdmin: 'isang account ng administrator',
+    roleOther: 'hindi account ng Barangay Health Worker',
+    pendingNote:
+      'Kapag nag-sign out, iuupload muna ang mga naghihintay pa. Kung may mga record na hindi maiupload, tatanungin muna kayo bago may burahin sa telepono na ito.',
+    signOut: 'Mag-sign out',
+  },
+  /**
+   * Forced password change (D-06). Shown over the whole app while the account
+   * still holds the password its captain or admin provisioned.
+   */
+  password: {
+    gateTitle: 'Gumawa ng sarili mong password',
+    gateSub:
+      'Ginagamit pa ng account na ito ang password na ibinigay ng iyong coordinator. Pumili ng password na ikaw lang ang nakakaalam bago magpatuloy.',
+    signedInAs: 'Naka-sign in bilang {{email}}',
+    newLabel: 'Bagong password',
+    confirmLabel: 'Kumpirmahin ang bagong password',
+    hint: 'Hindi bababa sa {{min}} karakter. Huwag gamitin muli ang password na ibinigay sa iyo.',
+    cta: 'I-save ang password at magpatuloy',
+    saving: 'Nagse-save…',
+    signOut: 'Mag-sign out na lang',
+    errTooShort: 'Gumamit ng hindi bababa sa {{min}} karakter.',
+    errLooksProvisioned:
+      'Iyan ay password na ginawa ng sistema. Pumili ng sarili mong password.',
+    errMismatch: 'Hindi magkatugma ang dalawang password.',
+    errApi: 'Hindi na-save ang password: {{message}}',
+    errFlag:
+      'Napalitan ang iyong password, ngunit hindi natapos ang telepono na ito. Mag-sign in muli gamit ang bagong password.',
   },
   status: {
     submitted: 'Naisumite',
@@ -106,7 +174,17 @@ export const tl: Translation = {
     // TODO i18n verify
     signOutConfirmTitle: 'Mag-sign out?',
     signOutConfirmBody:
-      'Buburahin ang mga offline na tala sa teleponong ito upang hindi makita ng susunod na account. Kung online ka, itutulak muna ang mga hindi pa nai-sync — kung hindi, mawawala ang mga ito.',
+      'Buburahin ang mga offline na tala sa teleponong ito upang hindi makita ng susunod na account. Ita-upload muna ang mga hindi pa nai-sync — kung may hindi maita-upload, tatanungin ka muna bago ito burahin.',
+    signOutSyncing: 'Nagsi-sync…',
+    signOutPendingTitle: 'May hindi pa nai-upload',
+    signOutPendingBody:
+      'May {{count}} talang hindi pa nakakarating sa server. Kapag nag-sign out ka, permanente itong mabubura. Kung kaya, kumonekta muna sa internet at mag-sync bago mag-sign out.',
+    signOutPendingBody_one:
+      'May {{count}} talang hindi pa nakakarating sa server. Kapag nag-sign out ka, permanente itong mabubura. Kung kaya, kumonekta muna sa internet at mag-sync bago mag-sign out.',
+    signOutPendingBody_other:
+      'May {{count}} talang hindi pa nakakarating sa server. Kapag nag-sign out ka, permanente itong mabubura. Kung kaya, kumonekta muna sa internet at mag-sync bago mag-sign out.',
+    staySignedIn: 'Manatiling naka-sign in',
+    signOutDiscard: 'Mag-sign out at burahin',
     languageSection: 'Wika',
     legalSection: 'Legal',
     viewTerms: 'Tingnan ang mga tuntunin at disclaimer',
@@ -195,7 +273,12 @@ export const tl: Translation = {
     createReferral: 'Gumawa ng referral',
     viewSpecimen: 'Specimen form',
     noShowChip: 'No-show',
-    resultLine: 'Resulta ({{date}}): {{result}}',
+    resultRecorded: 'Naitala ang resulta noong {{date}}',
+    resultPositive:
+      'POSITIBO ang naitalang resulta ng pasilidad. Siguraduhing bumalik ang pasyente sa TB-DOTS na pasilidad para magsimula ng gamutan.',
+    resultNegative:
+      'NEGATIBO ang naitalang resulta ng pasilidad. Ang pasilidad ang magsasabi ng mga susunod na hakbang.',
+    resultAskFacility: 'Para sa detalye, magtanong sa TB-DOTS na pasilidad.',
     // TODO i18n verify
     appt: {
       scheduled: 'Paparating',

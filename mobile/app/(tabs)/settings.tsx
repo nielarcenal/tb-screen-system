@@ -6,8 +6,8 @@
  * Assigned barangay: saved locally at once (works offline) and pushed to the
  * BHW's own users row on the next sync (users_update_self RLS policy).
  */
-import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { SetStateAction, useEffect, useState } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, HelperText, Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
@@ -23,7 +23,7 @@ import AddressCascade, {
   emptyAddress,
 } from '../../src/components/AddressCascade';
 import { cascadeForBarangay } from '../../src/db/psgcRepo';
-import { clearSyncableCache } from '../../src/db/database';
+import { confirmSignOut } from '../../src/lib/signOutFlow';
 import { triggerSync } from '../../src/sync/syncManager';
 import { palette } from '../../src/ui/tokens';
 
@@ -55,9 +55,11 @@ export default function SettingsScreen() {
   const assignedBarangayCode = useAppStore((s) => s.assignedBarangayCode);
   const assignedBarangayDirty = useAppStore((s) => s.assignedBarangayDirty);
   const setAssignedBarangay = useAppStore((s) => s.setAssignedBarangay);
-  const { userId, email, clearSession } = useSessionStore();
+  const { userId, email } = useSessionStore();
 
   const [address, setAddress] = useState<AddressSelection>(emptyAddress);
+  // True while the pre-sign-out sync runs, so the button can't be tapped twice.
+  const [signingOut, setSigningOut] = useState(false);
 
   // Pre-fill the cascade from the stored assigned barangay (if set).
   useEffect(() => {
@@ -65,38 +67,21 @@ export default function SettingsScreen() {
     void cascadeForBarangay(assignedBarangayCode).then((sel) => {
       if (sel) setAddress(sel);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // Depends on the code, NOT []: useAppStore is persisted over AsyncStorage and
+    // hydrates asynchronously, so on first render this is still null. With [] the
+    // effect bailed out and never re-ran, leaving the cascade blank forever.
+    // enroll.tsx has always had it right — this now matches.
+  }, [assignedBarangayCode]);
 
-  /**
-   * Sign out = end this BHW's session AND wipe the offline cache, so another
-   * account on the same phone can never read the previous account's patients
-   * (the server scopes each pull; the cache must not outlive the session).
-   * Best-effort final sync first so pending work isn't lost when online.
-   */
-  const confirmSignOut = () => {
-    Alert.alert(t('settings.signOutConfirmTitle'), t('settings.signOutConfirmBody'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('settings.signOut'),
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            try {
-              await triggerSync(); // push pending rows if we're online
-            } catch {
-              // offline / failed — proceed; the user was warned in the dialog
-            }
-            await supabase.auth.signOut(); // _layout's auth listener clears the store too
-            clearSession();
-            await clearSyncableCache();
-          })();
-        },
-      },
-    ]);
-  };
-
-  const onAddressChange = (next: AddressSelection) => {
+  const onAddressChange = (next: SetStateAction<AddressSelection>) => {
+    // The updater form comes from the cascade's own auto-select merging into
+    // the latest selection (it only ever fills region/province, never a
+    // barangay), so there is no new assignment to save and nothing to push.
+    // Only a plain object carries a BHW's choice.
+    if (typeof next === 'function') {
+      setAddress(next);
+      return;
+    }
     setAddress(next);
     if (next.barangayCode && next.barangayCode !== assignedBarangayCode) {
       setAssignedBarangay(next.barangayCode);
@@ -140,11 +125,19 @@ export default function SettingsScreen() {
                     {opt.native}
                   </Text>
                   <View style={{ flex: 1 }} />
-                  <MaterialCommunityIcons
-                    name="check-circle"
-                    size={22}
-                    color={selected ? palette.teal : 'transparent'}
-                  />
+                  {/* Rendered only when selected. It used to be drawn always
+                      with color 'transparent', but MaterialCommunityIcons does
+                      not honour that here — it falls back to black, so all
+                      three cards showed a check mark and every language looked
+                      selected. The spacer above right-aligns the mark, so
+                      leaving it out shifts nothing else. */}
+                  {selected ? (
+                    <MaterialCommunityIcons
+                      name="check-circle"
+                      size={22}
+                      color={palette.teal}
+                    />
+                  ) : null}
                 </Pressable>
               );
             })}
@@ -210,12 +203,14 @@ export default function SettingsScreen() {
                 mode="outlined"
                 icon="logout"
                 textColor={palette.red}
-                onPress={confirmSignOut}
+                onPress={() => confirmSignOut(t, setSigningOut)}
+                loading={signingOut}
+                disabled={signingOut}
                 contentStyle={{ height: 52 }}
                 labelStyle={{ fontWeight: '600' }}
                 style={{ marginTop: 12, borderRadius: 26, borderColor: palette.outline }}
               >
-                {t('settings.signOut')}
+                {signingOut ? t('settings.signOutSyncing') : t('settings.signOut')}
               </Button>
             </>
           ) : (
