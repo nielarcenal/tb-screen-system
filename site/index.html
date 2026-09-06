@@ -30,12 +30,7 @@
 <header class="site-head">
   <div class="wrap">
     <a class="brand" href="#top">
-      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#68b6bd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M12 3v8"></path>
-        <path d="M9.2 7.5h5.6"></path>
-        <path d="M12 11c-.6-1.6-2-2.6-3.6-2.6C6.5 8.4 5 10 5 12.2c0 2.6.5 5 1.5 7 .4.8 1.4 1.1 2.2.7l1.6-.9c1-.5 1.7-1.6 1.7-2.8V11z"></path>
-        <path d="M12 11c.6-1.6 2-2.6 3.6-2.6 1.9 0 3.4 1.6 3.4 3.8 0 2.6-.5 5-1.5 7-.4.8-1.4 1.1-2.2.7l-1.6-.9c-1-.5-1.7-1.6-1.7-2.8V11z"></path>
-      </svg>
+      <img class="brand-mark" src="assets/tb-screen-logo.png" alt="" width="36" height="36">
       <span class="brand-text">
         <span class="brand-name">TB&#8209;Screen</span>
         <span class="brand-sub">Health worker platform</span>
@@ -414,6 +409,20 @@
       <p class="band-lede">An undergraduate capstone, built against a real problem.</p>
     </div>
 
+    <!-- The formal study title, set as a citation rather than a headline: it is
+         the title of the research, not marketing copy for the app. -->
+    <div class="study">
+      <img class="study-mark" src="assets/tb-screen-logo.png" alt="TB-Screen logo" width="76" height="76">
+      <div>
+        <div class="study-label">Research title</div>
+        <h3 class="study-title">
+          TB&#8209;Screen BHW: Trilingual Mobile and Web&#8209;Based Referral System Linking
+          Barangay Health Workers and TB&#8209;DOTS Facilities for Tuberculosis
+          Pre&#8209;Screening and Follow&#8209;Up
+        </h3>
+      </div>
+    </div>
+
     <div class="about">
       <div>
         <!-- WHY-PARAGRAPH: replace with one or two sentences in the author's own
@@ -429,27 +438,19 @@
           and no prediction to over-trust.
         </p>
 
-        <div class="privacy">
-          <article>
-            <h3>Consent comes first</h3>
-            <p>The consent script is read to the patient in their own language before anything is recorded, and the toggle is never pre-ticked.</p>
-          </article>
-          <article>
-            <h3>A number only if it is wanted</h3>
-            <p>A mobile number is stored only alongside consent to reminders, enforced by the database itself. Declining never blocks enrolment.</p>
-          </article>
-          <article>
-            <h3>Nothing clinical leaves the system</h3>
-            <p>Reminder texts and printed referral slips carry no condition, no diagnosis and no result &mdash; only where to go and when.</p>
-          </article>
-        </div>
       </div>
 
       <aside class="facts">
-        <!-- AUTHOR-FACTS: name, programme, institution and adviser are the
+        <!-- AUTHOR-FACTS: programme, institution and adviser are still the
              author's to supply. See site/README.md. -->
+        <figure class="author">
+          <img src="assets/author.jpg" alt="Niel Ivan Ray Arcenal" width="112" height="112">
+          <figcaption>
+            <span class="author-name">Niel Ivan Ray Arcenal</span>
+            <span class="author-role">Researcher &amp; developer</span>
+          </figcaption>
+        </figure>
         <dl>
-          <dt>Author</dt><dd><em>[Your full name]</em></dd>
           <dt>Programme</dt><dd><em>[Degree programme]</em></dd>
           <dt>Institution</dt><dd><em>[University]</em></dd>
           <dt>Adviser</dt><dd><em>[Adviser]</em></dd>
@@ -472,6 +473,24 @@
         </p>
       </aside>
     </div>
+
+    <div class="privacy-section">
+      <h3 class="privacy-head">How patient information is handled</h3>
+      <div class="privacy">
+        <article>
+          <h3>Consent comes first</h3>
+          <p>The consent script is read to the patient in their own language before anything is recorded, and the toggle is never pre-ticked.</p>
+        </article>
+        <article>
+          <h3>A number only if it is wanted</h3>
+          <p>A mobile number is stored only alongside consent to reminders, enforced by the database itself. Declining never blocks enrolment.</p>
+        </article>
+        <article>
+          <h3>Nothing clinical leaves the system</h3>
+          <p>Reminder texts and printed referral slips carry no condition, no diagnosis and no result &mdash; only where to go and when.</p>
+        </article>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -480,7 +499,10 @@
 <footer class="site-foot">
   <div class="wrap">
     <div>
-      <div class="foot-brand">TB&#8209;Screen</div>
+      <div class="foot-brand">
+        <img src="assets/tb-screen-logo.png" alt="" width="26" height="26">
+        <span>TB&#8209;Screen</span>
+      </div>
       <p>A pre-screening and referral support tool. Not a diagnostic device. Diagnosis of tuberculosis happens at a TB&#8209;DOTS facility, through laboratory testing.</p>
     </div>
     <div class="foot-right">

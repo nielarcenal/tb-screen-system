@@ -14,7 +14,15 @@ site/
   index.html      the whole page — hero, how it works, limits, features, download, about
   styles.css      all styling, with the responsive breakpoints
   assets/         logo + favicons (copied from web/public/assets)
+                  author.jpg — the author's portrait, cropped square and
+                  downscaled to 720px (58 KB).
 ```
+
+The portrait was cropped from a 3840x2160 studio original that is deliberately
+**not** committed: it is 1.26 MB, it exists only to produce the 58 KB asset, and
+this page gets opened on mobile data in a barangay. The crop was
+`(976, 40, 2776, 1840)` scaled to 720x720 at quality 84 — repeat that if it ever
+needs redoing from a fresh original.
 
 ## Deploying
 
@@ -37,12 +45,21 @@ naming it, so `grep` finds them:
 | Marker | Where | What is needed |
 |---|---|---|
 | `APK-LINK` | `index.html`, download section | The real APK URL. Until it is set the button reads "Download link coming soon" and carries `aria-disabled="true"` — replace both. |
-| `AUTHOR-FACTS` | `index.html`, about section | Full name, degree programme, institution, adviser. Also appears once more in the footer as `[University]`. |
+| `AUTHOR-FACTS` | `index.html`, about section | Degree programme, institution, adviser. Also appears once more in the footer as `[University]`. Name, portrait and year are done. |
 | `WHY-PARAGRAPH` | `index.html`, about section | One or two sentences on why this problem, in the author's own words. |
 
 ```bash
 grep -n "APK-LINK\|AUTHOR-FACTS\|WHY-PARAGRAPH\|\[University\]" site/index.html
 ```
+
+## The sticky header and anchor offsets
+
+`scroll-padding-top` is re-stated at every breakpoint because the header grows
+as it wraps: 79px on desktop, 125px once the nav drops to its own row (≤980),
+162px once the CTA drops to a third (≤700). The values in the stylesheet are
+**measured**, not estimated — without them a nav link scrolls the target
+underneath the header, which is what happened on the first pass. If you change
+anything in the header, re-measure all three.
 
 ### About the APK link
 

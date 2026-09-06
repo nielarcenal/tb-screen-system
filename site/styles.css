@@ -56,9 +56,11 @@
 
 html {
   scroll-behavior: smooth;
-  /* The sticky header would otherwise cover the top of every anchored
-     section when a nav link is followed. */
-  scroll-padding-top: 84px;
+  /* The sticky header would otherwise cover the top of every anchored section
+     when a nav link is followed. The header grows as it wraps, so this is
+     re-stated at each breakpoint below; the values are MEASURED heights plus a
+     little air (79 / 125 / 162), not guesses. Change one, re-measure all. */
+  scroll-padding-top: 90px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -160,8 +162,17 @@ a:hover {
   text-decoration: none;
 }
 
-.brand svg {
+.brand svg,
+.brand-mark {
   flex: 0 0 auto;
+}
+
+/* The real app icon, not an abstract stroke. It is already a navy rounded
+   square, so it reads as an app mark on the navy bar without a plate. */
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
 }
 
 .brand-text {
@@ -898,9 +909,104 @@ a:hover {
   font-size: 13.5px;
 }
 
-/* privacy cards */
+/* ---------- research title ----------
+   Set as a citation, not a headline: it is the title of the study, so it wants
+   the weight of a formal reference rather than the page's display type. */
+.study {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--teal);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 40px;
+}
+
+.study-mark {
+  width: 76px;
+  height: 76px;
+  border-radius: 17px;
+  flex: 0 0 auto;
+}
+
+.study-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 7px;
+}
+
+.study-title {
+  font-size: clamp(16px, 1.7vw, 20px);
+  line-height: 1.45;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+  text-wrap: pretty;
+  max-width: 72ch;
+}
+
+/* ---------- author ---------- */
+.author {
+  margin: 0 0 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.author img {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  object-fit: cover;
+  /* The source is a studio portrait on a near-white ground, which would melt
+     into the card without an edge. */
+  border: 3px solid var(--paper);
+  box-shadow: 0 0 0 1px var(--line);
+  flex: 0 0 auto;
+}
+
+.author figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.author-name {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.author-role {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* privacy cards — a full-width row below the About columns, as in the design.
+   Nested inside the narrow text column they collapsed to two-and-an-orphan. */
+.privacy-section {
+  margin-top: 48px;
+  padding-top: 34px;
+  border-top: 1px solid var(--line);
+}
+
+.privacy-head {
+  font-size: 19px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
 .privacy {
-  margin-top: 44px;
+  margin-top: 0;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 20px;
@@ -944,6 +1050,16 @@ a:hover {
 .site-foot .foot-brand {
   font-weight: 600;
   color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 8px;
+}
+
+.site-foot .foot-brand img {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
 }
 
 .site-foot p {
@@ -968,6 +1084,12 @@ a:hover {
 @media (max-width: 980px) {
   :root {
     --gut: 44px;
+  }
+
+  /* Two-row header from here down — measured at 125px. Without this an anchor
+     jump lands 41px underneath it. */
+  html {
+    scroll-padding-top: 136px;
   }
 
   /* The nav drops to its own row here rather than at the phone breakpoint.
@@ -1029,9 +1151,10 @@ a:hover {
     font-size: 13px;
   }
 
-  /* The header is two rows on a phone, so the anchor offset grows with it. */
+  /* Narrower still and the "Get the app" button drops to a third row —
+     measured at 162px on a 430px viewport. */
   html {
-    scroll-padding-top: 124px;
+    scroll-padding-top: 174px;
   }
 
   .hero-lede {
@@ -1070,6 +1193,26 @@ a:hover {
   .site-foot .foot-right {
     margin-left: 0;
     text-align: left;
+  }
+
+  /* The study block and the author card both stack; the portrait shrinks so
+     the name still sits beside it rather than under it. */
+  .study {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .study-mark {
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+  }
+
+  .author img {
+    width: 88px;
+    height: 88px;
   }
 }
 
