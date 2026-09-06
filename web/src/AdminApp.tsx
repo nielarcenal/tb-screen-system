@@ -17,13 +17,14 @@ import AppShell, { ShellNavItem } from './components/AppShell';
 import LangToggle from './components/LangToggle';
 import LoginLayout from './components/LoginLayout';
 import AdminDashboard from './components/AdminDashboard';
+import BhwManagement from './components/BhwManagement';
 import CaptainManagement from './components/CaptainManagement';
 import FacilityManagement from './components/FacilityManagement';
 import StaffManagement from './components/StaffManagement';
 import PasswordField from './components/PasswordField';
 import ChangePasswordGate from './components/ChangePasswordGate';
 
-type Page = 'dashboard' | 'captains' | 'facilities' | 'staff';
+type Page = 'dashboard' | 'captains' | 'bhws' | 'facilities' | 'staff';
 
 export default function AdminApp() {
   const { t } = useTranslation();
@@ -186,6 +187,13 @@ export default function AdminApp() {
       onClick: () => setPage('captains'),
     },
     {
+      key: 'bhws',
+      icon: 'diversity_3',
+      label: t('nav.bhws'),
+      active: page === 'bhws',
+      onClick: () => setPage('bhws'),
+    },
+    {
       key: 'facilities',
       icon: 'local_hospital',
       label: t('facilities.title'),
@@ -208,7 +216,9 @@ export default function AdminApp() {
         ? t('facilities.title')
         : page === 'staff'
           ? t('nav.staff')
-          : t('nav.captains');
+          : page === 'bhws'
+            ? t('nav.bhws')
+            : t('nav.captains');
   const headerSub =
     page === 'dashboard'
       ? t('adminDash.headerSub')
@@ -216,7 +226,9 @@ export default function AdminApp() {
         ? t('shell.facilitiesSub')
         : page === 'staff'
           ? t('shell.staffSub')
-          : t('shell.captainsSub');
+          : page === 'bhws'
+            ? t('shell.bhwsSub')
+            : t('shell.captainsSub');
 
   return (
     <AppShell
@@ -237,6 +249,9 @@ export default function AdminApp() {
         <FacilityManagement />
       ) : page === 'staff' ? (
         <StaffManagement />
+      ) : page === 'bhws' ? (
+        // Same screen the captain gets, unscoped -- see BhwManagement's header.
+        <BhwManagement asAdmin />
       ) : (
         <CaptainManagement />
       )}

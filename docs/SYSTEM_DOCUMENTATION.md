@@ -174,7 +174,7 @@ Both apps implement a shared visual language from the project's hi-fi design can
 
 - **Proximity is approximate:** nearest-facility mapping is municipality-level road-corridor judgment, not geodesic; per-barangay overrides or coordinates would refine it.
 - **Translations pending native review** (`TODO i18n verify` markers).
-- **Free-text result vs. outcome:** BHWs still see the legacy free-text result notes on their device (a pre-existing feature), while the structured positive/negative outcome is facility-only — a documented tension to resolve with stakeholders.
+- **Free-text result vs. outcome (settled 2026-09-06):** BHWs see the structured positive/negative outcome; the facility's free-text `result` notes never reach a BHW device at all. D-05 blocked them at three layers — the sync pulls referrals by explicit column list rather than `*` (RLS cannot restrict columns, and a column GRANT cannot separate BHWs from TB-DOTS staff since both authenticate as `authenticated`), local migration v9 NULLs the column before dropping it so cached values are not left recoverable in freed pages, and no screen renders it. Showing the outcome is deliberate: a BHW's follow-up job is getting a positive patient back to the facility to start treatment, which they cannot prioritise without it. An earlier revision of this note described the situation exactly backwards.
 - `appointments` has no foreign key to `referrals` (the form shows the most recent scheduled appointment); flagged for a future migration.
 - Attribution of screenings to BHWs uses the enrolling BHW (screenings carry no creator column) — accurate for the normal workflow.
 - The portals are not yet publicly hosted (local/dev serving); the mobile app is installed via direct APK, not a store.

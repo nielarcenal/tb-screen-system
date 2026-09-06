@@ -1,5 +1,5 @@
 /**
- * Barangay-Captain view — BHW ACCOUNTS ONLY (v2 redesign): a persistent list
+ * BHW ACCOUNTS (v2 redesign): a persistent list
  * with search + status filter, and a right-hand slide-in DRAWER for create/edit.
  * Rows carry 30-day activity counts (bhw_activity() RPC, captain role required
  * server-side, 0014 adds name parts / coverage / email / joined date).
@@ -13,12 +13,29 @@
  * referrals on role in ('bhw','tb_dots'); the email here is the BHW's OWN account
  * email. All account WRITES go through the manage-bhw Edge Function (the auth
  * admin API needs the service role, which never reaches the browser).
+ *
+ * TWO CALLERS, ONE COMPONENT (0023). The captain's view is the default. Passing
+ * asAdmin renders the same screen for an admin, who is UNSCOPED: bhw_activity()
+ * returns every BHW, and every write carries target_role: 'bhw' so manage-bhw
+ * knows an admin means BHWs rather than captains.
+ *
+ * The differences an admin needs are all consequences of having no barangay of
+ * their own:
+ *   - Create must ASK for the barangay (AddressCascadeWeb, the same picker
+ *     CaptainManagement uses) instead of inheriting the caller's.
+ *   - The drawer subtitle cannot name "the" barangay, because the list spans
+ *     all of them.
+ *   - The handoff successor list must be narrowed to the departing BHW's own
+ *     barangay. That filter is applied for BOTH callers: it is a no-op for a
+ *     captain, whose rows all share one barangay, and writing it once avoids a
+ *     second code path that only the admin exercises.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
 import { BhwActivityRow } from '../lib/types';
+import AddressCascadeWeb from './AddressCascadeWeb';
 
 type Mode = 'closed' | 'new' | 'edit';
 
@@ -64,7 +81,7 @@ function partsOf(row: BhwActivityRow): { first: string; middle: string; last: st
   };
 }
 
-export default function BhwManagement() {
+export default function BhwManagement({ asAdmin = false }: { asAdmin?: boolean } = {}) {
   const { t, i18n } = useTranslation();
   const [rows, setRows] = useState<BhwActivityRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,6 +99,8 @@ export default function BhwManagement() {
   const [middle, setMiddle] = useState('');
   const [last, setLast] = useState('');
   const [purok, setPurok] = useState('');
+  /** Admin only: which barangay a new BHW joins. Captains inherit their own. */
+  const [formBrgy, setFormBrgy] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -104,7 +123,9 @@ export default function BhwManagement() {
 
   /** Call the manage-bhw Edge Function; returns the parsed body or throws. */
   const invoke = async (body: Record<string, unknown>): Promise<Record<string, unknown>> => {
-    const { data, error: err } = await supabase.functions.invoke('manage-bhw', { body });
+    // An admin's default target is captains, so BHW writes must say so.
+    const payload = asAdmin ? { ...body, target_role: 'bhw' } : body;
+    const { data, error: err } = await supabase.functions.invoke('manage-bhw', { body: payload });
     if (err) throw new Error(err.message);
     const parsed = (data ?? {}) as Record<string, unknown>;
     if (parsed.error) throw new Error(String(parsed.error));
@@ -112,14 +133,16 @@ export default function BhwManagement() {
   };
 
   const selected = mode === 'edit' && selId ? rows.find((r) => r.user_id === selId) ?? null : null;
-  // All the captain's BHWs share the captain's barangay; take it from any row.
-  const barangayName = rows.find((r) => r.barangay_name)?.barangay_name ?? '';
+  // All the captain's BHWs share the captain's barangay, so any row names it.
+  // An admin's rows span every barangay, so there is no single one to name.
+  const barangayName = asAdmin ? '' : rows.find((r) => r.barangay_name)?.barangay_name ?? '';
 
   const resetForm = () => {
     setFirst('');
     setMiddle('');
     setLast('');
     setPurok('');
+    setFormBrgy(null);
     setSaved(false);
     setError(null);
   };
@@ -136,6 +159,7 @@ export default function BhwManagement() {
     setMiddle(p.middle);
     setLast(p.last);
     setPurok(row.purok ?? '');
+    setFormBrgy(row.barangay_code ?? null);
     setSaved(false);
     setError(null);
     setSelId(row.user_id);
@@ -148,7 +172,13 @@ export default function BhwManagement() {
     setSaved(false);
   };
 
-  const valid = first.trim() !== '' && last.trim() !== '' && purok.trim() !== '';
+  const valid =
+    first.trim() !== '' &&
+    last.trim() !== '' &&
+    purok.trim() !== '' &&
+    // manage-bhw rejects an admin create with no barangay; block it here so the
+    // failure is a disabled button rather than a round trip and an error toast.
+    (!asAdmin || !!formBrgy);
 
   const createBhw = async () => {
     if (!valid) return;
@@ -161,6 +191,7 @@ export default function BhwManagement() {
         middle_name: middle,
         last_name: last,
         purok,
+        ...(asAdmin && formBrgy ? { barangay_code: formBrgy } : {}),
       });
       closeDrawer();
       setCreds({
@@ -447,6 +478,14 @@ export default function BhwManagement() {
                 </label>
               </div>
 
+              {asAdmin ? (
+                <div className="dfield">
+                  <span className="dfield-lbl">{t('bhw.barangayLabel')}</span>
+                  <AddressCascadeWeb value={formBrgy} onChange={setFormBrgy} />
+                  <span className="dfield-hint">{t('bhw.barangayHint')}</span>
+                </div>
+              ) : null}
+
               <label className="dfield">
                 <span className="dfield-lbl">{t('bhw.coverageLabel')}</span>
                 <input
@@ -502,7 +541,7 @@ export default function BhwManagement() {
                   <button className="secondary" disabled={busy} onClick={closeDrawer}>
                     {t('bhw.cancel')}
                   </button>
-                  <span className="req-note">{t('bhw.reqNote')}</span>
+                  <span className="req-note">{t(asAdmin ? 'bhw.reqNoteAdmin' : 'bhw.reqNote')}</span>
                 </div>
               ) : selected ? (
                 <>
@@ -641,7 +680,15 @@ export default function BhwManagement() {
                   <select value={reassignTo} onChange={(e) => setReassignTo(e.target.value)}>
                     <option value="">{t('bhw.reassignNone')}</option>
                     {rows
-                      .filter((r) => r.active && r.user_id !== handoff.user_id)
+                      .filter(
+                        (r) =>
+                          r.active &&
+                          r.user_id !== handoff.user_id &&
+                          // Patients may only move within the barangay they were
+                          // enrolled in. No-op for a captain; load-bearing for an
+                          // admin, whose list spans every barangay.
+                          r.barangay_code === handoff.barangay_code,
+                      )
                       .map((r) => (
                         <option key={r.user_id} value={r.user_id}>
                           {[r.full_name, r.purok].filter(Boolean).join(' · ')}

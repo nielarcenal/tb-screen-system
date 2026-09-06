@@ -33,6 +33,7 @@ export const tl: Translation = {
   },
   nav: {
     dashboard: 'Dashboard',
+    bhws: 'Pamamahala ng BHW',
     inbox: 'Inbox ng mga referral',
     hotspot: 'Mga hotspot ng barangay',
     bhw: 'Pamamahala ng BHW',
@@ -41,6 +42,7 @@ export const tl: Translation = {
   },
   shell: {
     facilityPortal: 'Portal ng Pasilidad',
+    bhwsSub: 'Pamahalaan ang mga BHW account sa lahat ng barangay',
     captainPortal: 'Portal ng Kapitan',
     dashboardSub: 'Aktibidad ngayong araw sa inyong pasilidad',
     referralsSub: 'Mga referral na nakatalaga sa inyong pasilidad',
@@ -75,6 +77,7 @@ export const tl: Translation = {
   },
   adminDash: {
     headerSub: 'Pangkalahatang tanaw ng programa',
+    deactivated: '{{count}} na-deactivate',
     summaryTitle: 'Pangkalahatang-tanaw ng programa',
     facilities: 'Mga pasilidad',
     facilitiesSub: 'Mga TB-DOTS center',
@@ -174,8 +177,9 @@ export const tl: Translation = {
   },
   bhw: {
     title: 'Mga BHW account',
-    privacyNote:
-      'Mga account at bilang ng aktibidad lamang ang nakikita ng mga kapitan. Walang pangalan ng pasyente, rekord, o resulta na lalabas saanman sa view na ito.',
+    barangayHint: 'Ang barangay na paglilingkuran ng BHW. Awtomatikong itinatakda ang pasilidad.',
+    barangayLabel: 'Barangay',
+    privacyNote: 'Ipinapakita lamang dito ang mga account at bilang ng aktibidad. Walang pangalan, rekord, o resulta ng pasyente na lumalabas dito.',
     addCta: 'Bagong BHW',
     colStatus: 'Status',
     active: 'Aktibo',
@@ -233,6 +237,7 @@ export const tl: Translation = {
     ctxReferrals: 'Mga referral',
     ctxJoined: 'Sumali',
     reqNote: 'Kailangan ang unang pangalan, apelyido, at saklaw na lugar.',
+    reqNoteAdmin: 'Kailangan ang first name, last name, barangay at coverage area.',
     hoWhat: 'Ano ang mangyayari',
     hoPoint1: 'Mawawala agad ang access sa app.',
     hoPoint2: 'Nananatili ang kasaysayan ng screening at referral at nasa pasilidad pa rin.',
