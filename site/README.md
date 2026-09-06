@@ -37,27 +37,15 @@ worker downloading the APK never lands on a sign-in form.
 The portal stays where it is at `tb-screen-system.vercel.app` and is untouched
 by this.
 
-## Still to fill in
+## Content
 
-One thing is still a placeholder in the markup. It is marked with an HTML comment
-naming it, so `grep` finds it:
+Everything on the page is real: no placeholders remain. Three facts are
+hand-kept beside the download button — version, size and date — and must be
+updated whenever a new APK ships (see below).
 
-| Marker | Where | What is needed |
-|---|---|---|
-| `WHY-PARAGRAPH` | `index.html`, about section | One or two sentences on why this problem, in the author's own words. |
-
-```bash
-grep -n "WHY-PARAGRAPH" site/index.html
-```
-
-## The sticky header and anchor offsets
-
-`scroll-padding-top` is re-stated at every breakpoint because the header grows
-as it wraps: 79px on desktop, 125px once the nav drops to its own row (≤980),
-162px once the CTA drops to a third (≤700). The values in the stylesheet are
-**measured**, not estimated — without them a nav link scrolls the target
-underneath the header, which is what happened on the first pass. If you change
-anything in the header, re-measure all three.
+The "why" paragraph in the About section is the author's own words. It is the
+only part of the page that says why the system exists rather than what it does.
+Leave it alone.
 
 ### The APK link
 
