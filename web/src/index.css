@@ -2134,7 +2134,19 @@ button.amber:hover { background: var(--amber-container); }
   gap: 8px;
   text-align: center;
 }
-.access-help .msym { font-size: 16px; color: var(--muted); flex: 0 0 auto; }
+/* One line, icon optically centred against it.
+
+   The note used to wrap to two lines and the lock then centred against the
+   whole block, sitting between them rather than beside the text. Keeping it to
+   one line is a COPY constraint, not a CSS one: the card is 384px and the old
+   sentence needed ~470px in English and ~650px in Tagalog, so no font size
+   could have fitted it. The string was shortened in all three bundles instead.
+
+   line-height: 1 on the icon collapses the Material Symbol's own leading, so
+   align-items: center lines the glyph up with the text rather than with the
+   taller line box around it. No nowrap: on a narrow phone the text SHOULD wrap
+   rather than overflow the card, and the shortened copy makes that rare. */
+.access-help .msym { font-size: 15px; line-height: 1; color: var(--muted); flex: 0 0 auto; }
 .access-help span { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
 
 @media (max-width: 880px) {

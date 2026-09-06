@@ -272,8 +272,7 @@ export const tl: Translation = {
     copyright: 'TB-Screen · Bukidnon TB-DOTS',
     signinTitle: 'Mag-sign in',
     signinSub: 'Maligayang pagbabalik. Ilagay ang inyong kredensyal upang magpatuloy.',
-    accessHelp:
-      'Ang access ay ibinibigay ng inyong administrator. Makipag-ugnayan sa kanila kung hindi kayo makapag-sign in.',
+    accessHelp: 'Kontakin ang administrator kung hindi maka-sign in.',
     noteStaff:
       'Tumatanggap ang TB-DOTS staff ng mga referral, nagtatala ng resulta ng laboratory, at sinusubaybayan ang pagdalo sa check-up.',
     noteCaptain:
