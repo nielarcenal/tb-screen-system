@@ -272,8 +272,7 @@ export const ceb: Translation = {
     copyright: 'TB-Screen · Bukidnon TB-DOTS',
     signinTitle: 'Pag-sign in',
     signinSub: 'Maayong pagbalik. Isulod ang imong kredensyal aron magpadayon.',
-    accessHelp:
-      'Ang access gihatag sa imong administrator. Kontaka sila kung dili ka maka-sign in.',
+    accessHelp: 'Kontaka ang administrator kung dili maka-sign in.',
     noteStaff:
       'Ang TB-DOTS staff modawat og mga referral, morekord sa resulta sa laboratoryo, ug mosubay sa pagtambong sa check-up.',
     noteCaptain:

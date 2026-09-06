@@ -9,23 +9,14 @@ import type { Translation } from './en';
 export const tl: Translation = {
   common: {
     appName: 'TB-Screen BHW',
-    accept: 'Nauunawaan ko at sumasang-ayon ako',
     back: 'Bumalik',
-    save: 'I-save',
-    close: 'Isara',
     cancel: 'Kanselahin',
     continue: 'Magpatuloy',
-    done: 'Tapos na',
     yes: 'Oo',
     no: 'Hindi',
     unsure: 'Hindi sigurado',
     outcomePositive: 'Positibo',
     outcomeNegative: 'Negatibo',
-  },
-  languages: {
-    en: 'Ingles',
-    tl: 'Tagalog',
-    ceb: 'Cebuano',
   },
   home: {
     title: 'TB-Screen BHW',
@@ -149,7 +140,6 @@ export const tl: Translation = {
     closed: 'Sarado',
   },
   welcome: {
-    title: 'Maligayang pagdating',
     disclaimerHeading: 'Hindi nagsusuri ng TB ang app na ito',
     disclaimerBody:
       'Sinusuportahan ng app na ito ang pre-screening at referral para sa tuberculosis (TB). HINDI nito dinidiyagnos ang TB at hindi masasabi kung may TB ang isang tao. Ang mga pasilidad ng TB-DOTS lamang ang makakapag-diyagnos ng TB sa pamamagitan ng laboratory testing. Tumutulong lamang ang app na ito na matukoy ang mga taong maaaring kailanganing i-refer para sa testing (presumptive TB).',
@@ -193,7 +183,6 @@ export const tl: Translation = {
     assignedSection: 'Aking nakatalagang barangay',
     assignedHint:
       'Ginagamit para paunang punan ang address kapag nag-e-enroll ng pasyente. Maaari mo pa ring baguhin ang address para sa bawat pasyente.',
-    assignedNotSet: 'Hindi pa naitatakda',
     assignedPendingPush:
       'Nai-save sa device na ito — maa-update ang iyong profile kapag online.',
   },
@@ -235,15 +224,12 @@ export const tl: Translation = {
     intro:
       'Awtomatikong bibigyan ng patient code (hal. PAT-XXXX-0001) sa pag-save. Ang detalye ng pasyente ay ibinabahagi lamang sa tumatanggap na TB-DOTS facility.',
     requiredHint: 'Kinakailangan ang mga field na may markang *.',
-    detailsSection: 'Detalye ng pasyente',
-    // TODO i18n verify
     fullNameLabel: 'Buong pangalan',
     firstNameLabel: 'Pangalan',
     middleNameLabel: 'Gitnang pangalan',
     lastNameLabel: 'Apelyido',
     birthdateLabel: 'Petsa ng kapanganakan',
     ageLabel: 'Edad',
-    ageError: 'Maglagay ng edad mula 0 hanggang 129.',
     sexLabel: 'Kasarian',
     addressSection: 'Address',
     addressHint:
@@ -256,7 +242,6 @@ export const tl: Translation = {
       'Kumpletuhin ang mga kinakailangang field: pahintulot, pangalan, petsa ng kapanganakan, kasarian, at barangay.',
   },
   patientDetail: {
-    infoSection: 'Impormasyon ng pasyente',
     ageSex: 'Edad at kasarian',
     smsLabel: 'SMS reminders',
     smsOptedIn: 'Oo — {{number}}',
@@ -327,9 +312,6 @@ export const tl: Translation = {
   },
   screening: {
     checklistHeading: 'DOH-NTP symptom checklist',
-    checklistIntro:
-      'Itanong sa pasyente ang bawat aytem. Ang checklist na ito lamang ang nagpapasya ng rekomendasyon para sa referral.',
-    progress: '{{answered}} sa {{total}} ang nasagutan',
     symptoms: {
       cough_2wks: 'Ubo nang 2 linggo o higit pa',
       weight_loss: 'Hindi maipaliwanag na pagbaba ng timbang',
@@ -344,7 +326,6 @@ export const tl: Translation = {
     pgisHeading: 'Tindi ng ubo ayon sa pasyente (PGI-S)',
     pgisIntro:
       'Hilingin sa pasyenteng sumagot sa sarili niyang salita — sariling sagot ito ng pasyente, hindi sa iyo. Karagdagang impormasyon lamang — hindi ito nakakaapekto sa rekomendasyon para sa referral.',
-    pgisClear: 'Burahin ang sagot',
     pgisOptions: {
       none: 'Wala',
       mild: 'Banayad',

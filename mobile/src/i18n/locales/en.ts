@@ -8,23 +8,14 @@
 export const en = {
   common: {
     appName: 'TB-Screen BHW',
-    accept: 'I understand and agree',
     back: 'Back',
-    save: 'Save',
-    close: 'Close',
     cancel: 'Cancel',
     continue: 'Continue',
-    done: 'Done',
     yes: 'Yes',
     no: 'No',
     unsure: 'Unsure',
     outcomePositive: 'Positive',
     outcomeNegative: 'Negative',
-  },
-  languages: {
-    en: 'English',
-    tl: 'Tagalog',
-    ceb: 'Cebuano',
   },
   home: {
     title: 'TB-Screen BHW',
@@ -138,7 +129,6 @@ export const en = {
     closed: 'Closed',
   },
   welcome: {
-    title: 'Welcome',
     disclaimerHeading: 'This app does not diagnose TB',
     disclaimerBody:
       'This app supports pre-screening and referral for tuberculosis (TB). It does NOT diagnose TB and cannot tell whether a person has TB. Only TB-DOTS facilities can diagnose TB through laboratory testing. This app only helps flag people who may need to be referred for testing (presumptive TB).',
@@ -180,7 +170,6 @@ export const en = {
     assignedSection: 'My assigned barangay',
     assignedHint:
       'Used to pre-fill the address when enrolling a patient. You can still change the address for each patient.',
-    assignedNotSet: 'Not set yet',
     assignedPendingPush: 'Saved on this device — your profile will update when online.',
   },
   address: {
@@ -221,14 +210,12 @@ export const en = {
     intro:
       'A patient code (e.g. PAT-XXXX-0001) is assigned automatically on save. Patient details are shared only with the receiving TB-DOTS facility.',
     requiredHint: 'Fields marked * are required.',
-    detailsSection: 'Patient details',
     fullNameLabel: 'Full name',
     firstNameLabel: 'First name',
     middleNameLabel: 'Middle name',
     lastNameLabel: 'Last name',
     birthdateLabel: 'Birthdate',
     ageLabel: 'Age',
-    ageError: 'Enter an age between 0 and 129.',
     sexLabel: 'Sex',
     addressSection: 'Address',
     addressHint:
@@ -240,7 +227,6 @@ export const en = {
     missingFields: 'Complete the required fields: consent, name, birthdate, sex, and barangay.',
   },
   patientDetail: {
-    infoSection: 'Patient information',
     ageSex: 'Age and sex',
     smsLabel: 'SMS reminders',
     smsOptedIn: 'Yes — {{number}}',
@@ -313,9 +299,6 @@ export const en = {
   },
   screening: {
     checklistHeading: 'DOH-NTP symptom checklist',
-    checklistIntro:
-      'Ask the patient each item. This checklist alone decides the referral recommendation.',
-    progress: '{{answered}} of {{total}} answered',
     symptoms: {
       cough_2wks: 'Cough for 2 weeks or more',
       weight_loss: 'Unexplained weight loss',
@@ -330,7 +313,6 @@ export const en = {
     pgisHeading: 'Patient-rated cough severity (PGI-S)',
     pgisIntro:
       'Ask the patient to answer in their own words — this is the patient’s own rating, not yours. Supplementary information only — it never affects the referral recommendation.',
-    pgisClear: 'Clear answer',
     pgisOptions: {
       none: 'None',
       mild: 'Mild',

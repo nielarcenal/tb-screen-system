@@ -9,23 +9,14 @@ import type { Translation } from './en';
 export const ceb: Translation = {
   common: {
     appName: 'TB-Screen BHW',
-    accept: 'Nakasabot ko ug miuyon ko',
     back: 'Balik',
-    save: 'I-save',
-    close: 'Sirad-i',
     cancel: 'Kanselahon',
     continue: 'Padayon',
-    done: 'Humana',
     yes: 'Oo',
     no: 'Dili',
     unsure: 'Dili sigurado',
     outcomePositive: 'Positibo',
     outcomeNegative: 'Negatibo',
-  },
-  languages: {
-    en: 'Iningles',
-    tl: 'Tagalog',
-    ceb: 'Binisaya',
   },
   home: {
     title: 'TB-Screen BHW',
@@ -149,7 +140,6 @@ export const ceb: Translation = {
     closed: 'Sirado',
   },
   welcome: {
-    title: 'Maayong pag-abot',
     disclaimerHeading: 'Kini nga app dili mag-diagnose sa TB',
     disclaimerBody:
       'Kini nga app nagsuporta sa pre-screening ug referral para sa tuberculosis (TB). DILI kini mag-diagnose sa TB ug dili masulti kung ang usa ka tawo adunay TB. Ang mga pasilidad sa TB-DOTS lamang ang makahimo pag-diagnose sa TB pinaagi sa laboratory testing. Kini nga app nagtabang lamang sa pag-ila sa mga tawo nga kinahanglan basin i-refer para sa testing (presumptive TB).',
@@ -193,7 +183,6 @@ export const ceb: Translation = {
     assignedSection: 'Akong gitahasang barangay',
     assignedHint:
       'Gigamit aron daan nga pun-on ang address kung mag-enroll og pasyente. Mahimo gihapon nimong usbon ang address sa matag pasyente.',
-    assignedNotSet: 'Wala pa matakda',
     assignedPendingPush:
       'Na-save niini nga device — ma-update ang imong profile kung online na.',
   },
@@ -235,15 +224,12 @@ export const ceb: Translation = {
     intro:
       'Awtomatikong hatagan og patient code (pananglitan PAT-XXXX-0001) inig-save. Ang detalye sa pasyente ipaambit lamang sa nagadawat nga TB-DOTS facility.',
     requiredHint: 'Gikinahanglan ang mga field nga adunay markang *.',
-    detailsSection: 'Detalye sa pasyente',
-    // TODO i18n verify
     fullNameLabel: 'Tibuok nga ngalan',
     firstNameLabel: 'Ngalan',
     middleNameLabel: 'Tunga nga ngalan',
     lastNameLabel: 'Apelyido',
     birthdateLabel: 'Petsa sa pagkatawo',
     ageLabel: 'Edad',
-    ageError: 'Pagbutang og edad gikan 0 hangtod 129.',
     sexLabel: 'Sekso',
     addressSection: 'Address',
     addressHint:
@@ -256,7 +242,6 @@ export const ceb: Translation = {
       'Kompletoha ang gikinahanglang mga field: pagtugot, ngalan, petsa sa pagkatawo, sekso, ug barangay.',
   },
   patientDetail: {
-    infoSection: 'Impormasyon sa pasyente',
     ageSex: 'Edad ug sekso',
     smsLabel: 'SMS reminders',
     smsOptedIn: 'Oo — {{number}}',
@@ -327,9 +312,6 @@ export const ceb: Translation = {
   },
   screening: {
     checklistHeading: 'DOH-NTP symptom checklist',
-    checklistIntro:
-      'Ipangutana sa pasyente ang matag aytem. Kining checklist ra ang modesisyon sa rekomendasyon alang sa referral.',
-    progress: '{{answered}} sa {{total}} ang natubag',
     symptoms: {
       cough_2wks: 'Ubo nga 2 ka semana o labaw pa',
       weight_loss: 'Dili matin-aw nga pagkunhod sa timbang',
@@ -344,7 +326,6 @@ export const ceb: Translation = {
     pgisHeading: 'Kabug-at sa ubo sumala sa pasyente (PGI-S)',
     pgisIntro:
       'Hangyoa ang pasyente nga motubag sa iyang kaugalingong pulong — kaugalingong tubag kini sa pasyente, dili imoha. Dugang impormasyon lamang — dili gyud kini makaapekto sa rekomendasyon alang sa referral.',
-    pgisClear: 'Papasa ang tubag',
     pgisOptions: {
       none: 'Wala',
       mild: 'Gaan',

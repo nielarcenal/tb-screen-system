@@ -273,8 +273,7 @@ export const en = {
     copyright: 'TB-Screen · Bukidnon TB-DOTS',
     signinTitle: 'Sign in',
     signinSub: 'Welcome back. Enter your credentials to continue.',
-    accessHelp:
-      'Access is provisioned by your administrator. Contact them if you can’t sign in.',
+    accessHelp: 'Contact your administrator if you can’t sign in.',
     noteStaff:
       'TB-DOTS staff receive referrals, record laboratory results, and track check-up attendance.',
     noteCaptain:
