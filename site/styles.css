@@ -1,0 +1,1109 @@
+/*
+ * TB-Screen project website.
+ *
+ * Built from the approved design canvas (7 artboards, "TB-Screen Project Site").
+ * The canvas expresses everything as inline styles because that is how a design
+ * canvas works; a real page needs a stylesheet with breakpoints, so the visual
+ * decisions are transcribed here and the markup stays semantic.
+ *
+ * PALETTE is the same one both apps ship (mobile/src/ui/tokens.ts, web/src/index.css):
+ * deep teal primary, seafoam accent, navy for the dark bands, warm off-white ground.
+ * Kept literal rather than imported — this page has no build step and shares no
+ * bundle with the portal.
+ *
+ * POSITIONING (§1): this is a public page about a pre-screening tool, so the
+ * "does not diagnose" section is not a footnote — it is a full band, and the
+ * claim is repeated in the hero and the footer. Nothing on this page may imply
+ * diagnosis, detection, a probability, or a score.
+ */
+
+/* ---------- tokens ---------- */
+:root {
+  --navy: #0b2e33;
+  --navy-deep: #06282c;
+  --navy-accent: #68b6bd;
+  --on-navy: #c3dde0;
+
+  --teal: #028090;
+  --teal-dark: #016575;
+  --teal-deep: #014b57;
+  --teal-container: #d9eeef;
+  --seafoam: #00a896;
+
+  --bg: #f7f5f1;
+  --paper: #ffffff;
+  --subtle: #f3f0ea;
+  --line: #e3ded6;
+
+  --ink: #20302e;
+  --ink-mid: #4a5754;
+  --ink-soft: #5a6b68;
+  --muted: #666f6a;
+
+  --amber-container: #f7ecd8;
+  --amber-ink: #6f4c00;
+
+  --gut: 80px; /* page gutter, collapsed at the breakpoints below */
+  --maxw: 1200px;
+}
+
+/* ---------- reset ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* The sticky header would otherwise cover the top of every anchored
+     section when a nav link is followed. */
+  scroll-padding-top: 84px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+figure {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: var(--teal-deep);
+}
+
+a:hover {
+  color: var(--teal-dark);
+}
+
+/* Keyboard focus must stay visible on both the light ground and the navy
+   bands, so the ring is drawn in the accent that clears 3:1 on each. */
+:focus-visible {
+  outline: 3px solid var(--seafoam);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 var(--gut);
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+}
+.skip:focus {
+  left: 16px;
+  top: 16px;
+  z-index: 100;
+  background: var(--paper);
+  color: var(--teal-deep);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* ---------- header ---------- */
+.site-head {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--navy);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.site-head .wrap {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.brand svg {
+  flex: 0 0 auto;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.brand-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.brand-sub {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--navy-accent);
+}
+
+.site-nav {
+  display: flex;
+  gap: 26px;
+  margin-left: auto;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.site-nav a {
+  font-size: 13.5px;
+  color: var(--on-navy);
+  text-decoration: none;
+}
+
+.site-nav a:hover {
+  color: #fff;
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 14px 26px;
+  font-size: 15px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.btn-sm {
+  padding: 9px 18px;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background: var(--seafoam);
+  color: var(--navy-deep);
+}
+.btn-primary:hover {
+  background: #00bda8;
+  color: var(--navy-deep);
+}
+
+.btn-teal {
+  background: var(--teal);
+  color: #fff;
+}
+.btn-teal:hover {
+  background: var(--teal-dark);
+  color: #fff;
+}
+
+.btn-ghost {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+.btn-ghost:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-outline {
+  color: var(--teal-deep);
+  border-color: var(--line);
+  background: var(--paper);
+}
+.btn-outline:hover {
+  background: var(--subtle);
+}
+
+/* A download button with no URL yet. Marked disabled for assistive tech
+   rather than merely looking dead. */
+.btn[aria-disabled='true'] {
+  background: var(--line);
+  color: var(--muted);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ---------- hero ---------- */
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--navy);
+  color: #fff;
+}
+
+.hero::before,
+.hero::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.hero::before {
+  top: -180px;
+  right: -140px;
+  width: 620px;
+  height: 620px;
+  background: radial-gradient(circle, rgba(0, 168, 150, 0.22) 0%, rgba(11, 46, 51, 0) 68%);
+}
+
+.hero::after {
+  bottom: -260px;
+  left: -120px;
+  width: 560px;
+  height: 560px;
+  background: radial-gradient(circle, rgba(2, 128, 144, 0.2) 0%, rgba(11, 46, 51, 0) 70%);
+}
+
+.hero .wrap {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 64px;
+  padding-top: 76px;
+  padding-bottom: 76px;
+  align-items: center;
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 620px;
+}
+
+.eyebrow {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--navy-accent);
+}
+
+.hero h1 {
+  font-size: clamp(32px, 4.4vw, 50px);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.hero-lede {
+  font-size: 17.5px;
+  line-height: 1.62;
+  color: var(--on-navy);
+  max-width: 56ch;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+/* The positioning rule sits in the hero, not buried in a footer. */
+.hero-note {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 10px;
+  padding: 16px 18px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  max-width: 58ch;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--on-navy);
+}
+
+.hero-note svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.hero-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 26px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.hero-card h2 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--navy-accent);
+}
+
+.hero-stats {
+  display: grid;
+  gap: 16px;
+}
+
+.hero-stat .k {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+}
+
+.hero-stat .v {
+  font-size: 13px;
+  color: var(--on-navy);
+  line-height: 1.5;
+}
+
+/* ---------- generic band ---------- */
+.band {
+  padding: 84px 0;
+}
+
+.band-tint {
+  background: var(--subtle);
+}
+
+.band-navy {
+  background: var(--navy);
+  color: #fff;
+}
+
+.band-head {
+  max-width: 62ch;
+  margin-bottom: 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.band h2 {
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.band-navy h2 {
+  color: #fff;
+}
+
+.band-lede {
+  font-size: 16.5px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+
+.band-navy .band-lede {
+  color: var(--on-navy);
+}
+
+/* ---------- steps ---------- */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.step {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.step-n {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+.step h3 {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.step p {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.step-where {
+  margin-top: auto;
+  padding-top: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- the referral rule ---------- */
+.rule {
+  margin-top: 44px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 30px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 30px;
+  align-items: start;
+}
+
+.rule h3 {
+  font-size: 19px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.rule p {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+
+.rule-box {
+  background: var(--teal-container);
+  border-radius: 12px;
+  padding: 20px 22px;
+}
+
+.rule-box .lbl {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--teal-deep);
+  margin-bottom: 10px;
+}
+
+.rule-list li {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--teal-deep);
+  padding: 5px 0 5px 22px;
+  position: relative;
+}
+
+.rule-list li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 13px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--teal);
+}
+
+.rule-or {
+  margin: 14px 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--teal-dark);
+}
+
+.rule-and {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--teal-deep);
+}
+
+/* ---------- does / never (two columns) ---------- */
+.twocol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.panel {
+  border-radius: 16px;
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.panel h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #fff;
+}
+
+.panel li {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  padding: 9px 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--on-navy);
+}
+
+.panel li svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.verdict {
+  margin-top: 30px;
+  padding: 22px 26px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: #fff;
+  max-width: 78ch;
+}
+
+.verdict strong {
+  color: var(--seafoam);
+}
+
+/* ---------- features ---------- */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 20px;
+}
+
+.feature {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.feature .ico {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--teal-container);
+  color: var(--teal-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature h3 {
+  font-size: 16.5px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.feature p {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+/* who-uses-what strip */
+.pieces {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+}
+
+.piece {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 20px;
+  background: var(--paper);
+}
+
+.piece .who {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+.piece .what {
+  font-size: 15.5px;
+  font-weight: 600;
+  margin: 4px 0 6px;
+}
+
+.piece p {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+/* ---------- download ---------- */
+.dl {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 40px;
+  align-items: start;
+}
+
+.dl-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.dl-app {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.dl-app img {
+  width: 56px;
+  height: 56px;
+  border-radius: 13px;
+  flex: 0 0 auto;
+}
+
+.dl-app .n {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.dl-app .p {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.dl-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 16px 0;
+}
+
+.dl-meta div {
+  min-width: 0;
+}
+
+.dl-meta .k {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.dl-meta .v {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.dl-note {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--amber-container);
+  color: var(--amber-ink);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.dl-note svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.dl-steps {
+  counter-reset: dlstep;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.dl-steps li {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.dl-steps li::before {
+  counter-increment: dlstep;
+  content: counter(dlstep);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dl-steps h3 {
+  font-size: 15.5px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.dl-steps p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.dl-help {
+  margin-top: 26px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+/* ---------- about ---------- */
+.about {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 44px;
+  align-items: start;
+}
+
+.about p + p {
+  margin-top: 16px;
+}
+
+.about p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+.facts {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px 26px;
+}
+
+.facts dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 10px 18px;
+}
+
+.facts dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.facts dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.stack {
+  margin-top: 20px;
+}
+
+.stack h3 {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.stack dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 8px 18px;
+}
+
+.stack dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.stack dd {
+  margin: 0;
+  font-size: 13.5px;
+}
+
+/* privacy cards */
+.privacy {
+  margin-top: 44px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.privacy article {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--teal);
+  border-radius: 12px;
+  padding: 20px 22px;
+}
+
+.privacy h3 {
+  font-size: 15.5px;
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+
+.privacy p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+/* ---------- footer ---------- */
+.site-foot {
+  background: var(--navy);
+  color: var(--on-navy);
+  padding: 40px 0;
+  font-size: 13.5px;
+}
+
+.site-foot .wrap {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.site-foot .foot-brand {
+  font-weight: 600;
+  color: #fff;
+}
+
+.site-foot p {
+  max-width: 62ch;
+  line-height: 1.6;
+}
+
+.site-foot .foot-right {
+  margin-left: auto;
+  text-align: right;
+}
+
+.site-foot a {
+  color: var(--navy-accent);
+}
+
+/* ---------- responsive ----------
+   Three steps down, matching where the design actually breaks rather than at
+   round numbers: the two-column hero and download blocks stack first, then the
+   gutters collapse, then the nav wraps under the brand. */
+
+@media (max-width: 980px) {
+  :root {
+    --gut: 44px;
+  }
+
+  /* The nav drops to its own row here rather than at the phone breakpoint.
+     Between 700 and 980 it was still being pushed right by margin-left:auto
+     while the brand's second line wrapped underneath it, which read as two
+     misaligned blocks rather than one bar. */
+  .site-head .wrap {
+    flex-wrap: wrap;
+    gap: 10px 18px;
+  }
+
+  .site-nav {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .brand-sub {
+    white-space: nowrap;
+  }
+
+  .hero .wrap,
+  .dl,
+  .about,
+  .rule {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 34px;
+  }
+
+  .hero .wrap {
+    padding-top: 56px;
+    padding-bottom: 56px;
+  }
+
+  .band {
+    padding: 60px 0;
+  }
+
+  .hero-card {
+    max-width: 620px;
+  }
+}
+
+@media (max-width: 700px) {
+  :root {
+    --gut: 20px;
+  }
+
+  body {
+    font-size: 15.5px;
+  }
+
+  .site-head .wrap {
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  .site-nav {
+    gap: 16px;
+    font-size: 13px;
+  }
+
+  /* The header is two rows on a phone, so the anchor offset grows with it. */
+  html {
+    scroll-padding-top: 124px;
+  }
+
+  .hero-lede {
+    font-size: 16px;
+  }
+
+  .btn {
+    padding: 13px 20px;
+    font-size: 14.5px;
+  }
+
+  /* A phone is where a BHW actually installs this, so the download button
+     goes full width and stays reachable rather than sitting in a row. */
+  .dl-card .btn,
+  .hero-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .dl-meta {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .facts dl,
+  .stack dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px 0;
+  }
+
+  .facts dd,
+  .stack dd {
+    margin-bottom: 10px;
+  }
+
+  .site-foot .foot-right {
+    margin-left: 0;
+    text-align: left;
+  }
+}
+
+@media (max-width: 380px) {
+  .dl-app img {
+    width: 46px;
+    height: 46px;
+  }
+}
+
+/* ---------- print ----------
+   The download page gets printed and handed out; the nav and decorative
+   gradients are noise on paper. */
+@media print {
+  .site-head,
+  .hero-actions,
+  .site-nav {
+    display: none;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .band,
+  .hero {
+    padding: 16px 0;
+    background: #fff;
+    color: #000;
+  }
+
+  .hero::before,
+  .hero::after {
+    display: none;
+  }
+}
