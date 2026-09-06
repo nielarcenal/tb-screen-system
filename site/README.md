@@ -39,12 +39,11 @@ by this.
 
 ## Still to fill in
 
-Three things are placeholders in the markup. Each is marked with an HTML comment
+Two things are placeholders in the markup. Each is marked with an HTML comment
 naming it, so `grep` finds them:
 
 | Marker | Where | What is needed |
 |---|---|---|
-| `APK-LINK` | `index.html`, download section | The real APK URL. Until it is set the button reads "Download link coming soon" and carries `aria-disabled="true"` — replace both. |
 | `AUTHOR-FACTS` | `index.html`, about section | Degree programme, institution, adviser. Also appears once more in the footer as `[University]`. Name, portrait and year are done. |
 | `WHY-PARAGRAPH` | `index.html`, about section | One or two sentences on why this problem, in the author's own words. |
 
@@ -61,18 +60,26 @@ as it wraps: 79px on desktop, 125px once the nav drops to its own row (≤980),
 underneath the header, which is what happened on the first pass. If you change
 anything in the header, re-measure all three.
 
-### About the APK link
+### The APK link
 
-The repository is **private**, and a GitHub Release asset on a private repo is
-not publicly downloadable — the URL demands a login, which is useless for a BHW
-standing in a barangay. So the release route needs the repository to be public
-first. Nothing in the repo or its history blocks that: no `.env` is tracked, the
-chat transcripts are gitignored, and a history sweep for a real Supabase key
-finds nothing. It is still a decision about publishing a capstone, not a
-technical one.
+The APK is a **GitHub release asset**, which needs the repository to be public —
+a release asset on a private repo demands a login, which is useless for a BHW
+standing in a barangay. The repository was made public on 2026-09-06 after an
+audit confirmed nothing sensitive was ever committed: no `.env`, no chat
+transcripts, no token literals in any blob on any branch, and neither
+`supabase/.temp/` (cron secret) nor `supabase/reset_fresh_accounts.sql`
+(test-account password) has ever been tracked — both are gitignored, and must
+stay that way.
 
-The alternative is any host that gives a direct link — Google Drive works, at
-the cost of an interstitial warning page on a 97 MB file.
+Current asset:
+
+```
+https://github.com/nielarcenal/tb-screen-system/releases/download/v1.1.0/app-release.apk
+```
+
+Shipping a new APK means: cut a release with the new tag, then update the URL
+in `index.html` **and** the three facts beside it (version, size, date). They
+are hand-kept — there is no build step to derive them.
 
 ## The copy is not decoration
 
