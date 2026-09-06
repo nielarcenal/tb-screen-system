@@ -39,16 +39,15 @@ by this.
 
 ## Still to fill in
 
-Two things are placeholders in the markup. Each is marked with an HTML comment
-naming it, so `grep` finds them:
+One thing is still a placeholder in the markup. It is marked with an HTML comment
+naming it, so `grep` finds it:
 
 | Marker | Where | What is needed |
 |---|---|---|
-| `AUTHOR-FACTS` | `index.html`, about section | Degree programme, institution, adviser. Also appears once more in the footer as `[University]`. Name, portrait and year are done. |
 | `WHY-PARAGRAPH` | `index.html`, about section | One or two sentences on why this problem, in the author's own words. |
 
 ```bash
-grep -n "APK-LINK\|AUTHOR-FACTS\|WHY-PARAGRAPH\|\[University\]" site/index.html
+grep -n "WHY-PARAGRAPH" site/index.html
 ```
 
 ## The sticky header and anchor offsets
