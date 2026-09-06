@@ -64,3 +64,23 @@ yarn-error.*
 .DS_Store
 Thumbs.db
 screenshots/
+
+# ---------------------------------------------------------------------------
+# Deliberately untracked working material. These were merely UNTRACKED until
+# the repository was made public on 2026-09-06; untracked is not a boundary —
+# one `git add -A` stages the lot. Ignoring them makes that accident impossible.
+#
+#   .claude/          session hand-off notes. Twelve of them quote the live
+#                     test-account password in plain text, next to the four
+#                     real account emails — including the admin. Publishing
+#                     these would hand out working credentials to a live
+#                     system holding real patient records.
+#   docs/v2 design/   design-canvas working files, kept out of the repo by
+#                     standing instruction. `git add -A docs` swept these in
+#                     once already and had to be unstaged.
+#   Images/           scratch folder for source images. site/assets holds the
+#                     cropped, web-sized copies that actually ship.
+# ---------------------------------------------------------------------------
+.claude/
+docs/v2 design/
+Images/
