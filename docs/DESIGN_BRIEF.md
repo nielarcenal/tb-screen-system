@@ -1,5 +1,12 @@
 # TB-Screen BHW — UI Redesign Brief
 
+> **Superseded in one respect (2026-09-06).** Everywhere this brief says *specimen form*
+> or describes a specimen travelling from the BHW to TB-DOTS, it is wrong. Sputum is
+> collected only at the TB-DOTS facility; the printed sheet is an optional **referral
+> document**, informational only, and the laboratory sample id belongs to the facility.
+> The brief is left as written because it is the historical record of what was specified;
+> `docs/TBScreen_Referral_Model_Correction_and_Vitals_Addendum.md` is what was built.
+
 Paste this whole document to your designer (human or AI). It contains everything
 needed to redesign the two frontends without breaking the system's medical,
 legal, and technical constraints. Attach screenshots of the current UI if you

@@ -5,8 +5,14 @@
  *
  * Creates, fully offline, in the local cache (both queue for push):
  *  - an appointment (status 'scheduled') for the chosen check-up date, and
- *  - the referral (status 'submitted') with a generated specimen id,
- * then moves to the printable specimen form.
+ *  - the referral (status 'submitted'),
+ * then moves to the referral document, which is OPTIONAL to print.
+ *
+ * No sample id is generated here any more. Sputum is collected only at the
+ * TB-DOTS facility (migration 0024), so there is nothing for a BHW to name —
+ * referrals.lab_sample_id is filled in by facility staff when they take the
+ * sample. Creating and syncing the referral IS the hand-off; the printed sheet
+ * on the next screen is a courtesy copy for the patient, not a required step.
  */
 import { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
@@ -32,7 +38,6 @@ import { getScreening, LocalScreeningRow } from '../../src/db/screeningsRepo';
 import { FacilityRow, LocalPatientRow } from '../../src/db/types';
 import { toDateOnly } from '../../src/lib/dates';
 import { uuid } from '../../src/lib/uuid';
-import { useAppStore } from '../../src/store/appStore';
 import { triggerSync } from '../../src/sync/syncManager';
 import { palette } from '../../src/ui/tokens';
 
@@ -40,7 +45,6 @@ export default function CreateReferralScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const { screeningId } = useLocalSearchParams<{ screeningId: string }>();
-  const allocateSpecimenId = useAppStore((s) => s.allocateSpecimenId);
 
   const [screening, setScreening] = useState<LocalScreeningRow | null>(null);
   const [patient, setPatient] = useState<LocalPatientRow | null>(null);
@@ -96,14 +100,13 @@ export default function CreateReferralScreen() {
         patient_id: patient.patient_id,
         screening_id: screening.screening_id,
         facility_id: facilityId,
-        specimen_id: allocateSpecimenId(),
         status: 'submitted',
         result_outcome: null, // only a TB-DOTS facility ever records this
         result_date: null,
         presented: null,
       });
       void triggerSync(); // best-effort; rows stay queued if offline
-      router.replace(`/specimen/${referralId}`);
+      router.replace(`/referral-document/${referralId}`);
     } finally {
       setSaving(false);
     }
@@ -139,9 +142,9 @@ export default function CreateReferralScreen() {
               <Button
                 mode="contained"
                 icon="file-document"
-                onPress={() => router.replace(`/specimen/${existingReferralId}`)}
+                onPress={() => router.replace(`/referral-document/${existingReferralId}`)}
               >
-                {t('patientDetail.viewSpecimen')}
+                {t('patientDetail.viewReferralDoc')}
               </Button>
             ) : null}
           </>

@@ -35,6 +35,7 @@ export const tl: Translation = {
     dashboard: 'Dashboard',
     bhws: 'Pamamahala ng BHW',
     inbox: 'Inbox ng mga referral',
+    register: 'Magrehistro ng pasyente',
     hotspot: 'Mga hotspot ng barangay',
     bhw: 'Pamamahala ng BHW',
     captains: 'Pamamahala ng kapitan',
@@ -46,6 +47,7 @@ export const tl: Translation = {
     captainPortal: 'Portal ng Kapitan',
     dashboardSub: 'Aktibidad ngayong araw sa inyong pasilidad',
     referralsSub: 'Mga referral na nakatalaga sa inyong pasilidad',
+    registerSub: 'Mga walk-in at kusang lumapit na pasyente',
     hotspotsSub: 'Mga presumptive na kaso ayon sa barangay',
     bhwSub: 'Mga health worker sa inyong barangay',
     adminPortal: 'Portal ng Developer',
@@ -337,6 +339,13 @@ export const tl: Translation = {
     female: 'Babae',
   },
   detail: {
+    registeredHere: 'Nirehistro sa pasilidad na ito ni {{name}}',
+    sampleIdLabel: 'ID ng sample sa laboratoryo',
+    sampleIdPlaceholder: 'Ayon sa nakasulat sa lalagyan ng plema',
+    sampleIdSave: 'I-save ang ID ng sample',
+    sampleIdHint:
+      'Dito ibinibigay, kapag kinuha na ang plema. Hindi ito binubuo ng app ng BHW.',
+    sampleIdPending: 'Magagamit kapag dumating na ang pasyente at natanggap na ang referral.',
     screeningSummary: 'Buod ng screening',
     actionsSection: 'Mga aksyon',
     patientReportedTag: 'sagot ng pasyente',
@@ -410,6 +419,7 @@ export const tl: Translation = {
     province: 'Probinsya',
     city: 'Lungsod / Munisipalidad',
     barangay: 'Barangay',
+    sitio: 'Sitio / Purok',
   },
   symptoms: {
     cough_2wks: 'Ubo nang 2 linggo o higit pa',
@@ -427,5 +437,74 @@ export const tl: Translation = {
     mild: 'Banayad',
     moderate: 'Katamtaman',
     severe: 'Malala',
+  },
+  register: {
+    intro:
+      'Para sa pasyenteng dumating dito nang tuwiran, walang referral mula sa BHW. Itinatala nito ang parehong detalye at parehong DOH-NTP checklist, at inihahain ang referral bilang natanggap na.',
+    optional: '(opsyonal)',
+    patientSection: 'Detalye ng pasyente',
+    firstName: 'Pangalan',
+    middleName: 'Gitnang pangalan',
+    lastName: 'Apelyido',
+    birthdate: 'Petsa ng kapanganakan',
+    age: 'Edad',
+    sex: 'Kasarian',
+    consentSection: 'Pahintulot',
+    consentIntro:
+      'Ipaliwanag sa pasyente sa sarili niyang wika ang layunin ng pre-screening na ito bago magpatuloy.',
+    consentConfirm: 'Pumapayag ang pasyente sa pre-screening at referral.',
+    smsOptIn: 'Magpadala ng SMS na paalala sa check-up sa pasyenteng ito',
+    contactNumber: 'Numero ng cellphone',
+    smsLanguage: 'Wika ng mga paalalang text',
+    contactInvalid: 'Maglagay ng wastong numero, o i-off ang mga paalalang SMS.',
+    checklistSection: 'DOH-NTP na checklist ng sintomas',
+    checklistIntro:
+      'Itanong ang bawat tanong at itala ang sagot ng pasyente. Ang mga sagot na ito lamang ang nagpapasya sa rekomendasyon sa referral.',
+    pgisSection: 'Tindi ng sintomas (PGI-S)',
+    pgisIntro:
+      'Gaano katindi ang ubo ayon sa pasyente, sa sarili niyang salita. Karagdagang konteksto lamang.',
+    answerAll: 'Sagutin ang bawat aytem sa checklist at ang tanong sa tindi para makapagpatuloy.',
+    willFlag:
+      'Umaabot ang mga sagot na ito sa pamantayan para sa presumptive TB \u2014 mafla-flag ang referral.',
+    willNotFlag:
+      'Hindi umaabot ang mga sagot na ito sa pamantayan para sa presumptive TB. Nakarehistro pa rin ang pasyente at nananatili ang talaan.',
+    saveCta: 'Irehistro ang pasyente',
+    saving: 'Nirerehistro\u2026',
+    saveError: 'Hindi mairehistro ang pasyenteng ito: {{message}}',
+    doneTitle: 'Nakarehistro na si {{name}}',
+    doneFlagged:
+      'Umaabot ang screening sa pamantayan para sa presumptive TB. Naihain ang referral bilang natanggap sa pasilidad na ito.',
+    doneNotFlagged:
+      'Hindi umaabot ang screening sa pamantayan para sa presumptive TB. Naihain pa rin ang talaan sa pasilidad na ito para hindi mawala ang pagbisita.',
+    openInInbox: 'Buksan sa inbox ng mga referral',
+    registerAnother: 'Magrehistro ng ibang pasyente',
+  },
+  vitals: {
+    heading: 'Mga vital sign',
+    optionalTag: 'Opsyonal',
+    introFacility:
+      'Itala ang anumang nasukat. Maaaring iwang blangko ang alinmang patlang, at wala itong epekto sa rekomendasyon sa referral.',
+    contextNote:
+      'Mga sukat lamang \u2014 karagdagang konteksto, hindi ginagamit sa pagpapasya ng referral.',
+    noneRecorded: 'Walang naitalang vital sign para sa screening na ito.',
+    height: 'Taas',
+    weight: 'Timbang',
+    temperature: 'Temperatura',
+    systolic: 'Systolic BP',
+    diastolic: 'Diastolic BP',
+    pulse: 'Bilis ng pulso',
+    spo2: 'Saturation ng oksiheno',
+    bmi: 'BMI',
+    bmiDerived: 'BMI (kinuha)',
+    bloodPressure: 'Presyon ng dugo',
+    unitCm: 'cm',
+    unitKg: 'kg',
+    unitC: '\u00b0C',
+    unitMmHg: 'mmHg',
+    unitBpm: 'bpm',
+    unitPercent: '%',
+    unitBmi: 'kg/m\u00b2',
+    outOfRange:
+      'Suriin ang mga sukat na may pulang marka \u2014 mukhang mali ang pagkaka-type.',
   },
 };

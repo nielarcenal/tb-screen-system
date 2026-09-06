@@ -122,8 +122,11 @@ values
 -- --- 4. Referrals for the 3 flagged screenings, at different stages --------
 -- facility_id 0000…d2 -> facilities."Malaybalay City Health DOTS Center"
 -- result / result_outcome are recorded BY FACILITY STAFF, never computed (§1).
+-- lab_sample_id (was specimen_id until 0024) is likewise the FACILITY's: it is
+-- null on the still-submitted row because no sample has been collected yet, and
+-- set only where the fixture has the patient already at the DOTS centre.
 insert into public.referrals
-  (referral_id, patient_id, screening_id, facility_id, specimen_id,
+  (referral_id, patient_id, screening_id, facility_id, lab_sample_id,
    status, result, result_date, result_outcome, presented)
 values
   ('5eed0000-0000-0000-0002-000000000001', '5eed0000-0000-0000-0000-000000000001',

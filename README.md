@@ -18,7 +18,7 @@ A tuberculosis **pre-screening and referral follow-up system** connecting Barang
 | Role | Interface | Sees patient data? | Scope |
 |---|---|---|---|
 | `bhw` | Mobile app | Yes | Patients of their assigned barangay, plus those they enrolled |
-| `tb_dots` | Facility portal | Yes | All patients (read); referrals addressed to their facility (act) |
+| `tb_dots` | Facility portal | Yes | Patients referred to their facility, plus any they registered themselves (read); referrals addressed to their facility (act) |
 | `captain` | Facility portal | **No** | BHW accounts in their barangay (names + activity counts) |
 | `admin` | Developer portal | **No** | Captain and TB-DOTS account provisioning only |
 
@@ -29,7 +29,7 @@ Row-Level Security is enforced on every table. The client UI adapts to the role 
 Each component takes its own `.env`, copied from the adjacent `.env.example`. **Never commit a real `.env`** — the `service_role` key is server-side only and must never reach a browser or the mobile bundle.
 
 ```bash
-# Backend — apply migrations 0001–0011 to your Supabase project
+# Backend — apply migrations 0001–0025 to your Supabase project
 cd supabase && supabase db push
 
 # Web portals
@@ -48,6 +48,7 @@ Useful scripts: `web` — `npm run dev`, `npm run build`, `npm run typecheck`. `
 - [`docs/DESIGN_BRIEF.md`](docs/DESIGN_BRIEF.md) — product brief and constraints
 - [`docs/TBScreen_Web_Design_Handoff.md`](docs/TBScreen_Web_Design_Handoff.md), [`docs/TBScreen_Web_Redesign_and_Branding_Addendum_1.md`](docs/TBScreen_Web_Redesign_and_Branding_Addendum_1.md) — web design specs
 - [`docs/TBScreen_Facility_Scheduling_Handoff.md`](docs/TBScreen_Facility_Scheduling_Handoff.md) — facility scheduling spec
+- [`docs/TBScreen_Referral_Model_Correction_and_Vitals_Addendum.md`](docs/TBScreen_Referral_Model_Correction_and_Vitals_Addendum.md) — the specimen-form → referral-document correction, TB-DOTS walk-in registration, and optional vital signs
 
 ## Repository history
 

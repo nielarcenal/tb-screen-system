@@ -89,7 +89,47 @@ export interface PatientRow {
   updated_at: string;
 }
 
-export interface ScreeningRow {
+/**
+ * Optional vital signs recorded alongside a screening (0024).
+ *
+ * Every field is nullable and stays that way: a BHW whose thermometer or
+ * oximeter is flat that day must still be able to finish a screening.
+ *
+ * SUPPLEMENTARY CONTEXT ONLY (§5), exactly like pgis_severity — recorded,
+ * displayed and printed on the referral document so the facility has them on
+ * arrival, but NEVER an input to the referral decision. BMI is deliberately
+ * absent: it is computed from height + weight at display time (domain/vitals.ts),
+ * the same way age is computed from birthdate.
+ */
+export interface Vitals {
+  /** Centimetres, one decimal. */
+  height_cm: number | null;
+  /** Kilograms, one decimal. */
+  weight_kg: number | null;
+  /** Degrees Celsius, one decimal. */
+  temperature_c: number | null;
+  /** mmHg. */
+  systolic_bp: number | null;
+  /** mmHg. */
+  diastolic_bp: number | null;
+  /** Beats per minute. */
+  pulse_rate: number | null;
+  /** Peripheral oxygen saturation, percent. */
+  spo2_percent: number | null;
+}
+
+/** Every vitals field, in the order the UI and the printed document show them. */
+export const VITALS_KEYS = [
+  'height_cm',
+  'weight_kg',
+  'temperature_c',
+  'systolic_bp',
+  'diastolic_bp',
+  'pulse_rate',
+  'spo2_percent',
+] as const;
+
+export interface ScreeningRow extends Vitals {
   screening_id: string;
   patient_id: string;
   symptom_flags: SymptomFlags;
@@ -108,7 +148,13 @@ export interface ReferralRow {
   patient_id: string;
   screening_id: string;
   facility_id: string;
-  specimen_id: string | null;
+  /**
+   * The laboratory sample id, OWNED BY TB-DOTS (0024). Sputum is collected only
+   * at the facility, so this app never generates it — it arrives on a pull
+   * once facility staff have entered it. Always null on a referral this device
+   * created. Was specimen_id until the referral-model correction.
+   */
+  lab_sample_id: string | null;
   status: ReferralStatus;
   /**
    * The facility's recorded outcome. The server also holds a free-text

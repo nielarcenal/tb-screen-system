@@ -48,9 +48,15 @@ interface AppState {
   nextPatientSeq: number;
   allocateDisplayCode: () => string;
 
-  /** Specimen ids follow the same scheme: SPC-<device>-<seq> (Feature 6). */
-  nextSpecimenSeq: number;
-  allocateSpecimenId: () => string;
+  /*
+   * There was a matching allocateSpecimenId() here (SPC-<device>-<seq>), called
+   * once per referral. It was removed in the referral-model correction (0024):
+   * sputum is collected only at the TB-DOTS facility, so the id it generated
+   * named a sample that did not exist and never would. The facility enters the
+   * real one. The persisted `nextSpecimenSeq` key may still sit in AsyncStorage
+   * on an upgraded install; zustand's persist merge ignores keys the store no
+   * longer declares, so it is inert and needs no cleanup.
+   */
 
   /**
    * A definite server refusal of whichever account is signed in on this device
@@ -73,7 +79,7 @@ interface AppState {
   rememberAccountDenial: (denial: { reason: DeniedReason; role: string | null } | null) => void;
 }
 
-/** No 0/O/1/I — codes get read aloud and handwritten on specimen forms. */
+/** No 0/O/1/I — codes get read aloud and handwritten on referral documents. */
 const DEVICE_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
 function randomDeviceCode(): string {
@@ -113,14 +119,6 @@ export const useAppStore = create<AppState>()(
 
       deniedAccount: null,
       rememberAccountDenial: (deniedAccount) => set({ deniedAccount }),
-
-      nextSpecimenSeq: 1,
-      allocateSpecimenId: () => {
-        const deviceCode = get().deviceCode ?? randomDeviceCode();
-        const seq = get().nextSpecimenSeq;
-        set({ deviceCode, nextSpecimenSeq: seq + 1 });
-        return `SPC-${deviceCode}-${String(seq).padStart(4, '0')}`;
-      },
     }),
     {
       name: 'tbscreen-app', // AsyncStorage key

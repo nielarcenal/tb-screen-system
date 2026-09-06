@@ -2,7 +2,7 @@
  * Facility portal shell (redesign §3): navy sidebar + content column via
  * <AppShell>. Role comes from the signed-in account's own users row
  * (users_read_same_facility policy):
- *   tb_dots  → Dashboard / Referrals / Barangay hotspots
+ *   tb_dots  → Dashboard / Referrals / Register patient / Barangay hotspots
  *   captain  → BHW management only (no patient data policies exist for them)
  * The inbox renders master-detail: list on the left, detail panel on the right.
  * Deliberately no router library — a handful of views and one id of state (§2).
@@ -21,11 +21,12 @@ import CaptainDashboard from './components/CaptainDashboard';
 import ReferralInbox from './components/ReferralInbox';
 import ReferralDetail from './components/ReferralDetail';
 import HotspotView from './components/HotspotView';
+import RegisterPatient from './components/RegisterPatient';
 import BhwManagement from './components/BhwManagement';
 import ChangePasswordGate from './components/ChangePasswordGate';
 import AccountStateGate, { AccountState } from './components/AccountStateGate';
 
-type Page = 'dashboard' | 'inbox' | 'hotspot' | 'bhw';
+type Page = 'dashboard' | 'inbox' | 'register' | 'hotspot' | 'bhw';
 
 export default function App() {
   const { t } = useTranslation();
@@ -173,6 +174,9 @@ export default function App() {
     : [
         navItem('dashboard', 'space_dashboard', t('nav.dashboard')),
         navItem('inbox', 'move_to_inbox', t('nav.inbox')),
+        // Walk-ins and self-referrals (0025) — the second way a patient reaches
+        // this facility, and until now the one the registry could not describe.
+        navItem('register', 'person_add', t('nav.register')),
         navItem('hotspot', 'map', t('nav.hotspot')),
       ];
 
@@ -182,6 +186,7 @@ export default function App() {
       sub: isCaptain ? t('shell.captainDashSub') : t('shell.dashboardSub'),
     },
     inbox: { title: t('nav.inbox'), sub: t('shell.referralsSub') },
+    register: { title: t('nav.register'), sub: t('shell.registerSub') },
     hotspot: { title: t('nav.hotspot'), sub: t('shell.hotspotsSub') },
     bhw: { title: t('nav.bhw'), sub: t('shell.bhwSub') },
   };
@@ -208,6 +213,14 @@ export default function App() {
         <Dashboard />
       ) : page === 'hotspot' ? (
         <HotspotView />
+      ) : page === 'register' ? (
+        <RegisterPatient
+          me={me}
+          onOpenReferral={(id) => {
+            setPage('inbox');
+            setOpenReferralId(id);
+          }}
+        />
       ) : (
         /* Inbox: master-detail split (design 1b). */
         <div className="split">

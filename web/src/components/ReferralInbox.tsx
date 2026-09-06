@@ -1,5 +1,9 @@
 /**
  * Referral inbox (redesign §4): the master pane of the master-detail split.
+ * Every referral addressed to this facility appears here — including walk-ins
+ * the facility registered itself (0025), which are deliberately NOT singled
+ * out: they are ordinary referrals that happen to start at 'received', and the
+ * detail panel names who registered them.
  * Compact rows — patient name, code, barangay · date, and a status chip (plus
  * a small result pill once an outcome is recorded, and a "repeat" marker when
  * the patient has an earlier referral here) — clicking a row opens it in
@@ -56,7 +60,9 @@ export default function ReferralInbox({ onOpen, selectedId }: Props) {
     if (statusFilter !== 'all' && r.status !== statusFilter) return false;
     if (!q) return true;
     return (
-      (r.specimen_id ?? '').toLowerCase().includes(q) ||
+      // lab_sample_id is this facility's own id (0024) and is null until staff
+      // enter it, so most rows match on name or patient code alone.
+      (r.lab_sample_id ?? '').toLowerCase().includes(q) ||
       r.patients.display_code.toLowerCase().includes(q) ||
       (r.patients.full_name ?? '').toLowerCase().includes(q)
     );

@@ -19,6 +19,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { en } from '../i18n/locales/en';
 import type { ReferralJoined } from '../lib/types';
+import { emptyVitals } from '../lib/vitals';
 import ReferralDetail from './ReferralDetail';
 
 /**
@@ -89,7 +90,7 @@ function makeReferral(over: Partial<ReferralJoined> = {}): ReferralJoined {
     patient_id: 'pat-1',
     screening_id: 'scr-1',
     facility_id: 'fac-1',
-    specimen_id: null,
+    lab_sample_id: null,
     status: 'received',
     result: null,
     result_outcome: null,
@@ -117,7 +118,7 @@ function makeReferral(over: Partial<ReferralJoined> = {}): ReferralJoined {
       created_at: '2026-07-30T02:00:00.000Z',
       updated_at: '2026-07-30T02:00:00.000Z',
       ref_barangays: { name: 'Poblacion' },
-      users: { full_name: 'Maria Santos' },
+      users: { full_name: 'Maria Santos', role: 'bhw' },
     },
     screenings: {
       screening_id: 'scr-1',
@@ -125,6 +126,9 @@ function makeReferral(over: Partial<ReferralJoined> = {}): ReferralJoined {
       symptom_flags: { cough_2wks: 'yes', weight_loss: 'no', fever: 'unsure' },
       pgis_severity: 'mild',
       referred: true,
+      // Vitals default to unmeasured — the ordinary case, and the one the
+      // "nothing recorded" copy has to handle. Tests that care override them.
+      ...emptyVitals,
       created_at: '2026-07-31T02:00:00.000Z',
       updated_at: '2026-07-31T02:00:00.000Z',
     },
@@ -290,5 +294,149 @@ describe('ReferralDetail lab result — saving', () => {
       result: 'notes without an outcome',
       result_outcome: 'negative',
     });
+  });
+});
+
+/**
+ * Vital signs (migration 0024) — displayed context, never a verdict.
+ *
+ * Two things are pinned. First, that the panel renders only what was actually
+ * measured and computes BMI from height and weight rather than reading a stored
+ * column. Second, and more importantly, that it stays free of interpretation:
+ * no "high", no "fever", no colour-by-value. The moment a reading arrives
+ * carrying a judgement, this stops being a pre-screening record (§1/§5).
+ */
+describe('ReferralDetail vital signs', () => {
+  it('says so plainly when nothing was measured', async () => {
+    await renderDetail(makeReferral());
+    expect(screen.getByText(en.vitals.noneRecorded)).toBeTruthy();
+  });
+
+  it('shows only the readings that were taken', async () => {
+    await renderDetail(
+      makeReferral({
+        screenings: {
+          ...makeReferral().screenings,
+          temperature_c: 37.4,
+          pulse_rate: 88,
+        },
+      }),
+    );
+    expect(screen.getByText('37.4 °C')).toBeTruthy();
+    expect(screen.getByText('88 bpm')).toBeTruthy();
+    // Height and weight were never taken, so neither they nor a BMI appear.
+    expect(screen.queryByText(en.vitals.height)).toBeNull();
+    expect(screen.queryByText(en.vitals.bmi)).toBeNull();
+  });
+
+  it('derives BMI from height and weight — there is no stored column to read', async () => {
+    await renderDetail(
+      makeReferral({
+        screenings: { ...makeReferral().screenings, height_cm: 170, weight_kg: 65 },
+      }),
+    );
+    expect(screen.getByText('22.5 kg/m²')).toBeTruthy();
+  });
+
+  it('needs both halves before it shows a blood pressure', async () => {
+    await renderDetail(
+      makeReferral({
+        screenings: { ...makeReferral().screenings, systolic_bp: 120 },
+      }),
+    );
+    // Half a blood pressure is not a blood pressure, and "120/—" would read as
+    // a reading someone took.
+    expect(screen.queryByText(en.vitals.bloodPressure)).toBeNull();
+  });
+
+  it('states readings without any interpretation (§5)', async () => {
+    // Values a scoring system would react to. Everything rendered must be the
+    // number and its unit, plus the standing "not used to decide referral" note.
+    await renderDetail(
+      makeReferral({
+        screenings: {
+          ...makeReferral().screenings,
+          temperature_c: 39.5,
+          systolic_bp: 180,
+          diastolic_bp: 110,
+          spo2_percent: 88,
+        },
+      }),
+    );
+    const panel = screen.getByText(en.vitals.heading).closest('.vitals-block') as HTMLElement;
+    const VERDICT = /\bhigh\b|\blow\b|normal|abnormal|fever|febrile|hyper|hypo|critical|urgent/i;
+    expect(VERDICT.test(panel.textContent ?? '')).toBe(false);
+    expect(screen.getByText(en.vitals.contextNote)).toBeTruthy();
+  });
+});
+
+/**
+ * The laboratory sample id (migration 0024) belongs to THIS facility, and the
+ * whole point of the referral-model correction is that the BHW app no longer
+ * invents one. So the field must not be offered before there is a sample to
+ * name — the patient has not arrived yet while the referral is 'submitted'.
+ */
+describe('ReferralDetail laboratory sample id', () => {
+  const sampleField = () =>
+    screen.queryByPlaceholderText(en.detail.sampleIdPlaceholder) as HTMLInputElement | null;
+
+  it('is not offered while the referral is still submitted', async () => {
+    await renderDetail(makeReferral({ status: 'submitted' }));
+    expect(sampleField()).toBeNull();
+    expect(screen.getByText(en.detail.sampleIdPending)).toBeTruthy();
+  });
+
+  it('saves what staff type once the referral has been received', async () => {
+    await renderDetail(makeReferral({ status: 'received' }));
+    const field = sampleField() as HTMLInputElement;
+    fireEvent.change(field, { target: { value: 'LAB-2026-0091' } });
+    fireEvent.click(screen.getByRole('button', { name: en.detail.sampleIdSave }));
+
+    await waitFor(() => expect(mock.db.updates).toHaveLength(1));
+    expect(lastUpdate().lab_sample_id).toBe('LAB-2026-0091');
+  });
+
+  it('puts an already-saved id back in the field', async () => {
+    await renderDetail(makeReferral({ status: 'tested', lab_sample_id: 'LAB-2026-0044' }));
+    expect((sampleField() as HTMLInputElement).value).toBe('LAB-2026-0044');
+    // Nothing changed, so there is nothing to save.
+    expect(
+      (screen.getByRole('button', { name: en.detail.sampleIdSave }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+  });
+
+  it('clears the id to NULL rather than an empty string', async () => {
+    await renderDetail(makeReferral({ status: 'received', lab_sample_id: 'LAB-2026-0044' }));
+    fireEvent.change(sampleField() as HTMLInputElement, { target: { value: '  ' } });
+    fireEvent.click(screen.getByRole('button', { name: en.detail.sampleIdSave }));
+
+    await waitFor(() => expect(mock.db.updates).toHaveLength(1));
+    expect(lastUpdate().lab_sample_id).toBeNull();
+  });
+});
+
+/**
+ * A walk-in the facility registered itself (0025) is deliberately an ordinary
+ * referral in every respect but one: nobody referred it in. The header line
+ * names who registered it instead of claiming a BHW screened them.
+ */
+describe('ReferralDetail referral origin', () => {
+  it('credits the BHW who screened a referred patient', async () => {
+    await renderDetail(makeReferral());
+    expect(screen.getByText(en.detail.screenedBy.replace('{{name}}', 'Maria Santos'))).toBeTruthy();
+  });
+
+  it('says a walk-in was registered here, not screened by a BHW', async () => {
+    const base = makeReferral();
+    await renderDetail(
+      makeReferral({
+        status: 'received',
+        patients: { ...base.patients, users: { full_name: 'Nurse Ana Lim', role: 'tb_dots' } },
+      }),
+    );
+    expect(
+      screen.getByText(en.detail.registeredHere.replace('{{name}}', 'Nurse Ana Lim')),
+    ).toBeTruthy();
+    expect(screen.queryByText(/Screened by/)).toBeNull();
   });
 });
