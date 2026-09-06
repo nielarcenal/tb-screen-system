@@ -13,8 +13,12 @@ import { supabase } from '../lib/supabase';
 interface CoverageRow {
   facility_id: string;
   facility_name: string;
+  /** ACTIVE captains. Counted deactivated accounts too before 0023. */
   captains: number;
+  captains_inactive: number;
+  /** ACTIVE BHWs. Counted deactivated accounts too before 0023. */
   bhws: number;
+  bhws_inactive: number;
   open_referrals: number;
 }
 
@@ -52,6 +56,18 @@ export default function AdminDashboard() {
   const captainsTotal = rows.reduce((s, r) => s + Number(r.captains), 0);
   const bhwsTotal = rows.reduce((s, r) => s + Number(r.bhws), 0);
   const openTotal = rows.reduce((s, r) => s + Number(r.open_referrals), 0);
+  const captainsOff = rows.reduce((s, r) => s + Number(r.captains_inactive), 0);
+  const bhwsOff = rows.reduce((s, r) => s + Number(r.bhws_inactive), 0);
+
+  /**
+   * The headline number counts people who can actually sign in; deactivated
+   * accounts are appended rather than folded in or dropped, so the tile cannot
+   * be read as a total that quietly includes them (which is what it did before
+   * 0023). Omitted entirely at zero -- "0 deactivated" is noise on every tile
+   * in the common case.
+   */
+  const withOff = (sub: string, off: number) =>
+    off > 0 ? `${sub} · ${t('adminDash.deactivated', { count: off })}` : sub;
 
   const tiles: TileSpec[] = [
     {
@@ -68,7 +84,7 @@ export default function AdminDashboard() {
       key: 'captains',
       value: captainsTotal,
       label: t('adminDash.captains'),
-      sub: t('adminDash.captainsSub'),
+      sub: withOff(t('adminDash.captainsSub'), captainsOff),
       icon: 'badge',
       iconBg: '#eef4f4',
       iconColor: '#046a78',
@@ -78,7 +94,7 @@ export default function AdminDashboard() {
       key: 'bhws',
       value: bhwsTotal,
       label: t('adminDash.bhws'),
-      sub: t('adminDash.bhwsSub'),
+      sub: withOff(t('adminDash.bhwsSub'), bhwsOff),
       icon: 'groups',
       iconBg: '#dff0ea',
       iconColor: '#12735f',

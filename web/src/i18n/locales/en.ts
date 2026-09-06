@@ -38,6 +38,7 @@ export const en = {
   },
   nav: {
     dashboard: 'Dashboard',
+    bhws: 'BHW management',
     inbox: 'Referral inbox',
     hotspot: 'Barangay hotspots',
     bhw: 'BHW management',
@@ -46,6 +47,7 @@ export const en = {
   },
   shell: {
     facilityPortal: 'Facility Portal',
+    bhwsSub: 'Manage BHW accounts across every barangay',
     captainPortal: 'Captain Portal',
     dashboardSub: 'Today’s activity at your facility',
     referralsSub: 'Referrals addressed to your facility',
@@ -80,6 +82,7 @@ export const en = {
   },
   adminDash: {
     headerSub: 'Program-wide overview',
+    deactivated: '{{count}} deactivated',
     summaryTitle: 'Program overview',
     facilities: 'Facilities',
     facilitiesSub: 'TB-DOTS centers',
@@ -179,8 +182,9 @@ export const en = {
   },
   bhw: {
     title: 'BHW accounts',
-    privacyNote:
-      'Captains see accounts and activity counts only. No patient names, records, or results appear anywhere in this view.',
+    barangayHint: 'The barangay this BHW will serve. Sets their facility automatically.',
+    barangayLabel: 'Barangay',
+    privacyNote: 'This view shows accounts and activity counts only. No patient names, records, or results appear anywhere in it.',
     addCta: 'New BHW',
     colStatus: 'Status',
     active: 'Active',
@@ -235,6 +239,7 @@ export const en = {
     ctxReferrals: 'Referrals',
     ctxJoined: 'Joined',
     reqNote: 'First name, last name and coverage area required.',
+    reqNoteAdmin: 'First name, last name, barangay and coverage area required.',
     hoWhat: 'What happens',
     hoPoint1: 'Loses app access immediately.',
     hoPoint2: 'Their screening and referral history is retained and stays with the facility.',

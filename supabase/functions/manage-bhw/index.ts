@@ -7,10 +7,15 @@
  *   captain → manages BHW accounts of THEIR OWN ASSIGNED BARANGAY only
  *             (0008: captains from other barangays cannot touch BHWs outside
  *             their area; new BHWs are always assigned the captain's barangay).
- *   admin   → manages CAPTAIN accounts (default) or TB-DOTS STAFF accounts
- *             (body.target_role = 'tb_dots'): staff belong to a facility and
- *             have no barangay; captains get a barangay and derive their
- *             facility from it.
+ *   admin   → manages CAPTAIN accounts (default), TB-DOTS STAFF accounts
+ *             (body.target_role = 'tb_dots'), or BHW accounts
+ *             (body.target_role = 'bhw', added 0023). Staff belong to a
+ *             facility and have no barangay; captains and BHWs get a barangay
+ *             and derive their facility from it.
+ *
+ *             The admin is UNSCOPED over BHWs, deliberately: a BHW who cannot
+ *             sign in should not have to wait for their captain. The captain's
+ *             own 0008 barangay boundary is unchanged.
  *
  * Actions (POST JSON { action, ... }):
  *   create         captain: { first_name, middle_name?, last_name, purok }
@@ -47,7 +52,7 @@ import { candidateEmail, isEmailTaken, slugPart } from '../_shared/accountEmail.
 interface Body {
   action: 'create' | 'update' | 'deactivate' | 'reactivate' | 'reset_password';
   /** Admin callers only: which account type they are managing (default captain). */
-  target_role?: 'captain' | 'tb_dots';
+  target_role?: 'captain' | 'tb_dots' | 'bhw';
   user_id?: string;
   first_name?: string;
   /** Optional middle name (0014) — part of the composed full_name. */
@@ -142,9 +147,13 @@ Deno.serve(async (req) => {
     return json(400, { error: 'invalid JSON body' });
   }
 
-  // Admins choose what they manage (captains by default, or tb_dots staff);
-  // captains always manage BHWs.
-  const managedRole = isAdmin ? (body.target_role === 'tb_dots' ? 'tb_dots' : 'captain') : 'bhw';
+  // Admins choose what they manage (captains by default, or tb_dots staff, or
+  // BHWs since 0023); captains always manage BHWs.
+  const managedRole = isAdmin
+    ? body.target_role === 'tb_dots' || body.target_role === 'bhw'
+      ? body.target_role
+      : 'captain'
+    : 'bhw';
 
   // --- helper: load a target account and verify role + scope ---
   const loadTarget = async (userId: string) => {
@@ -363,13 +372,26 @@ Deno.serve(async (req) => {
             .eq('user_id', body.reassign_to)
             .maybeSingle();
           if (succErr) return json(500, { error: succErr.message });
+          // Scope the successor to the barangay whose patients are moving.
+          // For a captain that is their own barangay; an admin has none, so it
+          // must be the TARGET's. Comparing against caller.assigned_barangay_code
+          // unconditionally would reject every admin handoff, because an admin's
+          // is null -- and would silently turn deactivation into an orphaning of
+          // that BHW's patients if the caller then skipped reassign_to.
+          const handoffBarangay = isAdmin
+            ? target.assigned_barangay_code
+            : caller.assigned_barangay_code;
           if (
             !successor ||
             successor.role !== 'bhw' ||
             !successor.active ||
-            successor.assigned_barangay_code !== caller.assigned_barangay_code
+            successor.assigned_barangay_code !== handoffBarangay
           ) {
-            return json(400, { error: 'reassign_to must be an active BHW in your barangay' });
+            return json(400, {
+              error: isAdmin
+                ? "reassign_to must be an active BHW in the same barangay as the account being deactivated"
+                : 'reassign_to must be an active BHW in your barangay',
+            });
           }
           const { error: reErr } = await admin
             .from('patients')

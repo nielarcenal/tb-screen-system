@@ -33,6 +33,7 @@ export const ceb: Translation = {
   },
   nav: {
     dashboard: 'Dashboard',
+    bhws: 'Pagdumala sa BHW',
     inbox: 'Inbox sa mga referral',
     hotspot: 'Mga hotspot sa barangay',
     bhw: 'Pagdumala sa BHW',
@@ -41,6 +42,7 @@ export const ceb: Translation = {
   },
   shell: {
     facilityPortal: 'Portal sa Pasilidad',
+    bhwsSub: 'Dumalaha ang mga BHW account sa tanang barangay',
     captainPortal: 'Portal sa Kapitan',
     dashboardSub: 'Kalihokan karong adlawa sa inyong pasilidad',
     referralsSub: 'Mga referral nga gipadala sa inyong pasilidad',
@@ -75,6 +77,7 @@ export const ceb: Translation = {
   },
   adminDash: {
     headerSub: 'Kinatibuk-ang panglantaw sa programa',
+    deactivated: '{{count}} gi-deactivate',
     summaryTitle: 'Kinatibuk-ang panglantaw',
     facilities: 'Mga pasilidad',
     facilitiesSub: 'Mga TB-DOTS center',
@@ -174,8 +177,9 @@ export const ceb: Translation = {
   },
   bhw: {
     title: 'Mga BHW account',
-    privacyNote:
-      'Mga account ug ihap sa aktibidad lamang ang makita sa mga kapitan. Walay ngalan sa pasyente, rekord, o resulta nga mogawas bisan asa niini nga view.',
+    barangayHint: 'Ang barangay nga alagaran sa BHW. Awtomatikong gitakda ang pasilidad.',
+    barangayLabel: 'Barangay',
+    privacyNote: 'Kini nga panid nagpakita lang sa mga account ug ihap sa kalihokan. Walay ngalan, rekord, o resulta sa pasyente nga makita dinhi.',
     addCta: 'Bag-ong BHW',
     colStatus: 'Status',
     active: 'Aktibo',
@@ -233,6 +237,7 @@ export const ceb: Translation = {
     ctxReferrals: 'Mga referral',
     ctxJoined: 'Miapil',
     reqNote: 'Gikinahanglan ang unang ngalan, apelyido, ug saklaw nga lugar.',
+    reqNoteAdmin: 'Gikinahanglan ang first name, last name, barangay ug coverage area.',
     hoWhat: 'Unsa ang mahitabo',
     hoPoint1: 'Mawad-an dayon ug access sa app.',
     hoPoint2: 'Magpabilin ang kasaysayan sa screening ug referral ug anaa gihapon sa pasilidad.',
