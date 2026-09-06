@@ -3,7 +3,7 @@
     "name": "TB-Screen BHW",
     "slug": "tb-screen-bhw",
     "scheme": "tbscreen",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icons/icon-1024.png",
     "userInterfaceStyle": "light",
@@ -12,6 +12,7 @@
     },
     "android": {
       "package": "com.tbscreen.bhw",
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive-foreground-1024.png",
         "backgroundColor": "#0B2E33"
