@@ -29,6 +29,11 @@
  *     barangay. That filter is applied for BOTH callers: it is a no-op for a
  *     captain, whose rows all share one barangay, and writing it once avoids a
  *     second code path that only the admin exercises.
+ *   - The list is GROUPED BY BARANGAY, with a barangay filter beside the status
+ *     one. A captain's list is deliberately left flat: every row shares their
+ *     one barangay, so a single group header would be pure furniture. The
+ *     admin's list spans all 464, where a flat roster of names is unreadable
+ *     the moment a barangay has more than a couple of workers.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -107,6 +112,8 @@ export default function BhwManagement({ asAdmin = false }: { asAdmin?: boolean }
   // List tools.
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  // Admin only — a captain has exactly one barangay and nothing to choose.
+  const [barangayFilter, setBarangayFilter] = useState<string>('all');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -270,17 +277,55 @@ export default function BhwManagement({ asAdmin = false }: { asAdmin?: boolean }
   };
 
   // ---- derived list ----
+  /** The label a row is grouped and filtered under. Falls back to the PSGC code
+   *  when the join produced no name, and to an explicit "unassigned" bucket
+   *  when the BHW has no barangay at all — those rows must stay visible, since
+   *  an unassigned BHW is exactly the one an admin needs to find and fix. */
+  const groupOf = (r: BhwActivityRow): string =>
+    r.barangay_name ?? r.barangay_code ?? '';
+
   const q = search.trim().toLowerCase();
   const visible = rows.filter((r) => {
     if (statusFilter === 'active' && !r.active) return false;
     if (statusFilter === 'inactive' && r.active) return false;
+    if (barangayFilter !== 'all' && groupOf(r) !== barangayFilter) return false;
     if (!q) return true;
     return (
       r.full_name.toLowerCase().includes(q) ||
       (r.purok ?? '').toLowerCase().includes(q) ||
-      (r.email ?? '').toLowerCase().includes(q)
+      (r.email ?? '').toLowerCase().includes(q) ||
+      // Searching a barangay by name is the obvious thing to try on a
+      // province-wide list, and it did not work before.
+      groupOf(r).toLowerCase().includes(q)
     );
   });
+
+  /** Every barangay present in the data, for the filter — built from `rows`
+   *  rather than `visible`, so choosing one does not empty the menu behind it. */
+  const barangayOptions = [...new Set(rows.map(groupOf))].sort((a, b) =>
+    a.localeCompare(b),
+  );
+
+  /**
+   * `visible`, bucketed by barangay and sorted — barangays alphabetically, and
+   * people by name within each. Only the admin renders these; the captain maps
+   * `visible` directly.
+   */
+  const groups: { name: string; rows: BhwActivityRow[] }[] = (() => {
+    const by = new Map<string, BhwActivityRow[]>();
+    for (const r of visible) {
+      const k = groupOf(r);
+      const list = by.get(k);
+      if (list) list.push(r);
+      else by.set(k, [r]);
+    }
+    return [...by.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([name, list]) => ({
+        name,
+        rows: [...list].sort((a, b) => a.full_name.localeCompare(b.full_name)),
+      }));
+  })();
 
   const previewEmail =
     first.trim() && last.trim() ? `${slugPart(first)}.${slugPart(last)}@tbscreen.ph` : '';
@@ -338,6 +383,25 @@ export default function BhwManagement({ asAdmin = false }: { asAdmin?: boolean }
                 expand_more
               </span>
             </div>
+            {asAdmin && barangayOptions.length > 1 ? (
+              <div className="select-wrap">
+                <select
+                  value={barangayFilter}
+                  aria-label={t('bhw.barangayLabel')}
+                  onChange={(e) => setBarangayFilter(e.target.value)}
+                >
+                  <option value="all">{t('bhw.barangayAll')}</option>
+                  {barangayOptions.map((b) => (
+                    <option key={b} value={b}>
+                      {b || t('bhw.barangayNone')}
+                    </option>
+                  ))}
+                </select>
+                <span className="msym sel-ic" aria-hidden="true">
+                  expand_more
+                </span>
+              </div>
+            ) : null}
             <button
               className="icon-btn"
               onClick={() => void load()}
@@ -401,26 +465,55 @@ export default function BhwManagement({ asAdmin = false }: { asAdmin?: boolean }
               <div className="st-body">{t('bhw.filterEmptyBody')}</div>
             </div>
           ) : (
-            visible.map((r) => {
-              const isSel = mode === 'edit' && r.user_id === selId;
-              return (
-                <button
-                  key={r.user_id}
-                  className={`bhw-row rowbtn${r.active ? '' : ' inactive'}${isSel ? ' selected' : ''}`}
-                  onClick={() => openEdit(r)}
-                >
-                  <span className="bhw-avatar">{initials(r.full_name)}</span>
-                  <div className="bhw-info">
-                    <span className="bhw-name">{r.full_name}</span>
-                    <span className="bhw-sub">
-                      {[r.purok, r.barangay_name ?? r.barangay_code].filter(Boolean).join(' · ') ||
-                        '—'}
+            /* One row renderer, two shapes. The captain gets `visible` flat;
+               the admin gets the same rows under barangay headings. */
+            (() => {
+              const row = (r: BhwActivityRow) => {
+                const isSel = mode === 'edit' && r.user_id === selId;
+                return (
+                  <button
+                    key={r.user_id}
+                    className={`bhw-row rowbtn${r.active ? '' : ' inactive'}${isSel ? ' selected' : ''}`}
+                    onClick={() => openEdit(r)}
+                  >
+                    <span className="bhw-avatar">{initials(r.full_name)}</span>
+                    <div className="bhw-info">
+                      <span className="bhw-name">{r.full_name}</span>
+                      <span className="bhw-sub">
+                        {/* Inside a barangay group the barangay is already the
+                            heading, so the sub-line drops it and shows the
+                            purok — the thing that actually distinguishes two
+                            workers in the same barangay. */}
+                        {(asAdmin
+                          ? [r.purok]
+                          : [r.purok, r.barangay_name ?? r.barangay_code]
+                        )
+                          .filter(Boolean)
+                          .join(' · ') || '—'}
+                      </span>
+                    </div>
+                    {statusChip(r.active)}
+                  </button>
+                );
+              };
+
+              if (!asAdmin) return visible.map(row);
+
+              return groups.map((g) => (
+                <div key={g.name || '(none)'} className="bhw-group">
+                  <div className="bhw-grouphead">
+                    <span className="msym" aria-hidden="true">
+                      location_on
+                    </span>
+                    <span className="bhw-groupname">{g.name || t('bhw.barangayNone')}</span>
+                    <span className="bhw-groupcount">
+                      {t('bhw.groupCount', { count: g.rows.length })}
                     </span>
                   </div>
-                  {statusChip(r.active)}
-                </button>
-              );
-            })
+                  {g.rows.map(row)}
+                </div>
+              ));
+            })()
           )}
         </div>
       </div>
