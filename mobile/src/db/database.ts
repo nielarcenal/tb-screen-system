@@ -198,6 +198,33 @@ const MIGRATIONS: string[] = [
   ALTER TABLE referrals DROP COLUMN result;
   ALTER TABLE referrals ADD COLUMN result_outcome TEXT;
   `,
+
+  // v10 — referral-model correction + optional vital signs (server 0024).
+  //
+  // specimen_id → lab_sample_id. The rename is the point, not a tidy-up: the
+  // column's MEANING moved. Sputum is collected only at the TB-DOTS facility,
+  // so this app no longer generates the id at referral time — it belongs to the
+  // facility and arrives on a pull once staff have entered it. Existing values
+  // are carried across rather than cleared: a code already handwritten on a
+  // paper slip should still match the row.
+  //
+  // Vitals mirror the server columns: REAL for the three that carry a decimal,
+  // INTEGER for the four that never do. All nullable — a missing instrument
+  // must never block a screening — and all supplementary context only (§5).
+  // No BMI column here either; it is computed in domain/vitals.ts.
+  //
+  // RENAME COLUMN needs SQLite 3.25+ (2018); expo-sqlite is far past that.
+  `
+  ALTER TABLE referrals RENAME COLUMN specimen_id TO lab_sample_id;
+
+  ALTER TABLE screenings ADD COLUMN height_cm REAL;
+  ALTER TABLE screenings ADD COLUMN weight_kg REAL;
+  ALTER TABLE screenings ADD COLUMN temperature_c REAL;
+  ALTER TABLE screenings ADD COLUMN systolic_bp INTEGER;
+  ALTER TABLE screenings ADD COLUMN diastolic_bp INTEGER;
+  ALTER TABLE screenings ADD COLUMN pulse_rate INTEGER;
+  ALTER TABLE screenings ADD COLUMN spo2_percent INTEGER;
+  `,
 ];
 
 // Bundled PSGC dataset — Bukidnon only (documented delimitation, §6). Generated

@@ -2149,6 +2149,166 @@ button.amber:hover { background: var(--amber-container); }
 .access-help .msym { font-size: 15px; line-height: 1; color: var(--muted); flex: 0 0 auto; }
 .access-help span { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
 
+/* ---------- selected state for the generic tri/binary toggles ----------
+   .tog only had per-purpose "on" colours (pos / neg / present / amber). The
+   register form and the sex picker need a neutral selected state, so give
+   .tog.on the teal-container fill the rest of the design system uses for a
+   chosen pill; the purpose-specific rules above still win where they apply. */
+.tog.on { background: var(--teal-container); color: var(--teal-deep); border-color: var(--teal-border); }
+.tog.amberpick.on {
+  /* Amber is reserved for the patient's own voice (PGI-S) — same rule the
+     mobile app follows, so the two read as the same thing. */
+  background: var(--amber-container);
+  color: var(--amber-ink);
+  border-color: var(--amber-border);
+}
+.toggle-pair.tri { flex-wrap: wrap; }
+.toggle-pair.tri .tog { flex: 1 1 84px; }
+
+/* ---------- vital signs, read-only (referral detail) ---------- */
+.vitals-block { margin-top: 14px; border-top: 1px solid #f0ece4; padding-top: 12px; }
+.vitals-head { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+.vitals-head .msym { font-size: 18px; color: var(--muted); }
+.vitals-title { font-size: 13px; font-weight: 600; color: #2c3a37; }
+.vitals-head .ro-tag {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+  background: #f2f4f1;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+.vitals-grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 8px;
+}
+.vitals-cell {
+  border: 1px solid #efeadf;
+  border-radius: 10px;
+  padding: 8px 11px;
+  background: #fdfcfa;
+}
+/* Deliberately one flat style for every reading: no colour by value, no
+   "out of range" highlight. A measurement carries no verdict here (§1/§5). */
+.vitals-cell dt { font-size: 11px; color: var(--muted); }
+.vitals-cell dd {
+  margin: 3px 0 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #2c3a37;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- laboratory sample id (referral detail) ---------- */
+.sample-row { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; margin: 10px 0 4px; }
+.sample-field { display: flex; flex-direction: column; gap: 5px; flex: 1 1 180px; min-width: 0; }
+.sample-field span { font-size: 11px; font-weight: 600; color: var(--ink-mid); }
+.sample-field input { width: 100%; font-size: 13px; }
+
+/* ---------- register patient ---------- */
+.regwrap { display: flex; flex-direction: column; gap: 14px; max-width: 860px; }
+.reg-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--teal-container);
+  color: var(--teal-deep);
+}
+.reg-intro .msym { font-size: 20px; flex: 0 0 auto; }
+.reg-intro p { margin: 0; font-size: 12.5px; line-height: 1.5; }
+
+.regsec { display: flex; flex-direction: column; gap: 12px; }
+.regsec h3 { margin: 0; font-size: 14px; font-weight: 700; color: #14302f; }
+.regsec-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.regsec-head h3 { flex: 0 1 auto; }
+.regsec-head .ro-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+  background: #f2f4f1;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+.regsec.consent { border-left: 3px solid var(--teal); }
+.regsec.pgis-sec { border-left: 3px solid var(--amber-border); }
+.regsec .dfield-row.addr-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.regsec .dfield-row.addr-row label { font-size: 11px; font-weight: 600; color: var(--ink-mid); display: block; margin-bottom: 5px; }
+
+/* Derived, never typed — age from birthdate, BMI from height and weight. Styled
+   as a readout rather than a disabled input so it cannot be mistaken for one. */
+.derived-box {
+  padding: 9px 11px;
+  border: 1px dashed #d5ddd6;
+  border-radius: 9px;
+  background: #f4f6f4;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--teal-dark);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.checkline { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; color: var(--ink); }
+.checkline input { width: 17px; height: 17px; margin: 1px 0 0; padding: 0; flex: 0 0 auto; }
+
+.sym-ask {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 9px 0;
+  border-top: 1px solid #f4f1ea;
+}
+.sym-ask .sym-q { flex: 1 1 220px; font-size: 13px; color: #2c3a37; }
+.sym-ask .toggle-pair { flex: 0 1 260px; }
+
+.regsec input.bad, .regsec input[aria-invalid='true'] { border-color: var(--red); background: #fff8f7; }
+
+.reg-foot { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; padding-bottom: 8px; }
+.reg-outcome {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--teal-deep);
+  background: var(--teal-container);
+  border-radius: 10px;
+  padding: 9px 13px;
+}
+.reg-save { padding: 11px 22px; font-size: 14px; }
+
+.regdone { max-width: 520px; text-align: center; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.regdone-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--subtle);
+  color: var(--ink-mid);
+}
+.regdone-badge.flagged { background: var(--teal-container); color: var(--teal-dark); }
+.regdone-badge .msym { font-size: 27px; }
+.regdone h2 { margin: 0; font-size: 17px; color: #14302f; }
+.regdone-code {
+  margin: 0;
+  font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--teal-dark);
+}
+.regdone-body { margin: 0; font-size: 13px; line-height: 1.55; color: var(--ink-soft); }
+.regdone-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+.regdone-actions button { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+.regdone-actions button .msym { font-size: 17px; }
+
+
 @media (max-width: 880px) {
   .brandpanel { display: none; }
   .formcard .topbrand { display: flex; }
@@ -2248,4 +2408,10 @@ button.amber:hover { background: var(--amber-container); }
   /* Admin key/value tables scroll inside themselves instead of forcing the
      whole page sideways. */
   table.kv { display: block; overflow-x: auto; }
+
+  /* ---- register form / vitals: one column at phone width ---- */
+  .sym-ask .toggle-pair { flex: 1 1 100%; }
+  .vitals-grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
+  .regdone-actions button { flex: 1 1 auto; justify-content: center; }
+
 }

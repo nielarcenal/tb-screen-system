@@ -636,12 +636,12 @@ export default function PatientDetailScreen() {
                                 mode="outlined"
                                 icon="file-document"
                                 textColor={palette.teal}
-                                onPress={() => router.push(`/specimen/${referral.referral_id}`)}
+                                onPress={() => router.push(`/referral-document/${referral.referral_id}`)}
                                 contentStyle={{ height: 48 }}
                                 labelStyle={{ fontWeight: '600' }}
                                 style={{ borderRadius: 24, borderColor: palette.teal }}
                               >
-                                {t('patientDetail.viewSpecimen')}
+                                {t('patientDetail.viewReferralDoc')}
                               </Button>
                             </>
                           ) : (

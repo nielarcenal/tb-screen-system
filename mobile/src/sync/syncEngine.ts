@@ -226,7 +226,7 @@ const SCREENINGS_PUSH: PushSpec<LocalScreeningRow> = {
  * an enforced one. Do not "tidy" it back to `*`.
  */
 const REFERRAL_COLUMNS =
-  'referral_id, patient_id, screening_id, facility_id, specimen_id, status, ' +
+  'referral_id, patient_id, screening_id, facility_id, lab_sample_id, status, ' +
   'result_outcome, result_date, presented, created_at, updated_at';
 
 const REFERRALS_PUSH: PushSpec<LocalReferralRow> = {

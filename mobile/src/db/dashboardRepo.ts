@@ -31,7 +31,6 @@ export interface DashboardReferral {
   patient_id: string;
   display_code: string;
   full_name: string | null;
-  specimen_id: string | null;
   status: string;
   result_outcome: ResultOutcome | null;
   result_date: string | null;
@@ -65,7 +64,7 @@ export async function listNoShowReferrals(): Promise<DashboardReferral[]> {
   const db = await getDb();
   return db.getAllAsync<DashboardReferral>(
     `SELECT r.referral_id, r.patient_id, p.display_code, p.full_name,
-            r.specimen_id, r.status, r.result_outcome, r.result_date, r.presented
+            r.status, r.result_outcome, r.result_date, r.presented
      FROM referrals r JOIN patients p ON p.patient_id = r.patient_id
      WHERE r.presented = 0
      ORDER BY r.updated_at DESC`,
@@ -76,7 +75,7 @@ export async function listResultReferrals(): Promise<DashboardReferral[]> {
   const db = await getDb();
   return db.getAllAsync<DashboardReferral>(
     `SELECT r.referral_id, r.patient_id, p.display_code, p.full_name,
-            r.specimen_id, r.status, r.result_outcome, r.result_date, r.presented
+            r.status, r.result_outcome, r.result_date, r.presented
      FROM referrals r JOIN patients p ON p.patient_id = r.patient_id
      WHERE r.result_outcome IS NOT NULL
      ORDER BY r.result_date DESC`,

@@ -58,7 +58,7 @@ function makeRow({ id, patient, at, status = 'submitted' }: RowSpec): ReferralJo
     patient_id: patient,
     screening_id: `scr-${id}`,
     facility_id: 'fac-1',
-    specimen_id: null,
+    lab_sample_id: null,
     status,
     result: null,
     result_outcome: null,

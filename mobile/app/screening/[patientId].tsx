@@ -1,8 +1,9 @@
 /**
- * Screening (Feature 5): DOH-NTP symptom checklist + PGI-S, trilingual.
- * Restyled per design 1a screens 7/7b/7c as a step flow:
+ * Screening (Feature 5): DOH-NTP symptom checklist + PGI-S + optional vitals,
+ * trilingual. Restyled per design 1a screens 7/7b/7c as a step flow:
  *   one question per screen with large tri-state pills → amber PGI-S step
- *   (patient-reported, visually separate) → review-answers list → result.
+ *   (patient-reported, visually separate) → optional vitals step → review-answers
+ *   list → result.
  *
  * POSITIONING (§1) and NO-SCORING (§5) — enforced by structure:
  *  - The referral recommendation comes ONLY from evaluateReferral()
@@ -11,6 +12,12 @@
  *  - PGI-S is collected on its own amber step, labeled patient-reported
  *    ("None" is a valid answer); its value is recorded on the screening row
  *    but is never passed to evaluateReferral().
+ *  - Vitals (0024) sit on their own step AFTER the checklist and PGI-S, are
+ *    ENTIRELY OPTIONAL — every field may be left blank and the step skipped —
+ *    and are likewise never passed to evaluateReferral(). A BHW whose
+ *    thermometer or oximeter is flat that day must still finish the screening.
+ *    They are printed on the referral document so the facility has them on
+ *    arrival; BMI is derived there, not stored (domain/vitals.ts).
  *  - The outcome is worded as "flags for referral (presumptive TB)" with the
  *    rule that fired, plus a standing "this is not a diagnosis" note.
  *
@@ -22,23 +29,55 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Appbar, Button, Text } from 'react-native-paper';
+import { Appbar, Button, Text, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { insertLocalScreening } from '../../src/db/screeningsRepo';
-import { PgisSeverity, SymptomFlags, TriState } from '../../src/db/types';
+import { PgisSeverity, SymptomFlags, TriState, Vitals, VITALS_KEYS } from '../../src/db/types';
 import {
   evaluateReferral,
   isChecklistComplete,
   SYMPTOM_KEYS,
 } from '../../src/domain/screeningRules';
+import { bmiFrom, emptyVitals, parseVital, VITALS_RANGE } from '../../src/domain/vitals';
 import { uuid } from '../../src/lib/uuid';
 import { triggerSync } from '../../src/sync/syncManager';
 import { palette } from '../../src/ui/tokens';
 
 const PGIS_OPTIONS: PgisSeverity[] = ['none', 'mild', 'moderate', 'severe'];
-const TOTAL_STEPS = SYMPTOM_KEYS.length + 1; // 9 checklist items + PGI-S
+const TOTAL_STEPS = SYMPTOM_KEYS.length + 2; // 9 checklist items + PGI-S + vitals
+
+/** Blank text for every vitals field — the state the step opens in and the
+ *  state it is perfectly valid to leave in. */
+const emptyVitalsText = Object.fromEntries(VITALS_KEYS.map((k) => [k, ''])) as Record<
+  keyof Vitals,
+  string
+>;
+
+/** Label and unit i18n keys per vitals field, written out IN FULL. The locale
+ *  scan in src/i18n/i18n.test.ts reads source for literal key strings; a
+ *  `vitals.${...}` template would force the whole namespace onto the
+ *  runtime-built allowlist and hide any genuine orphan inside it. */
+const VITALS_LABEL: Record<keyof Vitals, string> = {
+  height_cm: 'vitals.height',
+  weight_kg: 'vitals.weight',
+  temperature_c: 'vitals.temperature',
+  systolic_bp: 'vitals.systolic',
+  diastolic_bp: 'vitals.diastolic',
+  pulse_rate: 'vitals.pulse',
+  spo2_percent: 'vitals.spo2',
+};
+
+const VITALS_UNIT: Record<keyof Vitals, string> = {
+  height_cm: 'vitals.unitCm',
+  weight_kg: 'vitals.unitKg',
+  temperature_c: 'vitals.unitC',
+  systolic_bp: 'vitals.unitMmHg',
+  diastolic_bp: 'vitals.unitMmHg',
+  pulse_rate: 'vitals.unitBpm',
+  spo2_percent: 'vitals.unitPercent',
+};
 
 type Phase = 'questions' | 'review' | 'result';
 
@@ -76,20 +115,47 @@ export default function ScreeningScreen() {
 
   const [flags, setFlags] = useState<SymptomFlags>({});
   const [pgis, setPgis] = useState<PgisSeverity | null>(null);
+  // Vitals are held as the RAW TEXT typed, not as parsed numbers: a half-typed
+  // "3" on the way to "36.8" is out of range, and re-rendering the field from a
+  // parsed value would delete it under the BHW's fingers.
+  const [vitalsText, setVitalsText] = useState<Record<keyof Vitals, string>>(emptyVitalsText);
   const [phase, setPhase] = useState<Phase>('questions');
-  const [step, setStep] = useState(0); // 0..8 checklist, 9 = PGI-S
+  const [step, setStep] = useState(0); // 0..8 checklist, 9 = PGI-S, 10 = vitals
   const [saving, setSaving] = useState(false);
 
   const isPgisStep = step === SYMPTOM_KEYS.length;
+  const isVitalsStep = step === SYMPTOM_KEYS.length + 1;
   const currentKey = SYMPTOM_KEYS[Math.min(step, SYMPTOM_KEYS.length - 1)];
-  // PGI-S requires an answer like every other step ("None" is a valid answer);
-  // it stays supplementary — never feeds the referral rule (§5).
-  const answered = isPgisStep ? pgis !== null : flags[currentKey] !== undefined;
+
+  // Parse once per render: the values to store, and which fields to mark bad.
+  // Blank always parses valid to null — nothing here is ever required (§5).
+  const vitals: Vitals = { ...emptyVitals };
+  const vitalsInvalid: Partial<Record<keyof Vitals, boolean>> = {};
+  for (const key of VITALS_KEYS) {
+    const { value, valid } = parseVital(key, vitalsText[key]);
+    vitals[key] = value;
+    if (!valid) vitalsInvalid[key] = true;
+  }
+  const vitalsValid = VITALS_KEYS.every((k) => !vitalsInvalid[k]);
+  const bmi = bmiFrom(vitals.height_cm, vitals.weight_kg);
+
+  // PGI-S requires an answer like every other checklist step ("None" is valid);
+  // the VITALS step requires nothing at all — it may be walked straight past —
+  // but a value that is present must be a value the database will accept.
+  // Both stay supplementary: neither feeds the referral rule (§5).
+  const answered = isVitalsStep
+    ? vitalsValid
+    : isPgisStep
+      ? pgis !== null
+      : flags[currentKey] !== undefined;
   const complete = isChecklistComplete(flags);
   const outcome = complete ? evaluateReferral(flags) : null;
 
   const setAnswer = (key: (typeof SYMPTOM_KEYS)[number], value: TriState) =>
     setFlags((prev) => ({ ...prev, [key]: value }));
+
+  const setVital = (key: keyof Vitals, text: string) =>
+    setVitalsText((prev) => ({ ...prev, [key]: text }));
 
   /** Save once, then run the exit action. Used by Done / Create referral. */
   const saveAnd = async (after: (screeningId: string) => void) => {
@@ -102,6 +168,7 @@ export default function ScreeningScreen() {
         patient_id: patientId,
         symptom_flags: flags,
         pgis_severity: pgis, // supplementary only — not part of `outcome` (§5)
+        ...vitals, // likewise supplementary; any or all may be null (§5)
         referred: outcome.referred,
       });
       void triggerSync(); // best-effort; row stays queued if offline
@@ -116,7 +183,7 @@ export default function ScreeningScreen() {
       setPhase('review');
     } else if (phase === 'review') {
       setPhase('questions');
-      setStep(SYMPTOM_KEYS.length);
+      setStep(SYMPTOM_KEYS.length + 1); // back into the vitals step
     } else if (step === 0) {
       router.back();
     } else {
@@ -126,7 +193,7 @@ export default function ScreeningScreen() {
 
   const goNext = () => {
     if (!answered) return;
-    if (isPgisStep) setPhase('review');
+    if (isVitalsStep) setPhase('review');
     else setStep(step + 1);
   };
 
@@ -201,6 +268,78 @@ export default function ScreeningScreen() {
       </Pressable>
     );
   };
+
+  /**
+   * One vitals input. Deliberately plain: a label, a unit, and a number field.
+   * No colour coding, no thresholds, no "normal range" hint — a measurement
+   * carries no verdict in this system (§1/§5), and a red field would be one.
+   * `error` marks only a value the database's CHECK would reject.
+   */
+  const vitalField = (key: keyof Vitals) => (
+    <View key={key} style={{ flex: 1, minWidth: 132 }}>
+      <TextInput
+        mode="outlined"
+        label={`${t(VITALS_LABEL[key])} (${t(VITALS_UNIT[key])})`}
+        value={vitalsText[key]}
+        onChangeText={(v) => setVital(key, v)}
+        error={vitalsInvalid[key] === true}
+        keyboardType={VITALS_RANGE[key].decimals === 1 ? 'decimal-pad' : 'number-pad'}
+        style={{ backgroundColor: palette.paper }}
+      />
+    </View>
+  );
+
+  /** The whole optional vitals grid — shared by its own step and the review. */
+  const vitalsGrid = (
+    <View style={{ gap: 12 }}>
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        {vitalField('height_cm')}
+        {vitalField('weight_kg')}
+      </View>
+      {/* BMI is DERIVED here, never stored and never categorised — it is a
+          restatement of the two fields above it, shown the way age is shown
+          next to birthdate on the enrolment form. */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 10,
+          paddingHorizontal: 14,
+          paddingVertical: 10,
+          borderRadius: 12,
+          backgroundColor: palette.surfaceVariant,
+        }}
+      >
+        <Text variant="bodySmall" style={{ color: palette.muted, flex: 1 }}>
+          {t('vitals.bmiDerived')}
+        </Text>
+        <Text
+          variant="titleMedium"
+          style={{ fontWeight: '700', color: bmi !== null ? palette.tealDark : palette.outline }}
+        >
+          {bmi !== null ? bmi.toFixed(1) : '—'}
+        </Text>
+      </View>
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        {vitalField('temperature_c')}
+        {vitalField('spo2_percent')}
+      </View>
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        {vitalField('systolic_bp')}
+        {vitalField('diastolic_bp')}
+      </View>
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        {vitalField('pulse_rate')}
+        <View style={{ flex: 1, minWidth: 132 }} />
+      </View>
+      {!vitalsValid ? (
+        <Text variant="bodySmall" style={{ color: palette.red, lineHeight: 18 }}>
+          {t('vitals.outOfRange')}
+        </Text>
+      ) : null}
+    </View>
+  );
 
   // ---------- RESULT (design 7c) ----------
   if (phase === 'result' && outcome) {
@@ -400,6 +539,34 @@ export default function ScreeningScreen() {
               {PGIS_OPTIONS.map((opt) => pgisPill(opt, true))}
             </View>
           </View>
+
+          {/* Vitals — optional, and still optional here: the review may be left
+              with every field blank. */}
+          <View
+            style={{
+              backgroundColor: palette.paper,
+              borderWidth: 1,
+              borderColor: palette.border,
+              borderRadius: 14,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              gap: 10,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <MaterialCommunityIcons name="heart-pulse" size={16} color={palette.muted} />
+              <Text
+                variant="labelSmall"
+                style={{ color: palette.muted, fontWeight: '700', letterSpacing: 0.7 }}
+              >
+                {t('vitals.optionalTag').toUpperCase()}
+              </Text>
+            </View>
+            <Text variant="bodyMedium" style={{ color: palette.ink, fontWeight: '500' }}>
+              {t('vitals.heading')}
+            </Text>
+            {vitalsGrid}
+          </View>
         </ScrollView>
         <View
           style={{
@@ -412,15 +579,17 @@ export default function ScreeningScreen() {
         >
           <Button
             mode="contained"
-            disabled={!complete || pgis === null}
+            disabled={!complete || pgis === null || !vitalsValid}
             onPress={() => setPhase('result')}
             contentStyle={{ height: 54 }}
             labelStyle={{ fontSize: 15.5, fontWeight: '600' }}
             style={{ borderRadius: 27 }}
           >
-            {complete && pgis !== null
-              ? t('screening.seeRecommendation')
-              : t('screening.answerAll')}
+            {!complete || pgis === null
+              ? t('screening.answerAll')
+              : !vitalsValid
+                ? t('vitals.fixBeforeContinuing')
+                : t('screening.seeRecommendation')}
           </Button>
         </View>
       </View>
@@ -428,7 +597,7 @@ export default function ScreeningScreen() {
   }
 
   // ---------- QUESTION / PGI-S STEPS (design 7) ----------
-  const progress = (step + (answered && !isPgisStep ? 1 : 0)) / TOTAL_STEPS;
+  const progress = (step + (answered && !isPgisStep && !isVitalsStep ? 1 : 0)) / TOTAL_STEPS;
   return (
     <View style={{ flex: 1, backgroundColor: palette.background }}>
       <Appbar.Header style={{ backgroundColor: palette.background }}>
@@ -464,7 +633,40 @@ export default function ScreeningScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24, paddingTop: 20 }}>
-        {!isPgisStep ? (
+        {isVitalsStep ? (
+          <View
+            style={{
+              backgroundColor: palette.paper,
+              borderWidth: 1,
+              borderColor: palette.border,
+              borderRadius: 20,
+              padding: 24,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <MaterialCommunityIcons name="heart-pulse" size={19} color={palette.muted} />
+              <Text
+                variant="labelSmall"
+                style={{ color: palette.muted, fontWeight: '700', letterSpacing: 0.9 }}
+              >
+                {t('vitals.optionalTag').toUpperCase()}
+              </Text>
+            </View>
+            <Text
+              variant="headlineSmall"
+              style={{ marginTop: 10, color: palette.ink, fontWeight: '600', lineHeight: 31 }}
+            >
+              {t('vitals.heading')}
+            </Text>
+            <Text
+              variant="bodySmall"
+              style={{ marginTop: 8, color: palette.inkSoft, lineHeight: 19 }}
+            >
+              {t('vitals.intro')}
+            </Text>
+            <View style={{ marginTop: 22 }}>{vitalsGrid}</View>
+          </View>
+        ) : !isPgisStep ? (
           <View
             style={{
               backgroundColor: palette.paper,
@@ -558,7 +760,17 @@ export default function ScreeningScreen() {
           labelStyle={{ fontWeight: '600' }}
           style={{ flex: 2, borderRadius: 27 }}
         >
-          {answered ? t('screening.next') : t('screening.answerFirst')}
+          {isVitalsStep
+            ? // Naming the skip is the point: a BHW with no working thermometer
+              // needs to see that moving on is a supported choice, not a lapse.
+              !vitalsValid
+              ? t('vitals.fixBeforeContinuing')
+              : VITALS_KEYS.every((k) => vitalsText[k].trim() === '')
+                ? t('vitals.skipCta')
+                : t('screening.next')
+            : answered
+              ? t('screening.next')
+              : t('screening.answerFirst')}
         </Button>
       </View>
     </View>

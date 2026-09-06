@@ -57,7 +57,11 @@ export default function FollowUpsScreen() {
           key: r.referral_id,
           patientId: r.patient_id,
           title: r.full_name ?? r.display_code,
-          sub: r.full_name ? r.display_code : (r.specimen_id ?? ''),
+          // The sub-line used to fall back to the specimen id when a pre-0006
+          // row had no name. That id is now the facility's (0024) and is null
+          // on everything this device created, so the patient code — which
+          // always exists — carries the line instead.
+          sub: r.full_name ? r.display_code : '',
         }))
       : (filter === 'upcoming' ? upcoming : missed).map((a) => ({
           key: a.appointment_id,

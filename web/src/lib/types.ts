@@ -79,7 +79,36 @@ export interface PatientRow {
   updated_at: string;
 }
 
-export interface ScreeningRow {
+/**
+ * Optional vital signs recorded alongside a screening (migration 0024).
+ *
+ * SUPPLEMENTARY CONTEXT ONLY, exactly like pgis_severity: displayed for the
+ * facility's information, never an input to the referral decision. BMI is
+ * computed from height + weight at display time (lib/vitals.ts) and is
+ * deliberately not a column.
+ */
+export interface Vitals {
+  height_cm: number | null;
+  weight_kg: number | null;
+  temperature_c: number | null;
+  systolic_bp: number | null;
+  diastolic_bp: number | null;
+  pulse_rate: number | null;
+  spo2_percent: number | null;
+}
+
+/** Every vitals field, in the order the portal shows them. */
+export const VITALS_KEYS = [
+  'height_cm',
+  'weight_kg',
+  'temperature_c',
+  'systolic_bp',
+  'diastolic_bp',
+  'pulse_rate',
+  'spo2_percent',
+] as const;
+
+export interface ScreeningRow extends Vitals {
   screening_id: string;
   patient_id: string;
   symptom_flags: SymptomFlags;
@@ -94,7 +123,14 @@ export interface ReferralRow {
   patient_id: string;
   screening_id: string;
   facility_id: string;
-  specimen_id: string | null;
+  /**
+   * The laboratory sample identifier, OWNED BY THIS FACILITY (0024). Sputum is
+   * collected only here, never at the barangay, so the BHW app no longer
+   * generates it — staff enter it when they take the sample, typically while
+   * marking the referral received. Was specimen_id until the referral-model
+   * correction, and null on every referral created before staff fill it in.
+   */
+  lab_sample_id: string | null;
   status: ReferralStatus;
   result: string | null;
   /** Structured lab outcome recorded by staff (0006). Never computed (§1). */
@@ -156,9 +192,17 @@ export interface AppointmentRow {
 export interface ReferralJoined extends ReferralRow {
   patients: PatientRow & {
     ref_barangays: { name: string } | null;
-    /** Enrolling BHW (embedded via patients_enrolled_by_fkey; 0007 grants
-     *  tb_dots read on BHW users rows). Null if the row predates that. */
-    users: { full_name: string } | null;
+    /**
+     * The enroller (embedded via patients_enrolled_by_fkey; 0007 grants tb_dots
+     * read on BHW users rows, users_read_same_facility covers their own
+     * colleagues). Null if the row predates that.
+     *
+     * `role` is what distinguishes a BHW referral from a walk-in this facility
+     * registered itself (0025) — no origin column was added, because the
+     * enroller's role already answers the question and the two rows are
+     * deliberately identical in every other respect.
+     */
+    users: { full_name: string; role: UserRole } | null;
   };
   screenings: ScreeningRow;
 }
@@ -180,6 +224,38 @@ export function manilaToday(): string {
  *  No DST means whole-day arithmetic on the shifted instant is exact. */
 export function manilaDaysAgo(n: number): string {
   return new Date(Date.now() + MANILA_OFFSET_MS - n * 86_400_000).toISOString().slice(0, 10);
+}
+
+/**
+ * Whole-year age on today's date from a YYYY-MM-DD birthdate, or null when the
+ * input is missing/invalid/out of range (0-129, matching the DB CHECK on age).
+ * Mirrors ageFromBirthdate in mobile/src/lib/dates.ts: "today" is the Manila
+ * business day, so a patient's recorded age does not depend on where the
+ * machine reading it happens to be set.
+ */
+export function ageFromBirthdate(birthdate: string | null | undefined): number | null {
+  if (!birthdate) return null;
+  const [y, m, d] = birthdate.split('-').map(Number);
+  if (!y || !m || !d) return null;
+  const [ty, tm, td] = manilaToday().split('-').map(Number);
+  let age = ty - y;
+  if (tm < m || (tm === m && td < d)) age--;
+  return Number.isInteger(age) && age >= 0 && age < 130 ? age : null;
+}
+
+/** "First Middle Last", collapsing whitespace and omitting an empty middle.
+ *  Mirrors composeFullName in mobile/src/lib/names.ts — patients.full_name is
+ *  the one display string every reader consumes, so both writers must compose
+ *  it the same way. */
+export function composeFullName(
+  first: string,
+  middle: string | null | undefined,
+  last: string,
+): string {
+  return [first, middle, last]
+    .map((part) => (part ?? '').trim())
+    .filter((part) => part.length > 0)
+    .join(' ');
 }
 
 /** A picked Date as YYYY-MM-DD in the machine's own local time — never via

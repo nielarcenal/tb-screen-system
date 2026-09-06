@@ -16,7 +16,7 @@ interface ReferralSqlRow {
   patient_id: string;
   screening_id: string;
   facility_id: string;
-  specimen_id: string | null;
+  lab_sample_id: string | null;
   status: string;
   result_outcome: string | null;
   result_date: string | null;
@@ -32,7 +32,7 @@ function fromSql(r: ReferralSqlRow): LocalReferralRow {
     patient_id: r.patient_id,
     screening_id: r.screening_id,
     facility_id: r.facility_id,
-    specimen_id: r.specimen_id,
+    lab_sample_id: r.lab_sample_id,
     status: r.status as ReferralStatus,
     result_outcome: r.result_outcome as ResultOutcome | null,
     result_date: r.result_date,
@@ -43,22 +43,29 @@ function fromSql(r: ReferralSqlRow): LocalReferralRow {
   };
 }
 
+/**
+ * Insert a locally-created referral.
+ *
+ * `lab_sample_id` is NOT a parameter, and is written as NULL. Sputum is
+ * collected only at the TB-DOTS facility (0024), so there is no sample for a
+ * BHW to name at referral time — the facility enters the id when it collects
+ * the sample on-site. This app only ever reads that column, on a pull.
+ */
 export async function insertLocalReferral(
-  r: Omit<ReferralRow, 'created_at' | 'updated_at'>,
+  r: Omit<ReferralRow, 'created_at' | 'updated_at' | 'lab_sample_id'>,
 ): Promise<void> {
   const db = await getDb();
   const ts = nowIso();
   await db.runAsync(
     `INSERT INTO referrals
-       (referral_id, patient_id, screening_id, facility_id, specimen_id,
+       (referral_id, patient_id, screening_id, facility_id, lab_sample_id,
         status, result_outcome, result_date, presented, created_at, updated_at, sync_status)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?, 'pending')`,
+     VALUES (?,?,?,?,NULL,?,?,?,?,?,?, 'pending')`,
     [
       r.referral_id,
       r.patient_id,
       r.screening_id,
       r.facility_id,
-      r.specimen_id,
       r.status,
       r.result_outcome,
       r.result_date,
@@ -124,27 +131,27 @@ export async function upsertPulledReferral(server: ReferralRow): Promise<void> {
 
   await db.runAsync(
     `INSERT INTO referrals
-       (referral_id, patient_id, screening_id, facility_id, specimen_id,
+       (referral_id, patient_id, screening_id, facility_id, lab_sample_id,
         status, result_outcome, result_date, presented, created_at, updated_at, sync_status)
      VALUES (?,?,?,?,?,?,?,?,?,?,?, 'synced')
      ON CONFLICT(referral_id) DO UPDATE SET
-       patient_id   = excluded.patient_id,
-       screening_id = excluded.screening_id,
-       facility_id  = excluded.facility_id,
-       specimen_id  = excluded.specimen_id,
-       status       = excluded.status,
+       patient_id    = excluded.patient_id,
+       screening_id  = excluded.screening_id,
+       facility_id   = excluded.facility_id,
+       lab_sample_id = excluded.lab_sample_id,
+       status         = excluded.status,
        result_outcome = excluded.result_outcome,
-       result_date  = excluded.result_date,
-       presented    = excluded.presented,
-       created_at   = excluded.created_at,
-       updated_at   = excluded.updated_at,
-       sync_status  = 'synced'`,
+       result_date    = excluded.result_date,
+       presented      = excluded.presented,
+       created_at     = excluded.created_at,
+       updated_at     = excluded.updated_at,
+       sync_status    = 'synced'`,
     [
       server.referral_id,
       server.patient_id,
       server.screening_id,
       server.facility_id,
-      server.specimen_id,
+      server.lab_sample_id,
       server.status,
       server.result_outcome,
       server.result_date,

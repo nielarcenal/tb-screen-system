@@ -14,7 +14,7 @@ interface SessionState {
   email: string | null;
   /**
    * The BHW's own full name (users row), fetched best-effort after the session
-   * is (re)established — used to attribute the printed specimen form and the
+   * is (re)established — used to attribute the printed referral document and the
    * "enrolled by" line. Null while offline-at-launch until a fetch succeeds.
    */
   fullName: string | null;

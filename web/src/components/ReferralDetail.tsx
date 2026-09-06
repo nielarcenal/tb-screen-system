@@ -8,13 +8,20 @@
  * then check-up appointments (attend/miss) with an empty state.
  *
  * POSITIONING (§1): the screening block is read-only pre-screening context; the
- * lab outcome is human-entered data, never a computed result.
+ * lab outcome is human-entered data, never a computed result. Vitals (0024) are
+ * shown as measurements with units and NO interpretation — no colour coding, no
+ * "normal range", no verdict of any kind. Reading them is the clinician's job.
+ *
+ * The laboratory sample id lives here too, and only here: sputum is collected at
+ * this facility, so referrals.lab_sample_id is entered by the staff member who
+ * takes the sample. The BHW app never writes it (migration 0024).
  */
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
 import { AppointmentRow, ReferralJoined, SYMPTOM_KEYS, manilaToday } from '../lib/types';
+import { hasAnyVital, vitalsRows } from '../lib/vitals';
 
 interface Props {
   referralId: string;
@@ -36,6 +43,9 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [resultText, setResultText] = useState('');
   const [outcome, setOutcome] = useState<'positive' | 'negative' | null>(null);
+  // The sample id this facility assigns when it collects sputum (0024). Held as
+  // typed text; saved explicitly, because an id half-entered is not an id.
+  const [sampleId, setSampleId] = useState('');
   const [busy, setBusy] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
@@ -51,7 +61,7 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
     const { data, error: err } = await supabase
       .from('referrals')
       .select(
-        '*, patients(*, ref_barangays(name), users!patients_enrolled_by_fkey(full_name)), screenings(*)',
+        '*, patients(*, ref_barangays(name), users!patients_enrolled_by_fkey(full_name, role)), screenings(*)',
       )
       .eq('referral_id', referralId)
       .maybeSingle();
@@ -64,6 +74,7 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
     setReferral(r);
     setResultText(r?.result ?? '');
     setOutcome(r?.result_outcome ?? null);
+    setSampleId(r?.lab_sample_id ?? '');
     if (r) {
       // D-13: PATIENT-scoped, deliberately, and the heading now says so.
       // `appointments` has no referral_id (0001) — a check-up belongs to the
@@ -219,7 +230,14 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
               {p.sitio ? ` · ${p.sitio}` : ''}
             </div>
             {p.users?.full_name ? (
-              <div className="rd-screened">{t('detail.screenedBy', { name: p.users.full_name })}</div>
+              <div className="rd-screened">
+                {p.users.role === 'tb_dots'
+                  ? // Registered at this facility, not referred in by a BHW
+                    // (0025). Same row, same actions — only the origin differs,
+                    // and naming it stops a walk-in reading as a missing BHW.
+                    t('detail.registeredHere', { name: p.users.full_name })
+                  : t('detail.screenedBy', { name: p.users.full_name })}
+              </div>
             ) : null}
           </div>
           <button className="rd-close" onClick={onBack} aria-label={t('common.back')}>
@@ -266,6 +284,52 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
           <span className="pr-tag">{t('detail.patientReportedTag')}</span>
         </div>
         <p className="rd-note">{t('detail.pgisNote')}</p>
+
+        {/* Vitals (0024) — measurements with units, no interpretation (§5). */}
+        <div className="vitals-block">
+          <div className="vitals-head">
+            <span className="msym" aria-hidden="true">
+              monitor_heart
+            </span>
+            <span className="vitals-title">{t('vitals.heading')}</span>
+            <span className="ro-tag">{t('vitals.optionalTag')}</span>
+          </div>
+          {hasAnyVital(s) ? (
+            <>
+              <dl className="vitals-grid">
+                {vitalsRows(
+                  s,
+                  {
+                    height: t('vitals.height'),
+                    weight: t('vitals.weight'),
+                    bmi: t('vitals.bmi'),
+                    temperature: t('vitals.temperature'),
+                    bloodPressure: t('vitals.bloodPressure'),
+                    pulse: t('vitals.pulse'),
+                    spo2: t('vitals.spo2'),
+                  },
+                  {
+                    cm: t('vitals.unitCm'),
+                    kg: t('vitals.unitKg'),
+                    bmi: t('vitals.unitBmi'),
+                    c: t('vitals.unitC'),
+                    mmHg: t('vitals.unitMmHg'),
+                    bpm: t('vitals.unitBpm'),
+                    percent: t('vitals.unitPercent'),
+                  },
+                ).map((row) => (
+                  <div key={row.key} className="vitals-cell">
+                    <dt>{row.label}</dt>
+                    <dd>{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="rd-note">{t('vitals.contextNote')}</p>
+            </>
+          ) : (
+            <p className="rd-note">{t('vitals.noneRecorded')}</p>
+          )}
+        </div>
       </div>
 
       {/* Actions. */}
@@ -325,6 +389,36 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
                 </span>
               </div>
             )}
+
+            {/* Laboratory sample id — THIS facility's, entered when sputum is
+                collected here (0024). Deliberately not offered while the
+                referral is still 'submitted': the patient has not arrived, so
+                there is no sample and nothing to name. */}
+            {status === 'submitted' ? (
+              <p className="act-hint">{t('detail.sampleIdPending')}</p>
+            ) : (
+              <div className="sample-row">
+                <label className="sample-field">
+                  <span>{t('detail.sampleIdLabel')}</span>
+                  <input
+                    type="text"
+                    value={sampleId}
+                    placeholder={t('detail.sampleIdPlaceholder')}
+                    onChange={(e) => setSampleId(e.target.value)}
+                  />
+                </label>
+                <button
+                  className="act-primary secondary"
+                  disabled={busy || sampleId.trim() === (referral.lab_sample_id ?? '')}
+                  onClick={() =>
+                    void updateReferral({ lab_sample_id: sampleId.trim() || null })
+                  }
+                >
+                  {t('detail.sampleIdSave')}
+                </button>
+              </div>
+            )}
+            <p className="act-hint">{t('detail.sampleIdHint')}</p>
           </div>
 
           {/* Laboratory outcome — human-entered, never computed (§1). */}
