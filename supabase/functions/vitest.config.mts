@@ -12,6 +12,13 @@
  * every module there stays PURE — no Deno globals, no network, no clock of its
  * own. That is why selection.ts takes `nowMs` as an argument.
  *
+ * THE ONE EXCEPTION is sms-reminders/gateway.ts, listed explicitly rather than
+ * by widening the glob. It qualifies under the same rule: it imports nothing,
+ * touches no Deno global, and takes its environment as a parameter instead of
+ * reading Deno.env. It is included because it is the last code before a real
+ * SMS reaches a real patient and cannot be rehearsed without spending live
+ * gateway quota. index.ts stays out, permanently.
+ *
  * Both functions import these modules with an explicit `.ts` extension, which
  * is what Deno requires; Vite resolves that form too, so one file satisfies
  * both runtimes with no build step and no duplicated logic.
@@ -24,6 +31,6 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['_shared/**/*.test.ts'],
+    include: ['_shared/**/*.test.ts', 'sms-reminders/gateway.test.ts'],
   },
 });

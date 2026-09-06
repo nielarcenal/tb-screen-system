@@ -35,9 +35,20 @@
  *
  * Secrets (supabase secrets set ...):
  *   CRON_SECRET            required — shared secret for the cron caller
- *   SMS_GATEWAY            'stub' (default) | 'semaphore'
+ *   SMS_GATEWAY            'stub' (default) | 'semaphore' | 'textbee'
  *   SEMAPHORE_API_KEY      required when SMS_GATEWAY=semaphore
- *   SEMAPHORE_SENDER_NAME  optional registered sender name
+ *   SEMAPHORE_SENDER_NAME  REQUIRED in practice when SMS_GATEWAY=semaphore.
+ *                          Optional to the code, not to Semaphore: without an
+ *                          APPROVED sender name every send is rejected with
+ *                          HTTP 500 'No active sender name found'. Max 11
+ *                          alphanumeric chars and must not contain 'TB' or
+ *                          'DOTS' (§4).
+ *   TEXTBEE_API_KEY        required when SMS_GATEWAY=textbee
+ *   TEXTBEE_DEVICE_ID      optional; only needed once the TextBee account has
+ *                          more than one registered device.
+ *
+ * Set SMS_GATEWAY together with its provider key — SMS_GATEWAY alone logs an
+ * error and silently falls back to the stub (gateway.ts).
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
