@@ -4,7 +4,7 @@
  * pills and the standing "access is provisioned by your administrator" note.
  * The brand panel collapses below 880px, replaced by a compact top brand above
  * the form. The form itself — title, error, fields — is supplied as children,
- * so the facility (staff/captain) and admin logins share one shell.
+ * so the facility (staff/midwife) and admin logins share one shell.
  */
 import { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';

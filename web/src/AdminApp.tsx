@@ -1,6 +1,6 @@
 /**
  * Developer portal (admin.html) — deliberately SEPARATE from the facility
- * portal: its own login and only the provisioning views (Captain management /
+ * portal: its own login and only the provisioning views (Midwife management /
  * Staff management). Any signed-in account whose users row is not role 'admin'
  * is shown a polite refusal with a link back to the facility portal. Admins
  * have no patient-data policies at all — nothing clinical can render here even
@@ -18,13 +18,13 @@ import LangToggle from './components/LangToggle';
 import LoginLayout from './components/LoginLayout';
 import AdminDashboard from './components/AdminDashboard';
 import BhwManagement from './components/BhwManagement';
-import CaptainManagement from './components/CaptainManagement';
+import MidwifeManagement from './components/MidwifeManagement';
 import FacilityManagement from './components/FacilityManagement';
 import StaffManagement from './components/StaffManagement';
 import PasswordField from './components/PasswordField';
 import ChangePasswordGate from './components/ChangePasswordGate';
 
-type Page = 'dashboard' | 'captains' | 'bhws' | 'facilities' | 'staff';
+type Page = 'dashboard' | 'midwives' | 'bhws' | 'facilities' | 'staff';
 
 export default function AdminApp() {
   const { t } = useTranslation();
@@ -180,11 +180,11 @@ export default function AdminApp() {
       onClick: () => setPage('dashboard'),
     },
     {
-      key: 'captains',
+      key: 'midwives',
       icon: 'badge',
-      label: t('nav.captains'),
-      active: page === 'captains',
-      onClick: () => setPage('captains'),
+      label: t('nav.midwives'),
+      active: page === 'midwives',
+      onClick: () => setPage('midwives'),
     },
     {
       key: 'bhws',
@@ -218,7 +218,7 @@ export default function AdminApp() {
           ? t('nav.staff')
           : page === 'bhws'
             ? t('nav.bhws')
-            : t('nav.captains');
+            : t('nav.midwives');
   const headerSub =
     page === 'dashboard'
       ? t('adminDash.headerSub')
@@ -228,7 +228,7 @@ export default function AdminApp() {
           ? t('shell.staffSub')
           : page === 'bhws'
             ? t('shell.bhwsSub')
-            : t('shell.captainsSub');
+            : t('shell.midwivesSub');
 
   return (
     <AppShell
@@ -250,10 +250,10 @@ export default function AdminApp() {
       ) : page === 'staff' ? (
         <StaffManagement />
       ) : page === 'bhws' ? (
-        // Same screen the captain gets, unscoped -- see BhwManagement's header.
+        // Same screen the midwife gets, unscoped -- see BhwManagement's header.
         <BhwManagement asAdmin />
       ) : (
-        <CaptainManagement />
+        <MidwifeManagement />
       )}
     </AppShell>
   );

@@ -18,7 +18,7 @@ export const MIN_PASSWORD_LENGTH = 8;
  * The exact shape manage-bhw's tempPassword() emits (TBS-4829-kfmq).
  *
  * Knowing the format is what lets the gate refuse offline the one bypass a
- * hurried user actually attempts: retyping the slip of paper the captain
+ * hurried user actually attempts: retyping the slip of paper the midwife
  * handed over. The whole point of D-06 is retiring a password somebody else
  * chose, so a "new" password in the provisioned format defeats it — even a
  * different one, which would just be another password the app generated rather

@@ -2,7 +2,7 @@
  * Shared portal shell (redesign §3): persistent navy left sidebar — brand mark
  * on top, role nav, and the facility/user context pinned at the bottom — beside
  * a content column with a page header (title + subtitle) and the language
- * toggle. Replaces the old white top bar. Reused by the facility and captain
+ * toggle. Replaces the old white top bar. Reused by the facility and midwife
  * spaces; the standing non-diagnostic note (§1) sits under every content area.
  *
  * Presentation only — the nav items, context, and children are supplied by the

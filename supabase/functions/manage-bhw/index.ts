@@ -4,21 +4,21 @@
  * Two caller roles, one function (auth admin API needs the service role,
  * which must never reach the browser):
  *
- *   captain → manages BHW accounts of THEIR OWN ASSIGNED BARANGAY only
- *             (0008: captains from other barangays cannot touch BHWs outside
- *             their area; new BHWs are always assigned the captain's barangay).
- *   admin   → manages CAPTAIN accounts (default), TB-DOTS STAFF accounts
+ *   midwife → manages BHW accounts of THEIR OWN ASSIGNED BARANGAY only
+ *             (0008: midwives from other barangays cannot touch BHWs outside
+ *             their area; new BHWs are always assigned the midwife's barangay).
+ *   admin   → manages MIDWIFE accounts (default), TB-DOTS STAFF accounts
  *             (body.target_role = 'tb_dots'), or BHW accounts
  *             (body.target_role = 'bhw', added 0023). Staff belong to a
- *             facility and have no barangay; captains and BHWs get a barangay
+ *             facility and have no barangay; midwives and BHWs get a barangay
  *             and derive their facility from it.
  *
  *             The admin is UNSCOPED over BHWs, deliberately: a BHW who cannot
- *             sign in should not have to wait for their captain. The captain's
+ *             sign in should not have to wait for their midwife. The midwife's
  *             own 0008 barangay boundary is unchanged.
  *
  * Actions (POST JSON { action, ... }):
- *   create         captain: { first_name, middle_name?, last_name, purok }
+ *   create         midwife: { first_name, middle_name?, last_name, purok }
  *                  admin:   { first_name, middle_name?, last_name, barangay_code } — the
  *                  facility is derived from the barangay's LGU default DOTS
  *                  center (ref_cities.default_facility_id, 0009); an explicit
@@ -27,9 +27,9 @@
  *                    .2/.3… suffix on clash; temp password), inserts the users
  *                    row, returns { email, temp_password }.
  *   update         { user_id, first_name, last_name } (admin may also send
- *                  barangay_code to reassign a captain)
+ *                  barangay_code to reassign a midwife)
  *   deactivate     { user_id, reassign_to? } → users.active=false + auth ban
- *                  (blocks sign-in). Captains may pass reassign_to (another
+ *                  (blocks sign-in). Midwives may pass reassign_to (another
  *                  active BHW of the same barangay) to hand that BHW's enrolled
  *                  patients over to a successor so cross-barangay enrollments
  *                  and their follow-ups are not orphaned.
@@ -44,25 +44,25 @@
  * is ever read or returned to the caller. The ONE exception is the coverage
  * handoff above: a deactivation may reassign patients.enrolled_by (a foreign
  * key only) from the deactivated BHW to the successor, server-side, without
- * exposing any patient row. Captains and admins have no patient read policies.
+ * exposing any patient row. Midwives and admins have no patient read policies.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { candidateEmail, isEmailTaken, slugPart } from '../_shared/accountEmail.ts';
 
 interface Body {
   action: 'create' | 'update' | 'deactivate' | 'reactivate' | 'reset_password';
-  /** Admin callers only: which account type they are managing (default captain). */
-  target_role?: 'captain' | 'tb_dots' | 'bhw';
+  /** Admin callers only: which account type they are managing (default midwife). */
+  target_role?: 'midwife' | 'tb_dots' | 'bhw';
   user_id?: string;
   first_name?: string;
   /** Optional middle name (0014) — part of the composed full_name. */
   middle_name?: string;
   last_name?: string;
-  /** captain → BHW only (0014): the BHW's coverage area within the barangay. */
+  /** midwife → BHW only (0014): the BHW's coverage area within the barangay. */
   purok?: string;
   barangay_code?: string;
   facility_id?: string;
-  /** deactivate only (captain → BHW): successor to receive the enrolled patients. */
+  /** deactivate only (midwife → BHW): successor to receive the enrolled patients. */
   reassign_to?: string;
 }
 
@@ -93,7 +93,7 @@ const TEMP_PW_ALPHABET = 'abcdefghjkmnpqrstuvwxyz';
  * crypto.getRandomValues, NOT Math.random: this string is the account's only
  * credential until the holder passes the D-06 change gate, and Math.random is
  * a fast non-cryptographic PRNG whose future output is recoverable from a
- * handful of observed values — and a captain provisioning a batch of BHWs sees
+ * handful of observed values — and a midwife provisioning a batch of BHWs sees
  * exactly that, a run of consecutive outputs. Deno exposes the Web Crypto API
  * globally, so no import is needed.
  *
@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, // service role: server-side only
   );
 
-  // --- caller must be an ACTIVE captain (manages BHWs) or admin (captains) ---
+  // --- caller must be an ACTIVE midwife (manages BHWs) or admin (midwives) ---
   const jwt = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
   const { data: callerAuth, error: authErr } = await admin.auth.getUser(jwt);
   if (authErr || !callerAuth?.user) return json(401, { error: 'unauthorized' });
@@ -132,12 +132,12 @@ Deno.serve(async (req) => {
     .eq('user_id', callerAuth.user.id)
     .maybeSingle();
   if (callerErr) return json(500, { error: callerErr.message });
-  if (!caller || !caller.active || (caller.role !== 'captain' && caller.role !== 'admin')) {
-    return json(403, { error: 'captain or admin role required' });
+  if (!caller || !caller.active || (caller.role !== 'midwife' && caller.role !== 'admin')) {
+    return json(403, { error: 'midwife or admin role required' });
   }
   const isAdmin = caller.role === 'admin';
   if (!isAdmin && !caller.assigned_barangay_code) {
-    return json(403, { error: 'captain has no assigned barangay' });
+    return json(403, { error: 'midwife has no assigned barangay' });
   }
 
   let body: Body;
@@ -147,12 +147,12 @@ Deno.serve(async (req) => {
     return json(400, { error: 'invalid JSON body' });
   }
 
-  // Admins choose what they manage (captains by default, or tb_dots staff, or
-  // BHWs since 0023); captains always manage BHWs.
+  // Admins choose what they manage (midwives by default, or tb_dots staff, or
+  // BHWs since 0023); midwives always manage BHWs.
   const managedRole = isAdmin
     ? body.target_role === 'tb_dots' || body.target_role === 'bhw'
       ? body.target_role
-      : 'captain'
+      : 'midwife'
     : 'bhw';
 
   // --- helper: load a target account and verify role + scope ---
@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!target || target.role !== managedRole) return null;
-    // Captains only reach BHWs of their own barangay (0008).
+    // Midwives only reach BHWs of their own barangay (0008).
     if (!isAdmin && target.assigned_barangay_code !== caller.assigned_barangay_code) {
       return null;
     }
@@ -185,7 +185,7 @@ Deno.serve(async (req) => {
         if (!first || !last) {
           return json(400, { error: 'first_name and last_name required' });
         }
-        // Captain-created BHWs carry a coverage area (redesigned form; 0014).
+        // Midwife-created BHWs carry a coverage area (redesigned form; 0014).
         if (managedRole === 'bhw' && !purok) {
           return json(400, { error: 'purok (coverage area) required' });
         }
@@ -233,8 +233,8 @@ Deno.serve(async (req) => {
           return json(409, { error: 'could not allocate a unique email' });
         }
 
-        // Scope: captains always create into their own barangay/facility;
-        // admins say which barangay the new captain gets.
+        // Scope: midwives always create into their own barangay/facility;
+        // admins say which barangay the new midwife gets.
         const barangay = isAdmin ? body.barangay_code : caller.assigned_barangay_code;
         if (!barangay) return json(400, { error: 'barangay_code required' });
         let facility = isAdmin ? body.facility_id : caller.facility_id;
@@ -280,7 +280,7 @@ Deno.serve(async (req) => {
               first_name: first,
               middle_name: middle || null,
               last_name: last,
-              // Coverage area applies to BHWs only; captains have none.
+              // Coverage area applies to BHWs only; midwives have none.
               purok: managedRole === 'bhw' ? purok : null,
               facility_id: facility,
               assigned_barangay_code: barangay,
@@ -312,12 +312,12 @@ Deno.serve(async (req) => {
           fields.middle_name = middle || null;
           fields.last_name = last;
         }
-        // Coverage area edits (captain → BHW only). '' clears it back to null.
+        // Coverage area edits (midwife → BHW only). '' clears it back to null.
         if (managedRole === 'bhw' && body.purok !== undefined) {
           fields.purok = body.purok.trim() || null;
         }
-        // Only admins may move an account between barangays; a captain's BHWs
-        // stay in the captain's barangay by definition.
+        // Only admins may move an account between barangays; a midwife's BHWs
+        // stay in the midwife's barangay by definition.
         if (isAdmin && managedRole !== 'tb_dots' && body.barangay_code) {
           fields.assigned_barangay_code = body.barangay_code;
         }
@@ -357,7 +357,7 @@ Deno.serve(async (req) => {
         if (!target) return notFound();
         const activate = body.action === 'reactivate';
 
-        // Optional coverage handoff (captain deactivating a BHW): move the
+        // Optional coverage handoff (midwife deactivating a BHW): move the
         // BHW's enrolled patients to an active BHW of the same barangay, so a
         // cross-barangay enrollment (visible only to its enroller) is not
         // orphaned. Done BEFORE the ban so a failure aborts cleanly, leaving
@@ -373,7 +373,7 @@ Deno.serve(async (req) => {
             .maybeSingle();
           if (succErr) return json(500, { error: succErr.message });
           // Scope the successor to the barangay whose patients are moving.
-          // For a captain that is their own barangay; an admin has none, so it
+          // For a midwife that is their own barangay; an admin has none, so it
           // must be the TARGET's. Comparing against caller.assigned_barangay_code
           // unconditionally would reject every admin handoff, because an admin's
           // is null -- and would silently turn deactivation into an orphaning of

@@ -1,7 +1,7 @@
 /**
  * Admin view: provision TB-DOTS STAFF accounts. Each staff account belongs to
  * one facility — that facility_id is what scopes their whole portal (inbox,
- * dashboard, results). Same machinery as captain management: list reads users
+ * dashboard, results). Same machinery as midwife management: list reads users
  * rows (users_admin_read), writes go through the manage-bhw Edge Function
  * (target_role 'tb_dots'), temp password shown once.
  */

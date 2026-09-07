@@ -51,9 +51,9 @@ describe('an active BHW', () => {
 });
 
 describe('a deactivated BHW', () => {
-  it('is denied with the reason that picks the "talk to your captain" message', () => {
+  it('is denied with the reason that picks the "talk to your midwife" message', () => {
     // The reason is asserted, not just the denial: it is what chooses between
-    // telling them to contact their captain and sending them to the portal.
+    // telling them to contact their midwife and sending them to the portal.
     for (const policy of ['deny', 'unknown'] as const) {
       expect(evaluateAccountAccess(row('bhw', false), policy)).toEqual({
         kind: 'denied',
@@ -78,11 +78,11 @@ describe('an account that is not a BHW account', () => {
     }
   });
 
-  it('refuses a captain account', () => {
-    expect(evaluateAccountAccess(row('captain', true), 'deny')).toEqual({
+  it('refuses a midwife account', () => {
+    expect(evaluateAccountAccess(row('midwife', true), 'deny')).toEqual({
       kind: 'denied',
       reason: 'wrongRole',
-      role: 'captain',
+      role: 'midwife',
     });
   });
 
@@ -110,10 +110,10 @@ describe('an account that is not a BHW account', () => {
 
   it('reports the wrong role even when that account is also deactivated', () => {
     // Where they belong is more useful than the fact they are switched off.
-    expect(evaluateAccountAccess(row('captain', false), 'deny')).toEqual({
+    expect(evaluateAccountAccess(row('midwife', false), 'deny')).toEqual({
       kind: 'denied',
       reason: 'wrongRole',
-      role: 'captain',
+      role: 'midwife',
     });
   });
 });
@@ -176,7 +176,7 @@ describe('the lookup failed', () => {
 describe('the destination named in the wrong-app message', () => {
   it('sends each role to the right place', () => {
     expect(roleDestinationKey('tb_dots')).toBe('blocked.roleFacility');
-    expect(roleDestinationKey('captain')).toBe('blocked.roleCaptain');
+    expect(roleDestinationKey('midwife')).toBe('blocked.roleMidwife');
     expect(roleDestinationKey('admin')).toBe('blocked.roleAdmin');
   });
 

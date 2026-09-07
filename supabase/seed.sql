@@ -51,20 +51,20 @@ on conflict (facility_id) do nothing;
 -- on conflict (user_id) do nothing;
 
 -- ---------------------------------------------------------------------------
--- Barangay Captain test account (0006). Same flow: create the auth user first
--- (captain@test.local / Test1234!), then paste the UID and run. The captain
+-- Barangay Midwife test account (0006). Same flow: create the auth user first
+-- (midwife@test.local / Test1234!), then paste the UID and run. The midwife
 -- MUST share facility_id with the BHWs they manage (users_read_same_facility
 -- is how they list accounts) — here that is the Casisang BHS.
 -- ---------------------------------------------------------------------------
 -- insert into public.users (user_id, role, full_name, facility_id, assigned_barangay_code) values
---   ('<PASTE_CAPTAIN_AUTH_UID>', 'captain', 'Test Barangay Captain',
+--   ('<PASTE_MIDWIFE_AUTH_UID>', 'midwife', 'Test Barangay Midwife',
 --    '00000000-0000-0000-0000-0000000000b1', '101312012')
 -- on conflict (user_id) do nothing;
 
 -- ---------------------------------------------------------------------------
 -- Admin (developer) account (0008). Same flow: create the auth user first
 -- (admin@test.local / Test1234!), paste the UID, run. Admins provision
--- captain accounts from the portal; they can read no patient data. The
+-- midwife accounts from the portal; they can read no patient data. The
 -- facility is only an FK requirement — any facility works.
 -- ---------------------------------------------------------------------------
 -- insert into public.users (user_id, role, full_name, facility_id, assigned_barangay_code) values

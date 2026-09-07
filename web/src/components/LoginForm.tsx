@@ -1,14 +1,14 @@
 /**
  * Facility portal sign-in (redesign §4): the two-panel brand + form shell with
- * the staff/captain role toggle and a pill CTA that shows a spinner while
+ * the staff/midwife role toggle and a pill CTA that shows a spinner while
  * signing in. Accounts are provisioned by the admin (see supabase/seed.sql) —
  * there is deliberately no self-registration.
  *
  * WHAT THE ROLE TOGGLE DOES, and what it must never do (D-11): it selects the
  * explanatory note under the pills, and nothing else. Sign-in stays entirely
  * role-agnostic — `signInWithPassword` is given an email and a password, and
- * the account's own users row decides which portal opens, so a captain who
- * picked "TB-DOTS staff" still lands on the captain dashboard.
+ * the account's own users row decides which portal opens, so a midwife who
+ * picked "TB-DOTS staff" still lands on the midwife dashboard.
  *
  * That is deliberate. Gating sign-in on the pill would refuse correct
  * credentials over a cosmetic mis-tap, and would also turn the control into a
@@ -27,7 +27,7 @@ import PasswordField from './PasswordField';
 
 export default function LoginForm() {
   const { t } = useTranslation();
-  const [role, setRole] = useState<'staff' | 'captain'>('staff');
+  const [role, setRole] = useState<'staff' | 'midwife'>('staff');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -60,11 +60,11 @@ export default function LoginForm() {
         </button>
         <button
           type="button"
-          className={role === 'captain' ? 'on' : ''}
-          aria-pressed={role === 'captain'}
-          onClick={() => setRole('captain')}
+          className={role === 'midwife' ? 'on' : ''}
+          aria-pressed={role === 'midwife'}
+          onClick={() => setRole('midwife')}
         >
-          {t('login.roleCaptain')}
+          {t('login.roleMidwife')}
         </button>
       </div>
 
@@ -72,7 +72,7 @@ export default function LoginForm() {
           user who toggles hears the note change rather than only the pressed
           state flipping on a control with no consequence. */}
       <p className="login-rolenote" aria-live="polite">
-        {t(role === 'staff' ? 'login.noteStaff' : 'login.noteCaptain')}
+        {t(role === 'staff' ? 'login.noteStaff' : 'login.noteMidwife')}
       </p>
 
       {error ? (

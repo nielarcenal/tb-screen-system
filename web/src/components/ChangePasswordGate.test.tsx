@@ -176,8 +176,8 @@ describe('ChangePasswordGate — the way out', () => {
   });
 
   it('shows which account is being changed', () => {
-    renderGate('captain@example.test');
-    expect(screen.getByText(/captain@example\.test/)).toBeTruthy();
+    renderGate('midwife@example.test');
+    expect(screen.getByText(/midwife@example\.test/)).toBeTruthy();
   });
 
   it('renders without an email rather than showing an empty line', () => {

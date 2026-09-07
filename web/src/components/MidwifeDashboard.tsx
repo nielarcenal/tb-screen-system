@@ -1,9 +1,9 @@
 /**
- * Captain dashboard (redesign §4): a read-only overview of the captain's own
+ * Midwife dashboard (redesign §4): a read-only overview of the midwife's own
  * barangay BHW team — three summary tiles (BHWs / Screenings / Referrals over
  * the last 30 days) and a per-BHW activity list. Everything comes from the
- * bhw_activity() RPC (captain role required, barangay-scoped, 0008) that the
- * BHW-management view already uses; captains read no patient data of any kind
+ * bhw_activity() RPC (midwife role required, barangay-scoped, 0008) that the
+ * BHW-management view already uses; midwives read no patient data of any kind
  * (§1), so these are counts only.
  */
 import { useCallback, useEffect, useState } from 'react';
@@ -35,7 +35,7 @@ function initials(name: string): string {
   );
 }
 
-export default function CaptainDashboard() {
+export default function MidwifeDashboard() {
   const { t } = useTranslation();
   const [rows, setRows] = useState<BhwActivityRow[]>([]);
   const [loading, setLoading] = useState(true);

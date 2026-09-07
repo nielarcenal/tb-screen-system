@@ -5,7 +5,7 @@
  * WHY IT IS AN OVERLAY AND NOT A SCREEN: a route can be dismissed. This covers
  * the whole app, absolutely positioned above the navigator, and swallows the
  * Android back button, because the thing it is protecting against is a password
- * the BHW did not choose and their captain still knows. "Later" is not an
+ * the BHW did not choose and their midwife still knows. "Later" is not an
  * option the finding leaves open. The one way out other than setting a password
  * is signing out, which runs the same guarded flow as Settings — including the
  * unsynced-records question, so the escape hatch can never destroy a day's work.

@@ -3,7 +3,7 @@
  *
  * Mirrored at mobile/src/domain/passwordPolicy.test.ts — the app and the portal must
  * refuse the same passwords, and two copies that drift apart would mean a BHW
- * and a captain being told different things about the same rule.
+ * and a midwife being told different things about the same rule.
  */
 import { describe, expect, it } from 'vitest';
 
@@ -29,7 +29,7 @@ describe('validateNewPassword', () => {
   });
 
   it('rejects the provisioned temp-password format', () => {
-    // The slip of paper the captain handed over, retyped.
+    // The slip of paper the midwife handed over, retyped.
     expect(validateNewPassword('TBS-4829-kfmq', 'TBS-4829-kfmq')).toBe('looksProvisioned');
   });
 

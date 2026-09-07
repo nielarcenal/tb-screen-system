@@ -14,7 +14,7 @@
  * out of scope here.
  *
  * What it DOES close, in practice:
- *  - the phone is no longer the place a facility, captain or admin account can
+ *  - the phone is no longer the place a facility, midwife or admin account can
  *    accidentally sync a province of patients onto;
  *  - a deactivated BHW is told they were deactivated instead of being shown
  *    "your session expired" (the auth ban that `manage-bhw` applies at

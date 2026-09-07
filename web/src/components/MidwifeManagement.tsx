@@ -1,11 +1,11 @@
 /**
- * Admin (developer) view: provision Barangay-Captain accounts. Each captain is
- * assigned ONE barangay — the manage-bhw function then confines that captain
+ * Admin (developer) view: provision Barangay-Midwife accounts. Each midwife is
+ * assigned ONE barangay — the manage-bhw function then confines that midwife
  * to adding/managing BHWs of that barangay only (0008).
  *
  * List reads users rows directly (users_admin_read policy); all writes go
  * through the manage-bhw Edge Function (auth admin needs the service role).
- * Admins, like captains, can read no patient data of any kind.
+ * Admins, like midwives, can read no patient data of any kind.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import AddressCascadeWeb from './AddressCascadeWeb';
 
-interface CaptainRow {
+interface MidwifeRow {
   user_id: string;
   full_name: string;
   facility_id: string;
@@ -24,13 +24,13 @@ interface CaptainRow {
 
 type View =
   | { kind: 'list' }
-  | { kind: 'form'; editing: CaptainRow | null }
+  | { kind: 'form'; editing: MidwifeRow | null }
   | { kind: 'created'; email: string; tempPassword: string; name: string; reset?: boolean }
-  | { kind: 'confirmDeactivate'; target: CaptainRow };
+  | { kind: 'confirmDeactivate'; target: MidwifeRow };
 
-export default function CaptainManagement() {
+export default function MidwifeManagement() {
   const { t } = useTranslation();
-  const [rows, setRows] = useState<CaptainRow[]>([]);
+  const [rows, setRows] = useState<MidwifeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<View>({ kind: 'list' });
@@ -59,10 +59,10 @@ export default function CaptainManagement() {
     const { data, error: err } = await supabase
       .from('users')
       .select('user_id, full_name, facility_id, assigned_barangay_code, active, ref_barangays(name)')
-      .eq('role', 'captain')
+      .eq('role', 'midwife')
       .order('full_name');
     if (err) setError(err.message);
-    else setRows((data ?? []) as unknown as CaptainRow[]);
+    else setRows((data ?? []) as unknown as MidwifeRow[]);
     setLoading(false);
   }, []);
 
@@ -104,7 +104,7 @@ export default function CaptainManagement() {
     setView({ kind: 'form', editing: null });
   };
 
-  const openEdit = (row: CaptainRow) => {
+  const openEdit = (row: MidwifeRow) => {
     const [first, ...rest] = row.full_name.trim().split(/\s+/);
     setFormFirst(first ?? '');
     setFormLast(rest.join(' '));
@@ -112,7 +112,7 @@ export default function CaptainManagement() {
     setView({ kind: 'form', editing: row });
   };
 
-  const submitForm = async (editing: CaptainRow | null) => {
+  const submitForm = async (editing: MidwifeRow | null) => {
     setBusy(true);
     setError(null);
     try {
@@ -148,7 +148,7 @@ export default function CaptainManagement() {
     }
   };
 
-  const resetPassword = async (row: CaptainRow) => {
+  const resetPassword = async (row: MidwifeRow) => {
     setBusy(true);
     setError(null);
     try {
@@ -167,7 +167,7 @@ export default function CaptainManagement() {
     }
   };
 
-  const setActive = async (row: CaptainRow, active: boolean) => {
+  const setActive = async (row: MidwifeRow, active: boolean) => {
     setBusy(true);
     setError(null);
     try {
@@ -184,7 +184,7 @@ export default function CaptainManagement() {
   if (view.kind === 'created') {
     return (
       <div className="card centered" style={{ maxWidth: 480 }}>
-        <h2>{view.reset ? t('bhw.resetDoneTitle') : t('captains.createdTitle')}</h2>
+        <h2>{view.reset ? t('bhw.resetDoneTitle') : t('midwives.createdTitle')}</h2>
         <p>{view.name}</p>
         <table className="kv">
           <tbody>
@@ -212,7 +212,7 @@ export default function CaptainManagement() {
     const editing = view.editing;
     return (
       <div className="card centered" style={{ maxWidth: 480 }}>
-        <h2>{editing ? t('captains.editTitle') : t('captains.addTitle')}</h2>
+        <h2>{editing ? t('midwives.editTitle') : t('midwives.addTitle')}</h2>
         {error ? <p className="error">{t('bhw.actionError', { message: error })}</p> : null}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 10px' }}>
           <div>
@@ -237,13 +237,13 @@ export default function CaptainManagement() {
         <AddressCascadeWeb value={formBrgy} onChange={setFormBrgy} />
         {!editing && formBrgy ? (
           <p className="mutedline" style={{ marginTop: 10 }}>
-            <b>{t('captains.facilityLabel')}:</b>{' '}
-            {mappedFacility ?? t('captains.noFacilityMapped')}
+            <b>{t('midwives.facilityLabel')}:</b>{' '}
+            {mappedFacility ?? t('midwives.noFacilityMapped')}
           </p>
         ) : null}
         {!editing ? (
           <p className="mutedline" style={{ marginTop: 10 }}>
-            {t('captains.scopeNote')}
+            {t('midwives.scopeNote')}
           </p>
         ) : null}
         <p>
@@ -300,17 +300,17 @@ export default function CaptainManagement() {
       <div className="bhw-head">
         <div className="bhw-titlerow">
           <div className="bhw-titleleft">
-            <h2>{t('captains.title')}</h2>
+            <h2>{t('midwives.title')}</h2>
             <span className="count-pill">{rows.length}</span>
           </div>
           <button className="bhw-new" onClick={openAdd}>
             <span className="msym" aria-hidden="true">
               add
             </span>
-            {t('captains.addCta')}
+            {t('midwives.addCta')}
           </button>
         </div>
-        <p className="bhw-privacy">{t('captains.privacyNote')}</p>
+        <p className="bhw-privacy">{t('midwives.privacyNote')}</p>
         <div className="bhw-tools">
           <div className="search-wrap">
             <span className="msym search-ic" aria-hidden="true">
@@ -360,7 +360,7 @@ export default function CaptainManagement() {
                 cloud_off
               </span>
             </div>
-            <div className="st-title">{t('captains.errorTitle')}</div>
+            <div className="st-title">{t('midwives.errorTitle')}</div>
             <div className="st-body">{t('bhw.errorBody')}</div>
             <button className="retry" onClick={() => void load()}>
               <span className="msym" aria-hidden="true">
@@ -387,8 +387,8 @@ export default function CaptainManagement() {
                 group_off
               </span>
             </div>
-            <div className="st-title">{t('captains.empty')}</div>
-            <div className="st-body">{t('captains.emptyDataBody')}</div>
+            <div className="st-title">{t('midwives.empty')}</div>
+            <div className="st-body">{t('midwives.emptyDataBody')}</div>
           </div>
         ) : visible.length === 0 ? (
           <div className="dstate ok">
@@ -397,7 +397,7 @@ export default function CaptainManagement() {
                 search_off
               </span>
             </div>
-            <div className="st-title">{t('captains.filterEmptyTitle')}</div>
+            <div className="st-title">{t('midwives.filterEmptyTitle')}</div>
             <div className="st-body">{t('bhw.filterEmptyBody')}</div>
           </div>
         ) : (

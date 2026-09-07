@@ -35,7 +35,7 @@ export const SYMPTOM_KEYS = [
   'tb_contact',
 ] as const;
 
-export type UserRole = 'bhw' | 'tb_dots' | 'captain' | 'admin';
+export type UserRole = 'bhw' | 'tb_dots' | 'midwife' | 'admin';
 export type ResultOutcome = 'positive' | 'negative';
 
 /** The signed-in account's own users row (role drives which portal shows). */

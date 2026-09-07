@@ -9,7 +9,7 @@ A tuberculosis **pre-screening and referral follow-up system** connecting Barang
 | Path | Component | Users | Stack |
 |---|---|---|---|
 | `mobile/` | Android application | BHWs | Expo SDK 57 / React Native, TypeScript, offline-first |
-| `web/` | Facility portal (`/`) + developer portal (`/admin.html`) | TB-DOTS staff, Barangay Captains, admin | React 18 + Vite, TypeScript |
+| `web/` | Facility portal (`/`) + developer portal (`/admin.html`) | TB-DOTS staff, Barangay Midwives, admin | React 18 + Vite, TypeScript |
 | `supabase/` | Database, auth, Edge Functions | — | PostgreSQL 15 + RLS, GoTrue, Deno, pg_cron |
 | `docs/` | System documentation and design handoffs | — | — |
 
@@ -19,8 +19,8 @@ A tuberculosis **pre-screening and referral follow-up system** connecting Barang
 |---|---|---|---|
 | `bhw` | Mobile app | Yes | Patients of their assigned barangay, plus those they enrolled |
 | `tb_dots` | Facility portal | Yes | Patients referred to their facility, plus any they registered themselves (read); referrals addressed to their facility (act) |
-| `captain` | Facility portal | **No** | BHW accounts in their barangay (names + activity counts) |
-| `admin` | Developer portal | **No** | Captain and TB-DOTS account provisioning only |
+| `midwife` | Facility portal | **No** | BHW accounts in their barangay (names + activity counts) |
+| `admin` | Developer portal | **No** | Midwife and TB-DOTS account provisioning only |
 
 Row-Level Security is enforced on every table. The client UI adapts to the role but is never the security boundary.
 

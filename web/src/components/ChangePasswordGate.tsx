@@ -1,6 +1,6 @@
 /**
  * Forced password change (D-06). Shown instead of the portal — for staff,
- * captains and admins alike — while the signed-in account's users row still
+ * midwives and admins alike — while the signed-in account's users row still
  * has must_change_password = true.
  *
  * WHY IT BLOCKS: the flag is set by manage-bhw when an account is created or

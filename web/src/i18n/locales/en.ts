@@ -43,13 +43,13 @@ export const en = {
     register: 'Register patient',
     hotspot: 'Barangay hotspots',
     bhw: 'BHW management',
-    captains: 'Captain management',
+    midwives: 'Midwife management',
     staff: 'Staff management',
   },
   shell: {
     facilityPortal: 'Facility Portal',
     bhwsSub: 'Manage BHW accounts across every barangay',
-    captainPortal: 'Captain Portal',
+    midwifePortal: 'Midwife Portal',
     dashboardSub: 'Today’s activity at your facility',
     referralsSub: 'Referrals addressed to your facility',
     registerSub: 'Walk-in and self-referred patients',
@@ -57,9 +57,9 @@ export const en = {
     bhwSub: 'Health workers in your barangay',
     adminPortal: 'Developer Portal',
     roleAdmin: 'Administrator',
-    captainsSub: 'Provision Barangay Captain accounts',
+    midwivesSub: 'Provision Barangay Midwife accounts',
     staffSub: 'Provision TB-DOTS staff accounts',
-    captainDashSub: 'Your BHW team at a glance',
+    midwifeDashSub: 'Your BHW team at a glance',
     facilitiesSub: 'Manage TB-DOTS facilities',
   },
   capDash: {
@@ -80,7 +80,7 @@ export const en = {
     errorBody: 'We couldn’t reach the server. Check your connection and try again.',
     retry: 'Retry',
     footerNote:
-      'Activity counts are totals only — no patient information is shown to captains.',
+      'Activity counts are totals only — no patient information is shown to midwives.',
   },
   adminDash: {
     headerSub: 'Program-wide overview',
@@ -88,15 +88,15 @@ export const en = {
     summaryTitle: 'Program overview',
     facilities: 'Facilities',
     facilitiesSub: 'TB-DOTS centers',
-    captains: 'Captains',
-    captainsSub: 'across the program',
+    midwives: 'Midwives',
+    midwivesSub: 'across the program',
     bhws: 'BHWs',
     bhwsSub: 'across all facilities',
     openReferrals: 'Open referrals',
     openSub: 'system-wide',
     coverageTitle: 'Facility coverage',
-    coverageSub: 'Captains, BHWs and open referrals per facility',
-    covCaptains: 'captains',
+    coverageSub: 'Midwives, BHWs and open referrals per facility',
+    covMidwives: 'midwives',
     covBhws: 'BHWs',
     covOpen: 'open',
     emptyTitle: 'No facilities yet',
@@ -145,22 +145,22 @@ export const en = {
     emptyDataBody: 'Add a staff account to get started.',
     filterEmptyBody: 'Try clearing the search or facility filter.',
   },
-  captains: {
-    title: 'Barangay Captain accounts',
+  midwives: {
+    title: 'Barangay Midwife accounts',
     privacyNote:
-      'Admins provision captain accounts only. No patient names, records, or results appear anywhere in this view.',
-    addCta: 'Add captain',
-    addTitle: 'Add Barangay Captain',
-    editTitle: 'Edit captain',
+      'Admins provision midwife accounts only. No patient names, records, or results appear anywhere in this view.',
+    addCta: 'Add midwife',
+    addTitle: 'Add Barangay Midwife',
+    editTitle: 'Edit midwife',
     facilityLabel: 'Facility (nearest TB-DOTS center)',
     noFacilityMapped: 'no DOTS center mapped for this barangay — apply migration 0009',
-    createdTitle: 'Captain account created',
+    createdTitle: 'Midwife account created',
     scopeNote:
-      'The captain will only be able to add and manage BHW accounts for the barangay assigned here.',
-    empty: 'No captain accounts yet.',
-    errorTitle: 'Couldn’t load captains',
-    filterEmptyTitle: 'No captains match',
-    emptyDataBody: 'Add a captain to get started.',
+      'The midwife will only be able to add and manage BHW accounts for the barangay assigned here.',
+    empty: 'No midwife accounts yet.',
+    errorTitle: 'Couldn’t load midwives',
+    filterEmptyTitle: 'No midwives match',
+    emptyDataBody: 'Add a midwife to get started.',
   },
   dashboard: {
     outcomeNote:
@@ -267,7 +267,7 @@ export const en = {
   login: {
     sub: 'TB-DOTS facility staff',
     roleStaff: 'TB-DOTS staff',
-    roleCaptain: 'Barangay Captain',
+    roleMidwife: 'Barangay Midwife',
     email: 'Email',
     password: 'Password',
     showPassword: 'Show password',
@@ -277,9 +277,9 @@ export const en = {
     brandTag: 'Health Worker Platform',
     brandHead: 'Community TB screening, coordinated in one place.',
     brandSub:
-      'One platform connecting barangay health workers, captains, and TB-DOTS facilities across Bukidnon.',
+      'One platform connecting barangay health workers, midwives, and TB-DOTS facilities across Bukidnon.',
     pSecure: 'Secure, role-based access',
-    pRoles: 'For BHWs, captains & facilities',
+    pRoles: 'For BHWs, midwives & facilities',
     pProgram: 'Bukidnon TB-DOTS Program',
     copyright: 'TB-Screen · Bukidnon TB-DOTS',
     signinTitle: 'Sign in',
@@ -287,8 +287,8 @@ export const en = {
     accessHelp: 'Contact your administrator if you can’t sign in.',
     noteStaff:
       'TB-DOTS staff receive referrals, record laboratory results, and track check-up attendance.',
-    noteCaptain:
-      'Barangay Captains manage the health workers assigned to their own barangay.',
+    noteMidwife:
+      'Barangay Midwives manage the health workers assigned to their own barangay.',
   },
   /**
    * Forced password change (D-06). Shown while the signed-in account still

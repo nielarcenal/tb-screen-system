@@ -8,7 +8,7 @@
  *    `patients_tbdots_read`, which is an unconditional `true` for that role, and
  *    the first sync wrote EVERY patient in the province into that handset's
  *    sqlite file.
- *  - Captain and admin accounts signed in successfully and then got an app
+ *  - Midwife and admin accounts signed in successfully and then got an app
  *    where every query was denied, with no explanation.
  *  - A deactivated BHW's phone had no way to say so. (The auth ban that
  *    `manage-bhw` applies is what actually blocks a deactivated sign-in — see
@@ -110,7 +110,7 @@ export function evaluateAccountAccess(
 
   const role = row.role ?? null;
 
-  // Role first, so a facility or captain account is told where it DOES belong
+  // Role first, so a facility or midwife account is told where it DOES belong
   // rather than being told it was deactivated. An unrecognised role lands here
   // too: a migration that adds a role must not accidentally open the phone.
   if (role !== BHW_ROLE) return { kind: 'denied', reason: 'wrongRole', role };
@@ -135,8 +135,8 @@ export function roleDestinationKey(role: string | null): string {
   switch (role) {
     case 'tb_dots':
       return 'blocked.roleFacility';
-    case 'captain':
-      return 'blocked.roleCaptain';
+    case 'midwife':
+      return 'blocked.roleMidwife';
     case 'admin':
       return 'blocked.roleAdmin';
     default:

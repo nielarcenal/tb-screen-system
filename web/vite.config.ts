@@ -7,7 +7,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        // Facility portal (TB-DOTS staff + captains).
+        // Facility portal (TB-DOTS staff + midwives).
         main: resolve(__dirname, 'index.html'),
         // Developer portal (admin provisioning) — deliberately a separate page.
         admin: resolve(__dirname, 'admin.html'),

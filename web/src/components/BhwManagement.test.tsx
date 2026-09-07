@@ -1,14 +1,14 @@
 /**
  * BhwManagement — the barangay grouping on the admin's roster.
  *
- * A captain's list is one barangay's worth of people and reads fine flat. The
+ * A midwife's list is one barangay's worth of people and reads fine flat. The
  * admin's spans the whole province, and the moment a barangay holds more than
  * one worker a flat roster of names stops answering the question anyone
  * actually has, which is "who covers where".
  *
- * These pin the grouping and, just as importantly, pin that the CAPTAIN's list
+ * These pin the grouping and, just as importantly, pin that the MIDWIFE's list
  * stays flat. Grouping both callers is the obvious way to write this and is
- * wrong: it would put a single heading above every row a captain owns, naming
+ * wrong: it would put a single heading above every row a midwife owns, naming
  * the one barangay they already know they are looking at.
  *
  * The fixture mirrors the shape of the live data at the time of writing — four
@@ -136,9 +136,9 @@ describe('admin roster — grouped by barangay', () => {
   });
 });
 
-describe('captain roster — deliberately not grouped', () => {
+describe('midwife roster — deliberately not grouped', () => {
   it('renders a flat list with no barangay headings', async () => {
-    // Every row a captain sees is in their one barangay; a heading naming it
+    // Every row a midwife sees is in their one barangay; a heading naming it
     // above every row is furniture, not information.
     mock.db.rows = [bhw('Ivan Arcenal', 'Mt. Nebo'), bhw('Niel Arcenal', 'Mt. Nebo')];
     render(<BhwManagement />);

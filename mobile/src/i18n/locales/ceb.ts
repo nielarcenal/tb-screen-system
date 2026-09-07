@@ -81,7 +81,7 @@ export const ceb: Translation = {
       'Kinahanglan og koneksyon sa internet aron maka-sign in. Human ka maka-sign in, mogana ang app bisan offline.',
     // TODO i18n verify
     refusedInactive:
-      'Kini nga account gi-deactivate na. Hangyoa ang imong barangay captain o program coordinator nga i-activate kini pag-usab.',
+      'Kini nga account gi-deactivate na. Hangyoa ang imong barangay midwife o program coordinator nga i-activate kini pag-usab.',
     refusedWrongRole:
       'Kini nga app para sa mga Barangay Health Worker. Ang imong account usa ka {{destination}} — palihug pag-sign in sa TB-Screen portal sa computer.',
     refusedNoAccount:
@@ -95,7 +95,7 @@ export const ceb: Translation = {
   blocked: {
     inactiveTitle: 'Kini nga account gi-deactivate na',
     inactiveBody:
-      'Dili na nimo magamit ang app gamit kini nga account. Hangyoa ang imong barangay captain o program coordinator nga i-activate kini pag-usab.',
+      'Dili na nimo magamit ang app gamit kini nga account. Hangyoa ang imong barangay midwife o program coordinator nga i-activate kini pag-usab.',
     wrongRoleTitle: 'Kini nga app para sa mga Barangay Health Worker',
     wrongRoleBody:
       'Ang imong account usa ka {{destination}}. Palihug pag-sign in sa TB-Screen portal sa computer.',
@@ -103,7 +103,7 @@ export const ceb: Translation = {
     noAccountBody:
       'Wala namo makita ang mga detalye niini nga account. Palihug kontaka ang imong program coordinator.',
     roleFacility: 'account sa health facility',
-    roleCaptain: 'account sa barangay captain',
+    roleMidwife: 'account sa barangay midwife',
     roleAdmin: 'account sa administrator',
     roleOther: 'dili account sa Barangay Health Worker',
     pendingNote:
@@ -112,7 +112,7 @@ export const ceb: Translation = {
   },
   /**
    * Forced password change (D-06). Shown over the whole app while the account
-   * still holds the password its captain or admin provisioned.
+   * still holds the password its midwife or admin provisioned.
    */
   password: {
     gateTitle: 'Paghimo og kaugalingong password',

@@ -59,10 +59,10 @@ describe('AccountStateGate', () => {
   });
 
   it('names the state it is in, and the account that is stuck', () => {
-    render(<AccountStateGate state="inactive" email="captain@example.test" />);
+    render(<AccountStateGate state="inactive" email="midwife@example.test" />);
     expect(screen.getByText(en.account.inactiveTitle)).toBeTruthy();
     expect(screen.getByText(en.account.inactiveBody)).toBeTruthy();
-    expect(screen.getByText('captain@example.test')).toBeTruthy();
+    expect(screen.getByText('midwife@example.test')).toBeTruthy();
   });
 
   it('renders without an email rather than printing a blank chip', () => {

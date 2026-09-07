@@ -152,14 +152,14 @@ describe('the re-check that runs after a successful sync', () => {
 
   it('records a role change to a portal account', async () => {
     mocks.state.accountAccess = { kind: 'allowed' };
-    answers({ role: 'captain', active: true });
+    answers({ role: 'midwife', active: true });
 
     await refreshAccountAccess('u1', 'unknown');
 
     expect(mocks.state.accountAccess).toEqual({
       kind: 'denied',
       reason: 'wrongRole',
-      role: 'captain',
+      role: 'midwife',
     });
   });
 

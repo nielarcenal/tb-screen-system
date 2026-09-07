@@ -38,13 +38,13 @@ export const ceb: Translation = {
     register: 'Magparehistro og pasyente',
     hotspot: 'Mga hotspot sa barangay',
     bhw: 'Pagdumala sa BHW',
-    captains: 'Pagdumala sa kapitan',
+    midwives: 'Pagdumala sa midwife',
     staff: 'Pagdumala sa staff',
   },
   shell: {
     facilityPortal: 'Portal sa Pasilidad',
     bhwsSub: 'Dumalaha ang mga BHW account sa tanang barangay',
-    captainPortal: 'Portal sa Kapitan',
+    midwifePortal: 'Portal sa Midwife',
     dashboardSub: 'Kalihokan karong adlawa sa inyong pasilidad',
     referralsSub: 'Mga referral nga gipadala sa inyong pasilidad',
     registerSub: 'Mga walk-in ug kaugalingong miduol nga pasyente',
@@ -52,9 +52,9 @@ export const ceb: Translation = {
     bhwSub: 'Mga health worker sa inyong barangay',
     adminPortal: 'Portal sa Developer',
     roleAdmin: 'Administrator',
-    captainsSub: 'Paghatag og mga account sa Kapitan sa Barangay',
+    midwivesSub: 'Paghatag og mga account sa Midwife sa Barangay',
     staffSub: 'Paghatag og mga account sa TB-DOTS staff',
-    captainDashSub: 'Sulyap sa imong grupo sa BHW',
+    midwifeDashSub: 'Sulyap sa imong grupo sa BHW',
     facilitiesSub: 'Dumalaha ang mga pasilidad sa TB-DOTS',
   },
   capDash: {
@@ -75,7 +75,7 @@ export const ceb: Translation = {
     errorBody: 'Wala maabot ang server. Susiha ang koneksyon ug sulayi pag-usab.',
     retry: 'Sulayi pag-usab',
     footerNote:
-      'Ang ihap sa kalihokan kinatibuk-an lamang — walay impormasyon sa pasyente nga gipakita sa kapitan.',
+      'Ang ihap sa kalihokan kinatibuk-an lamang — walay impormasyon sa pasyente nga gipakita sa midwife.',
   },
   adminDash: {
     headerSub: 'Kinatibuk-ang panglantaw sa programa',
@@ -83,15 +83,15 @@ export const ceb: Translation = {
     summaryTitle: 'Kinatibuk-ang panglantaw',
     facilities: 'Mga pasilidad',
     facilitiesSub: 'Mga TB-DOTS center',
-    captains: 'Mga kapitan',
-    captainsSub: 'sa tibuok programa',
+    midwives: 'Mga midwife',
+    midwivesSub: 'sa tibuok programa',
     bhws: 'Mga BHW',
     bhwsSub: 'sa tanang pasilidad',
     openReferrals: 'Abli nga referral',
     openSub: 'tibuok sistema',
     coverageTitle: 'Saklaw sa pasilidad',
-    coverageSub: 'Mga kapitan, BHW, ug abli nga referral kada pasilidad',
-    covCaptains: 'kapitan',
+    coverageSub: 'Mga midwife, BHW, ug abli nga referral kada pasilidad',
+    covMidwives: 'midwife',
     covBhws: 'BHW',
     covOpen: 'abli',
     emptyTitle: 'Wala pay pasilidad',
@@ -140,22 +140,22 @@ export const ceb: Translation = {
     emptyDataBody: 'Pagdugang og staff account aron magsugod.',
     filterEmptyBody: 'Sulayi hawaan ang pagpangita o filter sa pasilidad.',
   },
-  captains: {
-    title: 'Mga account sa Kapitan sa Barangay',
+  midwives: {
+    title: 'Mga account sa Midwife sa Barangay',
     privacyNote:
-      'Ang admin maghimo lamang og mga account sa kapitan. Walay ngalan sa pasyente, rekord, o resulta nga mogawas bisan asa niini nga view.',
-    addCta: 'Pagdugang og kapitan',
-    addTitle: 'Pagdugang og Kapitan sa Barangay',
-    editTitle: 'Usba ang kapitan',
+      'Ang admin maghimo lamang og mga account sa midwife. Walay ngalan sa pasyente, rekord, o resulta nga mogawas bisan asa niini nga view.',
+    addCta: 'Pagdugang og midwife',
+    addTitle: 'Pagdugang og Midwife sa Barangay',
+    editTitle: 'Usba ang midwife',
     facilityLabel: 'Pasilidad (pinakaduol nga TB-DOTS center)',
     noFacilityMapped: 'walay DOTS center nga natakda alang niini nga barangay — i-apply ang migration 0009',
-    createdTitle: 'Nabuhat ang account sa kapitan',
+    createdTitle: 'Nabuhat ang account sa midwife',
     scopeNote:
-      'Ang kapitan makadugang ug makadumala lamang og mga BHW account alang sa barangay nga gitakda dinhi.',
-    empty: 'Wala pay account sa kapitan.',
-    errorTitle: 'Wala ma-load ang mga kapitan',
-    filterEmptyTitle: 'Walay kapitan nga nahaom',
-    emptyDataBody: 'Pagdugang og kapitan aron magsugod.',
+      'Ang midwife makadugang ug makadumala lamang og mga BHW account alang sa barangay nga gitakda dinhi.',
+    empty: 'Wala pay account sa midwife.',
+    errorTitle: 'Wala ma-load ang mga midwife',
+    filterEmptyTitle: 'Walay midwife nga nahaom',
+    emptyDataBody: 'Pagdugang og midwife aron magsugod.',
   },
   dashboard: {
     outcomeNote:
@@ -266,7 +266,7 @@ export const ceb: Translation = {
   login: {
     sub: 'Staff sa pasilidad sa TB-DOTS',
     roleStaff: 'Staff sa TB-DOTS',
-    roleCaptain: 'Kapitan sa Barangay',
+    roleMidwife: 'Midwife sa Barangay',
     email: 'Email',
     password: 'Password',
     showPassword: 'Ipakita ang password',
@@ -276,9 +276,9 @@ export const ceb: Translation = {
     brandTag: 'Plataporma sa Health Worker',
     brandHead: 'Koordinadong TB screening sa komunidad, sa usa ka plataporma.',
     brandSub:
-      'Usa ka plataporma nga nag-uban sa mga barangay health worker, kapitan, ug pasilidad sa TB-DOTS sa Bukidnon.',
+      'Usa ka plataporma nga nag-uban sa mga barangay health worker, midwife, ug pasilidad sa TB-DOTS sa Bukidnon.',
     pSecure: 'Luwas, role-based nga access',
-    pRoles: 'Para sa BHW, kapitan ug pasilidad',
+    pRoles: 'Para sa BHW, midwife ug pasilidad',
     pProgram: 'Programa sa TB-DOTS sa Bukidnon',
     copyright: 'TB-Screen · Bukidnon TB-DOTS',
     signinTitle: 'Pag-sign in',
@@ -286,8 +286,8 @@ export const ceb: Translation = {
     accessHelp: 'Kontaka ang administrator kung dili maka-sign in.',
     noteStaff:
       'Ang TB-DOTS staff modawat og mga referral, morekord sa resulta sa laboratoryo, ug mosubay sa pagtambong sa check-up.',
-    noteCaptain:
-      'Ang Kapitan sa Barangay modumala sa mga health worker nga gitakda sa ilang kaugalingong barangay.',
+    noteMidwife:
+      'Ang Midwife sa Barangay modumala sa mga health worker nga gitakda sa ilang kaugalingong barangay.',
   },
   /**
    * Forced password change (D-06). Shown while the signed-in account still

@@ -1406,7 +1406,7 @@ button.amber:hover { background: var(--amber-container); }
 .hs-row.skel .b.ct { width: 46px; height: 12px; }
 .hs-row.skel .b.tr { margin-top: 10px; height: 8px; border-radius: 999px; width: 60%; background: #efeae0; }
 
-/* ---------- account-management list (shared: BHW / captain / staff) + states (§4) ---------- */
+/* ---------- account-management list (shared: BHW / midwife / staff) + states (§4) ---------- */
 .bhw-head { padding: 15px 16px 13px; border-bottom: 1px solid #f0ece4; }
 .bhw-titlerow {
   display: flex;
@@ -1507,7 +1507,7 @@ button.amber:hover { background: var(--amber-container); }
 .bhw-row.skel .bhw-info .sk.s { width: 32%; height: 10px; margin-top: 7px; background: #f2ede4; }
 .bhw-row.skel .sk.ch { width: 54px; height: 18px; border-radius: 999px; background: #f2ede4; flex: 0 0 auto; }
 
-/* ---------- captain dashboard: per-BHW activity list (§4) ---------- */
+/* ---------- midwife dashboard: per-BHW activity list (§4) ---------- */
 .capdash { display: flex; flex-direction: column; gap: 18px; }
 .dcard-head .titlebox { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .dcard-head .titlebox > .msym { font-size: 20px; color: var(--teal); }
@@ -1590,7 +1590,7 @@ button.amber:hover { background: var(--amber-container); }
 
 /* ---------- BHW list grouped by barangay (admin only) ----------
    The admin's roster spans every barangay in the province, so the rows are
-   bucketed under a heading. The captain's list stays flat: all of their rows
+   bucketed under a heading. The midwife's list stays flat: all of their rows
    share one barangay and a lone header would be furniture. */
 .bhw-group + .bhw-group {
   margin-top: 6px;
@@ -1809,7 +1809,7 @@ button.amber:hover { background: var(--amber-container); }
 }
 .react-btn:hover { background: #dcefef; }
 
-/* ---------- captain dialogs: deactivation handoff + one-time credentials ---------- */
+/* ---------- midwife dialogs: deactivation handoff + one-time credentials ---------- */
 .cap-modal-scrim {
   position: fixed;
   inset: 0;
@@ -2377,7 +2377,7 @@ button.amber:hover { background: var(--amber-container); }
    sideways.
 
    Presentation only — no component knows the viewport width, so every portal
-   (facility, captain, admin) picks this up from the shared shell.
+   (facility, midwife, admin) picks this up from the shared shell.
    =========================================================================== */
 @media (max-width: 760px) {
   /* dvh tracks the collapsing browser chrome; 100vh stays as the fallback. */

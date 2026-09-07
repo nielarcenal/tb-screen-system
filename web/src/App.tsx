@@ -3,7 +3,7 @@
  * <AppShell>. Role comes from the signed-in account's own users row
  * (users_read_same_facility policy):
  *   tb_dots  → Dashboard / Referrals / Register patient / Barangay hotspots
- *   captain  → BHW management only (no patient data policies exist for them)
+ *   midwife  → BHW management only (no patient data policies exist for them)
  * The inbox renders master-detail: list on the left, detail panel on the right.
  * Deliberately no router library — a handful of views and one id of state (§2).
  * Admin accounts are redirected to the separate developer portal (admin.html).
@@ -17,7 +17,7 @@ import { PortalUser } from './lib/types';
 import AppShell, { ShellNavItem } from './components/AppShell';
 import LoginForm from './components/LoginForm';
 import Dashboard from './components/Dashboard';
-import CaptainDashboard from './components/CaptainDashboard';
+import MidwifeDashboard from './components/MidwifeDashboard';
 import ReferralInbox from './components/ReferralInbox';
 import ReferralDetail from './components/ReferralDetail';
 import HotspotView from './components/HotspotView';
@@ -151,7 +151,7 @@ export default function App() {
     );
   }
 
-  const isCaptain = me.role === 'captain';
+  const isMidwife = me.role === 'midwife';
 
   const openPage = (key: Page) => {
     setPage(key);
@@ -166,7 +166,7 @@ export default function App() {
     onClick: () => openPage(key),
   });
 
-  const nav: ShellNavItem[] = isCaptain
+  const nav: ShellNavItem[] = isMidwife
     ? [
         navItem('dashboard', 'space_dashboard', t('nav.dashboard')),
         navItem('bhw', 'groups', t('nav.bhw')),
@@ -183,7 +183,7 @@ export default function App() {
   const headers: Record<Page, { title: string; sub: string }> = {
     dashboard: {
       title: t('nav.dashboard'),
-      sub: isCaptain ? t('shell.captainDashSub') : t('shell.dashboardSub'),
+      sub: isMidwife ? t('shell.midwifeDashSub') : t('shell.dashboardSub'),
     },
     inbox: { title: t('nav.inbox'), sub: t('shell.referralsSub') },
     register: { title: t('nav.register'), sub: t('shell.registerSub') },
@@ -193,21 +193,21 @@ export default function App() {
 
   return (
     <AppShell
-      portalLabel={isCaptain ? t('shell.captainPortal') : t('shell.facilityPortal')}
+      portalLabel={isMidwife ? t('shell.midwifePortal') : t('shell.facilityPortal')}
       nav={nav}
-      facility={!isCaptain && facilityName ? { name: facilityName } : null}
+      facility={!isMidwife && facilityName ? { name: facilityName } : null}
       user={{
         name: me.full_name ?? session.user.email ?? '',
-        roleLabel: isCaptain ? t('login.roleCaptain') : t('login.roleStaff'),
+        roleLabel: isMidwife ? t('login.roleMidwife') : t('login.roleStaff'),
       }}
       headerTitle={headers[page].title}
       headerSub={headers[page].sub}
     >
-      {isCaptain ? (
+      {isMidwife ? (
         page === 'bhw' ? (
           <BhwManagement />
         ) : (
-          <CaptainDashboard />
+          <MidwifeDashboard />
         )
       ) : page === 'dashboard' ? (
         <Dashboard />

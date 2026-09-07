@@ -1,5 +1,5 @@
 /**
- * LoginForm — the staff/captain role toggle (D-11).
+ * LoginForm — the staff/midwife role toggle (D-11).
  *
  * Two properties are pinned here, and they pull against each other:
  *
@@ -43,15 +43,15 @@ describe('LoginForm role toggle', () => {
 
     // Staff is the default.
     expect(pill(en.login.roleStaff).getAttribute('aria-pressed')).toBe('true');
-    expect(pill(en.login.roleCaptain).getAttribute('aria-pressed')).toBe('false');
+    expect(pill(en.login.roleMidwife).getAttribute('aria-pressed')).toBe('false');
     expect(screen.getByText(en.login.noteStaff)).toBeTruthy();
-    expect(screen.queryByText(en.login.noteCaptain)).toBeNull();
+    expect(screen.queryByText(en.login.noteMidwife)).toBeNull();
 
-    fireEvent.click(pill(en.login.roleCaptain));
+    fireEvent.click(pill(en.login.roleMidwife));
 
-    expect(pill(en.login.roleCaptain).getAttribute('aria-pressed')).toBe('true');
+    expect(pill(en.login.roleMidwife).getAttribute('aria-pressed')).toBe('true');
     expect(pill(en.login.roleStaff).getAttribute('aria-pressed')).toBe('false');
-    expect(screen.getByText(en.login.noteCaptain)).toBeTruthy();
+    expect(screen.getByText(en.login.noteMidwife)).toBeTruthy();
     expect(screen.queryByText(en.login.noteStaff)).toBeNull();
   });
 
@@ -60,7 +60,7 @@ describe('LoginForm role toggle', () => {
     render(<LoginForm />);
 
     // Pick the pill that does NOT match how this account will actually resolve.
-    fireEvent.click(pill(en.login.roleCaptain));
+    fireEvent.click(pill(en.login.roleMidwife));
     fireEvent.change(screen.getByLabelText(en.login.email), {
       target: { value: 'staff@example.test' },
     });

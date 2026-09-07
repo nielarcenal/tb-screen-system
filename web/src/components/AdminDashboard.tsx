@@ -1,6 +1,6 @@
 /**
  * Admin dashboard (redesign §4): a read-only, program-wide overview for the
- * developer portal — four summary tiles (Facilities / Captains / BHWs / Open
+ * developer portal — four summary tiles (Facilities / Midwives / BHWs / Open
  * referrals) and a per-facility coverage list. All counts come from the
  * admin_overview() RPC (admin role required, SECURITY DEFINER, migration 0012);
  * admins read no patient or referral rows (§1), so these are counts only.
@@ -13,9 +13,9 @@ import { supabase } from '../lib/supabase';
 interface CoverageRow {
   facility_id: string;
   facility_name: string;
-  /** ACTIVE captains. Counted deactivated accounts too before 0023. */
-  captains: number;
-  captains_inactive: number;
+  /** ACTIVE midwives. Counted deactivated accounts too before 0023. */
+  midwives: number;
+  midwives_inactive: number;
   /** ACTIVE BHWs. Counted deactivated accounts too before 0023. */
   bhws: number;
   bhws_inactive: number;
@@ -53,10 +53,10 @@ export default function AdminDashboard() {
   }, [load]);
 
   const facilitiesCount = rows.length;
-  const captainsTotal = rows.reduce((s, r) => s + Number(r.captains), 0);
+  const midwivesTotal = rows.reduce((s, r) => s + Number(r.midwives), 0);
   const bhwsTotal = rows.reduce((s, r) => s + Number(r.bhws), 0);
   const openTotal = rows.reduce((s, r) => s + Number(r.open_referrals), 0);
-  const captainsOff = rows.reduce((s, r) => s + Number(r.captains_inactive), 0);
+  const midwivesOff = rows.reduce((s, r) => s + Number(r.midwives_inactive), 0);
   const bhwsOff = rows.reduce((s, r) => s + Number(r.bhws_inactive), 0);
 
   /**
@@ -81,10 +81,10 @@ export default function AdminDashboard() {
       valueColor: '#028090',
     },
     {
-      key: 'captains',
-      value: captainsTotal,
-      label: t('adminDash.captains'),
-      sub: withOff(t('adminDash.captainsSub'), captainsOff),
+      key: 'midwives',
+      value: midwivesTotal,
+      label: t('adminDash.midwives'),
+      sub: withOff(t('adminDash.midwivesSub'), midwivesOff),
       icon: 'badge',
       iconBg: '#eef4f4',
       iconColor: '#046a78',
@@ -233,8 +233,8 @@ export default function AdminDashboard() {
                 </div>
                 <div className="capact-nums">
                   <div className="capact-num">
-                    <div className="n">{r.captains}</div>
-                    <div className="w">{t('adminDash.covCaptains')}</div>
+                    <div className="n">{r.midwives}</div>
+                    <div className="w">{t('adminDash.covMidwives')}</div>
                   </div>
                   <div className="capact-num">
                     <div className="n">{r.bhws}</div>

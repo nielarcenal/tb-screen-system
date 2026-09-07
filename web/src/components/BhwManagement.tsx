@@ -1,36 +1,36 @@
 /**
  * BHW ACCOUNTS (v2 redesign): a persistent list
  * with search + status filter, and a right-hand slide-in DRAWER for create/edit.
- * Rows carry 30-day activity counts (bhw_activity() RPC, captain role required
+ * Rows carry 30-day activity counts (bhw_activity() RPC, midwife role required
  * server-side, 0014 adds name parts / coverage / email / joined date).
  *
  * ACCOUNT MODEL: passwords are system-generated. Create and "Reset password" both
  * return a one-time temp credential shown on the credentials modal (email + temp
- * password) — the captain relays it in person. Every provisioned/reset account is
+ * password) — the midwife relays it in person. Every provisioned/reset account is
  * flagged must_change_password (0014) and set its own password on first sign-in.
  *
- * PRIVACY (§1): captains read no patient data. RLS gates patients/screenings/
+ * PRIVACY (§1): midwives read no patient data. RLS gates patients/screenings/
  * referrals on role in ('bhw','tb_dots'); the email here is the BHW's OWN account
  * email. All account WRITES go through the manage-bhw Edge Function (the auth
  * admin API needs the service role, which never reaches the browser).
  *
- * TWO CALLERS, ONE COMPONENT (0023). The captain's view is the default. Passing
+ * TWO CALLERS, ONE COMPONENT (0023). The midwife's view is the default. Passing
  * asAdmin renders the same screen for an admin, who is UNSCOPED: bhw_activity()
  * returns every BHW, and every write carries target_role: 'bhw' so manage-bhw
- * knows an admin means BHWs rather than captains.
+ * knows an admin means BHWs rather than midwives.
  *
  * The differences an admin needs are all consequences of having no barangay of
  * their own:
  *   - Create must ASK for the barangay (AddressCascadeWeb, the same picker
- *     CaptainManagement uses) instead of inheriting the caller's.
+ *     MidwifeManagement uses) instead of inheriting the caller's.
  *   - The drawer subtitle cannot name "the" barangay, because the list spans
  *     all of them.
  *   - The handoff successor list must be narrowed to the departing BHW's own
  *     barangay. That filter is applied for BOTH callers: it is a no-op for a
- *     captain, whose rows all share one barangay, and writing it once avoids a
+ *     midwife, whose rows all share one barangay, and writing it once avoids a
  *     second code path that only the admin exercises.
  *   - The list is GROUPED BY BARANGAY, with a barangay filter beside the status
- *     one. A captain's list is deliberately left flat: every row shares their
+ *     one. A midwife's list is deliberately left flat: every row shares their
  *     one barangay, so a single group header would be pure furniture. The
  *     admin's list spans all 464, where a flat roster of names is unreadable
  *     the moment a barangay has more than a couple of workers.
@@ -104,7 +104,7 @@ export default function BhwManagement({ asAdmin = false }: { asAdmin?: boolean }
   const [middle, setMiddle] = useState('');
   const [last, setLast] = useState('');
   const [purok, setPurok] = useState('');
-  /** Admin only: which barangay a new BHW joins. Captains inherit their own. */
+  /** Admin only: which barangay a new BHW joins. Midwives inherit their own. */
   const [formBrgy, setFormBrgy] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -112,7 +112,7 @@ export default function BhwManagement({ asAdmin = false }: { asAdmin?: boolean }
   // List tools.
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  // Admin only — a captain has exactly one barangay and nothing to choose.
+  // Admin only — a midwife has exactly one barangay and nothing to choose.
   const [barangayFilter, setBarangayFilter] = useState<string>('all');
 
   const load = useCallback(async () => {
@@ -130,7 +130,7 @@ export default function BhwManagement({ asAdmin = false }: { asAdmin?: boolean }
 
   /** Call the manage-bhw Edge Function; returns the parsed body or throws. */
   const invoke = async (body: Record<string, unknown>): Promise<Record<string, unknown>> => {
-    // An admin's default target is captains, so BHW writes must say so.
+    // An admin's default target is midwives, so BHW writes must say so.
     const payload = asAdmin ? { ...body, target_role: 'bhw' } : body;
     const { data, error: err } = await supabase.functions.invoke('manage-bhw', { body: payload });
     if (err) throw new Error(err.message);
@@ -140,7 +140,7 @@ export default function BhwManagement({ asAdmin = false }: { asAdmin?: boolean }
   };
 
   const selected = mode === 'edit' && selId ? rows.find((r) => r.user_id === selId) ?? null : null;
-  // All the captain's BHWs share the captain's barangay, so any row names it.
+  // All the midwife's BHWs share the midwife's barangay, so any row names it.
   // An admin's rows span every barangay, so there is no single one to name.
   const barangayName = asAdmin ? '' : rows.find((r) => r.barangay_name)?.barangay_name ?? '';
 
@@ -308,7 +308,7 @@ export default function BhwManagement({ asAdmin = false }: { asAdmin?: boolean }
 
   /**
    * `visible`, bucketed by barangay and sorted — barangays alphabetically, and
-   * people by name within each. Only the admin renders these; the captain maps
+   * people by name within each. Only the admin renders these; the midwife maps
    * `visible` directly.
    */
   const groups: { name: string; rows: BhwActivityRow[] }[] = (() => {
@@ -465,7 +465,7 @@ export default function BhwManagement({ asAdmin = false }: { asAdmin?: boolean }
               <div className="st-body">{t('bhw.filterEmptyBody')}</div>
             </div>
           ) : (
-            /* One row renderer, two shapes. The captain gets `visible` flat;
+            /* One row renderer, two shapes. The midwife gets `visible` flat;
                the admin gets the same rows under barangay headings. */
             (() => {
               const row = (r: BhwActivityRow) => {
@@ -778,7 +778,7 @@ export default function BhwManagement({ asAdmin = false }: { asAdmin?: boolean }
                           r.active &&
                           r.user_id !== handoff.user_id &&
                           // Patients may only move within the barangay they were
-                          // enrolled in. No-op for a captain; load-bearing for an
+                          // enrolled in. No-op for a midwife; load-bearing for an
                           // admin, whose list spans every barangay.
                           r.barangay_code === handoff.barangay_code,
                       )

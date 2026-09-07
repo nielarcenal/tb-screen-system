@@ -81,7 +81,7 @@ export const tl: Translation = {
       'Kailangan ng koneksyon sa internet para makapag-sign in. Kapag naka-sign in na, gumagana ang app kahit offline.',
     // TODO i18n verify
     refusedInactive:
-      'Na-deactivate na ang account na ito. Hilingin sa inyong barangay captain o program coordinator na i-activate itong muli.',
+      'Na-deactivate na ang account na ito. Hilingin sa inyong barangay midwife o program coordinator na i-activate itong muli.',
     refusedWrongRole:
       'Ang app na ito ay para sa mga Barangay Health Worker. Ang account ninyo ay {{destination}} — mag-sign in po sa TB-Screen portal sa computer.',
     refusedNoAccount:
@@ -95,7 +95,7 @@ export const tl: Translation = {
   blocked: {
     inactiveTitle: 'Na-deactivate na ang account na ito',
     inactiveBody:
-      'Hindi na ninyo magagamit ang app gamit ang account na ito. Hilingin sa inyong barangay captain o program coordinator na i-activate itong muli.',
+      'Hindi na ninyo magagamit ang app gamit ang account na ito. Hilingin sa inyong barangay midwife o program coordinator na i-activate itong muli.',
     wrongRoleTitle: 'Ang app na ito ay para sa mga Barangay Health Worker',
     wrongRoleBody:
       'Ang account ninyo ay {{destination}}. Mag-sign in po sa TB-Screen portal sa computer.',
@@ -103,7 +103,7 @@ export const tl: Translation = {
     noAccountBody:
       'Hindi namin makita ang mga detalye ng account na ito. Makipag-ugnayan po sa inyong program coordinator.',
     roleFacility: 'isang account ng health facility',
-    roleCaptain: 'isang account ng barangay captain',
+    roleMidwife: 'isang account ng barangay midwife',
     roleAdmin: 'isang account ng administrator',
     roleOther: 'hindi account ng Barangay Health Worker',
     pendingNote:
@@ -112,7 +112,7 @@ export const tl: Translation = {
   },
   /**
    * Forced password change (D-06). Shown over the whole app while the account
-   * still holds the password its captain or admin provisioned.
+   * still holds the password its midwife or admin provisioned.
    */
   password: {
     gateTitle: 'Gumawa ng sarili mong password',

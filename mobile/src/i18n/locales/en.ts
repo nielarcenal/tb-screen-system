@@ -72,7 +72,7 @@ export const en = {
     errorOffline:
       'You need an internet connection to sign in. Once you are signed in, the app works offline.',
     refusedInactive:
-      'This account has been deactivated. Ask your barangay captain or program coordinator to reactivate it.',
+      'This account has been deactivated. Ask your barangay midwife or program coordinator to reactivate it.',
     refusedWrongRole:
       'This app is for Barangay Health Workers. Your account is {{destination}} — please sign in on the TB-Screen portal on a computer.',
     refusedNoAccount:
@@ -85,7 +85,7 @@ export const en = {
   blocked: {
     inactiveTitle: 'This account has been deactivated',
     inactiveBody:
-      'You can no longer use the app with this account. Ask your barangay captain or program coordinator to reactivate it.',
+      'You can no longer use the app with this account. Ask your barangay midwife or program coordinator to reactivate it.',
     wrongRoleTitle: 'This app is for Barangay Health Workers',
     wrongRoleBody:
       'Your account is {{destination}}. Please sign in on the TB-Screen portal on a computer instead.',
@@ -93,7 +93,7 @@ export const en = {
     noAccountBody:
       'We could not find the details for this account. Please contact your program coordinator.',
     roleFacility: 'a health facility account',
-    roleCaptain: 'a barangay captain account',
+    roleMidwife: 'a barangay midwife account',
     roleAdmin: 'an administrator account',
     roleOther: 'not a Barangay Health Worker account',
     pendingNote:
@@ -102,7 +102,7 @@ export const en = {
   },
   /**
    * Forced password change (D-06). Shown over the whole app while the account
-   * still holds the password its captain or admin provisioned.
+   * still holds the password its midwife or admin provisioned.
    */
   password: {
     gateTitle: 'Set your own password',

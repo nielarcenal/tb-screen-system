@@ -6,7 +6,7 @@
 
 ## 1. System Overview
 
-**TB-Screen BHW** is a tuberculosis **pre-screening and referral follow-up system** connecting Barangay Health Workers (BHWs) in Bukidnon province to public TB-DOTS facilities. It consists of an offline-tolerant Android application for BHWs, a web portal for TB-DOTS facility staff and Barangay Captains, a separate web portal for the system administrator, and a shared cloud backend.
+**TB-Screen BHW** is a tuberculosis **pre-screening and referral follow-up system** connecting Barangay Health Workers (BHWs) in Bukidnon province to public TB-DOTS facilities. It consists of an offline-tolerant Android application for BHWs, a web portal for TB-DOTS facility staff and Barangay Midwives, a separate web portal for the system administrator, and a shared cloud backend.
 
 ### 1.1 Positioning statement (non-negotiable design rule)
 
@@ -17,7 +17,7 @@ The system is a **pre-screening support tool, not a diagnostic tool**. It never 
 | Component | Users | Technology | Connectivity |
 |---|---|---|---|
 | Mobile application | BHWs | Expo (React Native), TypeScript | Offline-first; syncs when online |
-| Facility portal (`/`) | TB-DOTS staff, Barangay Captains | React + Vite, TypeScript | Online |
+| Facility portal (`/`) | TB-DOTS staff, Barangay Midwives | React + Vite, TypeScript | Online |
 | Developer portal (`/admin.html`) | System administrator | React + Vite (same build, separate entry) | Online |
 | Backend | — | Supabase: PostgreSQL, Auth, Edge Functions (Deno), pg_cron | Cloud |
 
@@ -40,8 +40,8 @@ Roles live on the `users` table (`role` column) and are enforced server-side by 
 |---|---|---|---|
 | `bhw` | Mobile app | Yes | Patients of their **assigned barangay**, plus patients they personally enrolled |
 | `tb_dots` | Facility portal | Yes | All patients (read); referrals/appointments **addressed to their facility** (act) |
-| `captain` | Facility portal | **No** — zero patient rows | BHW **accounts** of their assigned barangay only (names + activity counts) |
-| `admin` | Developer portal | **No** — zero patient rows | Captain and TB-DOTS staff **accounts** (provisioning only) |
+| `midwife` | Facility portal | **No** — zero patient rows | BHW **accounts** of their assigned barangay only (names + activity counts) |
+| `admin` | Developer portal | **No** — zero patient rows | Midwife and TB-DOTS staff **accounts** (provisioning only) |
 
 ### 3.1 Account provisioning chain
 
@@ -49,10 +49,10 @@ Every account except the first administrator is created through the system's own
 
 ```
 admin (created once, manually)
- └─ creates CAPTAIN accounts   — assigned one barangay; facility auto-derived
+ └─ creates MIDWIFE accounts   — assigned one barangay; facility auto-derived
  └─ creates TB-DOTS STAFF      — assigned one facility (defines their portal)
-      captains
-       └─ create BHW accounts  — always in the captain's own barangay
+      midwives
+       └─ create BHW accounts  — always in the midwife's own barangay
 ```
 
 Account creation is performed by the `manage-bhw` Edge Function using the service-role key (which never reaches a browser). Emails are auto-generated as `firstname.lastname@tbscreen.ph` (suffix `.2`, `.3`… on collision); a random temporary password (`TBS-####-xxxx`) is displayed exactly once. Passwords are stored only as hashes and can never be viewed — only reset (any manager can issue a new temporary password for their scope). Deactivation sets `users.active = false` *and* bans the auth account, which is what actually blocks sign-in; reactivation lifts both.
@@ -106,11 +106,11 @@ The on-device SQLite database is the working store; every syncable row carries a
 - **Register patient** — for walk-in and self-referred patients who never went through a BHW. Records the same details, the same DOH-NTP checklist, the same PGI-S and the same optional vitals the mobile app collects, then writes the whole chain — patient → screening → referral — with the referral filed as already `received`, since the patient is standing at the desk. A facility-registered patient behaves identically to a BHW-referred one everywhere downstream (hotspot counts, result recording, follow-up). Patient codes here are `PAT-DOTS-####`, issued by a server-side sequence rather than the mobile app's offline `PAT-<device>-<seq>` scheme.
 - **Barangay hotspots** — presumptive-referral counts grouped **only** by barangay (PSGC code) over Last 30/60/90 days, rendered as ranked bars. Deliberately **surveillance, not contact tracing**: no household, sitio, address, or patient-level drill-down exists, and the counts come from a SECURITY DEFINER function that returns aggregates only.
 
-**Captains** signing into the same portal see exactly one view — **BHW management**: their barangay's BHW accounts with 30-day activity counts (screenings/referrals attributed by enrolling BHW), add BHW (always into their own barangay), edit, reset password, deactivate/reactivate. A standing note states that no patient data appears in this view — and none can: captains have no patient-data policies at all.
+**Midwives** signing into the same portal see exactly one view — **BHW management**: their barangay's BHW accounts with 30-day activity counts (screenings/referrals attributed by enrolling BHW), add BHW (always into their own barangay), edit, reset password, deactivate/reactivate. A standing note states that no patient data appears in this view — and none can: midwives have no patient-data policies at all.
 
 ## 6. Developer Portal (`/admin.html`)
 
-A deliberately separate page with its own login. Two tabs: **Captain management** (create captains — pick the barangay via the PSGC cascade; the facility is auto-derived from the nearest-DOTS mapping; reset/deactivate) and **Staff management** (create TB-DOTS staff — pick the facility, which defines that account's entire portal scope; navigate accounts with a per-facility filter showing counts). Admin accounts signing into the facility portal are redirected here; non-admin accounts here are refused.
+A deliberately separate page with its own login. Two tabs: **Midwife management** (create midwives — pick the barangay via the PSGC cascade; the facility is auto-derived from the nearest-DOTS mapping; reset/deactivate) and **Staff management** (create TB-DOTS staff — pick the facility, which defines that account's entire portal scope; navigate accounts with a per-facility filter showing counts). Admin accounts signing into the facility portal are redirected here; non-admin accounts here are refused.
 
 ## 7. Facility Network and Nearest-Center Mapping
 
@@ -132,7 +132,7 @@ A scheduled Edge Function (`sms-reminders`) runs daily at 09:00 Asia/Manila (pg_
 |---|---|
 | `ref_regions/provinces/cities/barangays` | Official PSGC reference (Bukidnon scope). `ref_cities.default_facility_id` → nearest DOTS center |
 | `facilities` | Health facilities; `type` ∈ barangay_health_station, tb_dots |
-| `users` | One row per account: `role` (bhw/tb_dots/captain/admin), `full_name`, `facility_id`, `assigned_barangay_code`, `active` |
+| `users` | One row per account: `role` (bhw/tb_dots/midwife/admin), `full_name`, `facility_id`, `assigned_barangay_code`, `active` |
 | `patients` | `display_code` (unique), `full_name`, `birthdate`, `age`, `sex`, `barangay_code`, `sitio`, `contact_number`, `sms_consent`, `consent_date`, `enrolled_by`. CHECK: number/consent-date only with consent |
 | `screenings` | `symptom_flags` (jsonb tri-state answers), `pgis_severity`, seven nullable vital-sign columns (`height_cm`, `weight_kg`, `temperature_c`, `systolic_bp`, `diastolic_bp`, `pulse_rate`, `spo2_percent`), `referred` (boolean — **no score column by design**; BMI is computed at display time, never stored) |
 | `referrals` | `facility_id` (receiving), `lab_sample_id` (**owned by TB-DOTS**, entered when the sample is collected on-site), `status` (submitted/received/tested/closed), `result_outcome` (positive/negative, staff-recorded), `result` (free-text notes), `result_date`, `presented` (no-show flag) |
@@ -150,9 +150,9 @@ Every table has RLS enabled (default-deny). Aggregate reads that must cross row 
 | 0003 | pg_cron daily schedule for `sms-reminders` |
 | 0004 | `hotspot_counts()` — barangay-level aggregate counts, TB-DOTS only |
 | 0005 | Fix RLS recursion (patients ⇄ referrals) via SECURITY DEFINER id-set helpers |
-| 0006 | Patient `full_name` + `birthdate`; `result_outcome`; `captain` role + `users.active`; `dashboard_counts()`, `bhw_activity()` |
+| 0006 | Patient `full_name` + `birthdate`; `result_outcome`; `midwife` role + `users.active`; `dashboard_counts()`, `bhw_activity()` |
 | 0007 | BHW scope = assigned barangay (+ own enrollments); TB-DOTS reads all patients; TB-DOTS may read BHW names |
-| 0008 | `admin` role; captain scope tightened from facility to barangay |
+| 0008 | `admin` role; midwife scope tightened from facility to barangay |
 | 0009 | 11 Bukidnon TB-DOTS facilities; nearest-center default per LGU |
 | 0010–0023 | Patient name parts; TB-DOTS appointment insert; admin overview and facility writes; BHW profile fields; SMS language and kinds; RLS hardening (column-scoped `users` update, narrow BHW referral update); Manila business calendar; password-change gate; immutable identity columns; `patients_tbdots_read` narrowed back to referred-only; admin BHW management |
 | 0024 | Referral-model correction: `referrals.specimen_id` → `lab_sample_id` (ownership moves to TB-DOTS); seven optional vital-sign columns on `screenings` |
@@ -169,7 +169,7 @@ Both apps implement a shared visual language from the project's hi-fi design can
 ## 12. Security & Privacy Summary
 
 1. Default-deny RLS on every table; the UI is never the security boundary.
-2. Captains and admins can read **zero** patient rows — account management is fully separated from clinical data.
+2. Midwives and admins can read **zero** patient rows — account management is fully separated from clinical data.
 3. BHW visibility is barangay-scoped; facility staff act only on referrals addressed to them.
 4. Laboratory outcomes are facility-visible; BHW devices do not store the structured outcome — BHWs track referral *progress*.
 5. Contact numbers exist only alongside recorded SMS consent (database-enforced); the QR payload and SMS text carry no identifying clinical detail.
