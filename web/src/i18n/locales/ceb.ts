@@ -121,6 +121,7 @@ export const ceb: Translation = {
     sub: 'Paghimo og mga account — alang lamang sa developer',
     notAdmin: 'Kini nga account dili developer account.',
     goMain: 'Adto sa portal sa pasilidad',
+    goMidwife: 'Adto sa portal sa midwife',
     footnote:
       'Paghimo og account lamang: walay ngalan sa pasyente, rekord, o resulta nga ma-access gikan niini nga portal.',
   },
@@ -264,7 +265,6 @@ export const ceb: Translation = {
     retry: 'Sulayi pag-usab',
   },
   login: {
-    sub: 'Staff sa pasilidad sa TB-DOTS',
     roleStaff: 'Staff sa TB-DOTS',
     roleMidwife: 'Midwife sa Barangay',
     email: 'Email',
@@ -282,12 +282,13 @@ export const ceb: Translation = {
     pProgram: 'Programa sa TB-DOTS sa Bukidnon',
     copyright: 'TB-Screen · Bukidnon TB-DOTS',
     signinTitle: 'Pag-sign in',
-    signinSub: 'Maayong pagbalik. Isulod ang imong kredensyal aron magpadayon.',
     accessHelp: 'Kontaka ang administrator kung dili maka-sign in.',
     noteStaff:
       'Ang TB-DOTS staff modawat og mga referral, morekord sa resulta sa laboratoryo, ug mosubay sa pagtambong sa check-up.',
     noteMidwife:
       'Ang Midwife sa Barangay modumala sa mga health worker nga gitakda sa ilang kaugalingong barangay.',
+    goFacility: 'Dinhi mag-sign in ang TB-DOTS staff',
+    goMidwife: 'Dinhi mag-sign in ang mga Midwife sa Barangay',
   },
   /**
    * Forced password change (D-06). Shown while the signed-in account still

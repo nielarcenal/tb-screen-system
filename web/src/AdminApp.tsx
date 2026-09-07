@@ -151,8 +151,15 @@ export default function AdminApp() {
         </div>
         <div className="card centered" style={{ maxWidth: 420, margin: '60px auto', textAlign: 'center' }}>
           <p>{t('admin.notAdmin')}</p>
+          {/* Send them to the portal that IS theirs, not always the facility
+              one — a midwife bounced to index.html would only be redirected
+              again by App. */}
           <p>
-            <a href="/">{t('admin.goMain')}</a>
+            {me?.role === 'midwife' ? (
+              <a href="/midwife.html">{t('admin.goMidwife')}</a>
+            ) : (
+              <a href="/">{t('admin.goMain')}</a>
+            )}
           </p>
         </div>
       </div>

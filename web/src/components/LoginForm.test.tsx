@@ -1,20 +1,22 @@
 /**
- * LoginForm — the staff/midwife role toggle (D-11).
+ * LoginForm — the facility/midwife page split, and the property that survived
+ * the role toggle it replaced (was D-11).
  *
- * Two properties are pinned here, and they pull against each other:
+ * The old page served both clinical roles and offered a staff/midwife pill
+ * pair. The pills selected the explanatory note and nothing else, and the test
+ * that mattered was the one pinning that "nothing else": sending the picked
+ * role to Supabase would have refused correct credentials over a mis-tap, and
+ * would have told any anonymous visitor which role an email belongs to.
  *
- *  1. The pills must DO something. They carry `aria-pressed`, which tells a
- *     screen-reader user they select a state; before this fix the `role` state
- *     was written by the click handlers and read nowhere, so the control
- *     announced a selection that changed nothing on screen.
+ * The pills are gone — each role has its own page now, so there is nothing left
+ * to pick. THE PROPERTY IS NOT GONE. `portal` is a prop rather than a pressed
+ * button, but it is still a caller-supplied claim about a role, and it still
+ * must not reach the auth call. The second test below is the same guard as
+ * before, re-aimed at the thing that replaced the pills: it is what fails if
+ * someone later decides the midwife page should "only accept midwives".
  *
- *  2. The pills must NOT reach sign-in. Sending the picked role to Supabase
- *     would refuse correct credentials over a mis-tap, and would leak which
- *     role an email belongs to. So the credentials sent must be exactly the
- *     email and the password, whichever pill is lit.
- *
- * Test 2 is the one that matters long-term: it is what fails if someone
- * "finishes" D-11 later by wiring the toggle into the auth call.
+ * A wrong-page sign-in is corrected AFTER authentication, by the redirect in
+ * App, where the role is actually known.
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
@@ -35,32 +37,39 @@ vi.mock('../lib/supabase', () => ({
   supabase: { auth: { signInWithPassword: mock.signIn } },
 }));
 
-const pill = (name: string) => screen.getByRole('button', { name });
+describe('LoginForm', () => {
+  it('names the portal it belongs to, and explains that role', () => {
+    const { unmount } = render(<LoginForm portal="facility" />);
 
-describe('LoginForm role toggle', () => {
-  it('selects the note under the pills, and reflects it in aria-pressed', () => {
-    render(<LoginForm />);
-
-    // Staff is the default.
-    expect(pill(en.login.roleStaff).getAttribute('aria-pressed')).toBe('true');
-    expect(pill(en.login.roleMidwife).getAttribute('aria-pressed')).toBe('false');
+    expect(screen.getByText(en.shell.facilityPortal)).toBeTruthy();
     expect(screen.getByText(en.login.noteStaff)).toBeTruthy();
     expect(screen.queryByText(en.login.noteMidwife)).toBeNull();
+    unmount();
 
-    fireEvent.click(pill(en.login.roleMidwife));
+    render(<LoginForm portal="midwife" />);
 
-    expect(pill(en.login.roleMidwife).getAttribute('aria-pressed')).toBe('true');
-    expect(pill(en.login.roleStaff).getAttribute('aria-pressed')).toBe('false');
+    expect(screen.getByText(en.shell.midwifePortal)).toBeTruthy();
     expect(screen.getByText(en.login.noteMidwife)).toBeTruthy();
     expect(screen.queryByText(en.login.noteStaff)).toBeNull();
   });
 
-  it('signs in with the credentials alone — the picked role is never sent', async () => {
-    mock.signIn.mockClear();
-    render(<LoginForm />);
+  it('offers a link to the other clinical portal, not to its own', () => {
+    const { unmount } = render(<LoginForm portal="facility" />);
+    expect(screen.getByRole('link', { name: en.login.goMidwife }).getAttribute('href')).toBe(
+      '/midwife.html',
+    );
+    unmount();
 
-    // Pick the pill that does NOT match how this account will actually resolve.
-    fireEvent.click(pill(en.login.roleMidwife));
+    render(<LoginForm portal="midwife" />);
+    expect(screen.getByRole('link', { name: en.login.goFacility }).getAttribute('href')).toBe('/');
+  });
+
+  it('signs in with the credentials alone — `portal` is never sent', async () => {
+    mock.signIn.mockClear();
+    // The midwife page, signed into with an account that will resolve to
+    // TB-DOTS staff. This must reach Supabase as an ordinary sign-in.
+    render(<LoginForm portal="midwife" />);
+
     fireEvent.change(screen.getByLabelText(en.login.email), {
       target: { value: 'staff@example.test' },
     });
@@ -79,7 +88,7 @@ describe('LoginForm role toggle', () => {
   it('surfaces a sign-in failure instead of failing silently', async () => {
     mock.signIn.mockClear();
     mock.signIn.mockResolvedValueOnce({ data: {}, error: { message: 'Invalid login credentials' } });
-    render(<LoginForm />);
+    render(<LoginForm portal="facility" />);
 
     fireEvent.change(screen.getByLabelText(en.login.email), {
       target: { value: 'staff@example.test' },
@@ -87,8 +96,6 @@ describe('LoginForm role toggle', () => {
     fireEvent.change(screen.getByLabelText(en.login.password), { target: { value: 'wrong' } });
     fireEvent.click(screen.getByRole('button', { name: en.login.cta }));
 
-    await waitFor(() =>
-      expect(screen.getByText(/Invalid login credentials/)).toBeTruthy(),
-    );
+    await waitFor(() => expect(screen.getByText(/Invalid login credentials/)).toBeTruthy());
   });
 });

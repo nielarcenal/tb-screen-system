@@ -705,6 +705,30 @@ a:hover {
   color: var(--ink-soft);
 }
 
+/* ---------- portal sign-in cards ---------- */
+/* Reuses .piece from the roles grid; these three carry a call to action, so
+   they need the button spacing and an equal-height column the plain ones do
+   not. */
+.piece-portal {
+  display: flex;
+  flex-direction: column;
+}
+
+.piece-portal p {
+  flex: 1;
+}
+
+.piece-portal .btn {
+  margin-top: 16px;
+  align-self: flex-start;
+}
+
+.portals-note {
+  margin-top: 20px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
 /* ---------- download ---------- */
 .dl {
   display: grid;

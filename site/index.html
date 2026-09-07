@@ -40,6 +40,7 @@
       <a href="#how">How it works</a>
       <a href="#limits">Does not diagnose</a>
       <a href="#features">Features</a>
+      <a href="#portals">Sign in</a>
       <a href="#about">About</a>
       <a class="btn btn-sm btn-teal" href="#download">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -405,8 +406,54 @@
   </div>
 </section>
 
-<!-- ============================ 6 · About =========================== -->
-<section class="band band-tint" id="about">
+<!-- ====================== 6 · Web portal sign-in ===================== -->
+<!-- One page per role (web/vite.config.ts). These three URLs are the only way
+     into the portals — there is no self-registration anywhere. -->
+<section class="band band-tint" id="portals">
+  <div class="wrap">
+    <div class="band-head">
+      <h2>For facilities, midwives and administrators</h2>
+      <p class="band-lede">Each role signs in to its own portal. Accounts are created for you &mdash; there is no sign-up.</p>
+    </div>
+
+    <div class="pieces">
+      <div class="piece piece-portal">
+        <div class="who">Web portal</div>
+        <div class="what">TB-DOTS staff</div>
+        <p>Receive referrals from health workers, record laboratory results and check-up attendance, and register walk-in patients.</p>
+        <a class="btn btn-teal btn-sm" href="https://tb-screen-system.vercel.app/" rel="noopener">
+          Facility sign-in
+        </a>
+      </div>
+
+      <div class="piece piece-portal">
+        <div class="who">Web portal</div>
+        <div class="what">Barangay Midwife</div>
+        <p>Add and manage the health worker accounts for your own barangay, and see their activity totals. No patient information appears here at all.</p>
+        <a class="btn btn-teal btn-sm" href="https://tb-screen-system.vercel.app/midwife.html" rel="noopener">
+          Midwife sign-in
+        </a>
+      </div>
+
+      <div class="piece piece-portal">
+        <div class="who">Web portal</div>
+        <div class="what">Administrator</div>
+        <p>Provision midwife, facility staff and health worker accounts, and maintain the list of TB-DOTS facilities.</p>
+        <a class="btn btn-outline btn-sm" href="https://tb-screen-system.vercel.app/admin.html" rel="noopener">
+          Administrator sign-in
+        </a>
+      </div>
+    </div>
+
+    <p class="portals-note">
+      Barangay Health Workers do not sign in here &mdash; they use the Android app.
+      <a href="#download">Get the app</a>.
+    </p>
+  </div>
+</section>
+
+<!-- ============================ 7 · About =========================== -->
+<section class="band" id="about">
   <div class="wrap">
     <div class="band-head">
       <h2>About the project</h2>
@@ -478,7 +525,9 @@
         </div>
 
         <p style="margin-top:20px;">
-          <a class="btn btn-outline btn-sm" href="https://tb-screen-system.vercel.app" rel="noopener">Open the web portal</a>
+          <!-- Was a single link to the portal root. That address is the FACILITY
+               portal now, so it points at the section listing all three. -->
+          <a class="btn btn-outline btn-sm" href="#portals">Sign in to a web portal</a>
         </p>
       </aside>
     </div>

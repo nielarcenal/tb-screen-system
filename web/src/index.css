@@ -2063,29 +2063,23 @@ button.amber:hover { background: var(--amber-container); }
 .login-head h2 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: #14302f; }
 .login-head p { margin: 0; font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; }
 
-.login-roles { display: flex; gap: 8px; margin-bottom: 18px; }
-.login-roles button {
-  flex: 1;
-  margin: 0;
-  padding: 9px 8px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  background: #fff;
-  color: var(--ink-mid);
-  border: 1.5px solid var(--outline);
-}
-.login-roles button:hover { background: var(--subtle); }
-.login-roles button.on { background: var(--teal-container); color: var(--teal-deep); border-color: var(--teal-border); }
-
-/* D-11: the note the role pills actually select. Sits in the margin the pills
-   used to own, so adding it does not push the form down. */
+/* What this portal is for. Was the note the D-11 role pills selected; the
+   pills went with the facility/midwife page split (LoginForm's header), and
+   their styles went with them — this is now simply the note for the page. */
 .login-rolenote {
   margin: -12px 0 16px;
   font-size: 12px;
   line-height: 1.5;
   color: var(--muted);
 }
+
+/* The other clinical portal, offered to anyone who opened the wrong bookmark. */
+.login-otherportal {
+  margin: 16px 0 0;
+  font-size: 12.5px;
+  text-align: center;
+}
+.login-otherportal a { color: var(--teal-deep); font-weight: 600; }
 
 .login-err {
   display: flex;

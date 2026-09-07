@@ -1,21 +1,33 @@
 /**
- * Facility portal shell (redesign §3): navy sidebar + content column via
- * <AppShell>. Role comes from the signed-in account's own users row
- * (users_read_same_facility policy):
- *   tb_dots  → Dashboard / Referrals / Register patient / Barangay hotspots
- *   midwife  → BHW management only (no patient data policies exist for them)
+ * Clinical portal shell (redesign §3): navy sidebar + content column via
+ * <AppShell>. Serves the two clinical roles, which have a PAGE EACH:
+ *   tb_dots  → index.html   Dashboard / Referrals / Register patient / Hotspots
+ *   midwife  → midwife.html BHW management only (they hold no patient policies)
+ * One component, two entry points (main.tsx / midwife-main.tsx) differing only
+ * in the `portal` prop — the views below are unchanged, so nothing about either
+ * role's screens depends on which file booted them.
+ *
+ * WHY A PAGE EACH rather than one page that branches. The two roles share no
+ * views, no data and no vocabulary, and a midwife arriving at a page headed
+ * "Facility Portal" had to be told the software would sort it out. Separate
+ * URLs also mean each role has a link to hand out, which is what the public
+ * site now lists.
+ *
+ * Sign-in itself is still role-agnostic — see LoginForm's header for why that
+ * matters — so any role can authenticate on either page. `homeFor` below is
+ * what puts them right afterwards, once the role is actually known.
+ *
  * The inbox renders master-detail: list on the left, detail panel on the right.
  * Deliberately no router library — a handful of views and one id of state (§2).
- * Admin accounts are redirected to the separate developer portal (admin.html).
  */
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Session } from '@supabase/supabase-js';
 
 import { supabase } from './lib/supabase';
-import { PortalUser } from './lib/types';
+import { PortalUser, UserRole } from './lib/types';
 import AppShell, { ShellNavItem } from './components/AppShell';
-import LoginForm from './components/LoginForm';
+import LoginForm, { PortalKind } from './components/LoginForm';
 import Dashboard from './components/Dashboard';
 import MidwifeDashboard from './components/MidwifeDashboard';
 import ReferralInbox from './components/ReferralInbox';
@@ -28,8 +40,20 @@ import AccountStateGate, { AccountState } from './components/AccountStateGate';
 
 type Page = 'dashboard' | 'inbox' | 'register' | 'hotspot' | 'bhw';
 
-export default function App() {
+/** The page a role signs in to. Null means "wherever they are is fine": 'bhw'
+ *  is the mobile app's role and has no portal of its own, so a BHW who signs in
+ *  here is left where they landed rather than bounced between two pages that
+ *  are equally not theirs. */
+function homeFor(role: UserRole | undefined): string | null {
+  if (role === 'admin') return '/admin.html';
+  if (role === 'midwife') return '/midwife.html';
+  if (role === 'tb_dots') return '/';
+  return null;
+}
+
+export default function App({ portal }: { portal: PortalKind }) {
   const { t } = useTranslation();
+  const portalPath = portal === 'midwife' ? '/midwife.html' : '/';
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [me, setMe] = useState<PortalUser | null>(null);
@@ -85,9 +109,14 @@ export default function App() {
           return;
         }
         const user = (data ?? null) as PortalUser | null;
-        // Admin accounts live in the separate developer portal.
-        if (user?.role === 'admin') {
-          window.location.replace('/admin.html');
+        // Correct credentials on the wrong portal page are REDIRECTED, never
+        // refused — the sign-in form has no idea which role it just let in, by
+        // design (LoginForm's header). Admins leave for the developer portal
+        // here exactly as they always did; the midwife/facility split is the
+        // same rule, generalised.
+        const home = homeFor(user?.role);
+        if (home && home !== portalPath) {
+          window.location.replace(home);
           return;
         }
         if (!user) {
@@ -113,7 +142,7 @@ export default function App() {
           .maybeSingle();
         setFacilityName((fac as { name: string } | null)?.name ?? null);
       });
-  }, [userId, meVersion]);
+  }, [userId, meVersion, portalPath]);
 
   // Not signed in: the sidebar shell is hidden; the two-panel sign-in (§4)
   // carries its own brand panel and language toggle.
@@ -121,7 +150,7 @@ export default function App() {
     return <p style={{ padding: 24, textAlign: 'center' }}>{t('common.loading')}</p>;
   }
   if (!session) {
-    return <LoginForm />;
+    return <LoginForm portal={portal} />;
   }
   // D-12: three terminal states get a gate with a sign-out; only a genuinely
   // in-flight lookup is allowed to show a spinner, and that one does resolve.

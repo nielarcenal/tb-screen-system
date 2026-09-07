@@ -121,6 +121,7 @@ export const tl: Translation = {
     sub: 'Paggawa ng mga account — para lamang sa developer',
     notAdmin: 'Ang account na ito ay hindi developer account.',
     goMain: 'Pumunta sa portal ng pasilidad',
+    goMidwife: 'Pumunta sa portal ng midwife',
     footnote:
       'Paggawa ng account lamang: walang pangalan ng pasyente, rekord, o resulta na maa-access mula sa portal na ito.',
   },
@@ -264,7 +265,6 @@ export const tl: Translation = {
     retry: 'Subukan muli',
   },
   login: {
-    sub: 'Staff ng pasilidad ng TB-DOTS',
     roleStaff: 'Staff ng TB-DOTS',
     roleMidwife: 'Midwife ng Barangay',
     email: 'Email',
@@ -282,12 +282,13 @@ export const tl: Translation = {
     pProgram: 'Programang TB-DOTS ng Bukidnon',
     copyright: 'TB-Screen · Bukidnon TB-DOTS',
     signinTitle: 'Mag-sign in',
-    signinSub: 'Maligayang pagbabalik. Ilagay ang inyong kredensyal upang magpatuloy.',
     accessHelp: 'Kontakin ang administrator kung hindi maka-sign in.',
     noteStaff:
       'Tumatanggap ang TB-DOTS staff ng mga referral, nagtatala ng resulta ng laboratory, at sinusubaybayan ang pagdalo sa check-up.',
     noteMidwife:
       'Pinamamahalaan ng Midwife ng Barangay ang mga health worker na nakatalaga sa sarili nilang barangay.',
+    goFacility: 'Dito mag-sign in ang TB-DOTS staff',
+    goMidwife: 'Dito mag-sign in ang mga Midwife ng Barangay',
   },
   /**
    * Forced password change (D-06). Shown while the signed-in account still

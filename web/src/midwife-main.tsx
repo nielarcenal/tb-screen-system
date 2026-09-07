@@ -1,6 +1,7 @@
 /**
- * Entry point for index.html — the TB-DOTS facility portal. The midwife portal
- * boots the same <App> from midwife-main.tsx with portal="midwife".
+ * Entry point for midwife.html. Same <App> as the facility portal — only the
+ * `portal` prop differs, which selects the sign-in wording and the page a
+ * mismatched role is redirected to. See App's header.
  */
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -11,6 +12,6 @@ import App from './App';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App portal="facility" />
+    <App portal="midwife" />
   </StrictMode>,
 );

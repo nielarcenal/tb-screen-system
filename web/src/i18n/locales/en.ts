@@ -126,6 +126,7 @@ export const en = {
     sub: 'Account provisioning — developer access only',
     notAdmin: 'This account is not a developer account.',
     goMain: 'Go to the facility portal',
+    goMidwife: 'Go to the midwife portal',
     footnote:
       'Provisioning only: no patient names, records, or results are accessible from this portal.',
   },
@@ -265,7 +266,6 @@ export const en = {
     retry: 'Retry',
   },
   login: {
-    sub: 'TB-DOTS facility staff',
     roleStaff: 'TB-DOTS staff',
     roleMidwife: 'Barangay Midwife',
     email: 'Email',
@@ -283,12 +283,13 @@ export const en = {
     pProgram: 'Bukidnon TB-DOTS Program',
     copyright: 'TB-Screen · Bukidnon TB-DOTS',
     signinTitle: 'Sign in',
-    signinSub: 'Welcome back. Enter your credentials to continue.',
     accessHelp: 'Contact your administrator if you can’t sign in.',
     noteStaff:
       'TB-DOTS staff receive referrals, record laboratory results, and track check-up attendance.',
     noteMidwife:
       'Barangay Midwives manage the health workers assigned to their own barangay.',
+    goFacility: 'TB-DOTS staff sign in here',
+    goMidwife: 'Barangay Midwives sign in here',
   },
   /**
    * Forced password change (D-06). Shown while the signed-in account still

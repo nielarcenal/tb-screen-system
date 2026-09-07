@@ -7,9 +7,13 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        // Facility portal (TB-DOTS staff + midwives).
+        // One page per role. All three boot from src/, share the component
+        // tree, and differ only in which shell they mount — see App's header.
+        // Facility portal (TB-DOTS staff).
         main: resolve(__dirname, 'index.html'),
-        // Developer portal (admin provisioning) — deliberately a separate page.
+        // Midwife portal (BHW management for one barangay).
+        midwife: resolve(__dirname, 'midwife.html'),
+        // Developer portal (admin provisioning).
         admin: resolve(__dirname, 'admin.html'),
       },
     },
