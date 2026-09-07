@@ -249,7 +249,11 @@ export default function PatientDetailScreen() {
           {t('patientDetail.notFound')}
         </Text>
       ) : patient ? (
-        <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 6, paddingBottom: 32, gap: 16 }}>
+        <ScrollView
+          automaticallyAdjustKeyboardInsets
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ padding: 20, paddingTop: 6, paddingBottom: 32, gap: 16 }}
+        >
           {/* Edit-details card (design screen 9) replaces the identity card. */}
           {editing ? (
             <View

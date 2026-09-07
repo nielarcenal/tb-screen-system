@@ -103,7 +103,11 @@ export default function SignInScreen() {
       <Appbar.Header style={{ backgroundColor: palette.background }}>
         <Appbar.BackAction onPress={() => router.back()} />
       </Appbar.Header>
-      <ScrollView contentContainerStyle={{ padding: 24, gap: 16, flexGrow: 1 }}>
+      <ScrollView
+        automaticallyAdjustKeyboardInsets
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ padding: 24, gap: 16, flexGrow: 1 }}
+      >
         <View style={{ alignItems: 'center', gap: 12, marginTop: 24 }}>
           <Image
             source={require('../assets/tb-screen-logo.png')}

@@ -121,7 +121,11 @@ export default function CreateReferralScreen() {
         <Appbar.Content title={t('referral.title')} />
       </Appbar.Header>
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 8, gap: 14 }}>
+      <ScrollView
+        automaticallyAdjustKeyboardInsets
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ padding: 20, paddingTop: 8, gap: 14 }}
+      >
         {patient && screening ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Text variant="titleMedium">{patient.full_name ?? patient.display_code}</Text>

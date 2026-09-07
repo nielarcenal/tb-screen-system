@@ -99,6 +99,7 @@ export default function ChangePasswordGate() {
           gap: 16,
           flexGrow: 1,
         }}
+        automaticallyAdjustKeyboardInsets
         keyboardShouldPersistTaps="handled"
       >
         <View style={{ gap: 8 }}>

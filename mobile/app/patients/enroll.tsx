@@ -161,7 +161,11 @@ export default function EnrollScreen() {
         <Appbar.Content title={t('enroll.title')} />
       </Appbar.Header>
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 8, gap: 16 }}>
+      <ScrollView
+        automaticallyAdjustKeyboardInsets
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ padding: 20, paddingTop: 8, gap: 16 }}
+      >
         <Banner
           visible={!userId}
           icon="account-alert"

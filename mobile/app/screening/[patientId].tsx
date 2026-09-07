@@ -349,7 +349,11 @@ export default function ScreeningScreen() {
         <Appbar.Header style={{ backgroundColor: palette.background }}>
           <Appbar.BackAction onPress={goBack} />
         </Appbar.Header>
-        <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24, paddingTop: 8 }}>
+        <ScrollView
+          automaticallyAdjustKeyboardInsets
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ flexGrow: 1, padding: 24, paddingTop: 8 }}
+        >
           <View style={{ flex: 1, justifyContent: 'center' }}>
             <View
               style={{
@@ -485,7 +489,11 @@ export default function ScreeningScreen() {
           <Appbar.BackAction onPress={goBack} />
           <Appbar.Content title={t('screening.reviewTitle')} />
         </Appbar.Header>
-        <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, gap: 8 }}>
+        <ScrollView
+          automaticallyAdjustKeyboardInsets
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ padding: 20, paddingTop: 4, gap: 8 }}
+        >
           <Text variant="bodySmall" style={{ color: palette.inkSoft, marginBottom: 4 }}>
             {t('screening.reviewHint')}
           </Text>
@@ -632,7 +640,11 @@ export default function ScreeningScreen() {
         </Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24, paddingTop: 20 }}>
+      <ScrollView
+        automaticallyAdjustKeyboardInsets
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1, padding: 24, paddingTop: 20 }}
+      >
         {isVitalsStep ? (
           <View
             style={{
