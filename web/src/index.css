@@ -492,6 +492,19 @@ tbody tr:first-child .heatbar { background: var(--teal); }
   max-width: 100%;
   min-width: 0;
 }
+/* Once the split WRAPS, the master is alone on its row and the 360px cap that
+   keeps the list from sprawling beside the detail just makes the two cards
+   ragged — a 360px list stacked above a 686px panel. Below the wrap point the
+   cap comes off so both fill the column.
+
+   1151px is MEASURED, not derived: the panes wrap at <= 1151 and sit side by
+   side from 1152 up (binary-searched in the running portal at the real sidebar
+   width). Arithmetic from the flex bases put it at 1124 and was wrong, so if
+   the sidebar width or the split's bases ever change, re-measure rather than
+   recompute this number. */
+@media (max-width: 1151px) {
+  .split > .master { max-width: none; }
+}
 tbody tr.rowlink.selected { background: #f0f7f7; }
 
 /* ---------- referral inbox: master pane + four states (§4) ---------- */
