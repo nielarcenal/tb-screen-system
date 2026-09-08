@@ -2,39 +2,29 @@
  * BarangayReport — the properties that are easy to break and expensive to be
  * wrong about.
  *
- * The report is the artifact a health office would read next to its own signed
- * sheet, so the things pinned here are the ones that would quietly turn it into
- * a different claim:
- *
- *   1. It asks for TWO years, not one. The year-over-year column is the whole
- *      reason it mirrors the CHO sheet; a refactor that drops the second fetch
- *      leaves the previous-year column silently reading 0 for everyone.
- *   2. The ranking follows the SELECTED measure. The RPC orders by positives,
- *      so a component that renders the rows as they arrive looks correct until
- *      someone picks a different measure — and then shows a ranking that
- *      contradicts its own numbers.
- *   3. A barangay with no activity still appears with zeros. The CHO sheet
- *      lists Vintar with 0 cases in 2024; dropping empty rows would misreport
- *      "no data recorded" as "barangay not covered".
- *   4. The scope disclaimer renders. It is the sentence that keeps a screenshot
- *      of this view from reading as a claim to be the city case register.
+ * The one that matters most is LIKE FOR LIKE. The first version asked for two
+ * whole calendar years, so a nine-month current year was compared against a
+ * twelve-month previous one and every barangay appeared to be improving. That
+ * is not a cosmetic bug: it is a false finding, shown beside a health office's
+ * real one. The comparison period must end on the same day of the year as the
+ * selected period, and that is pinned here in both directions — partial year
+ * and finished year.
  */
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import BarangayReport from './BarangayReport';
 
-/**
- * Fake PostgREST. Records every rpc() call so the two-year fetch can be
- * asserted, and answers from a per-year table.
- */
+/** Fake PostgREST. Records every rpc() call and answers keyed on from_date. */
 const mock = vi.hoisted(() => {
-  const db = { byYear: new Map<string, unknown[]>(), calls: [] as { from: string; to: string }[] };
+  const db = {
+    byFrom: new Map<string, unknown[]>(),
+    calls: [] as { from: string; to: string }[],
+  };
   const supabase = {
     rpc: (_fn: string, args: { from_date: string; to_date: string }) => {
       db.calls.push({ from: args.from_date, to: args.to_date });
-      const year = args.from_date.slice(0, 4);
-      return Promise.resolve({ data: db.byYear.get(year) ?? [], error: null });
+      return Promise.resolve({ data: db.byFrom.get(args.from_date) ?? [], error: null });
     },
   };
   return { db, supabase };
@@ -59,23 +49,41 @@ const row = (name: string, over: Partial<Record<string, number>> = {}) => ({
 const thisYear = new Date().getFullYear();
 
 beforeEach(() => {
-  mock.db.byYear.clear();
+  mock.db.byFrom.clear();
   mock.db.calls.length = 0;
 });
 
 describe('BarangayReport', () => {
-  it('fetches the selected year AND the one before it', async () => {
-    mock.db.byYear.set(String(thisYear), [row('POBLACION', { referred_count: 3 })]);
+  it('compares LIKE FOR LIKE: both periods end on the same month and day', async () => {
+    mock.db.byFrom.set(`${thisYear}-01-01`, [row('POBLACION', { referred_count: 3 })]);
     render(<BarangayReport />);
 
     await waitFor(() => expect(mock.db.calls.length).toBe(2));
-    const years = mock.db.calls.map((c) => c.from.slice(0, 4)).sort();
-    expect(years).toEqual([String(thisYear - 1), String(thisYear)]);
+    const [a, b] = [...mock.db.calls].sort((x, y) => x.from.localeCompare(y.from));
+    expect(a.from).toBe(`${thisYear - 1}-01-01`);
+    expect(b.from).toBe(`${thisYear}-01-01`);
+    expect(a.to.slice(4)).toBe(b.to.slice(4));
+    expect(Number(b.to.slice(0, 4)) - Number(a.to.slice(0, 4))).toBe(1);
   });
 
-  it('asks for whole calendar years, so the columns line up with the health office sheet', async () => {
-    mock.db.byYear.set(String(thisYear), [row('POBLACION', { referred_count: 1 })]);
+  it('does not run the CURRENT year to 31 December — it stops at today', async () => {
+    // Asking for the whole calendar year is the bug: it pads the current year
+    // with months that have not happened and makes every count look lower.
+    mock.db.byFrom.set(`${thisYear}-01-01`, [row('POBLACION', { referred_count: 3 })]);
     render(<BarangayReport />);
+
+    await waitFor(() => expect(mock.db.calls.length).toBe(2));
+    const current = mock.db.calls.find((c) => c.from.startsWith(String(thisYear)))!;
+    expect(current.to.endsWith('-12-31')).toBe(false);
+  });
+
+  it('uses whole years once the selected year has finished', async () => {
+    mock.db.byFrom.set(`${thisYear - 1}-01-01`, [row('POBLACION', { referred_count: 5 })]);
+    render(<BarangayReport />);
+    await waitFor(() => expect(mock.db.calls.length).toBe(2));
+
+    mock.db.calls.length = 0;
+    fireEvent.click(screen.getByRole('button', { name: String(thisYear - 1) }));
 
     await waitFor(() => expect(mock.db.calls.length).toBe(2));
     for (const c of mock.db.calls) {
@@ -84,16 +92,13 @@ describe('BarangayReport', () => {
     }
   });
 
-  it('ranks by the SELECTED measure, not by the order the RPC returned', async () => {
-    // Arrives ordered by positives (as 0027 orders): ALPHA leads on positives,
-    // BETA leads on referrals. Switching the measure must re-rank.
-    mock.db.byYear.set(String(thisYear), [
+  it('ranks by the SELECTED measure, not the order the RPC returned', async () => {
+    mock.db.byFrom.set(`${thisYear}-01-01`, [
       row('ALPHA', { positive_count: 9, referred_count: 1 }),
       row('BETA', { positive_count: 0, referred_count: 7 }),
     ]);
     render(<BarangayReport />);
 
-    // Default measure is Referred, so BETA outranks ALPHA in the table.
     await waitFor(() => expect(screen.getByRole('table')).toBeTruthy());
     const firstCell = () =>
       within(within(screen.getByRole('table')).getAllByRole('row')[1]).getAllByRole('cell')[0]
@@ -105,9 +110,9 @@ describe('BarangayReport', () => {
   });
 
   it('keeps a barangay with no activity, showing zeros rather than dropping it', async () => {
-    // The CHO sheet lists Vintar at 0 for 2024. "No cases" and "not covered"
-    // are different statements and the table must not collapse them.
-    mock.db.byYear.set(String(thisYear), [
+    // "No cases" and "not covered" are different statements; the table must not
+    // collapse them. The health office sheet lists Vintar at 0 for 2024.
+    mock.db.byFrom.set(`${thisYear}-01-01`, [
       row('POBLACION', { referred_count: 4 }),
       row('VINTAR'),
     ]);
@@ -118,12 +123,13 @@ describe('BarangayReport', () => {
     expect(rows.some((r) => r.textContent?.includes('VINTAR'))).toBe(true);
   });
 
-  it('states what the report is not', async () => {
-    mock.db.byYear.set(String(thisYear), [row('POBLACION', { referred_count: 1 })]);
+  it('states the period, and states what the report is not', async () => {
+    mock.db.byFrom.set(`${thisYear}-01-01`, [row('POBLACION', { referred_count: 1 })]);
     render(<BarangayReport />);
 
     await waitFor(() => expect(screen.getByRole('table')).toBeTruthy());
-    expect(screen.getByText(/not a replacement for it/i)).toBeTruthy();
-    expect(screen.getByText(/does not track treatment/i)).toBeTruthy();
+    // The current year is partial, so the like-for-like sentence must be shown.
+    expect(screen.getByText(/same dates/i)).toBeTruthy();
+    expect(screen.getByText(/not a replacement for them/i)).toBeTruthy();
   });
 });

@@ -1,35 +1,32 @@
 /**
- * Barangay Report — the per-barangay screening/referral funnel, for a calendar
- * year, with the previous year alongside it.
+ * Barangay Report — screening and referral counts per barangay, ranked, with
+ * the same period a year earlier beside them.
  *
  * WHY IT LOOKS LIKE THE CITY HEALTH OFFICE SHEET. The CHO compiles its
- * per-barangay TB figures by hand once a year. This view produces the portion
- * of that work the system actually observes, continuously — same shape (a
- * barangay per row, a column per year, ranked), so it can be read next to the
- * signed document.
+ * per-barangay TB figures by hand once a year. This produces the portion of
+ * that work the system observes, continuously.
  *
- * WHAT IT DELIBERATELY DOES NOT CLAIM, restated in the UI itself because a
- * screenshot of this view will outlive the caveat in the thesis:
- *   - It is NOT the city case register. Only patients seen through this system
- *     are counted; the CHO's "All Forms" figure includes every other source.
- *   - There is NO treatment-completion column, because no treatment register
- *     exists in this schema (see 0027's header).
- *   - "Missed check-ups" is an ANALOGUE of Lost to Follow-Up, not the same
- *     measurement.
+ * LIKE FOR LIKE, ALWAYS. The comparison period ENDS ON THE SAME DAY OF THE YEAR
+ * as the selected one. Pick the current year and you get 1 Jan–today against
+ * 1 Jan–today last year; pick a finished year and you get two full years. The
+ * first version compared a nine-month 2026 against a twelve-month 2025 and made
+ * every barangay look like it was improving — a decline that was really just a
+ * calendar. Never compare a part year to a whole one.
+ *
+ * WHAT IT DOES NOT CLAIM, restated in the UI because a screenshot outlives a
+ * caveat in the thesis: not the city case register (only patients seen through
+ * this system are counted), no treatment-completion column (no treatment
+ * register exists in this schema), and "missed check-ups" is an analogue of
+ * lost to follow-up, not the same measurement.
  *
  * POSITIONING (§1, §5): the positive count is TB-DOTS's entered result, never a
  * conclusion drawn here. No score exists anywhere in this file.
  *
- * CHART CHOICES (and why, so a later edit does not undo them):
- *   - Ranked bars are ONE series, so they take one hue and need no legend — the
- *     heading names the measure. Sequential, not categorical.
- *   - Year-over-year is "before -> after per item", which is a DUMBBELL: one
- *     hue in two shades, not two competing colours. The pair #7cbec6 / #016575
- *     was picked by running the palette validator over the brand tokens — it
- *     has the widest separation available (CVD ΔE 29.2, normal 29.5). Its
- *     lighter shade sits under 3:1 on paper, which is why every mark here is
- *     directly labelled and the table below carries the same numbers: that is
- *     the required relief, not an oversight.
+ * ONE CHART ON PURPOSE. An earlier version also drew a year-over-year dumbbell.
+ * It was removed: the arrow in its label read left-to-right while its dots ran
+ * right-to-left whenever a figure fell, which is two contradictory directions
+ * for one fact. The year-on-year comparison lives in the table, which is where
+ * the health office sheet keeps it too.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -49,22 +46,14 @@ interface ReportRow {
   missed_count: number;
 }
 
-/** The measures a reader can rank by. Keys match ReportRow fields. */
-const METRICS = ['referred_count', 'positive_count', 'screened_count', 'missed_count'] as const;
+/** Measures the reader can rank the chart by. Keys match ReportRow fields. */
+const METRICS = ['referred_count', 'positive_count', 'screened_count'] as const;
 type Metric = (typeof METRICS)[number];
 
-/** Two shades of ONE hue — see the header. Never two competing hues. */
-const SHADE_PREV = '#7cbec6';
-const SHADE_CURR = '#016575';
-
+const BAR = '#016575';
 const TOP_N = 12;
 
-function yearRange(year: number): { from: string; to: string } {
-  return { from: `${year}-01-01`, to: `${year}-12-31` };
-}
-
-async function fetchYear(year: number): Promise<ReportRow[]> {
-  const { from, to } = yearRange(year);
+async function fetchPeriod(from: string, to: string): Promise<ReportRow[]> {
   const { data, error } = await supabase.rpc('barangay_report', {
     from_date: from,
     to_date: to,
@@ -73,114 +62,52 @@ async function fetchYear(year: number): Promise<ReportRow[]> {
   return (data ?? []) as ReportRow[];
 }
 
-/* ------------------------------------------------------------------ charts */
-
 /**
- * Ranked horizontal bars, one series, one hue. Values are direct-labelled at
- * the data end; there is no axis, because the label IS the value and a second
- * copy of the same number is noise.
+ * The two periods to compare. `end` is capped at today for the current year, and
+ * the earlier period is cut to the SAME month and day so the two cover an equal
+ * stretch of calendar. See the header.
  */
-function RankedBars({ rows, metric, label }: { rows: ReportRow[]; metric: Metric; label: string }) {
-  const max = rows.reduce((m, r) => Math.max(m, r[metric]), 0);
-  const ROW_H = 28;
-  const BAR_H = 14;
-  const NAME_W = 132;
-  const VALUE_W = 40;
-  const height = Math.max(rows.length * ROW_H, ROW_H);
-
-  return (
-    // Scrolls rather than squashes: label text does NOT shrink with the
-    // viewBox, so below ~460px the values overrun their marks and clip. A
-    // chart you can push sideways stays readable; one scaled to 260px is not.
-    <div className="brep-chartwrap">
-    <svg
-      className="brep-chart"
-      viewBox={`0 0 480 ${height}`}
-      role="img"
-      aria-label={label}
-      preserveAspectRatio="xMinYMin meet"
-    >
-      {rows.map((r, i) => {
-        const y = i * ROW_H;
-        const track = 480 - NAME_W - VALUE_W;
-        const w = max ? Math.max((r[metric] / max) * track, r[metric] > 0 ? 3 : 0) : 0;
-        return (
-          <g key={r.barangay_code}>
-            <text x={0} y={y + BAR_H} className="brep-cat" dominantBaseline="middle">
-              {r.barangay_name}
-            </text>
-            {/* recessive track so a zero row still reads as a row */}
-            <rect x={NAME_W} y={y + BAR_H / 2} width={track} height={1} className="brep-track" />
-            <rect
-              x={NAME_W}
-              y={y + 3}
-              width={w}
-              height={BAR_H}
-              rx={4}
-              fill={SHADE_CURR}
-            />
-            <text
-              x={NAME_W + w + 8}
-              y={y + BAR_H}
-              className="brep-val"
-              dominantBaseline="middle"
-            >
-              {r[metric]}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
-    </div>
-  );
+function periodsFor(year: number, today: string) {
+  const [ty, tm, td] = today.split('-');
+  const isCurrent = year === Number(ty);
+  const endMd = isCurrent ? `${tm}-${td}` : '12-31';
+  return {
+    isPartial: isCurrent,
+    endMd,
+    now: { from: `${year}-01-01`, to: `${year}-${endMd}` },
+    before: { from: `${year - 1}-01-01`, to: `${year - 1}-${endMd}` },
+  };
 }
 
 /**
- * Year-over-year dumbbell: previous year and selected year per barangay, joined
- * by a connector so the CHANGE is the shape you read, not two bar heights you
- * have to subtract by eye.
+ * "8 September 2026" from "2026-09-08". Built from the parts rather than
+ * `new Date(iso)`, which parses a bare date as UTC and can render the day
+ * before in a positive-offset zone like Manila.
  */
-function Dumbbell({
-  rows,
-  prevByCode,
-  metric,
-  prevYear,
-  year,
-  label,
-}: {
-  rows: ReportRow[];
-  prevByCode: Map<string, ReportRow>;
-  metric: Metric;
-  prevYear: number;
-  year: number;
-  label: string;
-}) {
-  const max = rows.reduce(
-    (m, r) => Math.max(m, r[metric], prevByCode.get(r.barangay_code)?.[metric] ?? 0),
-    0,
-  );
-  const ROW_H = 30;
+function readableDate(iso: string, lang: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  try {
+    return new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long', year: 'numeric' })
+      .format(new Date(y, m - 1, d));
+  } catch {
+    return iso; // unknown locale tag: the ISO date is still true, just plainer
+  }
+}
+
+/** Ranked horizontal bars: one series, one hue, value labelled at the bar end. */
+function RankedBars({ rows, metric, label }: { rows: ReportRow[]; metric: Metric; label: string }) {
+  const max = rows.reduce((m, r) => Math.max(m, r[metric]), 0);
+  const ROW_H = 26;
+  const BAR_H = 13;
   const NAME_W = 132;
-  // Wide enough for the "prev → curr" pair at two digits each; at 44 the label
-  // ran past the viewBox and clipped at the card edge.
-  const PAD_R = 68;
+  const VALUE_W = 44;
+  const track = 480 - NAME_W - VALUE_W;
   const height = Math.max(rows.length * ROW_H, ROW_H);
-  const track = 480 - NAME_W - PAD_R;
-  const x = (v: number) => NAME_W + (max ? (v / max) * track : 0);
 
   return (
-    <>
-      <div className="brep-legend">
-        <span>
-          <i style={{ background: SHADE_PREV }} aria-hidden="true" />
-          {prevYear}
-        </span>
-        <span>
-          <i style={{ background: SHADE_CURR }} aria-hidden="true" />
-          {year}
-        </span>
-      </div>
-      <div className="brep-chartwrap">
+    // Scrolls rather than squashes: SVG label text keeps its size while the
+    // viewBox shrinks, so below ~460px the values overrun their marks.
+    <div className="brep-chartwrap">
       <svg
         className="brep-chart"
         viewBox={`0 0 480 ${height}`}
@@ -189,50 +116,30 @@ function Dumbbell({
         preserveAspectRatio="xMinYMin meet"
       >
         {rows.map((r, i) => {
-          const y = i * ROW_H + 15;
-          const prev = prevByCode.get(r.barangay_code)?.[metric] ?? 0;
-          const curr = r[metric];
+          const y = i * ROW_H;
+          const w = max ? Math.max((r[metric] / max) * track, r[metric] > 0 ? 3 : 0) : 0;
           return (
             <g key={r.barangay_code}>
-              <text x={0} y={y} className="brep-cat" dominantBaseline="middle">
+              <text x={0} y={y + BAR_H} className="brep-cat" dominantBaseline="middle">
                 {r.barangay_name}
               </text>
-              <line
-                x1={x(Math.min(prev, curr))}
-                x2={x(Math.max(prev, curr))}
-                y1={y}
-                y2={y}
-                className="brep-conn"
-              />
-              {/* 2px surface ring keeps the dots readable where they overlap */}
-              <circle cx={x(prev)} cy={y} r={5} fill={SHADE_PREV} className="brep-dot" />
-              <circle cx={x(curr)} cy={y} r={5} fill={SHADE_CURR} className="brep-dot" />
-              {/* Anchored to the RIGHT edge, not a fixed offset: "107 → 116"
-                  is wider than "6 → 71" and a left-anchored label clipped the
-                  widest row at the card boundary. */}
-              <text
-                x={480}
-                y={y}
-                textAnchor="end"
-                className="brep-val"
-                dominantBaseline="middle"
-              >
-                {prev} → {curr}
+              <rect x={NAME_W} y={y + BAR_H / 2} width={track} height={1} className="brep-track" />
+              <rect x={NAME_W} y={y + 3} width={w} height={BAR_H} rx={4} fill={BAR} />
+              <text x={NAME_W + w + 8} y={y + BAR_H} className="brep-val" dominantBaseline="middle">
+                {r[metric]}
               </text>
             </g>
           );
         })}
       </svg>
-      </div>
-    </>
+    </div>
   );
 }
 
-/* ------------------------------------------------------------------- view */
-
 export default function BarangayReport() {
-  const { t } = useTranslation();
-  const thisYear = Number(manilaToday().slice(0, 4));
+  const { t, i18n } = useTranslation();
+  const today = manilaToday();
+  const thisYear = Number(today.slice(0, 4));
   const YEARS = [thisYear, thisYear - 1, thisYear - 2];
 
   const [year, setYear] = useState(thisYear);
@@ -242,32 +149,35 @@ export default function BarangayReport() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (y: number) => {
+  const periods = useMemo(() => periodsFor(year, today), [year, today]);
+
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [curr, before] = await Promise.all([fetchYear(y), fetchYear(y - 1)]);
-      setRows(curr);
-      setPrev(before);
+      const [a, b] = await Promise.all([
+        fetchPeriod(periods.now.from, periods.now.to),
+        fetchPeriod(periods.before.from, periods.before.to),
+      ]);
+      setRows(a);
+      setPrev(b);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
     setLoading(false);
-  }, []);
+  }, [periods]);
 
   useEffect(() => {
-    void load(year);
-  }, [load, year]);
+    void load();
+  }, [load]);
 
-  const prevByCode = useMemo(
-    () => new Map(prev.map((r) => [r.barangay_code, r])),
-    [prev],
-  );
+  const prevByCode = useMemo(() => new Map(prev.map((r) => [r.barangay_code, r])), [prev]);
 
-  // Ranked by the chosen measure. The RPC orders by positives; re-sort here so
-  // the pills actually change the ranking rather than only the bar lengths.
   const ranked = useMemo(
-    () => [...rows].sort((a, b) => b[metric] - a[metric] || a.barangay_name.localeCompare(b.barangay_name)),
+    () =>
+      [...rows].sort(
+        (a, b) => b[metric] - a[metric] || a.barangay_name.localeCompare(b.barangay_name),
+      ),
     [rows, metric],
   );
   const top = useMemo(() => ranked.filter((r) => r[metric] > 0).slice(0, TOP_N), [ranked, metric]);
@@ -275,15 +185,12 @@ export default function BarangayReport() {
   const totals = useMemo(
     () =>
       rows.reduce(
-        (acc, r) => ({
-          screened: acc.screened + r.screened_count,
-          referred: acc.referred + r.referred_count,
-          presented: acc.presented + r.presented_count,
-          tested: acc.tested + r.tested_count,
-          positive: acc.positive + r.positive_count,
-          missed: acc.missed + r.missed_count,
+        (a, r) => ({
+          screened: a.screened + r.screened_count,
+          referred: a.referred + r.referred_count,
+          positive: a.positive + r.positive_count,
         }),
-        { screened: 0, referred: 0, presented: 0, tested: 0, positive: 0, missed: 0 },
+        { screened: 0, referred: 0, positive: 0 },
       ),
     [rows],
   );
@@ -293,7 +200,6 @@ export default function BarangayReport() {
       referred_count: t('report.mReferred'),
       positive_count: t('report.mPositive'),
       screened_count: t('report.mScreened'),
-      missed_count: t('report.mMissed'),
     })[m];
 
   const exportCsv = () => {
@@ -302,7 +208,6 @@ export default function BarangayReport() {
       t('report.colCity'),
       `${t('report.mScreened')} ${year}`,
       `${t('report.mReferred')} ${year}`,
-      `${t('report.colPresented')} ${year}`,
       `${t('report.colTested')} ${year}`,
       `${t('report.mPositive')} ${year}`,
       `${t('report.mMissed')} ${year}`,
@@ -313,19 +218,10 @@ export default function BarangayReport() {
     const body = ranked.map((r) => {
       const p = prevByCode.get(r.barangay_code);
       return [
-        r.barangay_name,
-        r.city_name,
-        r.screened_count,
-        r.referred_count,
-        r.presented_count,
-        r.tested_count,
-        r.positive_count,
-        r.missed_count,
-        p?.referred_count ?? 0,
-        p?.positive_count ?? 0,
-      ]
-        .map(esc)
-        .join(',');
+        r.barangay_name, r.city_name,
+        r.screened_count, r.referred_count, r.tested_count, r.positive_count, r.missed_count,
+        p?.referred_count ?? 0, p?.positive_count ?? 0,
+      ].map(esc).join(',');
     });
     const csv = [head.map(esc).join(','), ...body].join('\r\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
@@ -341,16 +237,12 @@ export default function BarangayReport() {
       <div className="dcard">
         <div className="dstate">
           <div className="badge">
-            <span className="msym" aria-hidden="true">
-              cloud_off
-            </span>
+            <span className="msym" aria-hidden="true">cloud_off</span>
           </div>
           <div className="st-title">{t('report.errorTitle')}</div>
           <div className="st-body">{t('report.errorBody')}</div>
-          <button className="retry" onClick={() => void load(year)}>
-            <span className="msym" aria-hidden="true">
-              refresh
-            </span>
+          <button className="retry" onClick={() => void load()}>
+            <span className="msym" aria-hidden="true">refresh</span>
             {t('report.retry')}
           </button>
         </div>
@@ -364,12 +256,7 @@ export default function BarangayReport() {
         <p className="hs-intro">{t('report.intro')}</p>
         <div className="range-pills">
           {YEARS.map((y) => (
-            <button
-              key={y}
-              className={year === y ? 'active' : ''}
-              aria-pressed={year === y}
-              onClick={() => setYear(y)}
-            >
+            <button key={y} className={year === y ? 'active' : ''} aria-pressed={year === y} onClick={() => setYear(y)}>
               {y}
             </button>
           ))}
@@ -378,13 +265,10 @@ export default function BarangayReport() {
 
       {loading ? (
         <div className="hs-list" aria-busy="true">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="hs-row skel" aria-hidden="true">
               <div className="hs-main">
-                <div className="hs-toprow">
-                  <span className="b nm" />
-                  <span className="b ct" />
-                </div>
+                <div className="hs-toprow"><span className="b nm" /><span className="b ct" /></div>
                 <div className="b tr" />
               </div>
             </div>
@@ -392,126 +276,93 @@ export default function BarangayReport() {
         </div>
       ) : (
         <>
+          {/* Says what the period IS before any number is read. */}
+          <p className="brep-period">
+            {periods.isPartial
+              ? t('report.periodPartial', { year, end: readableDate(periods.now.to, i18n.language) })
+              : t('report.periodFull', { year })}
+          </p>
+
           <div className="brep-kpis">
             <div>
               <span className="brep-k">{totals.screened}</span>
               <span className="brep-l">{t('report.mScreened')}</span>
+              <span className="brep-h2">{t('report.dScreened')}</span>
             </div>
             <div>
               <span className="brep-k">{totals.referred}</span>
               <span className="brep-l">{t('report.mReferred')}</span>
-            </div>
-            <div>
-              <span className="brep-k">{totals.presented}</span>
-              <span className="brep-l">{t('report.colPresented')}</span>
-            </div>
-            <div>
-              <span className="brep-k">{totals.tested}</span>
-              <span className="brep-l">{t('report.colTested')}</span>
+              <span className="brep-h2">{t('report.dReferred')}</span>
             </div>
             <div>
               <span className="brep-k">{totals.positive}</span>
               <span className="brep-l">{t('report.mPositive')}</span>
+              <span className="brep-h2">{t('report.dPositive')}</span>
             </div>
-            <div>
-              <span className="brep-k">{totals.missed}</span>
-              <span className="brep-l">{t('report.mMissed')}</span>
-            </div>
-          </div>
-
-          <div className="range-pills brep-metrics">
-            {METRICS.map((m) => (
-              <button
-                key={m}
-                className={metric === m ? 'active' : ''}
-                aria-pressed={metric === m}
-                onClick={() => setMetric(m)}
-              >
-                {metricLabel(m)}
-              </button>
-            ))}
           </div>
 
           {top.length === 0 ? (
             <div className="dstate ok">
-              <div className="badge">
-                <span className="msym" aria-hidden="true">
-                  bar_chart
-                </span>
-              </div>
+              <div className="badge"><span className="msym" aria-hidden="true">bar_chart</span></div>
               <div className="st-title">{t('report.empty')}</div>
               <div className="st-body">{t('report.emptyBody')}</div>
             </div>
           ) : (
             <>
-              <h3 className="brep-h">{t('report.rankedTitle', { metric: metricLabel(metric), year })}</h3>
-              <RankedBars
-                rows={top}
-                metric={metric}
-                label={t('report.rankedTitle', { metric: metricLabel(metric), year })}
-              />
-
-              <h3 className="brep-h">
-                {t('report.yoyTitle', { metric: metricLabel(metric), prev: year - 1, year })}
-              </h3>
-              <Dumbbell
-                rows={top}
-                prevByCode={prevByCode}
-                metric={metric}
-                prevYear={year - 1}
-                year={year}
-                label={t('report.yoyTitle', { metric: metricLabel(metric), prev: year - 1, year })}
-              />
+              <h3 className="brep-h">{t('report.rankedTitle', { metric: metricLabel(metric) })}</h3>
+              <div className="range-pills brep-metrics">
+                {METRICS.map((m) => (
+                  <button key={m} className={metric === m ? 'active' : ''} aria-pressed={metric === m} onClick={() => setMetric(m)}>
+                    {metricLabel(m)}
+                  </button>
+                ))}
+              </div>
+              <RankedBars rows={top} metric={metric} label={t('report.rankedTitle', { metric: metricLabel(metric) })} />
             </>
           )}
 
+          <h3 className="brep-h">{t('report.tableTitle')}</h3>
           <div className="brep-tablewrap">
             <table className="brep-table">
               <thead>
                 <tr>
                   <th>{t('report.colBarangay')}</th>
-                  <th>{t('report.mScreened')}</th>
-                  <th>{t('report.mReferred')}</th>
-                  <th>{t('report.colPresented')}</th>
-                  <th>{t('report.colTested')}</th>
-                  <th>{t('report.mPositive')}</th>
-                  <th>{t('report.mMissed')}</th>
-                  <th>{t('report.colPrevPositive', { year: year - 1 })}</th>
+                  <th>{t('report.colYear', { metric: t('report.mScreened'), year })}</th>
+                  <th>{t('report.colYear', { metric: t('report.mReferred'), year })}</th>
+                  <th>{t('report.colYear', { metric: t('report.mReferred'), year: year - 1 })}</th>
+                  <th>{t('report.colYear', { metric: t('report.mPositive'), year })}</th>
+                  <th>{t('report.colYear', { metric: t('report.mPositive'), year: year - 1 })}</th>
+                  <th>{t('report.colYear', { metric: t('report.mMissed'), year })}</th>
                 </tr>
               </thead>
               <tbody>
-                {ranked.map((r) => (
-                  <tr key={r.barangay_code}>
-                    <td>
-                      {r.barangay_name}
-                      <span className="brep-sub">{r.city_name}</span>
-                    </td>
-                    <td>{r.screened_count}</td>
-                    <td>{r.referred_count}</td>
-                    <td>{r.presented_count}</td>
-                    <td>{r.tested_count}</td>
-                    <td>{r.positive_count}</td>
-                    <td>{r.missed_count}</td>
-                    <td>{prevByCode.get(r.barangay_code)?.positive_count ?? 0}</td>
-                  </tr>
-                ))}
+                {ranked.map((r) => {
+                  const p = prevByCode.get(r.barangay_code);
+                  return (
+                    <tr key={r.barangay_code}>
+                      <td>{r.barangay_name}</td>
+                      <td>{r.screened_count}</td>
+                      <td>{r.referred_count}</td>
+                      <td className="brep-prev">{p?.referred_count ?? 0}</td>
+                      <td>{r.positive_count}</td>
+                      <td className="brep-prev">{p?.positive_count ?? 0}</td>
+                      <td>{r.missed_count}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
           <button className="retry brep-export" onClick={exportCsv}>
-            <span className="msym" aria-hidden="true">
-              download
-            </span>
+            <span className="msym" aria-hidden="true">download</span>
             {t('report.exportCsv')}
           </button>
         </>
       )}
 
       <div className="dcard-foot">
-        <span className="msym" aria-hidden="true">
-          info
-        </span>
+        <span className="msym" aria-hidden="true">info</span>
         <p>{t('report.scopeNote')}</p>
       </div>
     </div>

@@ -255,26 +255,31 @@ export const ceb: Translation = {
   },
   report: {
     intro:
-      'Ihap sa screening ug referral matag barangay para sa tuig, kauban ang miaging tuig. Ihap ra — pareho sa gigamit sa hotspot view.',
-    rankedTitle: '{{metric}} matag barangay, {{year}}',
-    yoyTitle: '{{metric}} matag barangay: {{prev}} itandi sa {{year}}',
+      'Pila ka tawo ang na-screen sa matag barangay, pila ang na-refer sa TB-DOTS, ug pila ang positibo. Ihap ra — walay detalye sa pasyente.',
+    periodFull: 'Tibuok {{year}}, itandi sa tibuok tuig una niini.',
+    periodPartial:
+      'Gikan 1 Enero hangtod {{end}}. PAREHO nga petsa ang sakop sa miaging tuig, busa patas ang pagtandi.',
     mScreened: 'Na-screen',
     mReferred: 'Na-refer',
     mPositive: 'Positibo',
     mMissed: 'Wala natambongi nga check-up',
+    dScreened: 'Gisusi para sa sintomas sa TB',
+    dReferred: 'Gipadala sa TB-DOTS para ma-test',
+    dPositive: 'Gikumpirma nga positibo sa pasilidad',
+    rankedTitle: 'Nag-unang barangay sumala sa {{metric}}',
+    tableTitle: 'Tanang barangay',
     colBarangay: 'Barangay',
     colCity: 'Siyudad / munisipyo',
-    colPresented: 'Miabot',
     colTested: 'Na-test',
-    colPrevPositive: 'Positibo {{year}}',
+    colYear: '{{metric}} {{year}}',
     exportCsv: 'I-download ang CSV',
     empty: 'Walay natala nga datos para niini nga sukod.',
-    emptyBody: 'Walay barangay nga adunay ihap nga labaw sa zero para sa gipili nga sukod. Sulayi ang laing sukod o laing tuig.',
+    emptyBody: 'Walay barangay nga adunay ihap nga labaw sa zero. Sulayi ang laing sukod o laing tuig.',
     errorTitle: 'Dili ma-load ang report',
     errorBody: 'Dili maabot ang server. Palihug susiha ang koneksyon ug sulayi pag-usab.',
     retry: 'Sulayi pag-usab',
     scopeNote:
-      'Naglakip lamang sa mga pasyente nga miagi niini nga sistema — mga referral sa BHW ug mga walk-in nga narehistro dinhi — busa bahin ra kini sa talaan sa health office, dili puli niini. Walay column para sa nahuman nga tambal kay wala kini gisubay sa sistema. Ang “wala natambongi nga check-up” mao ang pinakaduol nga katumbas sa lost to follow-up, apan dili kini pareho.',
+      'Ang mga pasyente ra nga miagi niini nga sistema ang giihap, busa bahin ra kini sa talaan sa health office, dili puli niini. Walay column para sa nahuman nga tambal kay wala kini gisubay sa sistema. Ang “wala natambongi nga check-up” mao ang pinakaduol dinhi sa lost to follow-up, apan dili pareho.',
   },
   hotspot: {
     intro:

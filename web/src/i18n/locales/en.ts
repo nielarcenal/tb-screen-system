@@ -257,26 +257,31 @@ export const en = {
   },
   report: {
     intro:
-      'Screening and referral counts per barangay for the calendar year, with the year before it alongside. Counts only — the same barangay-level aggregate the hotspot view uses.',
-    rankedTitle: '{{metric}} by barangay, {{year}}',
-    yoyTitle: '{{metric}} per barangay: {{prev}} compared with {{year}}',
+      'How many people were screened in each barangay, how many were referred to TB-DOTS, and how many tested positive. Counts only — no patient details.',
+    periodFull: 'Showing all of {{year}}, compared with all of the year before.',
+    periodPartial:
+      'Showing 1 January to {{end}}. The year before covers the SAME dates, so the two columns can be compared fairly.',
     mScreened: 'Screened',
     mReferred: 'Referred',
     mPositive: 'Positive',
     mMissed: 'Missed check-ups',
+    dScreened: 'Checked for TB symptoms',
+    dReferred: 'Sent to TB-DOTS for testing',
+    dPositive: 'Confirmed positive by the facility',
+    rankedTitle: 'Top barangays by {{metric}}',
+    tableTitle: 'All barangays',
     colBarangay: 'Barangay',
     colCity: 'City / municipality',
-    colPresented: 'Presented',
     colTested: 'Tested',
-    colPrevPositive: 'Positive {{year}}',
+    colYear: '{{metric}} {{year}}',
     exportCsv: 'Download CSV',
     empty: 'Nothing recorded for this measure.',
-    emptyBody: 'No barangay has a count above zero for the selected measure. Try another measure, or another year.',
+    emptyBody: 'No barangay has a count above zero. Try another measure, or another year.',
     errorTitle: 'Couldn’t load the report',
     errorBody: 'We couldn’t reach the server. Check your connection and try again.',
     retry: 'Retry',
     scopeNote:
-      'Covers only patients seen through this system — BHW referrals and walk-ins registered here — so it is a subset of the health office case register, not a replacement for it. There is no treatment-completion column because this system does not track treatment. “Missed check-ups” is the closest available stand-in for lost to follow-up, not the same measurement.',
+      'Counts only patients seen through this system, so it is a part of the health office’s records, not a replacement for them. There is no treatment-completion column because this system does not follow treatment. “Missed check-ups” is the closest thing here to lost to follow-up, not the same measure.',
   },
   hotspot: {
     intro:

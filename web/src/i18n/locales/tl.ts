@@ -255,26 +255,31 @@ export const tl: Translation = {
   },
   report: {
     intro:
-      'Bilang ng screening at referral kada barangay para sa taon, kasama ang nakaraang taon. Bilang lamang — gaya rin ng ginagamit sa hotspot view.',
-    rankedTitle: '{{metric}} ayon sa barangay, {{year}}',
-    yoyTitle: '{{metric}} kada barangay: {{prev}} kumpara sa {{year}}',
+      'Ilan ang na-screen sa bawat barangay, ilan ang na-refer sa TB-DOTS, at ilan ang positibo. Bilang lamang — walang detalye ng pasyente.',
+    periodFull: 'Buong {{year}}, kumpara sa buong taon bago nito.',
+    periodPartial:
+      'Mula 1 Enero hanggang {{end}}. PAREHONG petsa ang saklaw ng nakaraang taon, kaya patas ang paghahambing.',
     mScreened: 'Na-screen',
     mReferred: 'Na-refer',
     mPositive: 'Positibo',
     mMissed: 'Hindi nadaluhang check-up',
+    dScreened: 'Sinuri para sa sintomas ng TB',
+    dReferred: 'Ipinadala sa TB-DOTS para sa test',
+    dPositive: 'Kinumpirmang positibo ng pasilidad',
+    rankedTitle: 'Nangungunang barangay ayon sa {{metric}}',
+    tableTitle: 'Lahat ng barangay',
     colBarangay: 'Barangay',
     colCity: 'Lungsod / munisipalidad',
-    colPresented: 'Dumating',
     colTested: 'Na-test',
-    colPrevPositive: 'Positibo {{year}}',
+    colYear: '{{metric}} {{year}}',
     exportCsv: 'I-download ang CSV',
     empty: 'Walang naitalang datos para sa sukat na ito.',
-    emptyBody: 'Walang barangay na may bilang na higit sa zero para sa napiling sukat. Sumubok ng ibang sukat o ibang taon.',
+    emptyBody: 'Walang barangay na may bilang na higit sa zero. Sumubok ng ibang sukat o ibang taon.',
     errorTitle: 'Hindi ma-load ang ulat',
     errorBody: 'Hindi ma-abot ang server. Pakisuri ang koneksyon at subukan ulit.',
     retry: 'Subukan ulit',
     scopeNote:
-      'Sakop lamang ang mga pasyenteng dumaan sa sistemang ito — mga referral ng BHW at mga walk-in na nairehistro rito — kaya bahagi lamang ito ng talaan ng health office, hindi kapalit nito. Walang column para sa natapos na paggamot dahil hindi sinusubaybayan ng sistemang ito ang paggamot. Ang “hindi nadaluhang check-up” ang pinakamalapit na katumbas ng lost to follow-up, ngunit hindi ito pareho.',
+      'Mga pasyenteng dumaan lamang sa sistemang ito ang bilang, kaya bahagi lamang ito ng talaan ng health office, hindi kapalit nito. Walang column para sa natapos na paggamot dahil hindi ito sinusubaybayan ng sistema. Ang “hindi nadaluhang check-up” ang pinakamalapit dito sa lost to follow-up, ngunit hindi ito pareho.',
   },
   hotspot: {
     intro:

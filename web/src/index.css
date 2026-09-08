@@ -1431,17 +1431,30 @@ button.amber:hover { background: var(--amber-container); }
    label carries identity, the label itself stays ink. The lighter dumbbell
    shade sits under 3:1 on paper, so every mark is directly labelled and the
    table repeats the numbers; that is the required relief, not decoration. */
+/* Says what stretch of calendar the numbers cover, before any of them is read.
+   A part year compared with a whole one made every barangay look like it was
+   improving; the periods are matched now and this line states it. */
+.brep-period {
+  margin: 0;
+  padding: 12px 18px 0;
+  font-size: 12px;
+  color: var(--ink-mid);
+}
+
 .brep-kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1px;
   background: var(--line);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
 .brep-kpis > div { background: var(--paper); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
-.brep-k { font-size: 21px; font-weight: 600; color: var(--ink); line-height: 1.1; }
-.brep-l { font-size: 11px; color: var(--muted); }
+.brep-k { font-size: 24px; font-weight: 600; color: var(--ink); line-height: 1.1; }
+.brep-l { font-size: 12px; font-weight: 600; color: var(--ink-mid); }
+/* Plain-English gloss: a bare "Referred" means nothing to a reader meeting this
+   page for the first time. */
+.brep-h2 { font-size: 11px; color: var(--muted); line-height: 1.4; }
 
 .brep-metrics { padding: 12px 18px 2px; }
 .brep-h { margin: 16px 18px 8px; font-size: 12.5px; font-weight: 600; color: var(--ink-mid); }
@@ -1470,6 +1483,8 @@ button.amber:hover { background: var(--amber-container); }
 .brep-table th:first-child, .brep-table td:first-child { text-align: left; }
 .brep-table td { color: var(--ink-mid); font-variant-numeric: tabular-nums; }
 .brep-sub { display: block; font-size: 10.5px; color: var(--muted); }
+/* Last year's figures sit quieter than this year's: same table, secondary role. */
+.brep-prev { color: var(--muted); }
 .brep-export { margin: 4px 18px 16px; }
 
 /* ---------- account-management list (shared: BHW / midwife / staff) + states (§4) ---------- */
