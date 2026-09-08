@@ -432,7 +432,14 @@ label { display: block; margin: 10px 0 4px; color: var(--ink-mid); font-weight: 
 .toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
 .toolbar input[type='search'] { flex: 1; min-width: 220px; border-radius: 999px; }
 
-.kv { border: none; }
+/* Scrolls inside itself at EVERY width, not just on phones. .content-main is
+   overflow-x: hidden, so anything too wide is silently CLIPPED rather than
+   given a scrollbar — and this table carries the one-time temporary password
+   shown after creating an account. A clipped value column there loses a
+   credential that cannot be read again. The label column is nowrap, so the
+   table has a hard minimum width and its container (a 480px card) can be
+   narrower than it on a laptop, not only on a phone. */
+.kv { border: none; display: block; overflow-x: auto; }
 .kv td { border: none; padding: 3px 16px 3px 0; }
 .kv td:first-child { color: var(--muted); white-space: nowrap; }
 
@@ -1426,7 +1433,12 @@ button.amber:hover { background: var(--amber-container); }
 .brep-metrics { padding: 12px 18px 2px; }
 .brep-h { margin: 16px 18px 8px; font-size: 12.5px; font-weight: 600; color: var(--ink-mid); }
 
-.brep-chart { display: block; width: 100%; height: auto; padding: 0 18px 4px; overflow: visible; }
+/* The chart SCROLLS below ~460px instead of scaling into illegibility: SVG
+   label text keeps its own size while the viewBox shrinks, so the values
+   overrun their marks and clip. Same pattern the wide table uses, and the same
+   promise — the chart scrolls inside itself, the page body never does. */
+.brep-chartwrap { overflow-x: auto; padding: 0 18px 4px; }
+.brep-chart { display: block; width: 100%; min-width: 440px; height: auto; overflow: visible; }
 .brep-cat { font-size: 11px; fill: var(--ink-mid); }
 .brep-val { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
 .brep-track { fill: var(--line); }
@@ -2491,10 +2503,6 @@ button.amber:hover { background: var(--amber-container); }
 
   /* Ranked hotspot bars: give the track room by trimming the name column. */
   .hotrow { grid-template-columns: 20px minmax(90px, 120px) 1fr 34px; gap: 8px; }
-
-  /* Admin key/value tables scroll inside themselves instead of forcing the
-     whole page sideways. */
-  table.kv { display: block; overflow-x: auto; }
 
   /* ---- register form / vitals: one column at phone width ---- */
   .sym-ask .toggle-pair { flex: 1 1 100%; }

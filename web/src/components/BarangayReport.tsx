@@ -89,6 +89,10 @@ function RankedBars({ rows, metric, label }: { rows: ReportRow[]; metric: Metric
   const height = Math.max(rows.length * ROW_H, ROW_H);
 
   return (
+    // Scrolls rather than squashes: label text does NOT shrink with the
+    // viewBox, so below ~460px the values overrun their marks and clip. A
+    // chart you can push sideways stays readable; one scaled to 260px is not.
+    <div className="brep-chartwrap">
     <svg
       className="brep-chart"
       viewBox={`0 0 480 ${height}`}
@@ -127,6 +131,7 @@ function RankedBars({ rows, metric, label }: { rows: ReportRow[]; metric: Metric
         );
       })}
     </svg>
+    </div>
   );
 }
 
@@ -175,6 +180,7 @@ function Dumbbell({
           {year}
         </span>
       </div>
+      <div className="brep-chartwrap">
       <svg
         className="brep-chart"
         viewBox={`0 0 480 ${height}`}
@@ -217,6 +223,7 @@ function Dumbbell({
           );
         })}
       </svg>
+      </div>
     </>
   );
 }
