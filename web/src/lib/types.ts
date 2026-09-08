@@ -265,3 +265,22 @@ export function toDateOnly(d: Date): string {
   const day = String(d.getDate()).padStart(2, '0');
   return `${d.getFullYear()}-${m}-${day}`;
 }
+
+/**
+ * Should the Barangay Report tab be shown, given the probe call's error?
+ *
+ * The portal is deployed by pushing to main; migration 0027 is applied by hand
+ * in the SQL editor. Those are different moments, so the UI can be live against
+ * a database that has never heard of barangay_report — it was, for a while on
+ * 2026-09-08, and the tab failed on every load.
+ *
+ * PGRST202 is PostgREST for "no such function", and it is the ONLY answer that
+ * hides the tab. Anything else — a dropped connection, a permissions error,
+ * a timeout — leaves it visible, because those are conditions the report view
+ * can explain to the reader with a retry button. Collapsing this to `!error`
+ * is the tempting simplification and it is wrong: it makes a feature vanish
+ * from the navigation every time the network hiccups, which reads as data loss.
+ */
+export function reportTabVisible(error: { code?: string } | null | undefined): boolean {
+  return error?.code !== 'PGRST202';
+}

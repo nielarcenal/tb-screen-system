@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 import type { Session } from '@supabase/supabase-js';
 
 import { supabase } from './lib/supabase';
-import { PortalUser, UserRole } from './lib/types';
+import { manilaToday, PortalUser, reportTabVisible, UserRole } from './lib/types';
 import AppShell, { ShellNavItem } from './components/AppShell';
 import LoginForm, { PortalKind } from './components/LoginForm';
 import Dashboard from './components/Dashboard';
@@ -69,6 +69,18 @@ export default function App({ portal }: { portal: PortalKind }) {
   // `me` rather than derived from it, because "no row" and "lookup failed" are
   // indistinguishable once both have collapsed into null.
   const [meState, setMeState] = useState<'loading' | 'ready' | AccountState>('loading');
+
+  // Is the Barangay Report's backing function actually there? 0027 ships in the
+  // same commit as the view, but its migration is applied BY HAND, so a
+  // deployed portal can run ahead of its own database — which it did for a
+  // while today, leaving a tab whose every load failed. A tab that always
+  // errors is worse than no tab.
+  //
+  // Starts false and is only turned on by a successful probe, so the tab never
+  // flickers in before we know. Hidden ONLY on PGRST202 ("function not found"):
+  // a network blip or a permission error leaves it VISIBLE, so the view itself
+  // can say what went wrong rather than a feature quietly disappearing.
+  const [reportReady, setReportReady] = useState(false);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => {
@@ -145,6 +157,23 @@ export default function App({ portal }: { portal: PortalKind }) {
       });
   }, [userId, meVersion, portalPath]);
 
+  // Cheapest honest probe: ask for a single day. The answer we care about is
+  // the error code, not the rows. Midwives never see this tab, so skip it.
+  const role = me?.role;
+  useEffect(() => {
+    if (!role || role === 'midwife') return;
+    let cancelled = false;
+    const today = manilaToday();
+    void supabase
+      .rpc('barangay_report', { from_date: today, to_date: today })
+      .then(({ error }) => {
+        if (!cancelled) setReportReady(reportTabVisible(error));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [role]);
+
   // Not signed in: the sidebar shell is hidden; the two-panel sign-in (§4)
   // carries its own brand panel and language toggle.
   if (!sessionLoaded) {
@@ -183,6 +212,12 @@ export default function App({ portal }: { portal: PortalKind }) {
 
   const isMidwife = me.role === 'midwife';
 
+  // If the report tab is not available, never sit on it — the nav item would be
+  // absent while the content column still rendered it. Unreachable in practice
+  // (you cannot click a hidden tab); cheap insurance against a probe that flips
+  // to false underneath us.
+  const activePage: Page = page === 'report' && !reportReady ? 'dashboard' : page;
+
   const openPage = (key: Page) => {
     setPage(key);
     setOpenReferralId(null);
@@ -192,7 +227,7 @@ export default function App({ portal }: { portal: PortalKind }) {
     key,
     icon,
     label,
-    active: page === key,
+    active: activePage === key,
     onClick: () => openPage(key),
   });
 
@@ -209,7 +244,8 @@ export default function App({ portal }: { portal: PortalKind }) {
         navItem('register', 'person_add', t('nav.register')),
         navItem('hotspot', 'map', t('nav.hotspot')),
         // The per-barangay counts the health office compiles by hand (0027).
-        navItem('report', 'summarize', t('nav.report')),
+        // Only once its function answers — see reportReady.
+        ...(reportReady ? [navItem('report', 'summarize', t('nav.report'))] : []),
       ];
 
   const headers: Record<Page, { title: string; sub: string }> = {
@@ -233,22 +269,22 @@ export default function App({ portal }: { portal: PortalKind }) {
         name: me.full_name ?? session.user.email ?? '',
         roleLabel: isMidwife ? t('login.roleMidwife') : t('login.roleStaff'),
       }}
-      headerTitle={headers[page].title}
-      headerSub={headers[page].sub}
+      headerTitle={headers[activePage].title}
+      headerSub={headers[activePage].sub}
     >
       {isMidwife ? (
-        page === 'bhw' ? (
+        activePage === 'bhw' ? (
           <BhwManagement />
         ) : (
           <MidwifeDashboard />
         )
-      ) : page === 'dashboard' ? (
+      ) : activePage === 'dashboard' ? (
         <Dashboard />
-      ) : page === 'hotspot' ? (
+      ) : activePage === 'hotspot' ? (
         <HotspotView />
-      ) : page === 'report' ? (
+      ) : activePage === 'report' ? (
         <BarangayReport />
-      ) : page === 'register' ? (
+      ) : activePage === 'register' ? (
         <RegisterPatient
           me={me}
           onOpenReferral={(id) => {
