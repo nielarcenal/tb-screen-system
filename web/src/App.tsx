@@ -32,13 +32,14 @@ import Dashboard from './components/Dashboard';
 import MidwifeDashboard from './components/MidwifeDashboard';
 import ReferralInbox from './components/ReferralInbox';
 import ReferralDetail from './components/ReferralDetail';
+import BarangayReport from './components/BarangayReport';
 import HotspotView from './components/HotspotView';
 import RegisterPatient from './components/RegisterPatient';
 import BhwManagement from './components/BhwManagement';
 import ChangePasswordGate from './components/ChangePasswordGate';
 import AccountStateGate, { AccountState } from './components/AccountStateGate';
 
-type Page = 'dashboard' | 'inbox' | 'register' | 'hotspot' | 'bhw';
+type Page = 'dashboard' | 'inbox' | 'register' | 'hotspot' | 'report' | 'bhw';
 
 /** The page a role signs in to. Null means "wherever they are is fine": 'bhw'
  *  is the mobile app's role and has no portal of its own, so a BHW who signs in
@@ -207,6 +208,8 @@ export default function App({ portal }: { portal: PortalKind }) {
         // this facility, and until now the one the registry could not describe.
         navItem('register', 'person_add', t('nav.register')),
         navItem('hotspot', 'map', t('nav.hotspot')),
+        // The per-barangay counts the health office compiles by hand (0027).
+        navItem('report', 'summarize', t('nav.report')),
       ];
 
   const headers: Record<Page, { title: string; sub: string }> = {
@@ -217,6 +220,7 @@ export default function App({ portal }: { portal: PortalKind }) {
     inbox: { title: t('nav.inbox'), sub: t('shell.referralsSub') },
     register: { title: t('nav.register'), sub: t('shell.registerSub') },
     hotspot: { title: t('nav.hotspot'), sub: t('shell.hotspotsSub') },
+    report: { title: t('nav.report'), sub: t('shell.reportSub') },
     bhw: { title: t('nav.bhw'), sub: t('shell.bhwSub') },
   };
 
@@ -242,6 +246,8 @@ export default function App({ portal }: { portal: PortalKind }) {
         <Dashboard />
       ) : page === 'hotspot' ? (
         <HotspotView />
+      ) : page === 'report' ? (
+        <BarangayReport />
       ) : page === 'register' ? (
         <RegisterPatient
           me={me}

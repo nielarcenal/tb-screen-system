@@ -1406,6 +1406,47 @@ button.amber:hover { background: var(--amber-container); }
 .hs-row.skel .b.ct { width: 46px; height: 12px; }
 .hs-row.skel .b.tr { margin-top: 10px; height: 8px; border-radius: 999px; width: 60%; background: #efeae0; }
 
+/* ---------- barangay report: KPIs, inline-SVG charts, wide table ----------
+   Chart text wears TEXT tokens, never the series colour — the mark beside a
+   label carries identity, the label itself stays ink. The lighter dumbbell
+   shade sits under 3:1 on paper, so every mark is directly labelled and the
+   table repeats the numbers; that is the required relief, not decoration. */
+.brep-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.brep-kpis > div { background: var(--paper); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+.brep-k { font-size: 21px; font-weight: 600; color: var(--ink); line-height: 1.1; }
+.brep-l { font-size: 11px; color: var(--muted); }
+
+.brep-metrics { padding: 12px 18px 2px; }
+.brep-h { margin: 16px 18px 8px; font-size: 12.5px; font-weight: 600; color: var(--ink-mid); }
+
+.brep-chart { display: block; width: 100%; height: auto; padding: 0 18px 4px; overflow: visible; }
+.brep-cat { font-size: 11px; fill: var(--ink-mid); }
+.brep-val { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.brep-track { fill: var(--line); }
+.brep-conn { stroke: var(--teal-border); stroke-width: 2; }
+/* 2px surface ring so overlapping dots stay two dots */
+.brep-dot { stroke: var(--paper); stroke-width: 2; }
+
+.brep-legend { display: flex; gap: 14px; padding: 2px 18px 8px; }
+.brep-legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+.brep-legend i { width: 9px; height: 9px; border-radius: 999px; display: inline-block; }
+
+.brep-tablewrap { overflow-x: auto; padding: 14px 18px 4px; }
+.brep-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.brep-table th, .brep-table td { padding: 7px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid #f4f1ea; }
+.brep-table th { font-size: 11px; font-weight: 600; color: var(--muted); text-align: right; }
+.brep-table th:first-child, .brep-table td:first-child { text-align: left; }
+.brep-table td { color: var(--ink-mid); font-variant-numeric: tabular-nums; }
+.brep-sub { display: block; font-size: 10.5px; color: var(--muted); }
+.brep-export { margin: 4px 18px 16px; }
+
 /* ---------- account-management list (shared: BHW / midwife / staff) + states (§4) ---------- */
 .bhw-head { padding: 15px 16px 13px; border-bottom: 1px solid #f0ece4; }
 .bhw-titlerow {

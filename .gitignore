@@ -80,7 +80,14 @@ screenshots/
 #                     once already and had to be unstaged.
 #   Images/           scratch folder for source images. site/assets holds the
 #                     cropped, web-sized copies that actually ship.
+#   docs/data/        source documents obtained from the City Health Office.
+#                     The Valencia 2024-2025 barangay TB sheet is an internal
+#                     office document carrying the City TB Nurse Coordinator's
+#                     full name and PRC licence number. The barangay figures
+#                     may be quoted in the paper; the file itself is not ours
+#                     to republish, and a public repo is republication.
 # ---------------------------------------------------------------------------
 .claude/
 docs/v2 design/
 Images/
+docs/data/
