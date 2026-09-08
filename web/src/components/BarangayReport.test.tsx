@@ -100,9 +100,10 @@ describe('BarangayReport', () => {
     render(<BarangayReport />);
 
     await waitFor(() => expect(screen.getByRole('table')).toBeTruthy());
+    // The name is a <th scope="row">, not a cell — the rank number is the
+    // first cell now. Read the whole row so the assertion survives either.
     const firstCell = () =>
-      within(within(screen.getByRole('table')).getAllByRole('row')[1]).getAllByRole('cell')[0]
-        .textContent;
+      within(screen.getByRole('table')).getAllByRole('row')[2].textContent;
     expect(firstCell()).toContain('BETA');
 
     fireEvent.click(screen.getByRole('button', { name: 'Positive' }));
@@ -131,5 +132,41 @@ describe('BarangayReport', () => {
     // The current year is partial, so the like-for-like sentence must be shown.
     expect(screen.getByText(/same dates/i)).toBeTruthy();
     expect(screen.getByText(/not a replacement for them/i)).toBeTruthy();
+  });
+  it('search narrows the table without touching the ranking numbers', async () => {
+    mock.db.byFrom.set(`${thisYear}-01-01`, [
+      row('POBLACION', { referred_count: 9 }),
+      row('VINTAR', { referred_count: 1 }),
+    ]);
+    render(<BarangayReport />);
+    await waitFor(() => expect(screen.getByRole('table')).toBeTruthy());
+
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'vint' } });
+
+    await waitFor(() => {
+      const body = within(screen.getByRole('table')).getAllByRole('row').slice(2);
+      expect(body).toHaveLength(1);
+      expect(body[0].textContent).toContain('VINTAR');
+    });
+    // Rank is the barangay's position overall, not its position in the filtered
+    // view: Vintar is 2nd by referrals and must still say 2 after searching.
+    expect(within(screen.getByRole('table')).getAllByRole('row')[2].textContent).toMatch(/^2/);
+  });
+
+  it('pages the table rather than printing all 31 barangays at once', async () => {
+    mock.db.byFrom.set(
+      `${thisYear}-01-01`,
+      Array.from({ length: 23 }, (_, i) =>
+        row(`BRGY${String(i).padStart(2, '0')}`, { referred_count: 23 - i }),
+      ),
+    );
+    render(<BarangayReport />);
+    await waitFor(() => expect(screen.getByRole('table')).toBeTruthy());
+
+    const bodyRows = () => within(screen.getByRole('table')).getAllByRole('row').slice(2);
+    expect(bodyRows()).toHaveLength(10);
+
+    fireEvent.click(screen.getByRole('button', { name: '3' }));
+    await waitFor(() => expect(bodyRows()).toHaveLength(3)); // 23 = 10 + 10 + 3
   });
 });

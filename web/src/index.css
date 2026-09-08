@@ -1425,67 +1425,159 @@ button.amber:hover { background: var(--amber-container); }
 .hs-row.skel .b.nm { width: 130px; height: 12px; }
 .hs-row.skel .b.ct { width: 46px; height: 12px; }
 .hs-row.skel .b.tr { margin-top: 10px; height: 8px; border-radius: 999px; width: 60%; background: #efeae0; }
+/* ---------- barangay report (redesign guide) ----------
+   KPI row, compact ranking card, detailed table with search + pagination.
+   Restrained on purpose: this is a government health reporting screen, so
+   clarity and density beat decoration. No gradients, one shadow weight, and
+   colour carries no meaning on its own.
 
-/* ---------- barangay report: KPIs, inline-SVG charts, wide table ----------
-   Chart text wears TEXT tokens, never the series colour — the mark beside a
-   label carries identity, the label itself stays ink. The lighter dumbbell
-   shade sits under 3:1 on paper, so every mark is directly labelled and the
-   table repeats the numbers; that is the required relief, not decoration. */
-/* Says what stretch of calendar the numbers cover, before any of them is read.
-   A part year compared with a whole one made every barangay look like it was
-   improving; the periods are matched now and this line states it. */
-.brep-period {
-  margin: 0;
-  padding: 12px 18px 0;
-  font-size: 12px;
-  color: var(--ink-mid);
+   Bars are HTML, not SVG. SVG label text keeps its size while a viewBox
+   shrinks, so the values clipped below ~460px; a div track with a
+   percentage-width fill reflows at any width. */
+.brep { display: flex; flex-direction: column; gap: 14px; }
+
+.brep-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
+/* Which stretch of calendar the numbers cover, before any is read. */
+.brep-period { margin: 0; font-size: 12px; color: var(--ink-soft); max-width: 70ch; line-height: 1.5; }
 
-.brep-kpis {
+/* ---- KPI cards ---- */
+.brep-kpirow { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.brep-kpi {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 16px 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.brep-kpi-ic {
+  flex: 0 0 auto;
+  width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px;
+  background: var(--teal-container);
+  color: var(--teal-dark);
+}
+.brep-kpi-ic .msym { font-size: 20px; }
+/* Positives get a warmer chip, not a red card: a restrained clinical accent. */
+.brep-kpi.warn .brep-kpi-ic { background: var(--amber-container); color: var(--amber-ink); }
+.brep-kpi-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.brep-kpi-l { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.brep-kpi-v { font-size: 30px; font-weight: 600; line-height: 1.15; color: var(--ink); font-variant-numeric: tabular-nums; }
+.brep-kpi-d { font-size: 12px; color: var(--ink-soft); line-height: 1.45; }
+.brep-kpi.skel .b { display: block; background: #eee9df; border-radius: 5px; animation: tbpulse 1.2s ease-in-out infinite; }
+.brep-kpi.skel .b.l { width: 70px; height: 10px; }
+.brep-kpi.skel .b.v { width: 54px; height: 24px; margin: 7px 0 6px; }
+.brep-kpi.skel .b.d { width: 130px; height: 10px; }
+
+/* ---- cards ---- */
+.brep-card { padding: 0; }
+.brep-cardhead {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  padding: 15px 18px 11px;
+  border-bottom: 1px solid #f0ece4;
+}
+.brep-cardhead h2 { margin: 0; font-size: 14.5px; font-weight: 600; color: var(--ink); }
+.brep-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: none; border: none; padding: 0; cursor: pointer;
+  font: inherit; font-size: 12px; font-weight: 500; color: var(--teal-dark);
+}
+.brep-link:hover { text-decoration: underline; }
+.brep-link .msym { font-size: 15px; }
+.brep-metrics { padding: 12px 18px 4px; }
+
+/* ---- ranking list ---- */
+.brep-rank { list-style: none; margin: 0; padding: 4px 18px 16px; display: flex; flex-direction: column; }
+.brep-rank li {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1px;
-  background: var(--line);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  grid-template-columns: 22px minmax(88px, 132px) 1fr 40px;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 0;
 }
-.brep-kpis > div { background: var(--paper); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
-.brep-k { font-size: 24px; font-weight: 600; color: var(--ink); line-height: 1.1; }
-.brep-l { font-size: 12px; font-weight: 600; color: var(--ink-mid); }
-/* Plain-English gloss: a bare "Referred" means nothing to a reader meeting this
-   page for the first time. */
-.brep-h2 { font-size: 11px; color: var(--muted); line-height: 1.4; }
+.brep-rk {
+  width: 22px; height: 22px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--teal-container); color: var(--teal-dark);
+  font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.brep-nm { font-size: 13px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.brep-trk { height: 9px; border-radius: 999px; background: var(--subtle); overflow: hidden; }
+.brep-fill { display: block; height: 100%; border-radius: 999px; background: var(--teal); }
+.brep-v { font-size: 12.5px; font-weight: 600; color: var(--ink-mid); text-align: right; font-variant-numeric: tabular-nums; }
 
-.brep-metrics { padding: 12px 18px 2px; }
-.brep-h { margin: 16px 18px 8px; font-size: 12.5px; font-weight: 600; color: var(--ink-mid); }
+/* ---- search ---- */
+.brep-search {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 0 11px; height: 32px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--paper);
+}
+.brep-search:focus-within { border-color: var(--teal-border); }
+.brep-search .msym { font-size: 17px; color: var(--muted); }
+.brep-search input { border: none; outline: none; background: none; font: inherit; font-size: 12.5px; width: 168px; padding: 0; }
 
-/* The chart SCROLLS below ~460px instead of scaling into illegibility: SVG
-   label text keeps its own size while the viewBox shrinks, so the values
-   overrun their marks and clip. Same pattern the wide table uses, and the same
-   promise — the chart scrolls inside itself, the page body never does. */
-.brep-chartwrap { overflow-x: auto; padding: 0 18px 4px; }
-.brep-chart { display: block; width: 100%; min-width: 440px; height: auto; overflow: visible; }
-.brep-cat { font-size: 11px; fill: var(--ink-mid); }
-.brep-val { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
-.brep-track { fill: var(--line); }
-.brep-conn { stroke: var(--teal-border); stroke-width: 2; }
-/* 2px surface ring so overlapping dots stay two dots */
-.brep-dot { stroke: var(--paper); stroke-width: 2; }
-
-.brep-legend { display: flex; gap: 14px; padding: 2px 18px 8px; }
-.brep-legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
-.brep-legend i { width: 9px; height: 9px; border-radius: 999px; display: inline-block; }
-
-.brep-tablewrap { overflow-x: auto; padding: 14px 18px 4px; }
-.brep-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.brep-table th, .brep-table td { padding: 7px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid #f4f1ea; }
-.brep-table th { font-size: 11px; font-weight: 600; color: var(--muted); text-align: right; }
-.brep-table th:first-child, .brep-table td:first-child { text-align: left; }
+/* ---- table ---- */
+.brep-tablewrap { overflow-x: auto; padding: 4px 18px 0; }
+.brep-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.brep-table th, .brep-table td { padding: 8px 12px; text-align: right; white-space: nowrap; }
+.brep-table thead th { font-size: 10.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+.brep-table thead .brep-grouprow th { border-bottom: 1px solid #f0ece4; }
+.brep-table thead .brep-grp { text-align: center; color: var(--ink-mid); }
+.brep-table tbody tr { border-top: 1px solid #f4f1ea; }
+.brep-table tbody tr:hover { background: var(--subtle); }
+.brep-table tbody th[scope='row'] { text-align: left; font-weight: 500; color: var(--ink); }
+/* The header has to sit over its own column, not over the numbers. */
+.brep-table thead th.brep-namecol { text-align: left; }
 .brep-table td { color: var(--ink-mid); font-variant-numeric: tabular-nums; }
-.brep-sub { display: block; font-size: 10.5px; color: var(--muted); }
-/* Last year's figures sit quieter than this year's: same table, secondary role. */
+.brep-numcol { width: 34px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+/* Last year sits quieter than this year: same table, secondary role. */
 .brep-prev { color: var(--muted); }
-.brep-export { margin: 4px 18px 16px; }
+/* A hairline between year groups, and before missed check-ups, which is not a
+   screening or referral count (guide §10). */
+.brep-sep { border-left: 1px solid #f0ece4; }
+.brep-nomatch { margin: 0; padding: 18px 0 10px; font-size: 12.5px; color: var(--muted); text-align: center; }
+
+/* ---- footer: count + pager ---- */
+.brep-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  padding: 12px 18px;
+}
+.brep-count { font-size: 12px; color: var(--muted); }
+.brep-pager { display: flex; align-items: center; gap: 4px; }
+.brep-pager button {
+  min-width: 28px; height: 28px; padding: 0 7px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line); border-radius: 7px; background: var(--paper);
+  font: inherit; font-size: 12px; color: var(--ink-mid); cursor: pointer;
+}
+.brep-pager button:hover:not(:disabled) { background: var(--subtle); }
+.brep-pager button.active { background: var(--teal); border-color: var(--teal); color: #fff; font-weight: 600; }
+.brep-pager button:disabled { opacity: 0.4; cursor: default; }
+.brep-pager .msym { font-size: 17px; }
+
+.brep-actions { padding: 0 18px 16px; }
+.brep-scope {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin: 0; padding: 0 2px 4px;
+  font-size: 11.5px; color: var(--muted); line-height: 1.55;
+}
+.brep-scope .msym { font-size: 16px; flex: 0 0 auto; margin-top: 1px; }
+
+@media (max-width: 760px) {
+  .brep-rank li { grid-template-columns: 20px minmax(74px, 104px) 1fr 34px; gap: 8px; }
+  .brep-search input { width: 100%; }
+  .brep-search { flex: 1 1 100%; }
+}
 
 /* ---------- account-management list (shared: BHW / midwife / staff) + states (§4) ---------- */
 .bhw-head { padding: 15px 16px 13px; border-bottom: 1px solid #f0ece4; }
