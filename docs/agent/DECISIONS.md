@@ -164,3 +164,18 @@ Still blocking case work (renumbered to 0030 at the final gate): treatment-outco
 | D-BASE-06 | Deactivated accounts keep RLS row access until JWT expiry. Release-blocking HIGH with its own unit. Superseded on final review by D-BASE-06-order: BASE-06 is migration 0029 and case work moves to 0030. |
 
 Still blocking case work (renumbered to 0030 at the final gate): BASE-06 must ship first as 0029; treatment-outcome vocabulary (hard); `weight_kg` and the short-code mappings (soft). The 0028 matrix has since passed 73/73.
+
+## 2026-09-09 - BASE-06 / migration 0029
+
+| # | Decision |
+| --- | --- |
+| D-0029-a | An account may ALWAYS read its own `users` row, even when deactivated. Both clients detect deactivation by reading that row; RLS filters rather than raising, so a hidden row returns `data: null, error: null`, which mobile's accountAccess maps to `unknown` — documented there as blocking nothing and revoking nothing. Hiding it would make the ban WEAKER. A ban is about other people's data, never your own account record. Pinned by a test. |
+| D-0029-b | Everything else about a deactivated account is closed: no colleague row, no write to its own row, no clinical row, no clinical write. |
+| D-0029-c | The four enumerating helpers move to `app_private`, which PostgREST does not expose, and each gains its own active-role check. In `public` they were RPCs handing out a facility's whole patient id list without passing a single policy. This is R3-05 applied to the pre-existing helpers, not only to the new one. |
+| D-0029-d | The `public` originals become uncallable delegating wrappers rather than being dropped: `dashboard_counts()` calls one in its body, and dropping it would force a second restatement of a function 0028 already verified. Client EXECUTE is revoked; only in-database SECURITY DEFINER callers reach them. |
+| D-0029-e | `current_user_role()` is kept but delegates to `current_user_active_role()`, so a future policy written with the old name is still safe. Dropping it was rejected: the migrations here have been hand-applied and a live object may reference it. POST-CHECK 4 is the condition for removing it later. |
+| D-0029-f | `current_user_facility()` and `current_user_barangay()` are active-aware too. Every use is an equality comparison, so NULL fails closed everywhere. |
+| D-0029-g | Untouched by design: `ref_*` and `facilities_read` (both `using (true)` on non-personal data, no role predicate to fix), the JWT lifetime (a project setting, and defence in depth rather than the fix), BASE-04, and BASE-02 — appointments stay patient-wide until 0030, and the matrix asserts the CURRENT scope so it cannot pass vacuously against a hole 0029 never meant to close. |
+| D-0029-h | Operational consequence accepted and documented: a BHW deactivated mid-shift can no longer push queued offline writes. signOutFlow already refuses to wipe the cache while rows are pending and reports the count, so nothing is lost — but support must know that deactivation strands unsynced work until the account is reactivated. |
+| D-0029-i | `build-0028-preflight.mjs` is replaced by `build-preflight.mjs <NNNN>`. Two near-identical copies of a verification tool is exactly the drift the generator exists to prevent. This edits a comment line in the approved-but-unapplied 0028; the SQL is untouched and its verifier still reports all six bodies matching. |
+| D-0029-j | Both verifiers normalise CRLF on read. A checker that stops matching because a file was saved with different line endings reports a failure that looks like a code defect; proven with an all-CRLF copy of the migration set. |

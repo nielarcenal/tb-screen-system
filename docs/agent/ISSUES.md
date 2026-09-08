@@ -61,3 +61,5 @@ Revision 2 gate result: **NOT APPROVED**. Independent BASE-01 repair is approved
 Migration 0028 is **APPROVED FOR APPLICATION** after the generated live preflight passed 73/73 checks and rolled back. Revision 4 architecture is **APPROVED**. BASE-06 remains the next release-blocking unit; implement it as migration 0029 before case/follow-up work, which moves to 0030.
 
 Migration 0028 was verified against the live database inside a rolled-back transaction and is not yet applied by this review. BASE-06 remains a live release-blocking authorization gap until migration 0029 is implemented and applied.
+
+2026-09-09 update: BASE-06 has an implementation awaiting verification — migration 0029. It is not closed until its preflight passes and the migration is applied. BASE-01's fix (0028) is likewise approved but not yet applied.

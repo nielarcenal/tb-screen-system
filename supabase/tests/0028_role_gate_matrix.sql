@@ -18,7 +18,7 @@
 --      Read the matrix, then discard the branch.
 --
 --   B. OTHERWISE — the generated transactional preflight.
---        node scripts/build-0028-preflight.mjs
+--        node scripts/build-preflight.mjs 0028
 --      writes supabase/tests/0028_preflight.generated.sql:
 --        begin;  <0028>  <this file>  <raise on FAIL>  rollback;
 --      Run that whole file in the SQL editor. It ALWAYS rolls back, so it

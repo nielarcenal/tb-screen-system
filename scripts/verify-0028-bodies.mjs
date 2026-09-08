@@ -38,7 +38,12 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), '..');
-const mig = (name) => readFileSync(join(repo, 'supabase', 'migrations', name), 'utf8');
+// CRLF is normalised on read. Without this, a file saved with Windows line
+// endings stops matching the multi-line mutation strings below, and the script
+// reports a self-test failure that looks like a code defect rather than a
+// newline difference. Line endings are not what this checker is about.
+const mig = (name) =>
+  readFileSync(join(repo, 'supabase', 'migrations', name), 'utf8').replace(/\r\n/g, '\n');
 
 /** Each function, and which migration currently defines it. */
 const TARGETS = [

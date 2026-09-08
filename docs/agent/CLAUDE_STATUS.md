@@ -271,3 +271,49 @@ If the push is needed sooner, the alternative is to push code and hold `docs/age
 **Next unit:** BASE-06 as migration 0029, following 0028's pattern - active-aware policies across the ~20 that call `current_user_role()`, a real-role RLS matrix, and a mobile/web regression pass. The four enumerating helpers in `public` (`referred_patient_ids`, `referred_screening_ids`, `bhw_visible_patient_ids`, `own_enrolled_patient_ids`) should move to `app_private` in the same unit, per R3-05.
 
 **Remaining human inputs:** local facility abbreviations, and the treatment-outcome vocabulary. Old-client PostgREST upsert behaviour remains a required 0030 test - still unexecuted.
+
+---
+
+## 2026-09-09 - BASE-06 implemented as migration 0029
+
+**Task:** the next unit after the final gate. Deactivated accounts kept RLS row access until JWT expiry; 0028 hardened only the RPC gates.
+
+**Files created:** `supabase/migrations/0029_active_aware_rls.sql`, `supabase/tests/0029_rls_row_matrix.sql`, `scripts/verify-0029-policies.mjs`, `scripts/build-preflight.mjs`.
+**Files changed:** `scripts/verify-0028-bodies.mjs` (CRLF), `supabase/migrations/0028_null_safe_role_gates.sql` and `supabase/tests/0028_role_gate_matrix.sql` (one comment line each, for the renamed generator), `DECISIONS.md`, `ISSUES.md`, `MASTER_PLAN.md`.
+**Removed:** `scripts/build-0028-preflight.mjs`, superseded by the parameterised generator.
+
+### What 0029 does
+
+- 28 clinical policies rewritten onto `current_user_active_role()`.
+- The four enumerating helpers move to `app_private`, a schema PostgREST does not expose, each with its own active-role check. In `public` they were RPCs that handed any authenticated caller a facility's whole patient id list without passing a single policy — R3-05 applied to the pre-existing helpers, not just the new one.
+- `current_user_facility()` / `current_user_barangay()` made active-aware; every use is an equality comparison, so NULL fails closed.
+- `current_user_role()` kept but delegating, so a future policy written with the old name is still safe.
+
+### The finding that shaped the design
+
+I nearly closed the `users` self-read along with everything else. Both clients detect deactivation by reading their own row (`web/src/App.tsx:143`, `mobile/src/lib/accountGate.ts`), and RLS filters rather than raising — so a hidden row returns `data: null, error: null`, which `mobile/src/domain/accountAccess.ts` maps to `{ kind: 'unknown' }`, described in its own comment as blocking nothing and revoking nothing. Hiding the row would have made the mobile ban **weaker**, and would have stopped the persistent refusal (the A54 force-stop bypass) from ever being recorded.
+
+So the self-read stays ungated and everything else about a deactivated account is closed. The carve-out is pinned by a test, with the reasoning in the migration header, so a future "tighten this" commit fails loudly instead of quietly regressing the ban.
+
+### Verification performed
+
+| Check | Result |
+| --- | --- |
+| `node scripts/verify-0029-policies.mjs` | 26 policies match their source apart from the helper rename; 2 declared exceptions (`users_read_same_facility`, `users_update_self`) that gain a predicate rather than swapping one |
+| Its self-test: swapped role literal, dropped predicate | Both caught |
+| `node scripts/verify-0028-bodies.mjs` | Still all six OK after the generator rename |
+| CRLF independence | Proven against an all-CRLF copy of the migration set |
+| Preflight generation, both 0028 and 0029 | Generated; one `begin;`, one `rollback;` each |
+| web / mobile / edge suites | 129 + 197 + 47 = 373 passed, unchanged (SQL-only change) |
+
+### Not performed
+
+**The 0029 row matrix has not been run** — still no local Postgres here. It needs the same treatment 0028 got: run `supabase/tests/0029_preflight.generated.sql` in the SQL editor, confirm every row PASS, then apply. **0029 requires 0028 to be applied first**; its own guard raises otherwise.
+
+One reasoning-only correction worth flagging for review: the matrix originally read temp tables while the role was switched to `authenticated`, which would have failed on privileges rather than policy — and a privilege error inside an EXCEPTION block reads exactly like a successful denial, so the matrix would have gone green for the wrong reason. Every block now resolves its ids before switching. I could not execute this, so it is reasoned, not proven.
+
+### Behaviour change support should know
+
+A BHW deactivated mid-shift can no longer push queued offline writes; before 0029 they still synced. Nothing is lost — `signOutFlow` counts pending rows after its final sync and refuses to wipe the cache while any remain, telling them how many could not be uploaded. Reactivating releases the queue.
+
+**Next:** run both preflights, apply 0028 then 0029, then 0030 (case/follow-up). The outcome vocabulary and local facility abbreviations are still the outstanding human inputs.

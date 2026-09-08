@@ -68,7 +68,7 @@
 --      matrix, discard the branch. Then apply this file to the real project.
 --
 --   B. OTHERWISE — one transactional preflight batch.
---        node scripts/build-0028-preflight.mjs
+--        node scripts/build-preflight.mjs 0028
 --      writes supabase/tests/0028_preflight.generated.sql, which is
 --      `begin;` + this file + the matrix + a raise-on-FAIL + `rollback;`.
 --      Run that whole file in the SQL editor. It always rolls back, so it
