@@ -55,6 +55,12 @@ docs/chat-history/
 # Pre-monorepo sub-repo history backups (safe to delete once the push is verified)
 .git-backup/
 
+# Generated verification batch: begin; + migration 0028 + its matrix + rollback.
+# Rebuild with `node scripts/build-0028-preflight.mjs`. Tracking it would let a
+# stale copy drift from the migration it is supposed to be verifying, which is
+# the one failure mode the generator exists to prevent.
+supabase/tests/*.generated.sql
+
 # Logs
 npm-debug.*
 yarn-debug.*

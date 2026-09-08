@@ -1,0 +1,405 @@
+# Codex final re-review — Migration 0028 and design Revision 4
+
+2026-09-09; reviewed the ten corrections M28-01 through M28-03 and R3-01 through R3-06, plus the continuing BASE-06 finding. No new finding was opened.
+
+## Migration 0028 result: APPROVED FOR APPLICATION
+
+The corrected artifacts close all three migration findings:
+
+- **M28-01 resolved.** The ACL inspection uses a LEFT JOIN so PostgreSQL's grantee OID 0 is rendered as `PUBLIC`. Migration 0028 explicitly revokes `PUBLIC`, `anon`, and `service_role` from the helper and all six repaired functions, then grants only `authenticated`.
+- **M28-02 resolved.** `node scripts/verify-0028-bodies.mjs` reports all six bodies equal to their source bodies outside the intended guard changes. Its self-test catches mutations in both a query token and the pre-existing `dashboard_counts()` declaration block.
+- **M28-03 resolved.** Migration 0028 and the matrix contain no transaction control. `node scripts/build-0028-preflight.mjs` generated one `BEGIN; <migration> <matrix> ROLLBACK;` batch. The matrix asserts the JWT-derived UID, exact active-role helper result, the seven-by-seven allow/deny grid, ACL-origin anonymous denials, and the named BASE-01 cases; it raises on any failure.
+
+I ran `supabase/tests/0028_preflight.generated.sql` against the configured live Supabase PostgreSQL database using the database URL already present in the repository environment. Result: **73/73 PASS**. The batch reached its explicit `ROLLBACK`; migration 0028 was not applied by this review.
+
+## Revision 4 architecture result: APPROVED
+
+- **R3-01 resolved:** unchanged parent links plus final facility agreement authorize referral/case cascades; the GUC is limited to link swaps, legacy claims, and transfers.
+- **R3-02 resolved:** `treatment_followups` uses table-level UPDATE revocation followed by grants for ordinary correction columns only, with effective privilege and direct PATCH tests required.
+- **R3-03 resolved:** the TB-DOTS arm explicitly requires `short_code IS NOT NULL`; the proposal contains the six three-valued-logic cases.
+- **R3-04 resolved:** every new or replaced policy uses `current_user_active_role()`.
+- **R3-05 resolved:** the enumerating case-ID helper is active-role-aware and placed in the non-exposed `app_private` schema.
+- **R3-06 resolved:** the withdrawn admin-queue workflow no longer appears as current behavior.
+
+The live `facilities` check also passed: exactly eleven `tb_dots` rows exist, and their IDs and names match the proposed mapping. The proposed short codes remain provisional until the CHO/TB-DOTS staff confirm whether their paper workflow already uses abbreviations.
+
+## Next unit
+
+Take **BASE-06 next**, before case implementation. It is a release-blocking authorization gap across the existing RLS policies and four exposed enumerating helpers. With 0028 reserved for BASE-01, BASE-06 becomes migration **0029** and the approved case/follow-up design moves to migration **0030**. The BASE-06 unit needs a construct-wide policy/helper inventory, a real-role active/inactive RLS matrix, and mobile/web regression coverage.
+
+Before 0030 is written, update the design's migration references from 0029 to 0030. The remaining external product inputs are the facility's outcome vocabulary and local short-code convention. The old-client upsert case remains a mandatory implementation test; `weight_kg` remains optional and must be omitted if unconfirmed.
+
+---
+
+# Codex review — Task 1.1 baseline
+
+2026-09-09; repository HEAD `4659d65`. No Claude sprint checkpoint or design handoff was available. Review-only: implementation and migrations unchanged. Findings below are confirmed from repository source; deployed ACLs and exploit behavior were not tested. Baseline audit is complete. Security/release approval is **NOT PASS**; Task 1.4 awaits Claude's design.
+
+## BASE-01 — Report authorization fails open for NULL roles
+
+Severity: HIGH
+File: supabase/migrations/0027_barangay_report.sql; supabase/migrations/0026_rename_captain_to_midwife.sql
+Location: barangay_report line 67; admin_overview lines 122 and 164
+Problem: current_user_role() returns NULL for anonymous callers and authenticated callers without a public.users row. Both `NULL NOT IN (...)` and `NULL <> 'admin'` evaluate to NULL, so the PL/pgSQL IF does not raise. The SECURITY DEFINER query then runs. admin_overview explicitly grants anon EXECUTE; barangay_report contains no revoke of default PUBLIC execution.
+Impact: The repository permits unauthorized access to restricted aggregate health/program counts and staffing data. This is not a demonstrated patient-row leak, but bypasses the intended reporting-role boundary.
+Recommended fix: Claude should add a new migration with null-safe role checks (IS DISTINCT FROM for a single role; explicit NULL rejection for an allowlist) and explicit least-privilege function ACLs. Test anonymous, missing-profile, BHW, midwife and allowed callers with real database roles. Inspect deployed default privileges as well.
+
+## BASE-02 — Appointments have no facility boundary of their own
+
+Severity: HIGH
+File: supabase/migrations/0005_fix_rls_recursion.sql; supabase/migrations/0011_appointments_tbdots_insert.sql; web/src/components/ReferralDetail.tsx
+Location: appointments_tbdots_read/update; appointments_tbdots_insert; appointment load at lines 86–89
+Problem: Read/update/insert authorization depends solely on patient_id appearing in referred_patient_ids(). Appointments contain neither facility nor referral ownership. When a patient has referrals at facilities A and B, staff at both facilities can see and change every appointment for that patient. The UI also loads by patient alone.
+Impact: One facility can alter another facility's intended attendance/schedule, and case episodes cannot be separated safely. SMS currently selects the latest referral's facility, so it can also identify the wrong destination.
+Recommended fix: Resolve explicit appointment ownership in Tasks 1.2/1.3, including legacy rows and BHW-created initial visits. Update policies, UI queries and SMS lookup together in Claude's implementation. Test a patient with two facilities and two episodes; do not infer ownership through an ambiguous backfill.
+
+## BASE-03 — Failed walk-in registration leaves partial records
+
+Severity: HIGH
+File: web/src/components/RegisterPatient.tsx
+Location: save(), lines 224–299 (patient/screening/referral inserts)
+Problem: Three independent PostgREST writes create the chain. Failure after the patient or screening succeeds leaves those rows committed. Retrying allocates new UUIDs and another display code rather than resuming the original chain.
+Impact: Partial enrollment and duplicate patient records; the normal referral inbox cannot show the unfinished chain. Widened read policy alone does not provide a repair workflow.
+Recommended fix: Claude should implement an authorized atomic registration RPC with patient/screening/referral consistency checks and an idempotent retry identifier. Test failure at each step and a lost success response. This confirms the concern explicitly assigned to Task 7.4; address before building case creation on this flow.
+
+## BASE-04 — New report bypasses the Manila calendar helpers
+
+Severity: HIGH
+File: supabase/migrations/0027_barangay_report.sql
+Location: scr/ref CTE date predicates, lines 90–105
+Problem: created_at timestamptz values are compared directly to date parameters. Conversion uses the database session timezone rather than manila_day_start(), despite migration 0018 introducing that helper to fix this same problem. With a UTC session, midnight-to-08:00 Manila events fall in the preceding reporting day.
+Impact: Incorrect screened/referral/outcome period counts at day/month/year boundaries.
+Recommended fix: In a new migration, use half-open ranges bounded by manila_day_start(from_date) and manila_day_start(to_date + 1). Test both boundaries under a UTC database session. Separately reconcile the header's claim about event dates with the implemented referral-created-date basis; result_date is not used here.
+
+## BASE-05 — Sync cursor can permanently skip timestamp ties
+
+Severity: HIGH
+File: mobile/src/sync/syncEngine.ts
+Location: pullTable(), query and maxSeen cursor update
+Problem: Pull uses one server-capped request ordered only by updated_at, then advances the cursor to the largest returned timestamp and uses strict greater-than next time. If more rows share that timestamp than fit in the response limit, omitted tied rows can never satisfy a later pull. A bulk transaction can give many rows the same now() timestamp.
+Impact: A device can permanently miss server rows even after repeated successful syncs. This is a source-derived boundary scenario, not a device reproduction.
+Recommended fix: Schedule an explicitly scoped sync correction with Claude, preserving the existing architecture. Use stable pagination with a timestamp/primary-key cursor or an equivalent complete-boundary strategy. Test more than the response cap with identical timestamps and interrupted/resumed pulls. Do not bundle a sync rewrite into case work.
+
+## Validation and remaining gate evidence
+
+- Web: 129 tests passed; npm.cmd run typecheck passed.
+- Mobile: 197 tests passed; npx.cmd --no-install tsc --noEmit passed.
+- Edge: 47 tests passed; npm.cmd run typecheck passed for its configured shared-module scope. This excludes the Deno entrypoints and gateway from that typecheck.
+- Total: 373 passed, 0 failed, 0 skipped. Initial npm.ps1 wrapper invocation was blocked by local PowerShell policy; the normal npm.cmd wrapper succeeded.
+- No live database/RLS, migration replay, device offline integration, browser manual accessibility, deployed SMS delivery or production deployment checks were performed. Passing mocked/unit tests does not clear these findings.
+- Documentation discrepancy: SYSTEM_DOCUMENTATION.md line 3 reports migrations through 0025; repository has 27. Reconcile during Task 7.5.
+
+Next handoff: Claude reads this review and the baseline audit, resolves high-severity issues in the appropriate authorized work units, and supplies Tasks 1.2/1.3 designs for the Task 1.4 review. Codex has not approved a new schema or taken ownership of implementation.
+
+---
+
+# Codex review — Task 1.4 architecture gate
+
+2026-09-09; reviewed `CLAUDE_TASK_1.2_CASE_DOMAIN_MODEL.md`, `CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md`, and the cited implementation at repository HEAD `4659d65`. The deliverables are design documents only, so the 373-test baseline was not rerun.
+
+**Gate result: NOT APPROVED.** The entity split, explicit case ownership, one-active-case constraint, appointment reuse, no-delete posture, aggregate timeline direction, and server-side BHW summary are sound. No CRITICAL issue was found, but the HIGH findings below must be resolved in the design before migration 0028 is written.
+
+## ARCH-01 — The proposed facility transfer cannot satisfy its foreign keys
+
+Severity: HIGH
+File: docs/agent/CLAUDE_TASK_1.2_CASE_DOMAIN_MODEL.md; docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md
+Location: Task 1.2 sections 4–5; Task 1.3 section 2
+Problem: `tb_cases_referral_agrees` requires the case facility to keep matching the originating referral facility. Moving the case therefore fails unless the historical referral is also rerouted, which would destroy its meaning. Separately, the case/appointment composite FK is immediate by default: updating the case first conflicts with old child facilities, while updating appointments first conflicts with the old case facility. "Same transaction" does not defer those checks.
+Impact: `transfer_tb_case()` cannot perform the documented transfer for a case with an originating referral or linked appointments.
+Recommended fix: Keep the referral as immutable provenance and validate its agreement at case creation rather than for the case's entire lifetime, or model original and current ownership separately. Make the case/appointment ownership change executable with an explicitly reviewed `ON UPDATE CASCADE` or deferred constraint. Add a transactional transfer test with both a referral and appointments. If global active-case uniqueness ships, the admin transfer RPC must ship even if its UI is deferred, or a receiving facility can be blocked without an operational remedy.
+
+## ARCH-02 — Case creation does not define patient-scope authorization
+
+Severity: HIGH
+File: docs/agent/CLAUDE_TASK_1.2_CASE_DOMAIN_MODEL.md
+Location: section 7, `create_tb_case`
+Problem: The RPC derives the caller's facility, but the design does not require that the patient is referred to that facility or was validly registered there. With nullable `p_referral_id`, a SECURITY DEFINER function bypasses RLS and could attach any supplied patient UUID to the caller's facility. It also does not require the resolved facility to be type `tb_dots` or explicitly account for `users.active`.
+Impact: A facility user could create a cross-facility case, disclose that a patient identifier exists through errors/results, and use the global partial unique index to block the correct facility from opening a case.
+Recommended fix: Specify and test a null-safe admission predicate inside the RPC. Referral-backed creation must require the referral's patient and receiving facility to match. Referral-free creation needs an explicit authorized intake/transfer-in rule rather than mere patient existence. Validate an active TB-DOTS profile and facility type inside every SECURITY DEFINER write RPC.
+
+## ARCH-03 — Direct case UPDATE contradicts the RPC-only lifecycle
+
+Severity: HIGH
+File: docs/agent/CLAUDE_TASK_1.2_CASE_DOMAIN_MODEL.md
+Location: sections 3, 7, and role table in section 8
+Problem: The design says all transitions go through `set_tb_case_status()`, but grants TB-DOTS staff direct table UPDATE. The proposed immutable trigger protects identity fields only. A direct PostgREST update can still alter status and dates outside the RPC transaction, and can bypass RPC-specific audit/cancellation behavior even if a transition trigger rejects some state edges.
+Impact: Status, outcome, appointment cancellation, and audit records can diverge depending on which write path the client uses.
+Recommended fix: Make mutation RPC-only by removing direct UPDATE policy/grant, or restrict grants to a precisely justified set of non-lifecycle columns and prove every invariant in table triggers. The RPC and trigger must share one transition authority, and changing to `closed` must atomically write the audit event and cancel the defined appointments.
+
+## ARCH-04 — Appointment ownership fields remain writable through existing policies
+
+Severity: HIGH
+File: docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md; supabase/migrations/0007_bhw_barangay_scope.sql; supabase/migrations/0011_appointments_tbdots_insert.sql; supabase/migrations/0020_immutable_identity_columns.sql
+Location: Task 1.3 sections 2–3; existing appointment UPDATE policies and immutable trigger
+Problem: Adding `facility_id` and `tb_case_id` changes the authorization keys, but the design does not revoke or constrain direct updates to those columns. Existing BHW and TB-DOTS UPDATE paths would be able to reassign ownership/linkage. The current immutable trigger pins only appointment_id and patient_id. The legacy policy can also accept a move back to NULL when the patient is referred to the caller's facility.
+Impact: A client can detach or reassign appointments, revive patient-wide visibility, and corrupt case/facility ownership.
+Recommended fix: Define column grants and/or controlled assignment RPCs before adding the columns. BHWs may supply facility ownership only on initial insert from their referral flow; later facility/case assignment and transfer must be authorized operations. Test malicious direct updates by BHW and both involved facilities.
+
+## ARCH-05 — The stated mobile scope is internally inconsistent
+
+Severity: HIGH
+File: docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md; mobile/src/db/types.ts; mobile/src/db/database.ts; mobile/src/db/appointmentsRepo.ts; mobile/app/referral/[screeningId].tsx
+Location: Task 1.3 sections 3.1 and 5/open question 5
+Problem: The design says the next mobile release sends `facility_id` on the initial appointment, but also says its only mobile change is the `AppointmentStatus` union. The current SQLite schema, AppointmentRow, repository mapping, push payload, and `insertLocalAppointment()` call contain no appointment facility field.
+Impact: New mobile appointments will continue arriving unowned, so BASE-02 remains open and the promised NULL-row exit criterion cannot be reached.
+Recommended fix: Treat facility ownership as one cross-layer contract change: add a local SQLite migration, row types, repository read/write/pull mapping, sync payload, referral-screen insert, cache tests, and old-database upgrade test. Case UI can remain web-only. Verify the old-client upsert behavior against the real PostgREST stack before relying on omitted keys to preserve server columns.
+
+## ARCH-06 — The legacy appointment policy does not have a reliable shrinking path
+
+Severity: HIGH
+File: docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md
+Location: section 3
+Problem: Old mobile builds can continue inserting NULL-facility appointments, contradicting “the set never grows.” For a patient referred to multiple facilities, the proposed legacy predicate makes the same unowned row visible to each facility. An “Unassigned appointments” screen cannot determine which one may claim it without referral/appointment provenance.
+Impact: The temporary cross-facility hole can persist indefinitely, and assignment itself can become a race between facilities.
+Recommended fix: Define a bounded compatibility window and a deterministic assignment authority. Prefer adding explicit referral ownership for pre-case appointments where the mobile workflow knows the referral, or use a server RPC that atomically creates the referral and its initial appointment. Do not promise `facility_id NOT NULL` until unsupported clients are retired and all legacy rows have an unambiguous resolution path.
+
+## ARCH-07 — The shared idempotency key is under-specified
+
+Severity: HIGH
+File: docs/agent/CLAUDE_TASK_1.2_CASE_DOMAIN_MODEL.md
+Location: section 7, `rpc_requests`
+Problem: A global caller-supplied `request_id` with only `created_at` and generic `result_id` does not bind a request to its operation, actor/facility, or input. Reuse or collision across case creation and walk-in registration can return the wrong result or suppress a legitimate operation. The design does not state how an existing request is authorized before replaying its result.
+Impact: Idempotent retry can become a cross-operation integrity or data-disclosure defect.
+Recommended fix: Store operation, caller/facility scope, request fingerprint, typed result reference, and timestamps; enforce uniqueness on the intended namespace. On replay, require the same authorized caller scope and identical payload or reject it. Keep the table inaccessible to clients. It may be created in the case migration once this contract is defined, then reused by the atomic walk-in RPC.
+
+## ARCH-08 — Follow-up records lack temporal and invalidation rules
+
+Severity: MEDIUM
+File: docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md
+Location: section 4
+Problem: Nothing constrains `visit_date` to the case interval or, when linked, to an attended appointment. “Recorded in error is an amended note” leaves a false visit structurally valid and eligible for latest-follow-up/timeline logic. Notes are deliberately excluded from audit changes, so editing the note cannot reliably mark the record invalid.
+Impact: Timelines and “no recent follow-up” calculations can treat erroneous or impossible visits as real.
+Recommended fix: Define whether a linked follow-up requires `appointments.status = 'attended'` and how `visit_date` relates to `attended_date`; enforce case-date bounds. Add a non-scheduling void/correction state or `voided_at/by/reason` metadata, with an audit event, while retaining the row. Recording attendance, follow-up, case transition, and optional next appointment should use an atomic RPC where the UI performs them as one visit workflow.
+
+## ARCH-09 — Case-number generation depends on undefined schema
+
+Severity: MEDIUM
+File: docs/agent/CLAUDE_TASK_1.2_CASE_DOMAIN_MODEL.md
+Location: section 6
+Problem: Facilities currently have no stable unique short-code column, and PostgreSQL sequences are non-transactional, so a rolled-back insert still consumes a sequence value. The promise that a failed insert consumes no number is false if this follows `next_facility_patient_code()`.
+Impact: Migration implementation has no defined source for a stable case prefix and may make guarantees it cannot keep.
+Recommended fix: Either accept harmless gaps explicitly or design a transactional counter row keyed by facility/year. Define, constrain, and make immutable the facility code used in case numbers; the global unique constraint remains the final collision guard.
+
+## Gate decisions on Claude's open questions
+
+1. Outcome vocabulary and follow-up weight are not approved until the named clinical confirmation is recorded. Weight can be omitted from the first migration if confirmation is delayed; the outcome vocabulary cannot remain an undocumented guess.
+2. BASE-01 must be repaired before or in the first migration that exposes new SECURITY DEFINER RPCs. All new and repaired functions require explicit ACL tests for anon, missing-profile, inactive, wrong-role, wrong-facility, and allowed callers.
+3. A corrected idempotency table may live in the case migration and later serve walk-in registration; ARCH-07 must be resolved first.
+4. Admin-wide audit reads are acceptable only for the documented metadata whitelist, with no clinical free text/contact data and a tested null-safe active-role gate.
+5. Transfer UI may be deferred. The transfer RPC cannot be deferred if one-active-case-across-facilities is enforced, and ARCH-01 must make that RPC executable.
+6. Adding appointment status `cancelled` is compatible with the existing referral rules. Auto-cancellation on case closure is approved for scheduled appointments on or after Manila “today”; define this boundary explicitly and audit the changes. Past scheduled rows remain part of missed-visit handling.
+7. Case and follow-up UI may remain web-only. Appointment facility ownership still requires the mobile data-contract work in ARCH-05.
+
+Claude should revise the two design documents, update DECISIONS.md/CLAUDE_STATUS.md, and hand them back for a focused re-review. No migration should be created until ARCH-01 through ARCH-07 and the clinical vocabulary blocker are resolved.
+
+---
+
+# Codex re-review — Tasks 1.2/1.3 Revision 2
+
+2026-09-09; reviewed Revision 2 against ARCH-01 through ARCH-09 and the cited repository contracts. No migration or application source changed, so tests were not rerun.
+
+**Gate result: NOT APPROVED (second review).** Revision 2 materially improves the model and fully resolves ARCH-02, ARCH-03, ARCH-05, and ARCH-07. ARCH-01, ARCH-04, and parts of ARCH-08/09 still need correction. Five new or residual HIGH issues are listed first.
+
+## R2-01 — Column-specific REVOKE does not remove the existing table UPDATE privilege
+
+Severity: HIGH
+File: docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md; supabase/migrations/0017_rls_hardening_users_referrals.sql
+Location: Task 1.3 section 2.2; migration 0017 lines 45–46
+Problem: `revoke update (facility_id, referral_id, tb_case_id)` removes column-level grants, but it does not subtract those columns from a table-level UPDATE grant. The repository already documents the required pattern in 0017: revoke UPDATE on the whole table, then grant UPDATE only on allowed columns. There is a second contract conflict: the revised mobile full-row upsert will include facility/referral IDs on its lost-response retry, so denying UPDATE on those columns can also make that legitimate conflict path fail.
+Impact: As written, ownership reassignment may remain possible; if privileges are corrected naively, interrupted mobile referral sync can become permanently stuck.
+Recommended fix: Replace the privilege claim with a design that handles both authorization and idempotent whole-row retries. Options include a validation trigger that permits unchanged ownership and reviewed FK cascades while rejecting client reassignment, or an atomic/idempotent referral-plus-appointment sync RPC. Test the real grants and all three paths: malicious PATCH, identical upsert retry after a lost response, and referral/case ownership cascade. ARCH-04 remains open.
+
+## R2-02 — An appointment linked to both referral and case still blocks transfer
+
+Severity: HIGH
+File: docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md
+Location: sections 2.1–2.2, `assign_appointment_to_case`
+Problem: Both composite FKs contain the same appointment `facility_id`. If an appointment retains `referral_id` when it is assigned `tb_case_id`, transferring the case cascades its facility to the destination while the unchanged referral FK requires the original facility. The statement fails. The claim that the cascades cannot fight only considers rerouting the referral, not transferring the case.
+Impact: ARCH-01 remains reproducible for an appointment with both links.
+Recommended fix: Define and enforce link exclusivity, for example `num_nonnulls(referral_id, tb_case_id) <= 1`. `assign_appointment_to_case()` can atomically replace the referral link with the case link; the case itself retains referral provenance. Alternatively model separate ownership without sharing one facility column across two live parents. Test transfer of a case whose original appointment began referral-linked and was later assigned to the case.
+
+## R2-03 — RPCs require audit events before the audit table is scheduled to exist
+
+Severity: HIGH
+File: docs/agent/CLAUDE_TASK_1.2_CASE_DOMAIN_MODEL.md; docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md
+Location: Task 1.2 sections 5, 7.2, and 9; Task 1.3 sections 2.2 and 4.4
+Problem: Transfer and case RPCs ship in the case migration and are specified to write audit events; appointment-assignment and visit RPCs also depend on audit events. Section 9 still says `audit_logs` is implemented in the Day-6 Audit Trail task.
+Impact: Early RPC migrations either fail because `audit_logs` does not exist or ship unaudited behavior that cannot reconstruct earlier changes later.
+Recommended fix: Move the minimal audit table, whitelist trigger/function, RLS, and event-writing contract into the first migration that creates mutable case data. Day 6 can add the viewer and broader event coverage. Do not enable an RPC before its audit dependency exists.
+
+## R2-04 — Treatment start is not an atomic lifecycle transition
+
+Severity: HIGH
+File: docs/agent/CLAUDE_TASK_1.2_CASE_DOMAIN_MODEL.md
+Location: sections 3–4 and 7.2
+Problem: `set_tb_case_status()` has no treatment-start-date input, while `update_tb_case_details()` changes that date separately. The CHECK only says `on_treatment` requires a date; it permits `registered` with a treatment date. It also relies on transition history to guarantee `interrupted` has a date, but the details RPC could later clear it because there is no row CHECK covering interrupted/closed cases.
+Impact: Starting treatment requires two commits and can stop halfway; corrections can create registered cases that appear started or interrupted cases with no start date.
+Recommended fix: Make treatment start one atomic RPC/transition, or include the date in `set_tb_case_status()`. Add a row invariant requiring a non-null start date for every state that semantically follows treatment start, and define whether registered/cancelled states must have it NULL. Restrict corrections so they cannot violate those invariants.
+
+## R2-05 — The ambiguous-row admin queue grants clinical detail to a non-clinical role
+
+Severity: HIGH
+File: docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md; docs/agent/CLAUDE_TASK_1.2_CASE_DOMAIN_MODEL.md
+Location: Task 1.3 section 3.2; Task 1.2 role table section 8
+Problem: Revision 2 says the admin queue shows a patient's referral history so an assignment is informed. The accepted role model says admins have no patient-level clinical rows, only aggregates and whitelisted audit metadata. Test data today does not make this safe for future production data.
+Impact: Resolving legacy ownership would introduce a new patient-level disclosure to administrative accounts.
+Recommended fix: Do not expose referral history to admin. Since current data is synthetic, resolve ambiguous rows during controlled migration/support cleanup before production, or design a minimal opaque assignment workflow whose inputs do not disclose clinical history. A clinical supervisor role would be a separate authorization decision and is outside this gate.
+
+## R2-06 — `sole_referral_facility(patient_id)` is a callable disclosure surface
+
+Severity: MEDIUM
+File: docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md
+Location: section 3.1
+Problem: The SECURITY DEFINER helper accepts an arbitrary patient ID and returns that patient's sole referral facility. If it is executable in the exposed public schema so authenticated policy evaluation can call it, it is also reachable as an RPC unless separately contained.
+Impact: A caller with a patient UUID can query a facility association outside normal row reads.
+Recommended fix: Use a private/non-exposed helper or a boolean authorization helper that validates the active caller and compares only against the caller's own facility. Compute the one-off backfill directly in the migration. Include direct-RPC denial in the ACL tests.
+
+## R2-07 — Follow-up correction and voiding are not internally complete
+
+Severity: MEDIUM
+File: docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md
+Location: sections 4.1–4.4
+Problem: Changing a linked follow-up's visit date by direct UPDATE conflicts with the unchanged appointment attendance date. Voiding retains the non-null appointment ID under a global UNIQUE constraint, so a corrected replacement cannot be recorded, and it leaves the appointment attended even when the visit itself was recorded in error.
+Impact: Staff can enter a state they cannot correctly repair without direct database work.
+Recommended fix: Put linked date correction in an atomic RPC that updates both rows. Decide whether void means “clinical note invalid but attendance remains” or “visit did not happen.” Use a partial unique index for active, non-voided follow-ups if replacement is allowed, and update/revert appointment attendance when the latter meaning applies.
+
+## R2-08 — Facility short-code migration does not cover all facility rows
+
+Severity: MEDIUM
+File: docs/agent/CLAUDE_TASK_1.2_CASE_DOMAIN_MODEL.md; supabase/seed.sql
+Location: Task 1.2 section 6; seed facility `...b1`
+Problem: The design adds `facilities.short_code NOT NULL` but proposes seeding only the TB-DOTS facilities from migration 0009. The schema also contains barangay health stations, including the seeded Casisang BHS, and admin facility creation supports facility types generally.
+Impact: The migration can fail on existing non-DOTS rows, or future facility creation can be blocked by a case-number field that BHS facilities do not use.
+Recommended fix: Prefer a nullable unique `short_code` required by a CHECK only when `type = 'tb_dots'`, unless short codes are intentionally defined for every facility type. Populate and validate existing rows before adding the CHECK. Claude should propose the eleven DOTS mappings from 0009 as a separate reviewable table; do not derive mutable codes from names at runtime.
+
+## Revision-2 disposition and remaining inputs
+
+- ARCH-02, ARCH-03, ARCH-05, and ARCH-07: resolved at design level.
+- ARCH-01: remains open through R2-02; the case/referral lifetime pin itself is resolved.
+- ARCH-04: remains open through R2-01.
+- ARCH-06: the shared facility visibility is resolved, but the admin resolution path is rejected under R2-05.
+- ARCH-08: temporal bounds and atomic visit recording are accepted; correction/void semantics remain under R2-07.
+- ARCH-09: transactional counter is accepted; facility-code rollout remains under R2-08.
+- The old-client PostgREST upsert remains a mandatory real-stack test. It does not by itself block architecture approval once R2-01 defines a safe compatibility path.
+- The conditional outcome design is accepted: if the locally used MOP vocabulary is not confirmed, omit `outcome` and keep `closed` unreachable in the first case migration. `weight_kg` may likewise be omitted.
+
+**BASE-01 decision:** Claude should take it now as its own migration and work unit. It is an independent live authorization defect. Because no new migration exists yet, that repair becomes `0028`; all case-design references must then move to `0029` or the next actual sequential number. The BASE-01 migration must contain the null-safe active-role checks, explicit function ACLs, and real-role denial matrix already specified. It must receive its own Codex review before case implementation begins.
+
+**Facility code decision:** Claude should prepare the explicit eleven-row DOTS mapping from migration 0009 for review. Resolve R2-08's nullable/type constraint first. The codes are persisted identifiers and must be reviewed as data, not generated silently from facility names.
+
+No case migration should be written while R2-01 through R2-05 remain open. The independent BASE-01 repair is approved to proceed now.
+
+---
+
+# Superseded review — Migration 0028 and design Revision 3
+
+This section records the third-gate findings for audit history. The final Revision 4 review at the top of this file closes them and controls current status.
+
+2026-09-09; reviewed `0028_null_safe_role_gates.sql`, its verifier and SQL matrix, both Revision-3 design documents, and the facility-code proposal. Ran `node scripts/verify-0028-bodies.mjs` successfully (six reported OK) and `git diff --check` successfully. The database matrix could not be run in this environment.
+
+## Migration 0028 result: CHANGES REQUIRED before application
+
+The migration's core authorization change is correct on source inspection: `current_user_active_role()` collapses anonymous, missing-profile, and inactive callers to NULL; the two genuinely fail-open guards now reject NULL; the other four functions become active-aware; and anon/PUBLIC execution is explicitly revoked. BASE-04 is appropriately left for its own migration.
+
+The work unit is not yet PASS because the mandatory database verification has not run and its verification artifacts contain the issues below.
+
+### M28-01 — ACL post-check hides PUBLIC and expects service-role grants to disappear without revoking them
+
+Severity: MEDIUM
+File: supabase/migrations/0028_null_safe_role_gates.sql
+Location: POST-CHECK 1 and function ACL blocks
+Problem: The ACL query inner-joins `pg_roles`; PostgreSQL represents PUBLIC as grantee OID 0, which has no `pg_roles` row, so the query can never display a surviving PUBLIC grant. It also expects `service_role` only on `admin_overview`, but the migration does not revoke the explicit service-role grants created by Supabase default privileges or preserved by CREATE OR REPLACE.
+Impact: The documented ACL expectation either fails for service-role rows or falsely reports no PUBLIC row even if one exists.
+Recommended fix: Use a LEFT JOIN and render grantee 0 as `PUBLIC`. Either explicitly revoke service_role on functions that should not expose it or document and expect it consistently; service_role already bypasses RLS, so this is least-privilege clarity rather than a new patient-data boundary.
+
+### M28-02 — Body verifier excludes existing declaration logic
+
+Severity: MEDIUM
+File: scripts/verify-0028-bodies.mjs
+Location: `normalize()`
+Problem: The verifier discards everything before the last guard. That includes unchanged business logic in existing DECLARE blocks, notably `dashboard_counts()`'s Manila date variables. It therefore proves the query tail matches, not that every non-guard part of all six bodies matches.
+Impact: A transcription error in excluded declarations can change reporting behavior while all six checks print OK.
+Recommended fix: Remove only the exact old/new guard spans and newly introduced `v_role` declaration, retaining every pre-existing declaration. Mutation-test a declaration token such as `d_next` as well as a query-body token.
+
+### M28-03 — The role matrix does not yet support the claimed pre-apply workflow
+
+Severity: MEDIUM
+File: supabase/tests/0028_role_gate_matrix.sql
+Location: setup, `current_user_active_role` expectations, and transaction ending
+Problem: The matrix calls definitions that exist only after 0028, while 0028 commits itself, so it cannot be run “before 0028 is applied” as currently packaged. The test begins a transaction but does not roll it back itself despite being described as self-rolling-back. It checks only whether `current_user_active_role()` is callable, not that it returns NULL for missing/inactive profiles and the exact role for active profiles. It also assumes `request.jwt.claims` drives `auth.uid()` without asserting the simulated UID.
+Impact: The required safety check can be run in the wrong order, leave test accounts if the SQL-editor session commits, or miss a broken helper result/setup.
+Recommended fix: Provide a transactional preflight script that installs the migration definitions without committing, runs assertions, and always rolls back; then apply the unchanged migration after PASS. Make the matrix fail on any FAIL row, assert `auth.uid()` after setting claims, and assert exact helper return values. If a disposable Supabase branch is available, running migration then matrix there is equally acceptable.
+
+### BASE-06 — Deactivated users retain RLS row access until JWT expiry
+
+Severity: HIGH
+File: supabase/migrations/0002_rls_policies.sql and later replacement policies
+Location: policies still calling `current_user_role()`
+Problem: Migration 0028 deliberately hardens RPC gates only. Existing row policies still use the non-active-aware helper, so a deactivated user with a valid access token retains scoped patient/referral/screening/appointment access.
+Impact: Account deactivation is not an immediate authorization revocation for patient-level data.
+Recommended fix: Take this as the next dedicated security unit, with a full real-role RLS matrix and mobile/web regression pass. New policies in case migration 0029 must use active-aware gates from their first version. This residual issue does not negate 0028's RPC fix, but it is a release-blocking HIGH finding.
+
+## Revision 3 architecture result: NOT APPROVED
+
+Revision 3 resolves R2-02, R2-03, R2-04, R2-05, R2-06 and most of R2-07/R2-08. The remaining HIGH findings follow.
+
+### R3-01 — Ownership trigger rejects authenticated FK cascades
+
+Severity: HIGH
+File: docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md
+Location: section 2.2, `enforce_appointment_ownership()`
+Problem: A BHW rerouting a submitted referral performs a normal authenticated UPDATE. The FK's `ON UPDATE CASCADE` does not change the JWT claim, so `auth.role()` remains `authenticated` when the appointment trigger runs. The RPC-only GUC is not set on this path. The trigger therefore rejects the legitimate cascade, contrary to the document's claim that the auth-role exemption keeps cascades working.
+Impact: Existing referral rerouting breaks as soon as a referral owns an appointment.
+Recommended fix: Validate cascaded final ownership against the unchanged parent link instead of assuming cascades have a privileged auth role. For example, allow a facility-only change when `referral_id` is unchanged, `tb_case_id` is NULL, and the new facility equals the linked referral's current facility; similarly validate a case-linked cascade against the current case. Keep GUC authorization only for link swaps/legacy claims. Test direct malicious PATCH separately from referral cascade, case cascade, and identical retry.
+
+### R3-02 — Follow-up void columns repeat the ineffective column-REVOKE design
+
+Severity: HIGH
+File: docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md
+Location: section 4.6
+Problem: The document still proposes `revoke update (voided_at, voided_by, void_reason)` while granting clients UPDATE on `treatment_followups`. As established in R2-01, a column revoke does not subtract from a table-level UPDATE grant.
+Impact: Facility clients can directly void/unvoid records, forge `voided_by`, or bypass the void RPC's reason and audit behavior.
+Recommended fix: Revoke table UPDATE first and grant only ordinary correction columns (`notes` and confirmed `weight_kg`, if retained). Keep visit date and all void fields RPC-only. Verify effective `information_schema.column_privileges`/`has_column_privilege` results and direct PATCH denials.
+
+### R3-03 — TB-DOTS short-code CHECK accepts NULL
+
+Severity: HIGH
+File: docs/agent/CLAUDE_FACILITY_SHORT_CODES_PROPOSAL.md; docs/agent/CLAUDE_TASK_1.2_CASE_DOMAIN_MODEL.md
+Location: `facilities_short_code_scope`
+Problem: For a `tb_dots` row with `short_code IS NULL`, `short_code ~ pattern` evaluates to NULL; the entire CHECK evaluates to NULL, and PostgreSQL accepts CHECK results that are true or unknown. The constraint therefore does not make a code required for TB-DOTS facilities.
+Impact: A direct or future facility insert can create a TB-DOTS facility with no usable case-number prefix, causing later case creation to fail.
+Recommended fix: State `type = 'tb_dots' AND short_code IS NOT NULL AND short_code ~ '^[A-Z0-9]{2,8}$'`, with the non-DOTS NULL arm unchanged. Test NULL, lowercase, duplicate, valid DOTS, and valid BHS inputs. The eleven proposed mappings are reasonable defaults derived from 0009, pending confirmation of local abbreviations and the live row set.
+
+### R3-04 — New appointment policy still uses the inactive-aware gap
+
+Severity: HIGH
+File: docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md
+Location: section 3.1 policy sketch
+Problem: The owned-row branch still starts with `current_user_role() = 'tb_dots'`; only the legacy helper is active-aware. A deactivated account can therefore continue reading/updating owned appointments through the new policy.
+Impact: Migration 0029 would reproduce BASE-06 in newly rewritten authorization policy.
+Recommended fix: Use `current_user_active_role()` in every new/replaced RLS policy and active-aware helpers from inception. Prefer resolving BASE-06 before 0029 so the policy family has one consistent rule.
+
+### R3-05 — Case-ID helper needs the same callable-surface treatment
+
+Severity: MEDIUM
+File: docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md
+Location: section 4.6, `own_facility_case_ids()`
+Problem: The public SECURITY DEFINER helper returns case IDs based only on `current_user_facility()` and does not check active TB-DOTS role. An admin or other account attached to a DOTS facility could call it directly if it has the EXECUTE privilege needed by policy evaluation.
+Impact: Non-clinical accounts can receive case identifiers outside the intended table policy.
+Recommended fix: Put the helper in a non-exposed schema or make it active-role-aware and non-enumerating. Add direct-RPC ACL/return tests, following the correction already made for `sole_referral_facility()`.
+
+### R3-06 — Revision 3 retains withdrawn admin-queue wording
+
+Severity: LOW
+File: docs/agent/CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md
+Location: revision history and section 3.4
+Problem: The current document still says NULL rows are “parked in the admin queue” and that tightening waits for the “admin queue” to empty, although section 3.2 withdraws that queue.
+Impact: Implementers may accidentally restore a rejected admin workflow.
+Recommended fix: Replace those references with the direct-session support backlog and mark old revision-history wording clearly superseded.
+
+## Gate and next action
+
+- Migration 0028: correct the verifier/matrix/ACL post-check, then run the transactional matrix in the SQL editor or a disposable database. It is not approved for application until that output is all PASS.
+- Architecture: revise R3-01 through R3-04 before writing migration 0029. R3-05/06 should be corrected in the same revision.
+- Facility codes: provisional data approval only. Local CHO abbreviations override the proposal; confirm the live database has exactly the eleven DOTS rows before populating.
+- Outcome vocabulary remains a human clinical decision. The documented fallback—omit outcome and keep `closed` unreachable—is acceptable.
