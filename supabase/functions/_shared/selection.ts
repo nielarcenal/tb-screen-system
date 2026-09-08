@@ -10,7 +10,7 @@
  *   REMINDERS are anchored to a date and idempotent PER CALENDAR DAY. Any
  *   logged attempt today — a failure included — retires today's reminder. The
  *   cron runs once a day, so "retry" would mean tomorrow regardless, and the
- *   1-day reminder is already the backstop for a 3-day one that went missing.
+ *   same-day reminder is already the backstop for a 5-day one that went missing.
  *
  *   FOLLOW-UPS are anchored to an event and sent ONCE, except that a failure is
  *   retried up to a cap. Counting any row as done let one gateway hiccup retire

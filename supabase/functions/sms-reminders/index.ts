@@ -5,10 +5,10 @@
  * things, both only for patients who opted into SMS (sms_consent = true):
  *
  *   1. REMINDERS — for check-ups still 'scheduled' that fall on one of the lead
- *      days ahead (REMINDER_OFFSETS, Asia/Manila): 3 days out AND the day before.
- *      Idempotent per day: an appointment gets at most one reminder per calendar
- *      day, so re-runs never double-send and the 3-day / 1-day reminders (on
- *      different days) both go out.
+ *      days ahead (REMINDER_OFFSETS, Asia/Manila): 5 days out AND the morning of
+ *      the appointment itself. Idempotent per day: an appointment gets at most
+ *      one reminder per calendar day, so re-runs never double-send and the
+ *      5-day / same-day reminders (on different days) both go out.
  *   2. FOLLOW-UPS — for check-ups recently marked 'missed' (updated in the last
  *      FOLLOWUP_WINDOW_DAYS), a neutral nudge to reschedule — UNLESS the patient
  *      already has an upcoming 'scheduled' appointment (rebooked; UPCOMING means
@@ -61,8 +61,22 @@ import {
   type SmsLogRow,
 } from '../_shared/selection.ts';
 
-/** Lead days before a check-up on which to remind (Asia/Manila). */
-const REMINDER_OFFSETS = [3, 1];
+/**
+ * Lead days before a check-up on which to remind (Asia/Manila).
+ *
+ * 0 means the morning of the appointment — the cron fires at 09:00 Manila, so a
+ * same-day reminder lands before a normal clinic day starts. It is the reliable
+ * one: it depends only on the booking existing before 09:00 that morning, which
+ * for a date chosen days earlier it always does.
+ *
+ * 5 is the advance notice, and it is the one that is easy to miss. The run
+ * matches scheduled_date EXACTLY, once a day, so an appointment booked less than
+ * five clear days out — or booked on the five-day mark after 09:00 — never hits
+ * that offset and the patient gets the same-day reminder only. That is by
+ * design (the same-day one is the backstop), but it means the honest claim is
+ * "UP TO two reminders", never "reminders at 5 days and on the day".
+ */
+const REMINDER_OFFSETS = [5, 0];
 /** Only follow up on check-ups marked missed within this many days. */
 const FOLLOWUP_WINDOW_DAYS = 14;
 /**
@@ -242,11 +256,13 @@ Deno.serve(async (req) => {
   rem.due = due.length;
 
   // Skip appointments already reminded TODAY (idempotent same-day re-runs; the
-  // 3-day and 1-day reminders land on different days, so both still go out).
+  // 5-day and same-day reminders land on different days, so both still go out).
   // ANY attempt counts here, a 'failed' one included — unlike the follow-up
   // path below, which retries failures. A reminder is anchored to a date: the
   // cron runs once a day, so retrying would mean the next offset day regardless,
-  // and the 1-day reminder is already the backstop for a 3-day one that missed.
+  // and the same-day reminder is already the backstop for a 5-day one that
+  // missed. Note the same-day offset has no backstop of its own — it IS the
+  // last one — so a failure there is the end of the line for that appointment.
   const remindedToday = new Set<string>();
   if (due.length > 0) {
     const { data: logged, error: logErr } = await supabase
