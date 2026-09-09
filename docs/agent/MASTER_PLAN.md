@@ -1,5 +1,18 @@
 # Sprint master plan
 
+2026-09-10, off the critical path: Claude wrote **Task 4.1 — the Patient Care Timeline
+data contract** as a design document, [CLAUDE_TASK_4.1_TIMELINE_DATA_CONTRACT.md](CLAUDE_TASK_4.1_TIMELINE_DATA_CONTRACT.md).
+Design only — no migration, no schema, no application code. It was taken because Codex
+holds uncommitted case registry UI work in `web/src` (Tasks 2.2–2.5) and rule 19 puts
+those files off limits; this unit shares none of them. The finding to review first is §2:
+**three of the timeline events the plan asks for cannot be dated** — `referrals` has no
+`received_at`, `closed_at` or `presented_at`, and `audit_logs` cannot cover them because
+its `entity_table` CHECK excludes referrals. Appointment `missed` and `cancelled` are
+audited only on the 0031 RPC paths, not on the ordinary PATCH both clients use. The
+contract marks those events undated rather than adding five nullable columns mid-sprint;
+that decision and three others are the open questions in §9. Task 4.2 (timeline UI) is
+blocked on this review **and** on the case registry landing, since both touch `web/src`.
+
 2026-09-10 latest checkpoint: **the seven-day Priority A finish remains achievable,
 but only as a strict scope-controlled sprint.** All six BASE findings are closed.
 Migration **0033** restored authenticated legacy appointment upsert compatibility

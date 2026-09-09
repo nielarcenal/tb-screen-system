@@ -624,3 +624,78 @@ question cannot exit 0 and read as if it had.
 **Next:** Codex re-reviews. Then apply 0031, run
 `TBSCREEN_TEST_PASSWORD=... node scripts/old-client-upsert-check.mjs` and confirm
 `GATE: CLOSED`, and only then start the client contract unit.
+
+---
+
+## 2026-09-10 - Task 4.1 timeline data contract written (design only)
+
+Codex holds uncommitted work in `web/src` for the case registry UI (Tasks 2.2-2.5):
+`CaseRegistry.tsx`, `caseRegistry.ts`, and edits to `App.tsx`, `ReferralDetail.tsx`,
+`types.ts` and the three locale files. Rule 19 puts all of that off limits, so I took the
+next Priority A unit that shares no file with it: **Task 4.1, the Patient Care Timeline
+data contract**, in
+[CLAUDE_TASK_4.1_TIMELINE_DATA_CONTRACT.md](CLAUDE_TASK_4.1_TIMELINE_DATA_CONTRACT.md).
+
+Design only. No migration, no schema, no application code, no test file.
+
+### What it settles
+
+Eighteen event types across eight source tables, each projected from a column that exists
+at `939ce5f`. One `SECURITY DEFINER` read function, `public.patient_timeline(uuid, int)`,
+taking an explicit patient id and never enumerating. Two authorization arms - patient and
+case - evaluated per event rather than once per call, so a BHW who may see the person does
+not thereby see another facility's episode. A whitelisted `detail jsonb` with seven
+permitted keys. Voided follow-ups, `referrals.result`, `treatment_followups.notes`,
+`contact_number`, `symptom_flags`, `pgis_severity` and every SMS payload field excluded.
+
+### The finding worth reviewing first
+
+**Three of the events the plan asks for cannot be dated, and two more are only partly
+covered.** `referrals` has no `received_at`, no `closed_at` and no `presented_at` - a
+referral that has been received, tested and closed carries one `updated_at`, naming the
+last write of any kind. `audit_logs` cannot fill the gap: its `entity_table` CHECK admits
+only `tb_cases`, `treatment_followups` and `appointments`, so referrals are outside the
+audit surface by construction.
+
+Appointments are covered only through the 0031 RPC paths. Marking an appointment
+`attended` or `missed` with the ordinary PostgREST PATCH that both clients use today
+writes no audit row at all, so `appointment_missed` has no recorded time and
+`appointment_cancelled` has one only when `set_tb_case_status()` did the cancelling.
+
+I did not add the five columns. A nullable `received_at` that gets backfilled from
+`updated_at` becomes indistinguishable from a fact within one release, and it would reopen
+both client write paths on Day 4. Instead the contract marks the events: `occurred_on
+is null` plus `is_undated` for the three referral transitions, and
+`occurred_on_is_derived` where a missed appointment is dated to its `scheduled_date`.
+That is question 2 at the gate - it reverses cleanly if Codex disagrees, because nothing
+else in the document depends on it.
+
+### Two smaller decisions that will look wrong without their reasons
+
+- **Denial returns zero rows, not `42501`.** A read that raises on "not yours" and returns
+  empty on "no such patient" is an existence oracle. The cost is that the client cannot
+  render "access denied" from this call, so Task 4.4's empty-timeline and unauthorized-user
+  cases assert the same thing and the test has to say so, or someone deletes one as a
+  duplicate.
+- **A transferred case disappears from the losing facility's timeline**, including
+  follow-ups its own staff recorded. That falls out of `own_facility_case_ids()` and is
+  correct, but it will read as a bug the first time it is seen, so it is named in the
+  document rather than discovered.
+
+### Ordering
+
+Six events are anchored to a `date` and eleven to a `timestamptz`. The sort key is
+`(occurred_on, rank, occurred_at nulls last, event_id)`, where `occurred_on` is a Manila
+civil date from the same expression `manila_today()` uses - the calendar 0030 corrected the
+barangay report onto, not a second one - and `rank` is a fixed per-type integer. Without
+the rank, Task 4.4's required same-day test asserts whatever the planner returned.
+
+### Verification performed
+
+None, and none is possible yet: there is no code. The document's factual claims about
+columns, indexes, policies and audit coverage were each read out of the applied
+migrations while writing it.
+
+**Next:** Codex reviews Task 4.1 whenever the case registry unit reaches its own gate.
+Four open questions are listed in §9. Task 4.2 (timeline UI) is blocked on that review and
+on the case registry landing, since both touch `web/src`.
