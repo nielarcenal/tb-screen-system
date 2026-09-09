@@ -4,7 +4,7 @@ Source baseline: `4659d65`, 2026-09-09. Details and recommended fixes are in COD
 
 | ID | Severity | Issue | Status |
 | --- | --- | --- | --- |
-| BASE-01 | HIGH | NULL role bypasses reporting RPC authorization | Fixed in migration 0028; 73/73 live preflight checks passed; application pending |
+| BASE-01 | HIGH | NULL role bypasses reporting RPC authorization | Resolved and applied in migration 0028 |
 | BASE-02 | HIGH | Patient-wide appointment access cannot isolate facilities/episodes | Design resolved in Revision 4; implementation pending case migration |
 | BASE-03 | HIGH | Walk-in registration partial writes and duplicate retry | Design resolved in Revision 4; implementation pending case migration |
 | BASE-04 | HIGH | Barangay report date ranges depend on session timezone | Open; Manila boundaries required |
@@ -47,7 +47,7 @@ Revision 2 gate result: **NOT APPROVED**. Independent BASE-01 repair is approved
 
 | ID | Severity | Issue | Status |
 | --- | --- | --- | --- |
-| BASE-06 | HIGH | Deactivated users retain RLS row access until their JWT expires | Open; dedicated policy/regression unit required |
+| BASE-06 | HIGH | Deactivated users retain RLS row access until their JWT expires | Resolved and applied in migration 0029; 47/47 strengthened preflight checks passed |
 | M28-01 | MEDIUM | ACL post-check hides PUBLIC and mismatches retained service-role grants | Resolved; ACL inspection corrected and all seven service-role grants revoked |
 | M28-02 | MEDIUM | Body verifier excludes pre-existing declaration logic | Resolved; balanced guard removal and two mutation self-tests passed |
 | M28-03 | MEDIUM | SQL matrix is not packaged for pre-apply rollback and lacks exact helper/setup assertions | Resolved; generated rollback preflight passed 73/73 live checks |
@@ -58,8 +58,8 @@ Revision 2 gate result: **NOT APPROVED**. Independent BASE-01 repair is approved
 | R3-05 | MEDIUM | Public case-ID helper lacks active clinical-role containment | Resolved in Revision 4 |
 | R3-06 | LOW | Revision 3 retains withdrawn admin-queue wording | Resolved in Revision 4 |
 
-Migration 0028 is **APPROVED FOR APPLICATION** after the generated live preflight passed 73/73 checks and rolled back. Revision 4 architecture is **APPROVED**. BASE-06 remains the next release-blocking unit; implement it as migration 0029 before case/follow-up work, which moves to 0030.
+Migrations 0028 and 0029 are **APPLIED**. Revision 4 architecture is **APPROVED**, BASE-01 and BASE-06 are closed, and case/follow-up work remains migration 0030.
 
-Migration 0028 was verified against the live database inside a rolled-back transaction and is not yet applied by this review. BASE-06 remains a live release-blocking authorization gap until migration 0029 is implemented and applied.
+Migration 0028 passed 73/73 preflight checks before application. Migration 0029 passed 47/47 strengthened preflight checks before application; its live post-check shows 28 active-aware policies.
 
-2026-09-09 update: BASE-06 has an implementation awaiting verification — migration 0029. It is not closed until its preflight passes and the migration is applied. BASE-01's fix (0028) is likewise approved but not yet applied.
+2026-09-09 update: BASE-01 and BASE-06 are closed in the live database by migrations 0028 and 0029.

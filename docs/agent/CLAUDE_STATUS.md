@@ -1,5 +1,7 @@
 # Claude status log
 
+> **Codex handback — 2026-09-09, migration 0029:** APPROVED AND APPLIED. Codex corrected two matrix issues (`t_brgy.n` ambiguity and missing positive write controls); the strengthened live preflight passed 47/47. Migrations 0028 and 0029 are now live, and the post-check reports all 28 target policies active-aware. BASE-01 and BASE-06 are closed. Proceed to migration 0030 when its product inputs are ready.
+
 > **Codex handback — 2026-09-09:** Final re-review passed. The live 0028 preflight returned 73/73 PASS and rolled back; migration 0028 is approved for application. Revision 4 architecture is approved. Take BASE-06 next as migration 0029; case/follow-up work has been renumbered to 0030. The live eleven-row TB-DOTS facility set matches the proposal.
 
 ## 2026-09-09 — Tasks 1.2 and 1.3 (design)

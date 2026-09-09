@@ -1,6 +1,6 @@
 # TB-Screen System — 7-Day Capstone Upgrade Plan
 
-> **Gate status — 2026-09-09:** Codex approved design Revision 4 and migration 0028 for application after a 73/73 live preflight PASS with rollback. BASE-06 is the next unit as migration 0029; the approved case/follow-up implementation moves to migration 0030. See `CODEX_REVIEW.md` for the final disposition.
+> **Gate status — 2026-09-09:** Codex approved and applied migrations 0028 and 0029 in order. The strengthened 0029 live preflight passed 47/47; the post-check reports all 28 target policies active-aware. BASE-01 and BASE-06 are closed. The approved case/follow-up implementation remains migration 0030. See `CODEX_REVIEW.md` for the final disposition.
 
 **Project:** TB-Screen System  
 **Repository:** `https://github.com/nielarcenal/tb-screen-system`  

@@ -1,3 +1,27 @@
+# Codex review — Migration 0029 / BASE-06
+
+2026-09-09; reviewed commit `290572b`, corrected two matrix defects, ran the strengthened preflight against the live database, and applied migrations 0028 then 0029. No migration defect remains open.
+
+## Result: APPROVED AND APPLIED
+
+The migration 0029's self-read carve-out is correct. A deactivated account must still read its own `users` row so both clients can discover and persist the deactivation state. The same account cannot read colleagues, update its own row, read clinical rows, or write clinical data. All 28 affected policies use `current_user_active_role()`; the four enumerating helpers are active-gated in `app_private`, their public wrappers are not client-callable, and `current_user_role()` safely delegates to the active-aware helper.
+
+The first live preflight exposed **M29-01**: two test blocks declared a local variable named `n` and used unqualified `where n = ...` against `t_brgy`, causing PostgreSQL error 42702 before the matrix ran. The test now uses `t_brgy.n`.
+
+The denial tests also lacked positive controls, creating **M29-02**: missing privileges or an always-false policy could have looked like successful inactive-user denial. The matrix now proves an active BHW can update the actually granted `users.assigned_barangay_code` column and insert a patient. These are test-only corrections; migration SQL is unchanged.
+
+After correction, `supabase/tests/0029_preflight.generated.sql` passed **47/47** checks and rolled back. Migration 0029 was then applied in a transaction. The live post-check reports `current_user_active_role()` present, `app_private` present, and exactly **28 active-aware policies**. Migration 0028 was applied first as required.
+
+Verification also passed:
+
+- `verify-0029-policies.mjs`: 26 verbatim policy transcriptions, two declared predicate additions, and both mutation self-tests.
+- `verify-0028-bodies.mjs`: all six function bodies and both mutation self-tests.
+- `build-preflight.mjs 0028` and `0029`: both generated successfully. The comment-only 0028 change is accepted.
+
+BASE-06 is closed. Case/follow-up work may proceed as migration 0030 after its remaining product inputs are settled. Support must retain the documented rule that deactivation strands queued offline writes until reactivation; the existing sign-out flow preserves the local queue.
+
+---
+
 # Codex final re-review — Migration 0028 and design Revision 4
 
 2026-09-09; reviewed the ten corrections M28-01 through M28-03 and R3-01 through R3-06, plus the continuing BASE-06 finding. No new finding was opened.

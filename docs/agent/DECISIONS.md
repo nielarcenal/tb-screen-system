@@ -1,5 +1,16 @@
 # Architecture decision register
 
+## 2026-09-09 — Migration 0029 final gate
+
+| # | Decision |
+| --- | --- |
+| D-0029-k | The self-read carve-out is approved: inactive accounts retain read access to their own `users` row so clients can detect and persist deactivation, while colleague access, self-write, and clinical access are denied. |
+| D-0029-l | Matrix identifiers must be qualified when a PL/pgSQL variable has the same name. The two `t_brgy.n` references were corrected after live error 42702. |
+| D-0029-m | Every denial test needs a positive control for the corresponding supported operation. The matrix now proves active self-update on the granted column and active patient insert, preventing missing privileges or always-false policies from producing false green results. |
+| D-0029-n | The strengthened live preflight passed 47/47. Migrations 0028 and 0029 were applied in order; the live schema now has all 28 target policies on active-aware helpers. BASE-01 and BASE-06 are closed. |
+
+---
+
 ## 2026-09-09 — Final Revision 4 gate
 
 | # | Decision |

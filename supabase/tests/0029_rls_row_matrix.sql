@@ -230,7 +230,7 @@ begin
   select v into u_inactive from t_ids where k = 'bhw_inactive';
   select v into u_active   from t_ids where k = 'bhw_active';
   select v into u_dots_a   from t_ids where k = 'dots_a';
-  select code into brgy2   from t_brgy where n = 2;
+  select code into brgy2   from t_brgy where t_brgy.n = 2;
 
   -- (a) A deactivated account STILL reads its own row, and can see `active`.
   --     If this ever fails, the ban gets weaker, not stronger. Read the header.
@@ -271,6 +271,18 @@ begin
   insert into t_result values ('write denied', 'update own users row', 'bhw_inactive',
     'no rows updated', case when ok then 'UPDATED' else 'blocked' end, msg,
     case when ok then 'FAIL' else 'PASS' end);
+
+  -- Positive control: the policy still permits an active account to update its
+  -- own row. Without this, a missing grant or an always-false policy would make
+  -- the inactive denial above pass for the wrong reason.
+  perform pg_temp.become('bhw_active');
+  update public.users
+     set assigned_barangay_code = assigned_barangay_code
+   where user_id = u_active;
+  get diagnostics n = row_count;
+  reset role;
+  insert into t_result values ('write allowed', 'update own users row', 'bhw_active',
+    '1 row', n::text || ' rows', '', case when n = 1 then 'PASS' else 'FAIL' end);
 end;
 $users$;
 
@@ -284,16 +296,20 @@ declare
   msg        text;
   n          int;
   u_inactive uuid;
+  u_active   uuid;
   p_other    uuid;
   p_own      uuid;
   r_1        uuid;
+  p_new      uuid;
   brgy1      text;
 begin
   select v into u_inactive from t_ids where k = 'bhw_inactive';
+  select v into u_active   from t_ids where k = 'bhw_active';
   select v into p_other    from t_ids where k = 'pat_brgy1_by_other';
   select v into p_own      from t_ids where k = 'pat_brgy1_by_active';
   select v into r_1        from t_ids where k = 'ref_1';
-  select code into brgy1   from t_brgy where n = 1;
+  p_new := gen_random_uuid();
+  select code into brgy1   from t_brgy where t_brgy.n = 1;
 
   -- A deactivated BHW cannot enrol a patient.
   perform pg_temp.become('bhw_inactive');
@@ -309,6 +325,22 @@ begin
   insert into t_result values ('write denied', 'insert patient', 'bhw_inactive',
     'blocked', case when ok then 'INSERTED' else 'blocked' end, msg,
     case when ok then 'FAIL' else 'PASS' end);
+
+  -- Positive control: an active BHW can still insert. This distinguishes the
+  -- inactive policy denial from a missing table/column privilege.
+  perform pg_temp.become('bhw_active');
+  begin
+    insert into public.patients
+      (patient_id, display_code, enrolled_by, age, sex, barangay_code, sms_consent)
+    values (p_new, 'MTX-ALLOW-1', u_active, 40, 'male', brgy1, false);
+    ok := true; msg := '';
+  exception when others then
+    ok := false; msg := left(sqlerrm, 60);
+  end;
+  reset role;
+  insert into t_result values ('write allowed', 'insert patient', 'bhw_active',
+    'inserted', case when ok then 'inserted' else 'BLOCKED' end, msg,
+    case when ok then 'PASS' else 'FAIL' end);
 
   -- ...nor edit one they enrolled while active.
   perform pg_temp.become('bhw_inactive');
