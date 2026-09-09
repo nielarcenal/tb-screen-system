@@ -1728,7 +1728,22 @@ begin
   perform pg_temp.expect_denied('closing vs recorded visits',
     'outcome dated before a live follow-up', 'dots_a', ok, msg);
 
-  -- The same correction through the other RPC that can move the date.
+  -- Close on a legal date first. The correction probe below must run against a
+  -- CLOSED case; while the case is on_treatment, tb_cases_outcome_shape rejects
+  -- any outcome_date before correct_tb_case_dates() reaches the follow-up rule,
+  -- which would make that denial vacuous.
+  perform pg_temp.become('dots_a');
+  begin
+    perform public.set_tb_case_status(
+      v_case14, 'closed', null, 'cured', public.manila_today());
+    ok := true; msg := '';
+  exception when others then ok := false; msg := left(sqlerrm, 70);
+  end;
+  reset role;
+  perform pg_temp.expect_ok('closing vs recorded visits',
+    'close on or after the last live follow-up', 'dots_a', ok, msg);
+
+  -- Now the other RPC that can move the date must enforce the same invariant.
   perform pg_temp.become('dots_a');
   begin
     perform public.correct_tb_case_dates(
@@ -1745,19 +1760,22 @@ begin
   perform pg_temp.become('dots_a');
   begin
     perform public.void_tb_followup(v_fu14, 'recorded on the wrong case');
-    perform public.set_tb_case_status(
-      v_case14, 'closed', null, 'cured', public.manila_today() - 5);
+    perform public.correct_tb_case_dates(
+      v_case14, public.manila_today() - 30, public.manila_today() - 5);
     ok := true; msg := '';
   exception when others then ok := false; msg := left(sqlerrm, 70);
   end;
   reset role;
   perform pg_temp.expect_ok('closing vs recorded visits',
-    'the same close, after the follow-up is voided', 'dots_a', ok, msg);
+    'the same correction, after the follow-up is voided', 'dots_a', ok, msg);
 
-  select case_status into st from public.tb_cases where case_id = v_case14;
-  insert into t_result values ('closing vs recorded visits', 'the case did close',
-    'dots_a', 'closed', st, 'positive control for both denials above',
-    case when st = 'closed' then 'PASS' else 'FAIL' end);
+  select case_status, outcome_date::text into st, oc
+    from public.tb_cases where case_id = v_case14;
+  insert into t_result values ('closing vs recorded visits', 'the correction took effect',
+    'dots_a', 'closed/' || (public.manila_today() - 5)::text,
+    st || '/' || coalesce(oc, 'null'), 'positive control for both denials above',
+    case when st = 'closed' and oc = (public.manila_today() - 5)::text
+         then 'PASS' else 'FAIL' end);
 end;
 $m31$;
 

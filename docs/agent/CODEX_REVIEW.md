@@ -1,3 +1,13 @@
+# Codex re-review — Migration 0031
+
+2026-09-09; reviewed commit `09c36bd`. Result: **APPROVED AND APPLIED**.
+
+M31-02 through M31-07 are resolved. The policy/body verifiers pass, and the strengthened live rollback preflight passed **140/140** after one final harness correction: the `correct_tb_case_dates()` denial now runs against a closed case, so it reaches that RPC's live-follow-up guard instead of failing early on the ordinary outcome-shape CHECK. The legal close and post-void correction are positive controls. Migration 0031 was then applied atomically to the linked project. Post-checks confirm the four new tables, all eleven TB-DOTS short codes, and the active `rpc-requests-purge` cron job.
+
+The PostgREST harness also needed a final correction. It now selects viable fixtures deterministically, exits non-zero for every skipped fixture, and cannot print `GATE: CLOSED` under the service-role fallback. A service-role probe executed both referral-linked and case-linked fixtures and preserved all three ownership columns, but the mandatory authenticated run remains open because this checkout has no `TBSCREEN_TEST_PASSWORD`. Do not start the client contract unit until the same script reports `GATE: CLOSED` as `bhw.arcenal@tbscreen.ph`.
+
+---
+
 # Codex review — Migration 0031
 
 2026-09-09; reviewed local commit `8c9d4ce`. Result: **CHANGES REQUIRED — DO NOT APPLY**.

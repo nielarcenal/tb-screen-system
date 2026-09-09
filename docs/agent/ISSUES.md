@@ -5,7 +5,7 @@ Source baseline: `4659d65`, 2026-09-09. Details and recommended fixes are in COD
 | ID | Severity | Issue | Status |
 | --- | --- | --- | --- |
 | BASE-01 | HIGH | NULL role bypasses reporting RPC authorization | Resolved and applied in migration 0028 |
-| BASE-02 | HIGH | Patient-wide appointment access cannot isolate facilities/episodes | Design resolved in Revision 4; implementation pending case migration |
+| BASE-02 | HIGH | Patient-wide appointment access cannot isolate facilities/episodes | Resolved and applied in migration 0031; strengthened live preflight 140/140 |
 | BASE-03 | HIGH | Walk-in registration partial writes and duplicate retry | Design resolved in Revision 4; implementation pending case migration |
 | BASE-04 | HIGH | Barangay report date ranges depend on session timezone | Resolved and applied in migration 0030; live preflight 16/16 |
 | BASE-05 | HIGH | Capped sync pull loses rows tied at cursor timestamp | Resolved; 215/215 tests, clean typecheck, and live REST assumptions verified |
@@ -58,7 +58,7 @@ Revision 2 gate result: **NOT APPROVED**. Independent BASE-01 repair is approved
 | R3-05 | MEDIUM | Public case-ID helper lacks active clinical-role containment | Resolved in Revision 4 |
 | R3-06 | LOW | Revision 3 retains withdrawn admin-queue wording | Resolved in Revision 4 |
 
-Migrations 0028, 0029, and 0030 are **APPLIED**. Revision 4 architecture is **APPROVED**. BASE-01, BASE-04, BASE-05, and BASE-06 are closed; BASE-02 and BASE-03 remain for case/follow-up migration 0031.
+Migrations 0028 through 0031 are **APPLIED**. Revision 4 architecture is **APPROVED**. BASE-01, BASE-02, BASE-04, BASE-05, and BASE-06 are closed; BASE-03 remains for its atomic walk-in registration unit.
 
 Migration 0028 passed 73/73 preflight checks before application. Migration 0029 passed 47/47 strengthened preflight checks before application; its live post-check shows 28 active-aware policies.
 
@@ -109,3 +109,12 @@ Live rollback preflight after the corrections: **139/139 PASS**. Migration 0031 
 **NOT applied**. The old-client upsert gate is still open — stage 2 cannot run until the
 ownership columns exist, and the script now prints `GATE: NOT CLOSED` and fails rather than
 exiting 0 when it cannot ask.
+
+## Migration 0031 final re-review
+
+| ID | Severity | Issue | Status |
+| --- | --- | --- | --- |
+| M31-08 | MEDIUM | The `correct_tb_case_dates()` denial probe ran while the case was open, so the ordinary outcome-shape CHECK could satisfy it before the intended follow-up bound | Resolved by Codex; the probe now closes legally first, reaches the RPC's follow-up guard, and has a post-void success control |
+| M31-09 | MEDIUM | The PostgREST harness could skip Stage 2 with exit 0 or print `GATE: CLOSED` under service-role fallback | Resolved by Codex; viable fixtures are selected deterministically, skips fail, and only a complete authenticated run can close the gate |
+
+Final result: migration **0031 is approved and applied**. The strengthened rollback preflight passed **140/140**. A service-role PostgREST probe executed both fixture shapes and preserved `facility_id`, `referral_id`, and a non-NULL `tb_case_id`; because service role bypasses RLS and column privileges, the authenticated BHW gate remains open until `TBSCREEN_TEST_PASSWORD` is supplied locally. BASE-02 is closed. BASE-03 remains open.

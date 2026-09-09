@@ -1,4 +1,4 @@
-# Session handoff — 2026-09-09 (updated: migration 0031 written)
+# Session handoff — 2026-09-09 (updated: migration 0031 applied)
 
 For whoever picks this up next: a new Claude session, Codex, or Niel.
 Branch `feature/capstone-upgrade`, pushed to origin. Baseline was `4659d65` on `main`.
@@ -15,12 +15,12 @@ Read this first, then [MASTER_PLAN.md](MASTER_PLAN.md) for task ownership and [I
 | **BASE-06** deactivated accounts keep row access | **Fixed, applied live** (migration 0029) | Nothing |
 | **BASE-04** report reads session timezone | **Fixed, applied live** (migration 0030) | Nothing |
 | **BASE-05** sync cursor loses tied rows | **Fixed and approved**, client-side | Ships with the next mobile build |
-| **BASE-02** appointments patient-wide | **Implemented in 0031, NOT applied** | Review, then apply |
-| **BASE-03** walk-in partial writes | Design approved; `rpc_requests` ships in 0031 | The atomic registration RPC is its own unit |
-| **Case / follow-up model** (Tasks 1.2 / 1.3) | **Written as migration 0031**; one review round done (M31-02…M31-07, all fixed); live preflight **139/139 PASS**, rolled back; **NOT applied** | Codex re-review, then apply — see §2 |
-| **Client contract change** (`cancelled`, ownership columns, SMS destination) | Not started | Sequenced AFTER 0031 is applied — see §3 |
+| **BASE-02** appointments patient-wide | **Fixed, approved, and applied live** (migration 0031) | Nothing |
+| **BASE-03** walk-in partial writes | Design approved; `rpc_requests` is live from 0031 | The atomic registration RPC is its own unit |
+| **Case / follow-up model** (Tasks 1.2 / 1.3) | **Approved and applied** as migration 0031; strengthened live preflight **140/140 PASS** | Authenticated old-client gate only — see §2 |
+| **Client contract change** (`cancelled`, ownership columns, SMS destination) | Not started | Start after the authenticated old-client gate closes — see §3 |
 
-Server migration numbering: 0028, 0029 and 0030 are applied; **0031 is written and verified but unapplied**.
+Server migrations 0028 through 0031 are applied.
 
 Commits on the branch, oldest first:
 
@@ -33,43 +33,23 @@ d64037e  Bound the barangay report to Manila days, not the session timezone
 acb3b17  Add a session handoff
 2b07ee3  Approve BASE-05 and unblock case migration          (Codex)
 288602c  Give TB cases, follow-ups and appointments an owner  (0031, amended by Codex to scrub a credential)
-ce2aabe  Make the appointment links agree about the patient, not just the facility
+09c36bd  Make the appointment links agree about the patient, not just the facility
 ```
 
-The last three are NOT pushed. Same judgement as 0028 and 0029: the repository is public
-and these documents describe an unapplied authorization fix precisely enough to reproduce
-the gap. Push after 0031 is applied.
+The recent commits are still not pushed. Migration 0031 is now applied, but no push was
+requested in this review turn.
 
 The only untracked file is `docs/TB-Screen_Barangay_Report_Design_Canvas_Brief.md`, which predates this work and was deliberately left alone.
 
 ---
 
-## 2. Do these things first, in this order
+## 2. Do this first
 
-**a. Review migration 0031.** `supabase/migrations/0031_case_registry_and_followups.sql`
-plus `supabase/tests/0031_case_registry_matrix.sql`. Its header lists seven deliberate
-deviations from the approved design (D1-D7), each with the reason it exists; those are the
-parts most worth a second opinion. One review round is already done - M31-02 through M31-07,
-all fixed - and `CLAUDE_STATUS.md` has the account of what was wrong and why.
+Migration 0031 is reviewed and applied. Its final live rollback preflight passed
+**140/140**. The post-apply check confirms `tb_cases`, `treatment_followups`, `audit_logs`,
+`rpc_requests`, all eleven short codes, and the active purge cron job.
 
-**b. Re-run its preflight, then apply it.**
-
-```bash
-node scripts/build-preflight.mjs 0031
-npx supabase db query --file supabase/tests/0031_preflight.generated.sql --linked --project-ref momiqgnhylqijyadldhg
-```
-
-Every row must read PASS. It returned **139/139** on 2026-09-09 after the first review
-round and reached its explicit `rollback`; the rollback was then confirmed by querying for
-the tables it would have created.
-
-**This machine CAN run database tests after all.** The old note saying it could not is
-wrong. `npx supabase db query --file` honours explicit `begin;` / `rollback;` - probed with
-a throwaway `begin; create table ...; rollback;` that reported `rolled_back = true`. A
-preflight is therefore safe to run against the live project, and 0031's matrix is the first
-on this branch that was executed rather than reasoned about before review.
-
-**c. Immediately after applying, close the old-client gate.**
+**Close the authenticated old-client gate.**
 
 ```bash
 TBSCREEN_TEST_PASSWORD='...' node scripts/old-client-upsert-check.mjs
@@ -79,18 +59,15 @@ The password has no default and never will: one was committed once as a fallback
 and had to be scrubbed from an unpushed commit. Supply it from the environment or the
 gitignored `.env`.
 
-Stage 1 already passes: signed in as the real `bhw.arcenal@tbscreen.ph`, an upsert payload
-that omitted a column left that column untouched - so PostgREST does build
-`ON CONFLICT DO UPDATE SET` from payload keys. Stage 2 asks the same question about
-`facility_id`, `referral_id` and `tb_case_id`, over TWO fixtures - one referral-linked, one
-case-linked - and can only run once those columns exist. The script detects them and runs it
-automatically.
+Stage 1 already passed under the real `bhw.arcenal@tbscreen.ph` identity before application.
+A post-apply service-role run executed both Stage 2 fixtures and preserved `facility_id`,
+`referral_id`, and a non-NULL `tb_case_id`, but service role bypasses RLS and column
+privileges and does not close the gate. This checkout has no `TBSCREEN_TEST_PASSWORD`; add
+it to the gitignored `.env` and rerun the script.
 
-**Read the last line of its output, not the check count.** It prints `GATE: CLOSED` only
-when an old-client payload has preserved a NON-NULL `tb_case_id`; anything else prints
-`GATE: NOT CLOSED` and exits non-zero. The first version of that assertion ran against a
-referral-linked row where the column is null by construction, so it compared null to null
-and could not have failed.
+The script prints `GATE: CLOSED` only when an authenticated BHW run completes every required
+ownership assertion without a failure. Missing columns, skipped fixtures, service fallback,
+or a failed assertion all print `GATE: NOT CLOSED` and exit non-zero.
 
 If stage 2 ever fails for real, the compatibility window of Task 1.3 3.4 stops being a
 convenience and becomes mandatory *before* anything relies on ownership.
@@ -104,9 +81,8 @@ appointment row and the referral screen, the portal's schedule-check-up insert, 
 locale files, and the SMS destination moving from "latest referral" to
 `appointment.facility_id` - none of it is done, and none of it may go first.
 
-PostgREST rejects an unknown column with a 400, so a portal that sends `facility_id` breaks
-the moment it deploys against a database that does not have the column. `web/` deploys on
-push to `main`. The order is: apply 0031, then ship the client unit.
+PostgREST rejects an unknown column with a 400, so the database had to go first. Migration
+0031 is now live; close the authenticated compatibility gate, then ship the client unit.
 
 Nothing in it is blocked on a decision. The complete file-by-file surface is Task 1.3 3.3
 and 5.

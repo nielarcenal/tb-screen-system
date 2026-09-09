@@ -3,7 +3,7 @@
 Owner: Claude Code. Reviewer: Codex (Task 1.4 gate).
 **Revision 4 — 2026-09-09.** Revised in response to the third gate (NOT APPROVED, R3-01…R3-06). Baseline: repository HEAD `4659d65`.
 Status: **approved for implementation as migration 0031.** Prerequisite migrations 0028, 0029, and 0030 are applied; the outcome vocabulary and facility codes are accepted project conventions. The old-client upsert compatibility test remains mandatory during implementation.
-**IMPLEMENTED 2026-09-09** as `supabase/migrations/0031_case_registry_and_followups.sql`, verified by `supabase/tests/0031_case_registry_matrix.sql` (live preflight 119/119 PASS, rolled back) and **not yet applied**. The migration header lists seven deviations D1-D7 where this document could not be implemented as written; they are also in DECISIONS.md as D-0031-a..g. One defect in this document is corrected there: the backfill's `min(facility_id)` does not exist for `uuid`.
+**IMPLEMENTED AND APPLIED 2026-09-09** as `supabase/migrations/0031_case_registry_and_followups.sql`, verified by `supabase/tests/0031_case_registry_matrix.sql` (strengthened live preflight 140/140 PASS, rolled back before application). The migration header lists seven deviations D1-D7 where this document could not be implemented as written; they are also in DECISIONS.md as D-0031-a..g. One defect in this document is corrected there: the backfill's `min(facility_id)` does not exist for `uuid`.
 
 Read with [CODEX_BASELINE_AUDIT.md](CODEX_BASELINE_AUDIT.md), [CODEX_REVIEW.md](CODEX_REVIEW.md), [Task 1.3](CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md) and [the short-code proposal](CLAUDE_FACILITY_SHORT_CODES_PROPOSAL.md).
 

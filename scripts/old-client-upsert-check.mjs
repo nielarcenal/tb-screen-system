@@ -143,6 +143,8 @@ async function signIn() {
 // Result bookkeeping.
 // ---------------------------------------------------------------------------
 const results = [];
+let authenticatedIdentity = false;
+let ownershipColumnsPresent = false;
 const check = (stage, subject, pass, detail) =>
   results.push({ stage, subject, verdict: pass ? 'PASS' : 'FAIL', detail: detail ?? '' });
 
@@ -155,14 +157,28 @@ function report() {
     );
   }
   const failed = results.filter((r) => r.verdict === 'FAIL').length;
-  const closedGate = results.some(
-    (r) => r.stage === 'stage2' && r.subject.includes('tb_case_id survives') && r.verdict === 'PASS',
-  );
+  const requiredStage2 = [
+    'referral-linked: facility_id survives',
+    'referral-linked: referral_id survives',
+    'case-linked: facility_id survives',
+    'case-linked: tb_case_id survives',
+  ];
+  const closedGate = authenticatedIdentity && ownershipColumnsPresent && failed === 0
+    && requiredStage2.every((subject) => results.some(
+      (r) => r.stage === 'stage2' && r.subject === subject && r.verdict === 'PASS',
+    ));
+  const gateDetail = !ownershipColumnsPresent
+    ? 'migration 0031 ownership columns are absent'
+    : !authenticatedIdentity
+      ? 'the run did not authenticate as the BHW account'
+      : failed
+        ? `${failed} check${failed === 1 ? '' : 's'} failed`
+        : 'one or more required ownership assertions did not run';
   console.log('');
   console.log(
     closedGate
       ? 'GATE: CLOSED — an old-client payload preserved facility_id, referral_id and tb_case_id.'
-      : 'GATE: NOT CLOSED — the tb_case_id assertion has not run against a case-linked row.',
+      : `GATE: NOT CLOSED — ${gateDetail}.`,
   );
   console.log('');
   if (failed) {
@@ -172,10 +188,12 @@ function report() {
         'window in Task 1.3 §3.4 is NOT optional: the rejecting BEFORE INSERT trigger and\n' +
         'the minimum-supported-build gate must ship BEFORE any client relies on ownership.',
     );
-  } else {
+  } else if (closedGate) {
     console.log(`all ${results.length} checks passed.`);
+  } else {
+    console.log(`all ${results.length} executed checks passed; gate prerequisites were not met.`);
   }
-  return failed;
+  return closedGate ? 0 : Math.max(failed, 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -193,6 +211,7 @@ async function main() {
   // phone; service_role does not, and the difference has to be visible in the
   // output rather than buried here.
   const token = await signIn();
+  authenticatedIdentity = Boolean(token);
   const identity = token ? `${EMAIL} (authenticated)` : 'service_role (FALLBACK)';
   const callerToken = token ?? SERVICE;
   const callerKey = token ? ANON : SERVICE;
@@ -210,33 +229,38 @@ async function main() {
   // Does the server already have the ownership columns?
   const probe = await asService('appointments?select=facility_id,referral_id,tb_case_id&limit=1');
   const hasOwnership = probe.ok;
+  ownershipColumnsPresent = hasOwnership;
   console.log(`0031    : ${hasOwnership ? 'applied (ownership columns present)' : 'NOT applied'}`);
 
-  // A patient to hang the fixture on — chosen AS THE CALLER, not as
-  // service_role. RLS decides whether the upsert is even attempted, so a
-  // fixture the caller cannot see makes the whole run vacuous: the write is
-  // refused, nothing changes, and "the omitted column survived" is true for
-  // the wrong reason. The first version of this script had exactly that bug.
-  const pat = await rest('patients?select=patient_id&limit=1', {
-    token: callerToken,
-    apikey: callerKey,
-  });
-  if (!pat.ok || !pat.body?.length) {
-    throw new Error(
-      `the caller can see no patient row to test with: ${pat.status} ${pat.text}`,
-    );
-  }
-  const patientId = pat.body[0].patient_id;
-
-  // A referral and facility for the same patient, so stage 2 can set real
-  // ownership rather than an arbitrary uuid the FK would reject.
+  // Once ownership exists, choose a referral AS THE CALLER and derive the
+  // patient from it. Picking an arbitrary patient and only then looking for a
+  // referral made Stage 2 depend on row order: a perfectly usable database
+  // could report no fixture and exit green. A caller-visible referral also
+  // proves the BHW can reach the appointment through the same policy path the
+  // old phone uses.
   let ref = null;
   if (hasOwnership) {
-    const r = await rest(
-      `referrals?select=referral_id,facility_id&patient_id=eq.${patientId}&limit=1`,
-      { token: callerToken, apikey: callerKey },
-    );
+    const r = await rest('referrals?select=referral_id,facility_id,patient_id&limit=1', {
+      token: callerToken,
+      apikey: callerKey,
+    });
     if (r.ok && r.body?.length) ref = r.body[0];
+  }
+
+  // Before 0031, or if no referral is visible, Stage 1 can still test its
+  // generic omitted-column mechanism against a caller-visible patient.
+  let patientId = ref?.patient_id ?? null;
+  if (!patientId) {
+    const pat = await rest('patients?select=patient_id&limit=1', {
+      token: callerToken,
+      apikey: callerKey,
+    });
+    if (!pat.ok || !pat.body?.length) {
+      throw new Error(
+        `the caller can see no patient row to test with: ${pat.status} ${pat.text}`,
+      );
+    }
+    patientId = pat.body[0].patient_id;
   }
 
   const today = new Date().toISOString().slice(0, 10);
@@ -319,6 +343,8 @@ async function main() {
         'facility/referral pair to set on the fixture. Re-run against a patient that has\n' +
         'one; the composite FK rejects an invented pair, correctly.',
     );
+    check('stage2', 'referral-linked fixture available', false,
+      'no caller-visible referral; the ownership assertions did not run');
     return;
   }
 
@@ -420,40 +446,38 @@ async function main() {
   async function buildCaseLinkedFixture() {
     // The patient needs no OPEN case of their own: tb_cases_one_active_per_patient
     // is global, so a second one would be refused.
-    const visible = await rest('patients?select=patient_id&limit=25', {
-      token: callerToken,
-      apikey: callerKey,
-    });
-    const openCases = await asService(
-      'tb_cases?select=patient_id&case_status=in.(registered,on_treatment,interrupted)',
-    );
+    const [visible, openCases, referrals, staff] = await Promise.all([
+      rest('patients?select=patient_id&limit=1000', {
+        token: callerToken,
+        apikey: callerKey,
+      }),
+      asService('tb_cases?select=patient_id&case_status=in.(registered,on_treatment,interrupted)'),
+      asService('referrals?select=patient_id,facility_id&limit=1000'),
+      asService('users?select=user_id,facility_id&role=eq.tb_dots&active=eq.true&limit=1000'),
+    ]);
     const taken = new Set((openCases.body ?? []).map((c) => c.patient_id));
+    const visibleIds = new Set((visible.body ?? []).map((p) => p.patient_id));
+    const staffByFacility = new Map(
+      (staff.body ?? []).map((u) => [u.facility_id, u.user_id]),
+    );
 
     let chosen = null;
-    for (const p of visible.body ?? []) {
-      if (taken.has(p.patient_id)) continue;
-      const r = await asService(
-        `referrals?select=referral_id,facility_id&patient_id=eq.${p.patient_id}&limit=1`,
-      );
-      if (r.ok && r.body?.length) {
-        chosen = { patientId: p.patient_id, facilityId: r.body[0].facility_id };
+    for (const referral of referrals.body ?? []) {
+      const staffId = staffByFacility.get(referral.facility_id);
+      if (visibleIds.has(referral.patient_id) && !taken.has(referral.patient_id) && staffId) {
+        chosen = {
+          patientId: referral.patient_id,
+          facilityId: referral.facility_id,
+          staffId,
+        };
         break;
       }
     }
     if (!chosen) {
       console.log(
-        '\nFIXTURE B SKIPPED: no caller-visible patient without an open case and with a\n' +
-          'referral. The case-linked assertion did not run; the gate is not fully closed.',
-      );
-      return null;
-    }
-
-    const staff = await asService(
-      `users?select=user_id&role=eq.tb_dots&facility_id=eq.${chosen.facilityId}&limit=1`,
-    );
-    if (!staff.ok || !staff.body?.length) {
-      console.log(
-        '\nFIXTURE B SKIPPED: no TB-DOTS user at that facility to own the case row.',
+        '\nFIXTURE B SKIPPED: no caller-visible patient without an open case, with a\n' +
+          'referral to a facility that has active TB-DOTS staff. The case-linked assertion\n' +
+          'did not run; the gate is not fully closed.',
       );
       return null;
     }
@@ -468,7 +492,7 @@ async function main() {
         case_number: `TBC-CHK-${caseId.slice(0, 8)}`,
         registration_date: today,
         case_status: 'registered',
-        created_by: staff.body[0].user_id,
+        created_by: chosen.staffId,
       },
       prefer: 'return=representation',
     });
@@ -500,12 +524,14 @@ try {
     const del = await asService(`appointments?appointment_id=eq.${id}`, { method: 'DELETE' });
     if (!del.ok) {
       console.error(`\nCLEANUP FAILED for appointment ${id} (${del.status}). Delete it by hand.`);
+      check('cleanup', `delete appointment ${id}`, false, `${del.status} ${del.text}`);
     }
   }
   for (const id of created.cases) {
     const del = await asService(`tb_cases?case_id=eq.${id}`, { method: 'DELETE' });
     if (!del.ok) {
       console.error(`\nCLEANUP FAILED for tb_case ${id} (${del.status}). Delete it by hand.`);
+      check('cleanup', `delete tb_case ${id}`, false, `${del.status} ${del.text}`);
     }
   }
 }

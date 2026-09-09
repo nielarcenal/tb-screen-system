@@ -262,3 +262,10 @@ reading the SQL and a reviewer reading this register see the same labels.
 | D-0031-r | A test whose assertion compares null to null is reported as VACUOUS, not as a pass, and a fixture that could not be built fails the run. The upsert gate's `tb_case_id` check ran against a referral-linked row, where the column is null by construction, so it could not have failed (M31-06). |
 | D-0031-s | A fixture mutation may not outlive the check it serves. Pass 7's positive control re-routed pat_b's referral to facility A and left it there, which would have made Pass 12's admission denial pass for the wrong reason once M31-03 was fixed. It now restores the row, with the dependency written down. |
 | D-0031-t | No credential is ever a default. The upsert script requires `TBSCREEN_TEST_PASSWORD` from the environment or the gitignored `.env`, and has no fallback (M31-07). |
+
+## 2026-09-09 - Migration 0031, final review
+
+| # | Decision |
+| --- | --- |
+| D-0031-u | A denial probe must reach the guard it claims to test. The `correct_tb_case_dates()` matrix case now closes the case on a legal date first; otherwise `tb_cases_outcome_shape` rejects an outcome date on an open case before the RPC's follow-up check runs (M31-08). |
+| D-0031-v | The old-client gate closes only for a fully passing authenticated BHW run. Service-role fallback, absent ownership columns, an unavailable fixture, or any failed ownership assertion returns non-zero and reports `GATE: NOT CLOSED` (M31-09). |
