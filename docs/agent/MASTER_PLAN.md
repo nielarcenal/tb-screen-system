@@ -27,3 +27,5 @@ The authoritative plan is [TB-Screen_7-Day_Claude-Codex_Master_Plan.md](TB-Scree
 2026-09-09: Claude implemented BASE-04 as migration **0030** (barangay_report Manila boundaries), with a body verifier and a two-timezone boundary test carrying a negative control. Case/follow-up work therefore moves to **0031**. The preflight is generated; the boundary test has not been run.
 
 2026-09-09: Claude implemented BASE-05 (sync cursor loses rows tied at the boundary) as a scoped client change: `mobile/src/domain/pullCursor.ts` plus a rewritten `pullTable` and local DB migration v11. Client-only — no server migration, so 0031 remains free for case work. 18 new tests; mobile suite 215 passing, typecheck clean.
+
+2026-09-09: Session handoff written to [HANDOFF.md](HANDOFF.md) — current state, the two things to do first (apply 0030; verify the BASE-05 round-trip assumption), the clinical blocker on 0031, how to use the verification harness, and what remains unproven. Read it before resuming.
