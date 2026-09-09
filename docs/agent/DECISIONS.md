@@ -190,3 +190,15 @@ Still blocking case work (renumbered to 0030 at the final gate): BASE-06 must sh
 | D-0029-h | Operational consequence accepted and documented: a BHW deactivated mid-shift can no longer push queued offline writes. signOutFlow already refuses to wipe the cache while rows are pending and reports the count, so nothing is lost — but support must know that deactivation strands unsynced work until the account is reactivated. |
 | D-0029-i | `build-0028-preflight.mjs` is replaced by `build-preflight.mjs <NNNN>`. Two near-identical copies of a verification tool is exactly the drift the generator exists to prevent. This edits a comment line in the approved-but-unapplied 0028; the SQL is untouched and its verifier still reports all six bodies matching. |
 | D-0029-j | Both verifiers normalise CRLF on read. A checker that stops matching because a file was saved with different line endings reports a failure that looks like a code defect; proven with an all-CRLF copy of the migration set. |
+
+## 2026-09-09 - BASE-04 / migration 0030
+
+| # | Decision |
+| --- | --- |
+| D-0030-a | The four `created_at` predicates move onto `manila_day_start()` half-open ranges, the pairing 0018's own comment prescribes. The window no longer depends on the caller's session timezone. |
+| D-0030-b | The `mis` CTE is deliberately NOT changed. `appointments.scheduled_date` is a plain `date` and a date-to-date comparison involves no timezone, so it was always correct. Wrapping it would be a new bug; the verifier asserts it stayed. |
+| D-0030-c | 0027's header claim was wrong and is corrected: it promised that a patient screened in December and tested in January lands in different periods, but `tested_count` filters on `referrals.created_at`, so that referral counts in December — the same period as its screening. |
+| D-0030-d | The date basis is DOCUMENTED, not changed. screened/referred are event counts; presented/tested/positive are a cohort — referrals created in the period, counted by the status they have reached by report time. Recounting by `result_date` would be different numbers and is a health-office decision, not a bug fix. |
+| D-0030-e | The boundary test runs the report under both a UTC session and a Manila session and asserts they agree. A single-timezone test cannot see this class of bug at all. |
+| D-0030-f | The fixture uses a barangay with no existing patients. `barangay_report` aggregates by barangay and cannot be filtered to fixture rows the way 0029's matrix filters by id, so sharing a barangay with live data would make every expected count meaningless. |
+| D-0030-g | The test carries a negative control that reproduces the OLD predicate on the same rows and asserts it misfiles them. Without it, the PASS rows would not distinguish "fixed" from "fixture never exercised the boundary". |

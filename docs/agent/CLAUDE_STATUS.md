@@ -319,3 +319,47 @@ One reasoning-only correction worth flagging for review: the matrix originally r
 A BHW deactivated mid-shift can no longer push queued offline writes; before 0029 they still synced. Nothing is lost — `signOutFlow` counts pending rows after its final sync and refuses to wipe the cache while any remain, telling them how many could not be uploaded. Reactivating releases the queue.
 
 **Next:** run both preflights, apply 0028 then 0029, then 0030 (case/follow-up). The outcome vocabulary and local facility abbreviations are still the outstanding human inputs.
+
+---
+
+## 2026-09-09 - BASE-04 implemented as migration 0030
+
+**Pushed first**, as agreed: the disclosure hold is lifted now that 0028 and 0029 are applied live, so the documents describe fixed defects. `feature/capstone-upgrade` is on origin with three commits.
+
+**Files created:** `supabase/migrations/0030_barangay_report_manila_boundaries.sql`, `supabase/tests/0030_report_boundary.sql`, `scripts/verify-0030-report-body.mjs`.
+
+### What 0030 does
+
+`barangay_report()` compared `timestamptz` columns to bare `date` parameters, so PostgreSQL cast the date using the session timezone. On a UTC session the reporting day began at 08:00 Manila and every screening or referral created between midnight and 08:00 was filed under the previous day — and at a year boundary, the previous year. The four predicates now use `manila_day_start()` half-open ranges.
+
+The `mis` CTE is deliberately untouched: `scheduled_date` is a plain `date`, a date-to-date comparison has no timezone, and wrapping it would introduce a bug rather than fix one. The verifier asserts it stayed put.
+
+### The second half of BASE-04
+
+0027's header claimed "a patient screened in December and tested in January lands in DIFFERENT periods for screened_count and tested_count". That is not what the SQL does — `tested_count` filters on `referrals.created_at`, so that referral counts in **December**, the same period as its screening. The comment described the opposite of the behaviour.
+
+Corrected in the function comment: screened/referred are **event** counts; presented/tested/positive are a **cohort** — referrals created in the period, counted by the status they have reached by report time, not tests performed in the period.
+
+The basis is documented, **not changed**. Recounting by `result_date` would be different numbers on a report the health office reads, which is their decision and its own unit.
+
+### Verification performed
+
+| Check | Result |
+| --- | --- |
+| `node scripts/verify-0030-report-body.mjs` | OK — body matches 0028's apart from the date bounds; all four bounds go through `manila_day_start()`; the `mis` comparison is unchanged |
+| Its self-test: reporting-query edit, removed Manila bound | Both caught |
+| 0028 and 0029 verifiers | Still pass |
+| Preflight generation | `0030_preflight.generated.sql`, one `begin;`, one `rollback;` |
+
+### Two fixture defects I caught in my own test before shipping it
+
+Both are the classes Codex found in the 0029 matrix, so I went looking for them deliberately:
+
+1. **Isolation.** The fixture first picked the alphabetically-first barangay, which may already hold live patients. `barangay_report` aggregates by barangay and cannot be filtered to fixture rows the way 0029's matrix filters by id, so live rows would have been counted into every expected number. It now selects a barangay with no existing patients, and raises if none exists.
+2. **Shadowing.** The loop variable `tz` shadowed `t_result.tz`. Safe as written — `INSERT ... VALUES` puts no target columns in scope — but that is the exact shape that produced the `where n = 2` defect, so it is renamed `v_tz` rather than left for a reader to reason about.
+
+### Not performed
+
+**The boundary test has not been run** — no local Postgres here. Run `supabase/tests/0030_preflight.generated.sql`, confirm every row PASS, then apply. It needs 0018 and 0028 applied, and guards on both.
+
+**Next:** case/follow-up work is now **0031**, still gated on the treatment-outcome vocabulary. BASE-05 (sync cursor ties) is the other open HIGH and is explicitly its own unit.
