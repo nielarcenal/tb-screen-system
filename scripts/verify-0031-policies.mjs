@@ -24,6 +24,14 @@
  *   * R3-05 — no policy may reach an enumerating helper through `public`.
  *     In `public` those are RPCs that hand out other people's row ids with no
  *     policy in the way.
+ *   * M31-03 — the TB-DOTS insert policy must keep 0011's admission boundary
+ *     for unlinked rows. The first version of 0031 replaced
+ *     `patient_id in referred_patient_ids()` with `facility_id =
+ *     current_user_facility()`, which let a facility schedule any patient uuid
+ *     it could name. A rule that was lost once is worth a check.
+ *   * M31-02 — both appointment ownership FKs, and the parent keys they point
+ *     at, must carry `patient_id`. A facility-only key enforces half of what
+ *     its name claims.
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -111,7 +119,28 @@ function run(sql0029, sql0031) {
   say('no policy reaches an enumerating helper via public', leaked.length === 0,
     leaked.length ? leaked.map(([n]) => n).join(', ') : 'all go through app_private');
 
-  // 5. The helper 0031 introduces must itself be active-aware. It is not a
+  // 5. M31-03 — the unlinked arm keeps 0011's admission boundary.
+  say('appointments_tbdots_insert keeps the admission boundary',
+    Boolean(b.get('appointments_tbdots_insert')
+      && b.get('appointments_tbdots_insert').text.includes('app_private.referred_patient_ids()')),
+    'naming your own facility is not an admission');
+
+  // 6. M31-02 — the ownership keys are patient-aware. Not policies, so these
+  //    are read from the migration text directly.
+  for (const [label, re] of [
+    ['appointments_referral_facility_agrees names patient_id',
+      /foreign key \(referral_id, patient_id, facility_id\)\s*references public\.referrals \(referral_id, patient_id, facility_id\)/i],
+    ['appointments_case_facility_agrees names patient_id',
+      /foreign key \(tb_case_id, patient_id, facility_id\)\s*references public\.tb_cases \(case_id, patient_id, facility_id\)/i],
+    ['referrals_identity_uniq names patient_id',
+      /referrals_identity_uniq\s*\n?\s*unique \(referral_id, patient_id, facility_id\)/i],
+    ['tb_cases_identity_uniq names patient_id',
+      /tb_cases_identity_uniq\s*\n?\s*unique \(case_id, patient_id, facility_id\)/i],
+  ]) {
+    say(label, re.test(sql0031), 'M31-02');
+  }
+
+  // 7. The helper 0031 introduces must itself be active-aware. It is not a
   //    policy, so the scan above cannot see it.
   const helper = /create or replace function public\.caller_owns_unassigned_appointment[\s\S]*?\$fn\$;/i.exec(sql0031);
   say('caller_owns_unassigned_appointment is active-aware',
@@ -166,6 +195,20 @@ const mutations = [
     apply: (s) => s.replace(
       '(referral_id is null and facility_id is null)',
       '(referral_id is not null)',
+    ),
+  },
+  {
+    label: 'M31-03: the unlinked admission boundary dropped again',
+    apply: (s) => s.replace(
+      'and patient_id in (select app_private.referred_patient_ids())',
+      'and true',
+    ),
+  },
+  {
+    label: 'M31-02: an ownership FK reverted to facility-only',
+    apply: (s) => s.replace(
+      'foreign key (tb_case_id, patient_id, facility_id)\n  references public.tb_cases (case_id, patient_id, facility_id)',
+      'foreign key (tb_case_id, facility_id)\n  references public.tb_cases (case_id, facility_id)',
     ),
   },
 ];

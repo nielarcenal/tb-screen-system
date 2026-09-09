@@ -34,9 +34,14 @@
  *     generation does not care WHICH column is absent, so this is the same
  *     question asked with the columns that exist right now.
  *   Stage 2 (only once 0031 is applied) — THE REAL THING. Upsert the exact
- *     pre-ownership mobile payload over a row that has facility_id and
- *     referral_id set, and assert both survive. The script detects the columns
- *     and skips this stage with a clear message if they are absent.
+ *     pre-ownership mobile payload over rows that already carry ownership, and
+ *     assert it survives. TWO fixtures, because one cannot answer for the
+ *     other: a REFERRAL-LINKED appointment (facility_id + referral_id set,
+ *     tb_case_id null) and a CASE-LINKED one (facility_id + tb_case_id set).
+ *     The first version had only the referral-linked fixture, so its
+ *     "tb_case_id survives" assertion compared null to null and could not have
+ *     failed — a green line that tested nothing (M31-06). The script detects
+ *     the columns and skips this stage with a clear message if they are absent.
  *
  * Stage 2 is the one the gate asks for. Stage 1 passing is evidence, not proof,
  * and the script says so in its own output rather than letting a green line be
@@ -150,6 +155,15 @@ function report() {
     );
   }
   const failed = results.filter((r) => r.verdict === 'FAIL').length;
+  const closedGate = results.some(
+    (r) => r.stage === 'stage2' && r.subject.includes('tb_case_id survives') && r.verdict === 'PASS',
+  );
+  console.log('');
+  console.log(
+    closedGate
+      ? 'GATE: CLOSED — an old-client payload preserved facility_id, referral_id and tb_case_id.'
+      : 'GATE: NOT CLOSED — the tb_case_id assertion has not run against a case-linked row.',
+  );
   console.log('');
   if (failed) {
     console.log(`${failed} of ${results.length} checks FAILED.`);
@@ -166,8 +180,13 @@ function report() {
 
 // ---------------------------------------------------------------------------
 // Main.
+//
+// Everything this script creates is registered here as it is created, and torn
+// down in reverse in the finally block. Reverse order matters: appointments
+// reference tb_cases with ON DELETE RESTRICT, so the case can only go once its
+// appointment has.
 // ---------------------------------------------------------------------------
-let fixtureId = null;
+const created = { appointments: [], cases: [] };
 
 async function main() {
   // Which identity is asking. A real account travels the same path as the
@@ -221,8 +240,20 @@ async function main() {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  fixtureId = crypto.randomUUID();
 
+  /** Insert one appointment as service_role and remember it for teardown. */
+  async function makeAppointment(row) {
+    const res = await asService('appointments', {
+      method: 'POST',
+      body: row,
+      prefer: 'return=representation',
+    });
+    if (!res.ok) throw new Error(`fixture insert failed: ${res.status} ${res.text}`);
+    created.appointments.push(row.appointment_id);
+    return res.body[0];
+  }
+
+  const fixtureId = crypto.randomUUID();
   const fixture = {
     appointment_id: fixtureId,
     patient_id: patientId,
@@ -234,14 +265,7 @@ async function main() {
     fixture.facility_id = ref.facility_id;
     fixture.referral_id = ref.referral_id;
   }
-
-  const created = await asService('appointments', {
-    method: 'POST',
-    body: fixture,
-    prefer: 'return=representation',
-  });
-  if (!created.ok) throw new Error(`fixture insert failed: ${created.status} ${created.text}`);
-  const before = created.body[0];
+  const before = await makeAppointment(fixture);
 
   // -------------------------------------------------------------------------
   // Stage 1 — the mechanism, with the columns that exist today.
@@ -298,52 +322,86 @@ async function main() {
     return;
   }
 
-  // The EXACT payload a pre-ownership mobile build sends: syncEngine.ts's
-  // toServerPayload() over LocalAppointmentRow, which strips only sync_status.
-  const oldClientPayload = {
+  /**
+   * Send the EXACT payload a pre-ownership mobile build sends — syncEngine.ts's
+   * toServerPayload() over LocalAppointmentRow, which strips only sync_status —
+   * and assert that each ownership column the row started with is still there.
+   *
+   * `expect` names the columns that must be NON-NULL both before and after. A
+   * column that was null to begin with is not evidence of anything, so it is
+   * asserted as unchanged but reported as vacuous rather than as a pass.
+   */
+  async function oldClientProbe(label, row, expect) {
+    const payload = {
+      appointment_id: row.appointment_id,
+      patient_id: row.patient_id,
+      scheduled_date: row.scheduled_date,
+      attended_date: row.attended_date,
+      status: row.status,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    };
+
+    const res = await rest('appointments', {
+      method: 'POST',
+      token: callerToken,
+      apikey: callerKey,
+      body: payload,
+      prefer: 'resolution=merge-duplicates,return=representation',
+    });
+    check('stage2', `${label}: old-client upsert accepted`, res.ok,
+      `${res.status} ${res.ok ? '' : res.text}`);
+
+    const after = (
+      await asService(`appointments?select=*&appointment_id=eq.${row.appointment_id}`)
+    ).body?.[0];
+
+    for (const col of expect) {
+      const wasSet = row[col] !== null && row[col] !== undefined;
+      check(
+        'stage2',
+        `${label}: ${col} survives`,
+        res.ok && wasSet && after?.[col] === row[col],
+        wasSet
+          ? `${row[col]} -> ${after?.[col] ?? 'null'}`
+          : `VACUOUS — ${col} was already null on the fixture, so this proves nothing`,
+      );
+    }
+    return after;
+  }
+
+  // Fixture A — referral-linked. tb_case_id is null here by construction
+  // (appointments_one_owner), so this fixture can only speak for two columns.
+  await oldClientProbe('referral-linked', before, ['facility_id', 'referral_id']);
+
+  // Fixture B — case-linked, which is the one M31-06 is about. Built directly
+  // as service_role rather than through create_tb_case(), because this script
+  // signs in as the mobile role and case creation is a TB-DOTS operation; what
+  // is under test is PostgREST's upsert, not the RPC.
+  const caseFixture = await buildCaseLinkedFixture();
+  if (caseFixture) {
+    await oldClientProbe('case-linked', caseFixture, ['facility_id', 'tb_case_id']);
+  } else {
+    // Recorded as a failure on purpose. The gate asks specifically about
+    // tb_case_id, and a run that could not ask must not exit 0 and read as
+    // "closed" — that is the shape of M31-06 itself, one level up.
+    check('stage2', 'case-linked fixture available', false,
+      'the tb_case_id assertion did not run; the gate is NOT closed');
+  }
+
+  // The other half of the same window: a NEW client re-sending the ownership
+  // columns unchanged must also be accepted, or the retry path is stranded the
+  // other way round. This is the ownership trigger's "identical re-send" branch,
+  // asked over real PostgREST rather than in SQL.
+  const newClientPayload = {
     appointment_id: fixtureId,
     patient_id: patientId,
     scheduled_date: today,
     attended_date: today,
     status: 'attended',
-    created_at: before.created_at,
-    updated_at: before.updated_at,
+    facility_id: before.facility_id,
+    referral_id: before.referral_id,
   };
-
-  const up2 = await rest('appointments', {
-    method: 'POST',
-    token: callerToken,
-    apikey: callerKey,
-    body: oldClientPayload,
-    prefer: 'resolution=merge-duplicates,return=representation',
-  });
-  check('stage2', 'old-client upsert accepted', up2.ok, `${up2.status} ${up2.ok ? '' : up2.text}`);
-
-  const after2 = (await asService(`appointments?select=*&appointment_id=eq.${fixtureId}`)).body?.[0];
-  check(
-    'stage2',
-    'facility_id survives',
-    after2?.facility_id === before.facility_id,
-    `${before.facility_id} -> ${after2?.facility_id ?? 'null'}`,
-  );
-  check(
-    'stage2',
-    'referral_id survives',
-    after2?.referral_id === before.referral_id,
-    `${before.referral_id} -> ${after2?.referral_id ?? 'null'}`,
-  );
-  check(
-    'stage2',
-    'tb_case_id survives',
-    (after2?.tb_case_id ?? null) === (before.tb_case_id ?? null),
-    `${before.tb_case_id ?? 'null'} -> ${after2?.tb_case_id ?? 'null'}`,
-  );
-
-  // The other half of the same window: a NEW client re-sending the ownership
-  // columns unchanged must also be accepted, or the retry path is stranded the
-  // other way round. This is the trigger's "identical re-send" branch, asked
-  // over real PostgREST rather than in SQL.
-  const newClientPayload = { ...oldClientPayload, facility_id: before.facility_id, referral_id: before.referral_id };
   const up3 = await rest('appointments', {
     method: 'POST',
     token: callerToken,
@@ -351,7 +409,85 @@ async function main() {
     body: newClientPayload,
     prefer: 'resolution=merge-duplicates,return=representation',
   });
-  check('stage2', 'new-client identical re-send accepted', up3.ok, `${up3.status} ${up3.ok ? '' : up3.text}`);
+  check('stage2', 'new-client identical re-send accepted', up3.ok,
+    `${up3.status} ${up3.ok ? '' : up3.text}`);
+
+  /**
+   * A case-linked appointment for a patient the CALLER can see. Returns null,
+   * with a printed reason, if the live data cannot supply one — never a
+   * silently skipped assertion.
+   */
+  async function buildCaseLinkedFixture() {
+    // The patient needs no OPEN case of their own: tb_cases_one_active_per_patient
+    // is global, so a second one would be refused.
+    const visible = await rest('patients?select=patient_id&limit=25', {
+      token: callerToken,
+      apikey: callerKey,
+    });
+    const openCases = await asService(
+      'tb_cases?select=patient_id&case_status=in.(registered,on_treatment,interrupted)',
+    );
+    const taken = new Set((openCases.body ?? []).map((c) => c.patient_id));
+
+    let chosen = null;
+    for (const p of visible.body ?? []) {
+      if (taken.has(p.patient_id)) continue;
+      const r = await asService(
+        `referrals?select=referral_id,facility_id&patient_id=eq.${p.patient_id}&limit=1`,
+      );
+      if (r.ok && r.body?.length) {
+        chosen = { patientId: p.patient_id, facilityId: r.body[0].facility_id };
+        break;
+      }
+    }
+    if (!chosen) {
+      console.log(
+        '\nFIXTURE B SKIPPED: no caller-visible patient without an open case and with a\n' +
+          'referral. The case-linked assertion did not run; the gate is not fully closed.',
+      );
+      return null;
+    }
+
+    const staff = await asService(
+      `users?select=user_id&role=eq.tb_dots&facility_id=eq.${chosen.facilityId}&limit=1`,
+    );
+    if (!staff.ok || !staff.body?.length) {
+      console.log(
+        '\nFIXTURE B SKIPPED: no TB-DOTS user at that facility to own the case row.',
+      );
+      return null;
+    }
+
+    const caseId = crypto.randomUUID();
+    const mk = await asService('tb_cases', {
+      method: 'POST',
+      body: {
+        case_id: caseId,
+        patient_id: chosen.patientId,
+        facility_id: chosen.facilityId,
+        case_number: `TBC-CHK-${caseId.slice(0, 8)}`,
+        registration_date: today,
+        case_status: 'registered',
+        created_by: staff.body[0].user_id,
+      },
+      prefer: 'return=representation',
+    });
+    if (!mk.ok) {
+      console.log(`\nFIXTURE B SKIPPED: could not create a case row (${mk.status} ${mk.text})`);
+      return null;
+    }
+    created.cases.push(caseId);
+
+    return await makeAppointment({
+      appointment_id: crypto.randomUUID(),
+      patient_id: chosen.patientId,
+      scheduled_date: today,
+      attended_date: today,
+      status: 'attended',
+      facility_id: chosen.facilityId,
+      tb_case_id: caseId,
+    });
+  }
 }
 
 try {
@@ -359,12 +495,17 @@ try {
 } catch (err) {
   check('harness', 'ran to completion', false, String(err?.message ?? err));
 } finally {
-  if (fixtureId) {
-    const del = await asService(`appointments?appointment_id=eq.${fixtureId}`, { method: 'DELETE' });
+  // Reverse order: an appointment references its case with ON DELETE RESTRICT.
+  for (const id of created.appointments) {
+    const del = await asService(`appointments?appointment_id=eq.${id}`, { method: 'DELETE' });
     if (!del.ok) {
-      console.error(
-        `\nCLEANUP FAILED for appointment ${fixtureId} (${del.status}). Delete it by hand.`,
-      );
+      console.error(`\nCLEANUP FAILED for appointment ${id} (${del.status}). Delete it by hand.`);
+    }
+  }
+  for (const id of created.cases) {
+    const del = await asService(`tb_cases?case_id=eq.${id}`, { method: 'DELETE' });
+    if (!del.ok) {
+      console.error(`\nCLEANUP FAILED for tb_case ${id} (${del.status}). Delete it by hand.`);
     }
   }
 }

@@ -93,3 +93,19 @@ not exist until 0031 is applied; the script runs that stage automatically once t
 | M31-07 | HIGH | Real account password committed as a script fallback | Fixed in worktree; amend the unpushed 0031 commit before push |
 
 Codex result: **CHANGES REQUIRED; migration 0031 must not be applied.** The original 119 checks remain useful, but four added appointment checks produce one valid PASS and three expected FAILs against the current migration. The resulting live preflight reports 3/123 failed and rolls back.
+
+## Migration 0031 review — round 1
+
+| ID | Severity | Issue | Status |
+| --- | --- | --- | --- |
+| M31-02 | HIGH | Appointment ownership FKs name the link and facility but not the patient, so an appointment can cite another patient's referral or case at the same facility | Resolved; both parent keys and both FKs carry `patient_id`, `assign_appointment_to_case()` compares patients, and the review's Pass 12 plus a new RPC check cover it |
+| M31-03 | HIGH | `appointments_tbdots_insert` replaced 0011's `referred_patient_ids()` admission predicate with a facility-only check, letting a facility schedule any patient uuid | Resolved; the unlinked arm restores the original boundary and the linked arms prove patient and facility agreement. Pinned by the verifier with a mutation self-test |
+| M31-04 | HIGH | `set_tb_case_status()` could close a case with an outcome dated before an existing live follow-up | Resolved; closing rejects it, scoped to non-voided rows, with denial/void/allow tests |
+| M31-05 | MEDIUM | `record_visit(p_new_case_status)` advertised transitions it had no inputs to perform, and permitted `cancelled` alongside a clinical record | Resolved; it carries the treatment/outcome inputs, refuses `cancelled`, and each advertised path is tested |
+| M31-06 | MEDIUM | The stage-2 `tb_case_id` upsert assertion ran against a referral-linked fixture, comparing null to null | Resolved; two fixtures, a VACUOUS verdict for an already-null column, and a skipped fixture now fails the run |
+| M31-07 | HIGH | A real test-account password was committed as the upsert script's default fallback | Resolved by Codex in the unpushed commit; the script now requires `TBSCREEN_TEST_PASSWORD` from the environment or `.env` |
+
+Live rollback preflight after the corrections: **139/139 PASS**. Migration 0031 remains
+**NOT applied**. The old-client upsert gate is still open — stage 2 cannot run until the
+ownership columns exist, and the script now prints `GATE: NOT CLOSED` and fails rather than
+exiting 0 when it cannot ask.

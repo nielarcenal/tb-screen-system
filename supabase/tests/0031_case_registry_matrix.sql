@@ -904,6 +904,13 @@ begin
   end;
   perform pg_temp.expect_ok('referral provenance',
     're-route an uncited referral', 'migration role', ok, msg);
+
+  -- ...and put it back. `ref_bo` belongs to pat_b, and Pass 12 asserts that
+  -- DOTS A cannot schedule pat_b because pat_b is referred only to DOTS B.
+  -- Leaving this control's side effect in place would quietly hand pat_b a
+  -- facility-A referral and make that admission check pass. A fixture mutation
+  -- that outlives the check it serves is a trap for whoever adds the next pass.
+  update public.referrals set facility_id = v_fac_b where referral_id = v_ref_bo;
 end;
 $cascade$;
 
@@ -955,7 +962,8 @@ begin
   perform pg_temp.become('dots_a');
   begin
     select followup_id into v_fu from public.record_visit(
-      v_case, public.manila_today(), v_appt, 'matrix note', null, null, null);
+      p_case_id => v_case, p_visit_date => public.manila_today(),
+      p_appointment_id => v_appt, p_notes => 'matrix note');
     ok := true; msg := '';
   exception when others then ok := false; msg := left(sqlerrm, 70);
   end;
@@ -972,7 +980,9 @@ begin
   -- A second LIVE follow-up on the same appointment is refused.
   perform pg_temp.become('dots_a');
   begin
-    perform public.record_visit(v_case, public.manila_today(), v_appt, 'duplicate', null, null, null);
+    perform public.record_visit(
+      p_case_id => v_case, p_visit_date => public.manila_today(),
+      p_appointment_id => v_appt, p_notes => 'duplicate');
     ok := true; msg := '';
   exception when others then ok := false; msg := left(sqlerrm, 70);
   end;
@@ -982,7 +992,8 @@ begin
   -- A future visit date, and one before the case was registered.
   perform pg_temp.become('dots_a');
   begin
-    perform public.record_visit(v_case, public.manila_today() + 1, null, null, null, null, null);
+    perform public.record_visit(
+      p_case_id => v_case, p_visit_date => public.manila_today() + 1);
     ok := true; msg := '';
   exception when others then ok := false; msg := left(sqlerrm, 70);
   end;
@@ -991,7 +1002,8 @@ begin
 
   perform pg_temp.become('dots_a');
   begin
-    perform public.record_visit(v_case, public.manila_today() - 400, null, null, null, null, null);
+    perform public.record_visit(
+      p_case_id => v_case, p_visit_date => public.manila_today() - 400);
     ok := true; msg := '';
   exception when others then ok := false; msg := left(sqlerrm, 70);
   end;
@@ -1060,8 +1072,9 @@ begin
   perform pg_temp.become('dots_a');
   begin
     select followup_id into v_fu2 from public.record_visit(
-      v_case, (select attended_date from public.appointments where appointment_id = v_appt),
-      v_appt, 'replacement', null, null, null);
+      p_case_id => v_case,
+      p_visit_date => (select attended_date from public.appointments where appointment_id = v_appt),
+      p_appointment_id => v_appt, p_notes => 'replacement');
     ok := v_fu2 is not null; msg := '';
   exception when others then ok := false; msg := left(sqlerrm, 70);
   end;
@@ -1482,6 +1495,271 @@ begin
     'unlinked patient referred to caller facility', 'dots_a', ok, msg);
 end;
 $appointment_patient_agreement$;
+
+
+-- ===========================================================================
+-- Pass 13 — closing against recorded visits (M31-04), record_visit()'s
+-- advertised transitions (M31-05), and the RPC half of patient agreement
+-- (M31-02).
+--
+-- These three findings share one shape: a rule that was enforced on ONE side of
+-- a pair. The follow-up trigger checked `visit_date <= outcome_date` when the
+-- follow-up moved but not when the case did; the appointment FK checked the
+-- facility but not the patient; record_visit() advertised transitions it had no
+-- inputs to perform. Each check below therefore comes with the control that
+-- proves it is the new rule biting and not the operation being broken outright.
+-- ===========================================================================
+do $m31$
+declare
+  v_fac_a   uuid;
+  v_pat_a   uuid;
+  v_case_a  uuid;
+  v_brgy    text;
+  v_pat13   uuid := gen_random_uuid();
+  v_scr13   uuid := gen_random_uuid();
+  v_ref13   uuid := gen_random_uuid();
+  v_case13  uuid;
+  v_pat14   uuid := gen_random_uuid();
+  v_scr14   uuid := gen_random_uuid();
+  v_ref14   uuid := gen_random_uuid();
+  v_case14  uuid;
+  v_fu14    uuid;
+  v_appt_x  uuid := gen_random_uuid();
+  v_appt_y  uuid := gen_random_uuid();
+  ok        boolean;
+  msg       text;
+  st        text;
+  oc        text;
+begin
+  select v into v_fac_a from t_ids where k = 'fac_a';
+  select v into v_pat_a from t_ids where k = 'pat_a';
+  select code into v_brgy from t_brgy where t_brgy.n = 1;
+  select case_id into v_case_a from public.tb_cases
+   where patient_id = v_pat_a and case_status not in ('closed','cancelled');
+
+  -- A patient of our own, so nothing here disturbs the earlier passes.
+  insert into public.patients
+    (patient_id, display_code, enrolled_by, age, sex, barangay_code, sms_consent)
+  values (v_pat13, 'MTC-0013', (select v from t_ids where k = 'dots_a'),
+          44, 'male', v_brgy, false);
+  insert into public.screenings (screening_id, patient_id, referred)
+  values (v_scr13, v_pat13, true);
+  insert into public.referrals (referral_id, patient_id, screening_id, facility_id, status)
+  values (v_ref13, v_pat13, v_scr13, v_fac_a, 'received');
+
+  perform pg_temp.become('dots_a');
+  select case_id into v_case13 from public.create_tb_case(
+    v_pat13, v_ref13, public.manila_today() - 60, null);
+  reset role;
+
+  -- -------------------------------------------------------------------------
+  -- M31-02, RPC half: assign_appointment_to_case() must compare PATIENTS.
+  -- The patient-aware FK would reject the write anyway; this asserts the RPC
+  -- refuses it as an authorization question, before the constraint is reached.
+  -- -------------------------------------------------------------------------
+  insert into public.appointments
+    (appointment_id, patient_id, scheduled_date, status, facility_id) values
+    (v_appt_x, v_pat_a,  public.manila_today() + 30, 'scheduled', v_fac_a),
+    (v_appt_y, v_pat13, public.manila_today() + 30, 'scheduled', v_fac_a);
+
+  perform pg_temp.become('dots_a');
+  begin
+    perform public.assign_appointment_to_case(v_appt_x, v_case13);
+    ok := true; msg := '';
+  exception when others then ok := false; msg := left(sqlerrm, 70);
+  end;
+  reset role;
+  perform pg_temp.expect_denied('appointment patient agreement',
+    'assign another patient''s appointment to this case', 'dots_a', ok, msg);
+
+  perform pg_temp.become('dots_a');
+  begin
+    perform public.assign_appointment_to_case(v_appt_y, v_case13);
+    ok := true; msg := '';
+  exception when others then ok := false; msg := left(sqlerrm, 70);
+  end;
+  reset role;
+  perform pg_temp.expect_ok('appointment patient agreement',
+    'assign this patient''s own appointment', 'dots_a', ok, msg);
+
+  -- -------------------------------------------------------------------------
+  -- M31-05: every transition record_visit() advertises, and every one it does
+  -- not. The first version silently advertised all five and could perform two.
+  -- -------------------------------------------------------------------------
+  perform pg_temp.become('dots_a');
+  begin
+    perform public.record_visit(
+      p_case_id => v_case13, p_visit_date => public.manila_today() - 3,
+      p_new_case_status => 'cancelled');
+    ok := true; msg := '';
+  exception when others then ok := false; msg := left(sqlerrm, 70);
+  end;
+  reset role;
+  perform pg_temp.expect_denied('record_visit transitions',
+    'cancelled — an episode opened in error has no visits', 'dots_a', ok, msg);
+
+  perform pg_temp.become('dots_a');
+  begin
+    perform public.record_visit(
+      p_case_id => v_case13, p_visit_date => public.manila_today() - 3,
+      p_new_case_status => 'registered');
+    ok := true; msg := '';
+  exception when others then ok := false; msg := left(sqlerrm, 70);
+  end;
+  reset role;
+  perform pg_temp.expect_denied('record_visit transitions',
+    'a status this call cannot set', 'dots_a', ok, msg);
+
+  perform pg_temp.become('dots_a');
+  begin
+    perform public.record_visit(
+      p_case_id => v_case13, p_visit_date => public.manila_today() - 3,
+      p_new_case_status => 'closed');
+    ok := true; msg := '';
+  exception when others then ok := false; msg := left(sqlerrm, 70);
+  end;
+  reset role;
+  perform pg_temp.expect_denied('record_visit transitions',
+    'closed without an outcome', 'dots_a', ok, msg);
+
+  perform pg_temp.become('dots_a');
+  begin
+    perform public.record_visit(
+      p_case_id => v_case13, p_visit_date => public.manila_today() - 3,
+      p_next_scheduled_date => public.manila_today() + 7,
+      p_new_case_status => 'closed',
+      p_outcome => 'cured', p_outcome_date => public.manila_today() - 3);
+    ok := true; msg := '';
+  exception when others then ok := false; msg := left(sqlerrm, 70);
+  end;
+  reset role;
+  perform pg_temp.expect_denied('record_visit transitions',
+    'book a next visit while closing (D6)', 'dots_a', ok, msg);
+
+  -- Nothing above may have left a follow-up behind: a rejected call must write
+  -- nothing at all, which is the entire argument for one atomic RPC.
+  insert into t_result
+  select 'record_visit transitions', 'refused calls wrote nothing', 'dots_a',
+         '0', count(*)::text, '',
+         case when count(*) = 0 then 'PASS' else 'FAIL' end
+    from public.treatment_followups where case_id = v_case13;
+
+  -- registered -> on_treatment, WITH the start date the transition needs.
+  perform pg_temp.become('dots_a');
+  begin
+    perform public.record_visit(
+      p_case_id => v_case13, p_visit_date => public.manila_today() - 3,
+      p_notes => 'treatment started',
+      p_new_case_status => 'on_treatment',
+      p_treatment_start_date => public.manila_today() - 3);
+    ok := true; msg := '';
+  exception when others then ok := false; msg := left(sqlerrm, 70);
+  end;
+  reset role;
+  perform pg_temp.expect_ok('record_visit transitions',
+    'registered -> on_treatment with a start date', 'dots_a', ok, msg);
+
+  select case_status into st from public.tb_cases where case_id = v_case13;
+  insert into t_result values ('record_visit transitions', 'the status actually moved',
+    'dots_a', 'on_treatment', st, '',
+    case when st = 'on_treatment' then 'PASS' else 'FAIL' end);
+
+  perform pg_temp.become('dots_a');
+  begin
+    perform public.record_visit(
+      p_case_id => v_case13, p_visit_date => public.manila_today() - 2,
+      p_new_case_status => 'interrupted');
+    ok := true; msg := '';
+  exception when others then ok := false; msg := left(sqlerrm, 70);
+  end;
+  reset role;
+  perform pg_temp.expect_ok('record_visit transitions',
+    'on_treatment -> interrupted', 'dots_a', ok, msg);
+
+  perform pg_temp.become('dots_a');
+  begin
+    perform public.record_visit(
+      p_case_id => v_case13, p_visit_date => public.manila_today() - 1,
+      p_new_case_status => 'closed',
+      p_outcome => 'treatment_completed', p_outcome_date => public.manila_today() - 1);
+    ok := true; msg := '';
+  exception when others then ok := false; msg := left(sqlerrm, 70);
+  end;
+  reset role;
+  perform pg_temp.expect_ok('record_visit transitions',
+    'interrupted -> closed with an outcome', 'dots_a', ok, msg);
+
+  select case_status, outcome into st, oc from public.tb_cases where case_id = v_case13;
+  insert into t_result values ('record_visit transitions', 'the outcome was stored',
+    'dots_a', 'closed/treatment_completed', st || '/' || coalesce(oc, 'null'), '',
+    case when st = 'closed' and oc = 'treatment_completed' then 'PASS' else 'FAIL' end);
+
+  -- -------------------------------------------------------------------------
+  -- M31-04: a case may not be closed with an outcome dated before a visit it
+  -- has already recorded.
+  -- -------------------------------------------------------------------------
+  insert into public.patients
+    (patient_id, display_code, enrolled_by, age, sex, barangay_code, sms_consent)
+  values (v_pat14, 'MTC-0014', (select v from t_ids where k = 'dots_a'),
+          45, 'female', v_brgy, false);
+  insert into public.screenings (screening_id, patient_id, referred)
+  values (v_scr14, v_pat14, true);
+  insert into public.referrals (referral_id, patient_id, screening_id, facility_id, status)
+  values (v_ref14, v_pat14, v_scr14, v_fac_a, 'received');
+
+  perform pg_temp.become('dots_a');
+  select case_id into v_case14 from public.create_tb_case(
+    v_pat14, v_ref14, public.manila_today() - 60, null);
+  perform public.set_tb_case_status(
+    v_case14, 'on_treatment', public.manila_today() - 30, null, null);
+  select followup_id into v_fu14 from public.record_visit(
+    p_case_id => v_case14, p_visit_date => public.manila_today() - 1,
+    p_notes => 'the last visit');
+  reset role;
+
+  perform pg_temp.become('dots_a');
+  begin
+    perform public.set_tb_case_status(
+      v_case14, 'closed', null, 'cured', public.manila_today() - 5);
+    ok := true; msg := '';
+  exception when others then ok := false; msg := left(sqlerrm, 70);
+  end;
+  reset role;
+  perform pg_temp.expect_denied('closing vs recorded visits',
+    'outcome dated before a live follow-up', 'dots_a', ok, msg);
+
+  -- The same correction through the other RPC that can move the date.
+  perform pg_temp.become('dots_a');
+  begin
+    perform public.correct_tb_case_dates(
+      v_case14, public.manila_today() - 30, public.manila_today() - 5);
+    ok := true; msg := '';
+  exception when others then ok := false; msg := left(sqlerrm, 70);
+  end;
+  reset role;
+  perform pg_temp.expect_denied('closing vs recorded visits',
+    'correct the outcome date to before a live follow-up', 'dots_a', ok, msg);
+
+  -- Voiding the visit frees the date: the check counts LIVE rows, and saying
+  -- so is the difference between a scoped rule and a blanket one.
+  perform pg_temp.become('dots_a');
+  begin
+    perform public.void_tb_followup(v_fu14, 'recorded on the wrong case');
+    perform public.set_tb_case_status(
+      v_case14, 'closed', null, 'cured', public.manila_today() - 5);
+    ok := true; msg := '';
+  exception when others then ok := false; msg := left(sqlerrm, 70);
+  end;
+  reset role;
+  perform pg_temp.expect_ok('closing vs recorded visits',
+    'the same close, after the follow-up is voided', 'dots_a', ok, msg);
+
+  select case_status into st from public.tb_cases where case_id = v_case14;
+  insert into t_result values ('closing vs recorded visits', 'the case did close',
+    'dots_a', 'closed', st, 'positive control for both denials above',
+    case when st = 'closed' then 'PASS' else 'FAIL' end);
+end;
+$m31$;
 
 
 -- ---------------------------------------------------------------------------

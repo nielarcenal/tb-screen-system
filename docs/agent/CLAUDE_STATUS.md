@@ -521,3 +521,96 @@ being live.
 **Next:** Codex reviews migration 0031 and its matrix. If it is approved, apply it, re-run
 `node scripts/old-client-upsert-check.mjs`, and take the client contract change as the
 following unit.
+
+---
+
+## 2026-09-09 - Migration 0031, review round 1 (M31-02 … M31-07)
+
+**Codex result on `8c9d4ce`: CHANGES REQUIRED.** Five defects plus one credential slip.
+All six are fixed; the live rollback preflight now returns **139/139 PASS**.
+
+**Files changed:** `supabase/migrations/0031_case_registry_and_followups.sql`,
+`supabase/tests/0031_case_registry_matrix.sql`, `scripts/verify-0031-policies.mjs`,
+`scripts/old-client-upsert-check.mjs`. Still no application code.
+
+### What was wrong, and it is worth naming the pattern
+
+Three of the five are the same mistake in different clothes: **a rule enforced on one side
+of a pair.**
+
+- **M31-02 (HIGH)** — `appointments_referral_facility_agrees` and
+  `appointments_case_facility_agrees` named the link and the facility but not the patient.
+  A constraint called "agrees" enforced half of what it claimed: PostgreSQL accepted an
+  appointment for patient A citing patient B's referral or case, as long as the facility
+  matched. Both parent keys and both FKs now carry `patient_id`, and
+  `assign_appointment_to_case()` compares patients before the constraint would.
+  Cascades are unaffected — `patient_id` is immutable on both parents, so a cascade still
+  only ever moves `facility_id`.
+- **M31-04 (HIGH)** — §8.1's trigger enforced `visit_date <= outcome_date` when the
+  FOLLOW-UP moved, and nothing re-checked when the CASE moved. A case could therefore be
+  closed with an outcome dated before a visit it had already recorded. `set_tb_case_status()`
+  now refuses that, scoped to non-voided rows; `correct_tb_case_dates()` already did.
+- **M31-06 (MEDIUM)** — the upsert gate's `tb_case_id survives` assertion ran against a
+  referral-linked fixture, so it compared null to null. It could not have failed. There are
+  now two fixtures, one of each shape, and a column that was already null is reported as
+  VACUOUS rather than as a pass.
+
+The other two are about promising more than the code delivers:
+
+- **M31-03 (HIGH)** — I replaced `patient_id in referred_patient_ids()` with
+  `facility_id = current_user_facility()` in `appointments_tbdots_insert`. That is a
+  *widening*, inside the migration whose entire purpose is to narrow appointment access: a
+  facility could schedule any patient uuid it could name by writing its own id into the
+  row. Codex's live probe demonstrated it. The three legal shapes now each prove the patient
+  belongs: referral-linked, case-linked, or 0011's original boundary for unlinked rows.
+- **M31-05 (MEDIUM)** — `record_visit(p_new_case_status)` advertised five transitions and
+  could perform two. It passed NULL treatment/outcome fields through, so an initial
+  `on_treatment` and every `closed` failed on a missing date, while `cancelled` succeeded
+  and left a clinical follow-up attached to an episode declared opened in error. It now
+  carries `p_treatment_start_date`, `p_outcome` and `p_outcome_date` — because starting and
+  completing treatment at a visit are exactly the moments §4.4 calls one act — and refuses
+  `cancelled` outright.
+
+**M31-07** — I committed the BHW test account's password as the script's default fallback.
+Codex removed it and amended the unpushed commit. The script now requires
+`TBSCREEN_TEST_PASSWORD` from the environment or `.env`. Nothing reachable ever held it.
+
+### A fixture trap the fix exposed
+
+Pass 7's positive control re-routed `ref_bo` to facility A and left it there. `ref_bo`
+belongs to pat_b, and the review's new Pass 12 asserts DOTS A *cannot* schedule pat_b
+because pat_b is referred only to DOTS B. Once M31-03 restored the admission predicate, that
+leftover would have made the check pass for the wrong reason. Pass 7 now puts the referral
+back, with a comment saying why. A fixture mutation that outlives the check it serves is a
+trap for whoever writes the next pass.
+
+### Verification performed
+
+| Check | Result |
+| --- | --- |
+| `supabase/tests/0031_preflight.generated.sql`, live | **139/139 PASS**, rolled back |
+| Rollback confirmed by query | no `tb_cases`, no ownership columns, 1100 appointments, 0 fixture rows |
+| `node scripts/verify-0031-policies.mjs` | 20 OK; **6** self-tests caught their mutation |
+| `verify-0028-bodies` / `0029-policies` / `0030-report-body` | still pass |
+| `node scripts/old-client-upsert-check.mjs` | stage 1 PASS; **gate still NOT CLOSED** |
+
+The verifier gained the two rules that were lost: the TB-DOTS insert policy must keep
+`referred_patient_ids()`, and all four ownership keys must name `patient_id`. Both have
+mutation self-tests, so losing them again fails loudly.
+
+Pass 13 adds 16 checks: patient agreement through the RPC, every transition `record_visit()`
+now advertises and three it refuses, proof that a refused call writes nothing at all, and
+closing against a live follow-up — denied, denied again through the date-correction RPC,
+then allowed once the follow-up is voided, which is what makes the rule scoped rather than
+blanket.
+
+### Still not closed
+
+Stage 2 of the upsert gate has **never executed**, including its new case-linked fixture:
+the columns it asks about do not exist until 0031 is applied. The script now records a
+skipped fixture as a FAILURE and prints `GATE: NOT CLOSED`, so a run that could not ask the
+question cannot exit 0 and read as if it had.
+
+**Next:** Codex re-reviews. Then apply 0031, run
+`TBSCREEN_TEST_PASSWORD=... node scripts/old-client-upsert-check.mjs` and confirm
+`GATE: CLOSED`, and only then start the client contract unit.

@@ -74,8 +74,13 @@
 --   D5. `record_visit()` takes no `p_weight_kg`, and `treatment_followups`
 --       has no `weight_kg` column — Task 1.3 §4.5, gate item 4.
 --   D6. `record_visit()` rejects a call that both books a next appointment and
---       moves the case to a terminal status. The two instructions contradict
---       each other and D3 would immediately cancel what was just booked.
+--       closes the case. The two instructions contradict each other and D3
+--       would immediately cancel what was just booked. It also refuses
+--       `p_new_case_status = 'cancelled'` outright: an episode declared opened
+--       in error cannot simultaneously have one of its visits written up. It
+--       does carry `p_treatment_start_date`, `p_outcome` and `p_outcome_date`,
+--       so the transitions it advertises are the ones it can actually perform
+--       (M31-05).
 --   D7. `create_tb_case()`'s referral-free admission arm is facility-scoped,
 --       not caller-scoped. Task 1.2 §7.1 rule 4 names own_enrolled_patient_ids()
 --       — `enrolled_by = auth.uid()` — while the same sentence describes the
@@ -576,8 +581,19 @@ create index if not exists tb_cases_patient_idx  on public.tb_cases (patient_id)
 create index if not exists tb_cases_referral_idx on public.tb_cases (referral_id);
 
 -- The composite target that makes appointment ownership cascade on transfer.
+--
+-- M31-02: `patient_id` is part of the key. A (case_id, facility_id) key only
+-- says "this appointment's facility matches this case's facility", which two
+-- DIFFERENT patients at one facility both satisfy — so PostgreSQL accepted an
+-- appointment for patient A citing patient B's case, and record_visit() would
+-- then mark the wrong patient's appointment attended. A foreign key has to
+-- carry every column whose agreement its name is claiming.
+--
+-- Cascading on this key is still safe: `patient_id` is pinned immutable on both
+-- parents, so the only column a cascade ever moves is `facility_id`.
 alter table public.tb_cases drop constraint if exists tb_cases_identity_uniq;
-alter table public.tb_cases add constraint tb_cases_identity_uniq unique (case_id, facility_id);
+alter table public.tb_cases add constraint tb_cases_identity_uniq
+  unique (case_id, patient_id, facility_id);
 
 drop trigger if exists tb_cases_set_updated_at on public.tb_cases;
 create trigger tb_cases_set_updated_at
@@ -698,8 +714,12 @@ create policy tb_cases_tbdots_read on public.tb_cases
 -- narrower than the withdrawn composite FK — it constrains the REFERRAL, not
 -- the case — so tb_cases.facility_id remains free to move under a transfer.
 -- ===========================================================================
+-- M31-02: patient-aware, for the reason given on tb_cases_identity_uniq.
+-- referrals.patient_id is already pinned immutable by the 0020 trigger, so a
+-- cascade from this key still only ever moves facility_id.
 alter table public.referrals drop constraint if exists referrals_identity_uniq;
-alter table public.referrals add constraint referrals_identity_uniq unique (referral_id, facility_id);
+alter table public.referrals add constraint referrals_identity_uniq
+  unique (referral_id, patient_id, facility_id);
 
 create or replace function public.enforce_referral_not_cited_by_case()
 returns trigger
@@ -839,18 +859,25 @@ $backfill$;
 --   * referral FK — a BHW re-routing a still-submitted referral SHOULD move
 --     that referral's initial appointment with it. The patient is going
 --     somewhere else.
+-- M31-02: each FK names `patient_id` as well. Without it the constraint
+-- enforces only half of what its name claims — an appointment for patient A
+-- could cite patient B's referral or case as long as the facility matched,
+-- which corrupts the care timeline and lets an authorized RPC act on the wrong
+-- patient's row. `patient_id` is NOT NULL on appointments, so MATCH SIMPLE
+-- still skips each check exactly when its own link or facility is NULL, which
+-- is what legacy and pre-case rows need.
 alter table public.appointments drop constraint if exists appointments_referral_facility_agrees;
 alter table public.appointments
   add constraint appointments_referral_facility_agrees
-  foreign key (referral_id, facility_id)
-  references public.referrals (referral_id, facility_id)
+  foreign key (referral_id, patient_id, facility_id)
+  references public.referrals (referral_id, patient_id, facility_id)
   on update cascade on delete restrict;
 
 alter table public.appointments drop constraint if exists appointments_case_facility_agrees;
 alter table public.appointments
   add constraint appointments_case_facility_agrees
-  foreign key (tb_case_id, facility_id)
-  references public.tb_cases (case_id, facility_id)
+  foreign key (tb_case_id, patient_id, facility_id)
+  references public.tb_cases (case_id, patient_id, facility_id)
   on update cascade on delete restrict;
 
 -- Link exclusivity (R2-02). An appointment holding BOTH links would share one
@@ -1105,6 +1132,19 @@ create policy appointments_tbdots_update on public.appointments
     )
   );
 
+-- M31-03: naming your own facility is NOT an admission.
+--
+-- Before 0031 this policy required `patient_id in referred_patient_ids()`.
+-- Replacing that with `facility_id = current_user_facility()` let a facility
+-- schedule ANY patient uuid it could name, simply by writing its own id into
+-- the row — a widening, inside the migration whose entire purpose is to narrow
+-- appointment access. The live probe confirmed it: DOTS A could insert an
+-- unlinked appointment for a patient referred only to DOTS B.
+--
+-- So each of the three legal shapes proves the patient belongs here:
+--   * referral-linked — the referral names this patient AND this facility;
+--   * case-linked     — the case does, and is still open;
+--   * unlinked        — 0011's original admission boundary, unchanged.
 drop policy if exists appointments_tbdots_insert on public.appointments;
 create policy appointments_tbdots_insert on public.appointments
   for insert to authenticated
@@ -1112,12 +1152,31 @@ create policy appointments_tbdots_insert on public.appointments
     public.current_user_active_role() = 'tb_dots'
     and facility_id = public.current_user_facility()
     and (
-      tb_case_id is null
-      or exists (
-        select 1 from public.tb_cases c
-         where c.case_id = appointments.tb_case_id
-           and c.facility_id = public.current_user_facility()
-           and c.case_status not in ('closed','cancelled')
+      (
+        referral_id is not null
+        and tb_case_id is null
+        and exists (
+          select 1 from public.referrals r
+           where r.referral_id = appointments.referral_id
+             and r.patient_id  = appointments.patient_id
+             and r.facility_id = public.current_user_facility()
+        )
+      )
+      or (
+        tb_case_id is not null
+        and referral_id is null
+        and exists (
+          select 1 from public.tb_cases c
+           where c.case_id     = appointments.tb_case_id
+             and c.patient_id  = appointments.patient_id
+             and c.facility_id = public.current_user_facility()
+             and c.case_status not in ('closed','cancelled')
+        )
+      )
+      or (
+        referral_id is null
+        and tb_case_id is null
+        and patient_id in (select app_private.referred_patient_ids())
       )
     )
   );
@@ -1710,6 +1769,27 @@ begin
       raise exception 'set_tb_case_status: outcome date % is in the future', p_outcome_date
         using errcode = '22007';
     end if;
+
+    -- M31-04. §8.1's trigger enforces `visit_date <= outcome_date` only when a
+    -- FOLLOW-UP is written; closing the parent never re-checked the rows that
+    -- already exist. So a case could be closed with an outcome dated before a
+    -- visit it had already recorded — an episode that ended before its own last
+    -- visit, which every timeline and duration figure would then repeat.
+    --
+    -- The invariant belongs to the pair, so it is enforced from both sides:
+    -- here when the case moves, in the trigger when the follow-up moves.
+    if exists (
+      select 1 from public.treatment_followups f
+       where f.case_id = p_case_id
+         and f.voided_at is null
+         and f.visit_date > p_outcome_date
+    ) then
+      raise exception
+        'set_tb_case_status: outcome date % precedes a recorded visit on this case',
+        p_outcome_date
+        using errcode = '22007',
+              hint = 'Correct or void the later follow-up first, or close on a later date.';
+    end if;
   elsif p_outcome is not null or p_outcome_date is not null then
     raise exception 'set_tb_case_status: an outcome belongs only to a closed case'
       using errcode = '22023';
@@ -2008,10 +2088,16 @@ begin
     perform app_private.deny();
   end if;
 
+  -- M31-02: the PATIENT has to match too, not just the facility. The
+  -- patient-aware FK would now reject the mismatch anyway, but an FK violation
+  -- is a constraint name in a log, and this is an authorization question — a
+  -- caller asking to attach one patient's appointment to another patient's
+  -- episode gets the uniform denial, like every other admission failure.
   if not exists (
     select 1 from public.tb_cases c
      where c.case_id = p_case_id
        and c.facility_id = v_caller.caller_facility_id
+       and c.patient_id = v_old.patient_id
        and c.case_status not in ('closed','cancelled')
   ) then
     perform app_private.deny();
@@ -2049,15 +2135,45 @@ $fn$;
 -- D5: no p_weight_kg. D6: booking a next appointment while moving the case to
 -- a terminal status is rejected rather than silently resolved — D3's sweep
 -- would cancel what was just booked.
+--
+-- M31-05 — WHICH TRANSITIONS THIS ADVERTISES, and what each one needs.
+--
+-- The first version passed NULL treatment and outcome fields straight through
+-- to set_tb_case_status(), so it advertised a `p_new_case_status` it could not
+-- deliver: an initial `on_treatment` and every `closed` would fail on a missing
+-- date, while `cancelled` would succeed and leave a clinical follow-up attached
+-- to an episode declared opened in error.
+--
+-- Rather than narrow the parameter to the two transitions that happened to
+-- work, it now carries the inputs those transitions require — because starting
+-- treatment at a visit and completing treatment at a visit are exactly the
+-- moments Task 1.3 §4.4 describes as one act:
+--
+--   on_treatment  from `registered`   — needs p_treatment_start_date
+--                 from `interrupted`  — the start date already exists
+--   interrupted   from `on_treatment` — needs nothing
+--   closed        from either         — needs p_outcome and p_outcome_date
+--   cancelled                         — REJECTED here, always
+--
+-- `cancelled` means the episode was opened in error. You cannot in the same
+-- breath record what happened at one of its visits. It stays available on
+-- set_tb_case_status(), where nothing clinical is being written alongside it.
+--
+-- Every field is still routed through the single transition authority; this
+-- function validates its own inputs and then delegates, so the lifecycle rules
+-- live in exactly one place.
 -- ---------------------------------------------------------------------------
 create or replace function public.record_visit(
-  p_case_id             uuid,
-  p_visit_date          date,
-  p_appointment_id      uuid default null,
-  p_notes               text default null,
-  p_next_scheduled_date date default null,
-  p_new_case_status     text default null,
-  p_request_id          uuid default null
+  p_case_id              uuid,
+  p_visit_date           date,
+  p_appointment_id       uuid default null,
+  p_notes                text default null,
+  p_next_scheduled_date  date default null,
+  p_new_case_status      text default null,
+  p_treatment_start_date date default null,
+  p_outcome              text default null,
+  p_outcome_date         date default null,
+  p_request_id           uuid default null
 ) returns public.treatment_followups
 language plpgsql
 volatile
@@ -2079,8 +2195,34 @@ begin
 
   v_visit := coalesce(p_visit_date, public.manila_today());
 
-  if p_next_scheduled_date is not null
-     and p_new_case_status in ('closed','cancelled') then
+  -- M31-05. Reject what this function cannot honestly represent, BEFORE any
+  -- row is written, so a caller is never told a visit was recorded and a status
+  -- moved when only the first is true.
+  if p_new_case_status = 'cancelled' then
+    raise exception
+      'record_visit: a case cancelled as opened in error cannot also have a visit recorded'
+      using errcode = '22023',
+            hint = 'Use set_tb_case_status() to cancel, and void the follow-up if one exists.';
+  end if;
+
+  if p_new_case_status is not null
+     and p_new_case_status not in ('on_treatment','interrupted','closed') then
+    raise exception 'record_visit: % is not a status this call can set', p_new_case_status
+      using errcode = '22023';
+  end if;
+
+  if p_new_case_status = 'closed' and (p_outcome is null or p_outcome_date is null) then
+    raise exception 'record_visit: closing a case requires an outcome and its date'
+      using errcode = '22004';
+  end if;
+
+  if p_new_case_status is distinct from 'closed'
+     and (p_outcome is not null or p_outcome_date is not null) then
+    raise exception 'record_visit: an outcome belongs only to a closed case'
+      using errcode = '22023';
+  end if;
+
+  if p_next_scheduled_date is not null and p_new_case_status = 'closed' then
     raise exception
       'record_visit: cannot book a next appointment while ending the episode'
       using errcode = '22023',
@@ -2088,12 +2230,15 @@ begin
   end if;
 
   v_fingerprint := app_private.payload_fingerprint(jsonb_build_object(
-    'case_id',             p_case_id,
-    'visit_date',          v_visit,
-    'appointment_id',      p_appointment_id,
-    'notes',               p_notes,
-    'next_scheduled_date', p_next_scheduled_date,
-    'new_case_status',     p_new_case_status
+    'case_id',              p_case_id,
+    'visit_date',           v_visit,
+    'appointment_id',       p_appointment_id,
+    'notes',                p_notes,
+    'next_scheduled_date',  p_next_scheduled_date,
+    'new_case_status',      p_new_case_status,
+    'treatment_start_date', p_treatment_start_date,
+    'outcome',              p_outcome,
+    'outcome_date',         p_outcome_date
   ));
 
   v_replay := app_private.replayed_result(
@@ -2165,9 +2310,13 @@ begin
         'tb_case_id',     jsonb_build_object('from', null, 'to', p_case_id)));
   end if;
 
-  -- Delegated to the single transition authority rather than re-implemented.
+  -- Delegated to the single transition authority rather than re-implemented,
+  -- now with the fields each advertised transition actually needs (M31-05).
+  -- It runs LAST, so M31-04's check sees the follow-up just inserted: closing
+  -- on a date earlier than this very visit is refused here too.
   if p_new_case_status is not null and p_new_case_status <> v_case.case_status then
-    perform public.set_tb_case_status(p_case_id, p_new_case_status, null, null, null);
+    perform public.set_tb_case_status(
+      p_case_id, p_new_case_status, p_treatment_start_date, p_outcome, p_outcome_date);
   end if;
 
   if p_request_id is not null then
@@ -2371,7 +2520,7 @@ begin
     'public.transfer_tb_case(uuid, uuid, text)',
     'public.claim_unassigned_appointment(uuid)',
     'public.assign_appointment_to_case(uuid, uuid)',
-    'public.record_visit(uuid, date, uuid, text, date, text, uuid)',
+    'public.record_visit(uuid, date, uuid, text, date, text, date, text, date, uuid)',
     'public.void_tb_followup(uuid, text)',
     'public.correct_followup_visit_date(uuid, date)',
     'public.bhw_case_summary(uuid)'
