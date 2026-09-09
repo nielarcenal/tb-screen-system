@@ -65,3 +65,5 @@ Migration 0028 passed 73/73 preflight checks before application. Migration 0029 
 2026-09-09 update: BASE-01 and BASE-06 are closed in the live database by migrations 0028 and 0029.
 
 2026-09-09 update: BASE-04 has an implementation awaiting verification — migration 0030. BASE-06 is resolved and applied (0029). Remaining open: BASE-02 and BASE-03 (both land with case work, now 0031) and BASE-05 (sync cursor ties, its own unit, explicitly not to be bundled with case work).
+
+2026-09-09 update: BASE-05 has an implementation awaiting review — client-side only. Remaining open after it: BASE-02 and BASE-03, both landing with case work (migration 0031).

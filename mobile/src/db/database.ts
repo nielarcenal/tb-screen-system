@@ -225,6 +225,34 @@ const MIGRATIONS: string[] = [
   ALTER TABLE screenings ADD COLUMN pulse_rate INTEGER;
   ALTER TABLE screenings ADD COLUMN spo2_percent INTEGER;
   `,
+
+  // v11 — BASE-05: heal pull cursors written by the old, lossy rule.
+  //
+  // Until now a cursor was a bare timestamp, and a pull asked for
+  // `updated_at > cursor` with no limit of its own. When more rows shared the
+  // boundary timestamp than fit in one server-capped response, the remainder
+  // could never satisfy that predicate again — so a device could be permanently
+  // missing rows while reporting a clean sync. domain/pullCursor.ts has the
+  // full explanation and the tests.
+  //
+  // Every affected device is sitting on exactly such a cursor right now, and the
+  // new rule alone would not recover those rows: it would still start strictly
+  // AFTER that timestamp. Appending the `|*` sentinel marks the boundary group
+  // "not drained", so the first pull after upgrading re-reads that whole group
+  // and picks up whatever was skipped. Upserts are last-write-wins, so re-reading
+  // rows the device already holds is a no-op.
+  //
+  // The epoch is left alone: there is no group to recover, and marking it would
+  // cost every fresh install one pointless request per table. `instr(...) = 0`
+  // keeps this idempotent — a cursor already carrying a sentinel is untouched.
+  //
+  // No schema change: last_pull_at is TEXT and holds `<iso>` or `<iso>|<id>`.
+  `
+  UPDATE sync_meta
+     SET last_pull_at = last_pull_at || '|*'
+   WHERE last_pull_at <> '1970-01-01T00:00:00.000Z'
+     AND instr(last_pull_at, '|') = 0;
+  `,
 ];
 
 // Bundled PSGC dataset — Bukidnon only (documented delimitation, §6). Generated

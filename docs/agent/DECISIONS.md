@@ -202,3 +202,15 @@ Still blocking case work (renumbered to 0030 at the final gate): BASE-06 must sh
 | D-0030-e | The boundary test runs the report under both a UTC session and a Manila session and asserts they agree. A single-timezone test cannot see this class of bug at all. |
 | D-0030-f | The fixture uses a barangay with no existing patients. `barangay_report` aggregates by barangay and cannot be filtered to fixture rows the way 0029's matrix filters by id, so sharing a barangay with live data would make every expected count meaningless. |
 | D-0030-g | The test carries a negative control that reproduces the OLD predicate on the same rows and asserts it misfiles them. Without it, the PASS rows would not distinguish "fixed" from "fixture never exercised the boundary". |
+
+## 2026-09-09 - BASE-05 / sync pull cursor
+
+| # | Decision |
+| --- | --- |
+| D-0005-a | The cursor becomes a keyset over `(updated_at, id)` — a total order, because id is a primary key — stored in the existing `sync_meta.last_pull_at` TEXT column as `<iso>` or `<iso>\|<id>`. No schema change, and a value written by an older build still parses. |
+| D-0005-b | The pull sets its OWN `.limit(PULL_PAGE_SIZE)`. This is the heart of the fix: without an explicit limit a server-capped reply is indistinguishable from a complete one, so the old code could not know it had been truncated. A full page now means "there may be more". |
+| D-0005-c | A full page keeps the last row's id, because that row's timestamp group may be cut in half; the next request drains the rest of that group by id. Nothing is skipped on the assumption that a timestamp was finished. |
+| D-0005-d | The rule lives in `domain/pullCursor.ts`, which imports nothing, following the existing `domain/accountAccess.ts` + `lib/accountGate.ts` split. The failure needs "more tied rows than fit in a response", which a device test cannot reliably manufacture; a pure module can, exactly. |
+| D-0005-e | Local DB migration v11 appends a `\|*` sentinel to every non-epoch cursor, so the first pull after upgrading re-reads its boundary group and recovers rows the old build skipped. Without it the new rule would still start strictly after that timestamp and the already-lost rows would stay lost. Idempotent; the epoch is left alone. |
+| D-0005-f | Scope held deliberately: push, table order, error classification and last-write-wins are untouched, and a delta that fits in one page still costs exactly one request. The plan puts a sync-engine rewrite out of scope. |
+| D-0005-g | One unverifiable assumption is recorded in the code: a drain filters `eq(updated_at, <value PostgREST just returned>)`, which assumes exact round-trip. If that ever failed, the drain would match nothing and the group would be skipped — BASE-05 in a new costume. Named in the header with the one-line way to verify it against the real stack. |

@@ -70,6 +70,13 @@ import {
   isTransientError,
   runStep,
 } from './syncErrors';
+import {
+  PULL_PAGE_SIZE,
+  advance,
+  formatCursor,
+  nextStep,
+  parseCursor,
+} from '../domain/pullCursor';
 
 export interface SyncResult {
   pushed: number;
@@ -157,43 +164,111 @@ async function pushTable<T extends { sync_status: SyncStatus }>(
 }
 
 /**
- * Pull one table's changes since our cursor. A pull is a single request, so it
- * succeeds or fails as a whole; the caller records a permanent failure against
- * the table and moves on to the next one.
+ * How to read the primary key of a pulled row. The column name drives the
+ * server-side ORDER BY and the accessor reads the value back; keeping them in
+ * one object is what stops them drifting apart.
+ */
+interface PullId<T> {
+  column: string;
+  of: (row: T) => string;
+}
+
+/**
+ * Pull one table's changes since our cursor (BASE-05).
+ *
+ * WHAT CHANGED, AND WHY IT HAD TO. This used to be one request ordered by
+ * `updated_at` with no limit, after which the cursor became the largest
+ * timestamp received and the next pull asked for `> that`. Two facts made that
+ * lose rows permanently:
+ *
+ *   * PostgREST caps responses server-side, and with no limit of our own a
+ *     capped reply is indistinguishable from a complete one;
+ *   * `updated_at` is not unique — one bulk write stamps many rows alike.
+ *
+ * So when more rows shared the boundary timestamp than fit in a response, the
+ * remainder could never satisfy `> timestamp` again. Not delayed: gone, with the
+ * device reporting a clean sync.
+ *
+ * Now the request carries OUR limit, so a full page is a signal, and ordering is
+ * by `(updated_at, id)` — a total order — with the cursor remembering both
+ * parts. domain/pullCursor.ts holds that rule and its tests; this function is
+ * just the half that talks to Supabase, the same split as
+ * lib/accountGate.ts / domain/accountAccess.ts.
+ *
+ * A pull is now a loop, but each REQUEST still succeeds or fails as a whole, and
+ * the cursor is persisted after every page — so an interrupted pull resumes
+ * where it stopped rather than restarting or skipping. In the common case, a
+ * delta that fits in one page, this issues exactly one request, as before.
+ *
+ * ONE SERVER-BEHAVIOUR ASSUMPTION, worth stating because it is load-bearing and
+ * cannot be checked without a real PostgREST: a drain filters
+ * `.eq('updated_at', <the timestamp PostgREST just gave us>)`, so it assumes the
+ * timestamp round-trips exactly. PostgreSQL stores timestamptz to microseconds
+ * and PostgREST emits full precision, so the value we send back parses to the
+ * same instant — but if it ever did NOT, a drain would match nothing, the group
+ * would be treated as finished, and the remaining tied rows would be skipped:
+ * BASE-05 in a new costume. Verify it once against the real stack by pulling a
+ * table that has more rows sharing one `updated_at` than PULL_PAGE_SIZE, and
+ * asserting the device ends up with all of them.
  */
 async function pullTable<T extends { updated_at: string }>(
   table: string,
   upsertLocal: (row: T) => Promise<void>,
+  id: PullId<T>,
   /** Columns to request. Defaults to everything; pass an explicit list to keep
    *  a column off the device entirely — see REFERRAL_COLUMNS (D-05). */
   columns = '*',
 ): Promise<number> {
-  const since = await getCursor(table);
-  const { data, error } = await supabase
-    .from(table)
-    .select(columns)
-    .gt('updated_at', since)
-    .order('updated_at', { ascending: true });
+  let cursor = parseCursor(await getCursor(table));
+  let total = 0;
 
-  if (error) {
-    const message = `Pull failed (${table}): ${error.message}`;
-    throw isTransientError(error) ? new TransientSyncError(message) : new Error(message);
-  }
+  for (;;) {
+    const step = nextStep(cursor);
 
-  // `columns` is a runtime string, so supabase-js cannot infer the row shape and
-  // falls back to GenericStringError[]. The caller names the real type.
-  const rows = (data ?? []) as unknown as T[];
-  let maxSeen = since;
-  for (const server of rows) {
-    await upsertLocal(server);
-    if (new Date(server.updated_at).getTime() > new Date(maxSeen).getTime()) {
-      maxSeen = server.updated_at;
+    // A drain walks the inside of one timestamp group by primary key; an
+    // advance moves past that timestamp entirely. A drain is only ever reached
+    // after a full page, so a small delta never pays for one.
+    let query = supabase.from(table).select(columns);
+    if (step.mode === 'drain') {
+      query = query.eq('updated_at', step.updatedAt);
+      if (step.afterId !== null) query = query.gt(id.column, step.afterId);
+      query = query.order(id.column, { ascending: true });
+    } else {
+      query = query
+        .gt('updated_at', step.afterUpdatedAt)
+        .order('updated_at', { ascending: true })
+        .order(id.column, { ascending: true });
     }
+
+    const { data, error } = await query.limit(PULL_PAGE_SIZE);
+
+    if (error) {
+      const message = `Pull failed (${table}): ${error.message}`;
+      throw isTransientError(error) ? new TransientSyncError(message) : new Error(message);
+    }
+
+    // `columns` is a runtime string, so supabase-js cannot infer the row shape
+    // and falls back to GenericStringError[]. The caller names the real type.
+    const rows = (data ?? []) as unknown as T[];
+    for (const server of rows) await upsertLocal(server);
+    total += rows.length;
+
+    const outcome = advance(
+      cursor,
+      step,
+      rows.map((r) => ({ updated_at: r.updated_at, id: id.of(r) })),
+      PULL_PAGE_SIZE,
+    );
+
+    // Persist before the next request, so a pull that dies mid-table resumes
+    // from here. The cursor still only ever moves to a row we actually
+    // received — we never trust a local clock as the high-water mark.
+    const next = formatCursor(outcome.cursor);
+    if (next !== formatCursor(cursor)) await setCursor(table, next);
+    cursor = outcome.cursor;
+
+    if (!outcome.more) return total;
   }
-  // Advance the cursor to the newest row we actually received (robust to clock
-  // skew — we never trust local "now" as the high-water mark).
-  if (maxSeen !== since) await setCursor(table, maxSeen);
-  return rows.length;
 }
 
 // ---------------------------------------------------------------------------
@@ -288,29 +363,44 @@ export async function syncAll(): Promise<SyncResult> {
   let pulled = 0;
 
   pulled += await runStep('facilities', failures, () =>
-    pullTable<FacilityRow>('facilities', upsertPulledFacility),
+    pullTable<FacilityRow>('facilities', upsertPulledFacility, {
+      column: 'facility_id',
+      of: (r) => r.facility_id,
+    }),
   );
   // Tiny; not counted in pushed/pulled.
   await runStep('ref_cities', failures, pullCityFacilityDefaults);
 
   pushed += await runStep('patients', failures, () => pushTable(PATIENTS_PUSH, failures));
   pulled += await runStep('patients', failures, () =>
-    pullTable<PatientRow>('patients', upsertPulledPatient),
+    pullTable<PatientRow>('patients', upsertPulledPatient, {
+      column: 'patient_id',
+      of: (r) => r.patient_id,
+    }),
   );
 
   pushed += await runStep('screenings', failures, () => pushTable(SCREENINGS_PUSH, failures));
   pulled += await runStep('screenings', failures, () =>
-    pullTable<ScreeningRow>('screenings', upsertPulledScreening),
+    pullTable<ScreeningRow>('screenings', upsertPulledScreening, {
+      column: 'screening_id',
+      of: (r) => r.screening_id,
+    }),
   );
 
   pushed += await runStep('referrals', failures, () => pushTable(REFERRALS_PUSH, failures));
   pulled += await runStep('referrals', failures, () =>
-    pullTable<ReferralRow>('referrals', upsertPulledReferral, REFERRAL_COLUMNS),
+    pullTable<ReferralRow>('referrals', upsertPulledReferral, {
+      column: 'referral_id',
+      of: (r) => r.referral_id,
+    }, REFERRAL_COLUMNS),
   );
 
   pushed += await runStep('appointments', failures, () => pushTable(APPOINTMENTS_PUSH, failures));
   pulled += await runStep('appointments', failures, () =>
-    pullTable<AppointmentRow>('appointments', upsertPulledAppointment),
+    pullTable<AppointmentRow>('appointments', upsertPulledAppointment, {
+      column: 'appointment_id',
+      of: (r) => r.appointment_id,
+    }),
   );
 
   return { pushed, pulled, failures };

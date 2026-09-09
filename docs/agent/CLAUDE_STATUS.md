@@ -363,3 +363,48 @@ Both are the classes Codex found in the 0029 matrix, so I went looking for them 
 **The boundary test has not been run** — no local Postgres here. Run `supabase/tests/0030_preflight.generated.sql`, confirm every row PASS, then apply. It needs 0018 and 0028 applied, and guards on both.
 
 **Next:** case/follow-up work is now **0031**, still gated on the treatment-outcome vocabulary. BASE-05 (sync cursor ties) is the other open HIGH and is explicitly its own unit.
+
+---
+
+## 2026-09-09 - BASE-05 implemented (client-side)
+
+**Files created:** `mobile/src/domain/pullCursor.ts`, `mobile/src/domain/pullCursor.test.ts`.
+**Files changed:** `mobile/src/sync/syncEngine.ts` (`pullTable` and its five call sites), `mobile/src/db/database.ts` (local migration v11).
+
+**No server migration.** BASE-05 is entirely a client bug, so 0031 stays free for case work.
+
+### The defect, precisely
+
+Two facts combined into permanent loss. `pullTable` set no limit of its own, so a server-capped reply was indistinguishable from a complete one; and `updated_at` is not unique, so one bulk write stamps many rows alike. When more rows shared the boundary timestamp than fit in a response, the device took what it got, moved the cursor to that timestamp, and asked for `> timestamp` forever after. The remainder were not delayed — they were unreachable, while the device reported a clean sync.
+
+### The fix
+
+A keyset cursor over `(updated_at, id)`, stored in the existing TEXT column as `<iso>` or `<iso>|<id>` — no schema change, and an old build's value still parses. The request now carries our own `limit`, which is what makes truncation observable at all: a full page means "there may be more", so the cursor keeps the last row's id and the next request drains the rest of that timestamp group by key.
+
+The rule lives in `domain/pullCursor.ts`, which imports nothing — the same split as `domain/accountAccess.ts` / `lib/accountGate.ts`. That is not tidiness: the failure requires "more tied rows than fit in one response", which no device test can reliably manufacture, and a pure module can reproduce exactly.
+
+**Local migration v11** appends a `|*` sentinel to every non-epoch cursor so the first pull after upgrading re-reads its boundary group and recovers what the old build skipped. Without it the new rule would still start strictly after that timestamp and the already-lost rows would stay lost. It is idempotent and leaves the epoch alone.
+
+### Verification performed
+
+| Check | Result |
+| --- | --- |
+| `mobile` suite | 12 files, **215 passed** (was 197; 18 new) |
+| `npx tsc --noEmit` | clean |
+| Regression test: 12 rows sharing one timestamp, page size 5 | all 12 delivered |
+| The same fixture under the OLD rule | 5 delivered, then nothing — the defect, pinned so it cannot silently return |
+| Group split across a page edge | all rows delivered |
+| Interrupted mid-group, resumed from the persisted cursor | all rows delivered, none duplicated in the set |
+| Second pull from a finished cursor | fetches nothing |
+| Healing a stranded cursor | recovers all 12 where the unhealed cursor recovers 0 |
+| Small delta | exactly one request, as before |
+
+Per `mobile/AGENTS.md` I checked the Expo SDK 57 docs before writing: `execAsync` / `runAsync` / `getFirstAsync` and the `PRAGMA user_version` migration pattern are unchanged, and this change adds no new Expo API surface.
+
+### The one thing I could not verify
+
+A drain filters `eq('updated_at', <the timestamp PostgREST just returned>)`, which assumes the value round-trips exactly. PostgreSQL keeps microseconds and PostgREST emits full precision, so it should — but if it ever did not, the drain would match nothing, the group would be treated as finished, and the tied rows would be skipped: **BASE-05 in a new costume**. It is named in the `pullTable` header with the way to check it: pull a table holding more rows at one `updated_at` than `PULL_PAGE_SIZE` and assert the device ends with all of them.
+
+Device-level offline integration (real connectivity loss mid-pull, account switch, cache purge) is also still unexercised — unit tests do not establish device correctness, as the baseline audit says.
+
+**Next:** case/follow-up work is migration 0031, still gated on the treatment-outcome vocabulary. With BASE-05 done, BASE-02 and BASE-03 are the only open HIGHs and both land with that work.
