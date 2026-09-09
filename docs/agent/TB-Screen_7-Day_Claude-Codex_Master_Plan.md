@@ -1,6 +1,6 @@
 # TB-Screen System — 7-Day Capstone Upgrade Plan
 
-> **Gate status — 2026-09-09:** Codex approved and applied migrations 0028 and 0029 in order. The strengthened 0029 live preflight passed 47/47; the post-check reports all 28 target policies active-aware. BASE-01 and BASE-06 are closed. The approved case/follow-up implementation remains migration 0030. See `CODEX_REVIEW.md` for the final disposition.
+> **Gate status — 2026-09-09:** Migrations 0028, 0029, and 0030 are approved and applied. BASE-01, BASE-04, BASE-05, and BASE-06 are closed. The six NTP outcomes and eleven project facility codes are accepted; `weight_kg` is omitted. Claude may proceed with case/follow-up migration 0031, including the mandatory old-client upsert compatibility test. See `CODEX_REVIEW.md`.
 
 **Project:** TB-Screen System  
 **Repository:** `https://github.com/nielarcenal/tb-screen-system`  

@@ -2,7 +2,7 @@
 
 Owner: Claude Code. Reviewer: Codex (Task 1.4 gate).
 **Revision 4 — 2026-09-09.** Revised in response to the third gate (NOT APPROVED, R3-01…R3-06). Baseline: repository HEAD `4659d65`.
-Status: **approved design only.** Migration 0028 passed its live preflight and is approved for application. BASE-06 is migration 0029; case/follow-up work is **migration 0030**.
+Status: **approved for implementation as migration 0031.** Prerequisite migrations 0028, 0029, and 0030 are applied; `weight_kg` is omitted. The old-client upsert compatibility test remains mandatory during implementation.
 Depends on [Task 1.2](CLAUDE_TASK_1.2_CASE_DOMAIN_MODEL.md).
 
 ### Revision 4 changelog
@@ -11,10 +11,10 @@ Depends on [Task 1.2](CLAUDE_TASK_1.2_CASE_DOMAIN_MODEL.md).
 | --- | --- | --- |
 | R3-01 | The `auth.role()` cascade exemption was **wrong** — a cascade from a BHW's referral re-route is an ordinary `authenticated` UPDATE and would have been rejected, breaking re-routing. The trigger now validates the *result* against the unchanged parent link instead of guessing at the caller's privilege. | §2.2 |
 | R3-02 | The void columns repeated the ineffective column-only REVOKE. Same correction as R2-01: table revoke, then grant only the ordinary correction columns. | §4.6 |
-| R3-04 | Every new or replaced policy uses `current_user_active_role()` from its first version, so 0030 does not reproduce BASE-06 in freshly written authorization. | §3.1, §4.6 |
+| R3-04 | Every new or replaced policy uses `current_user_active_role()` from its first version, so 0031 does not reproduce BASE-06 in freshly written authorization. | §3.1, §4.6 |
 | R3-05 | `own_facility_case_ids()` moves to a non-exposed schema and becomes active-role-aware, matching the correction already made for the sole-facility helper. | §4.6 |
 | R3-06 | Withdrawn admin-queue wording removed from §3.4 and marked superseded in the revision-2 changelog. | §3.4 |
-| BASE-06 | Accepted as a release-blocking HIGH and assigned migration 0029 before case/follow-up work in 0030. | §0 |
+| BASE-06 | Accepted as a release-blocking HIGH and assigned migration 0029 before case/follow-up work in 0031. | §0 |
 
 ### Revision 3 changelog
 
@@ -43,7 +43,7 @@ Depends on [Task 1.2](CLAUDE_TASK_1.2_CASE_DOMAIN_MODEL.md).
 
 Codex confirmed **BASE-06**: RLS policies still call `current_user_role()`, which is not active-aware, so a deactivated account with an unexpired JWT keeps scoped patient, referral, screening and appointment access until the token expires. Migration 0028 hardened the RPC gates only and says so.
 
-That is a release-blocking HIGH with its own work unit, and it lands on this design in two places. Everything below uses `current_user_active_role()` (0028) in every new or replaced policy and helper — R3-04 caught me writing `current_user_role()` into a *new* policy, which would have reproduced BASE-06 in freshly written authorization. Because a mixed policy family is its own hazard, **the required order is BASE-06 in 0029, then this design in 0030**, so `appointments` never carries active-aware and inactive-aware policies together.
+That is a release-blocking HIGH with its own work unit, and it lands on this design in two places. Everything below uses `current_user_active_role()` (0028) in every new or replaced policy and helper — R3-04 caught me writing `current_user_role()` into a *new* policy, which would have reproduced BASE-06 in freshly written authorization. Because a mixed policy family is its own hazard, **the required order is BASE-06 in 0029, then this design in 0031**, so `appointments` never carries active-aware and inactive-aware policies together.
 
 ---
 
@@ -289,7 +289,7 @@ using (
 )
 ```
 
-**`current_user_active_role()`, not `current_user_role()` (R3-04).** Revision 3 made only the legacy helper active-aware and left the owned-row branch on the old one, so a deactivated account would have kept reading and updating owned appointments — reproducing BASE-06 inside a policy this design is newly writing. Every new or replaced policy in 0030 uses the active-aware helper from its first version. See §0 on ordering.
+**`current_user_active_role()`, not `current_user_role()` (R3-04).** Revision 3 made only the legacy helper active-aware and left the owned-row branch on the old one, so a deactivated account would have kept reading and updating owned appointments — reproducing BASE-06 inside a policy this design is newly writing. Every new or replaced policy in 0031 uses the active-aware helper from its first version. See §0 on ordering.
 
 **No row is ever visible to two facilities.** The claim race Codex described cannot occur, because at most one facility satisfies the predicate at any moment.
 
@@ -463,7 +463,7 @@ record_visit(
 
 ### 4.5 Other field decisions
 
-- **`weight_kg`** is routine TB treatment monitoring and dosing depends on it; it follows the vitals convention and range-check style of 0024. It is an observation, not an input to anything computed. Per gate decision 1 it is **omitted from 0030 if clinical confirmation is delayed** — unlike the outcome vocabulary, dropping it costs nothing structural.
+- **`weight_kg` is omitted from migration 0031.** It remains clinically unconfirmed, and dropping it costs nothing structural. A later migration may add it after confirmation.
 - **No `treatment_status_after`.** Where the patient stands is `tb_cases.case_status`; its history is `audit_logs`. A third copy per visit would drift from both.
 - **`notes`** is free clinical text, facility-only, exactly like `referrals.result`. It never enters an SMS, a report, an audit payload, or the mobile device.
 
@@ -492,7 +492,7 @@ grant  execute on function app_private.own_facility_case_ids() to authenticated;
 
 `app_private` is not in PostgREST's exposed schema list, so the function is usable in a policy expression — which evaluates as the querying user and therefore needs EXECUTE — but is not reachable as an RPC. The active-role check means it returns nothing for a deactivated or non-DOTS caller even if it were reached.
 
-*Observation, not part of this task:* the existing helpers `referred_patient_ids()`, `referred_screening_ids()`, `bhw_visible_patient_ids()` and `own_enrolled_patient_ids()` are enumerating functions in `public` with the same property. They are pre-existing surface, not something 0030 introduces, so moving them belongs with BASE-06's policy pass rather than here — but they should move.
+*Observation, not part of this task:* the existing helpers `referred_patient_ids()`, `referred_screening_ids()`, `bhw_visible_patient_ids()` and `own_enrolled_patient_ids()` are enumerating functions in `public` with the same property. They are pre-existing surface, not something 0031 introduces, so moving them belongs with BASE-06's policy pass rather than here — but they should move.
 
 **Policies use the active-aware helper from their first version (R3-04).**
 
@@ -524,7 +524,7 @@ Everything else is RPC-only by privilege, not by convention:
 | `voided_at`, `voided_by`, `void_reason` | `void_tb_followup()` only |
 | `followup_id`, `case_id`, `appointment_id`, `recorded_by` | Never — pinned by the 0020 immutable trigger |
 
-If `weight_kg` is omitted from 0030 pending clinical confirmation (§4.5), it drops out of the grant too.
+`weight_kg` is omitted from 0031, so it is omitted from this grant too.
 
 **Verify the effective privileges, not the statements.** The reason this class of error survived two revisions is that a wrong `REVOKE` runs without complaint. The test asserts the outcome:
 
@@ -580,8 +580,6 @@ It is served by a `SECURITY DEFINER` RPC that applies patient authorization and 
 
 ---
 
-## 8. Remaining blockers
+## 8. Remaining implementation gate
 
-1. **`weight_kg`** (§4.5) — clinical confirmation, alongside the outcome vocabulary. Omitted from 0030 if it does not arrive.
-2. **Old-client upsert behaviour** (§3.3) — still unexecuted. Note that §2.2's ownership trigger now makes this less load-bearing than it was: even if PostgREST did include omitted columns in the `SET` list, an old client's re-send carries the *same* values, so the trigger passes it. The test is still required, because a genuine null-out would now fail loudly rather than silently, and that changes the compatibility window from convenient to mandatory.
-3. Everything else raised at the two gates is answered above and needs Codex's re-review rather than an external input.
+**Old-client upsert behaviour** (§3.3) is still unexecuted. The test remains required because a genuine ownership null-out would fail loudly and make the compatibility window mandatory. `weight_kg` is omitted from 0031.

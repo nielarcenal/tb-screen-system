@@ -1,5 +1,18 @@
 # Architecture decision register
 
+## 2026-09-09 — Migration 0030, BASE-05, and migration 0031 inputs
+
+| # | Decision |
+| --- | --- |
+| D-0030-h | The live preflight's invalid `SET LOCAL TIMEZONE` syntax was corrected to `SET LOCAL TIME ZONE`. The regenerated preflight passed 16/16, rolled back, and migration 0030 was applied. BASE-04 is closed. |
+| D-0005-h | BASE-05 is approved. Mobile tests passed 215/215, typecheck is clean, and live Supabase REST returned 500/500 requested rows and matched a returned `updated_at` value exactly through `.eq`. The cursor's load-bearing server assumptions are verified. |
+| D-0031-outcome | Migration 0031 stores the six NTP/WHO patient-level outcomes: `cured`, `treatment_completed`, `treatment_failed`, `died`, `lost_to_follow_up`, and `not_evaluated`. `treatment_success` is derived, not stored. |
+| D-0031-codes | The eleven mappings in `CLAUDE_FACILITY_SHORT_CODES_PROPOSAL.md` are accepted as TB-Screen project codes. They are not represented as confirmed CHO paper abbreviations. |
+| D-0031-weight | `weight_kg` is omitted from migration 0031 because no clinical confirmation is available. |
+| D-0031-next | Claude may implement case/follow-up migration 0031. The real PostgREST old-client upsert compatibility test remains mandatory during implementation. |
+
+---
+
 ## 2026-09-09 — Migration 0029 final gate
 
 | # | Decision |

@@ -7,8 +7,8 @@ Source baseline: `4659d65`, 2026-09-09. Details and recommended fixes are in COD
 | BASE-01 | HIGH | NULL role bypasses reporting RPC authorization | Resolved and applied in migration 0028 |
 | BASE-02 | HIGH | Patient-wide appointment access cannot isolate facilities/episodes | Design resolved in Revision 4; implementation pending case migration |
 | BASE-03 | HIGH | Walk-in registration partial writes and duplicate retry | Design resolved in Revision 4; implementation pending case migration |
-| BASE-04 | HIGH | Barangay report date ranges depend on session timezone | Open; Manila boundaries required |
-| BASE-05 | HIGH | Capped sync pull loses rows tied at cursor timestamp | Open; scoped sync correction and boundary test required |
+| BASE-04 | HIGH | Barangay report date ranges depend on session timezone | Resolved and applied in migration 0030; live preflight 16/16 |
+| BASE-05 | HIGH | Capped sync pull loses rows tied at cursor timestamp | Resolved; 215/215 tests, clean typecheck, and live REST assumptions verified |
 
 ## Task 1.4 architecture gate findings
 
@@ -58,7 +58,7 @@ Revision 2 gate result: **NOT APPROVED**. Independent BASE-01 repair is approved
 | R3-05 | MEDIUM | Public case-ID helper lacks active clinical-role containment | Resolved in Revision 4 |
 | R3-06 | LOW | Revision 3 retains withdrawn admin-queue wording | Resolved in Revision 4 |
 
-Migrations 0028 and 0029 are **APPLIED**. Revision 4 architecture is **APPROVED**, BASE-01 and BASE-06 are closed, and case/follow-up work remains migration 0030.
+Migrations 0028, 0029, and 0030 are **APPLIED**. Revision 4 architecture is **APPROVED**. BASE-01, BASE-04, BASE-05, and BASE-06 are closed; BASE-02 and BASE-03 remain for case/follow-up migration 0031.
 
 Migration 0028 passed 73/73 preflight checks before application. Migration 0029 passed 47/47 strengthened preflight checks before application; its live post-check shows 28 active-aware policies.
 
@@ -67,3 +67,5 @@ Migration 0028 passed 73/73 preflight checks before application. Migration 0029 
 2026-09-09 update: BASE-04 has an implementation awaiting verification — migration 0030. BASE-06 is resolved and applied (0029). Remaining open: BASE-02 and BASE-03 (both land with case work, now 0031) and BASE-05 (sync cursor ties, its own unit, explicitly not to be bundled with case work).
 
 2026-09-09 update: BASE-05 has an implementation awaiting review — client-side only. Remaining open after it: BASE-02 and BASE-03, both landing with case work (migration 0031).
+
+2026-09-09 final update: BASE-04 and BASE-05 passed review and are closed. Migration 0030 is live. The national outcome vocabulary and eleven facility codes are accepted as project conventions, so migration 0031 is unblocked apart from its mandatory old-client upsert compatibility test.

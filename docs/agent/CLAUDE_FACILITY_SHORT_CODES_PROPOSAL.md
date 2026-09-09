@@ -1,8 +1,8 @@
-# Facility short codes — proposal for review (R2-08)
+# Facility short codes — accepted project convention (R2-08)
 
 Owner: Claude Code. Reviewer: Codex.
 Date: 2026-09-09. Source of truth: `supabase/migrations/0009_bukidnon_dots_facilities.sql`, plus `supabase/seed.sql` for the pre-0009 row.
-Status: **proposal only. No migration written.** These are persisted identifiers; per the gate they are reviewed as data, not generated from names at runtime.
+Status: **accepted project convention for migration 0031.** These are persisted identifiers, reviewed as data and never generated from names at runtime.
 
 ---
 
@@ -65,7 +65,7 @@ Admin facility creation (0013, `FacilitiesAdmin`) gains a short-code field, requ
 
 All eleven `type = 'tb_dots'` rows in the schema. Facility IDs are abbreviated to their final segment; the full UUIDs are `00000000-0000-0000-0000-0000000000xx`.
 
-| # | Facility ID | Facility name (post-0009) | Proposed `short_code` | LGU served |
+| # | Facility ID | Facility name (post-0009) | Accepted `short_code` | LGU served |
 | --- | --- | --- | --- | --- |
 | 1 | `…d1` | Bukidnon Provincial Medical Center Hospital DOTS Center | `BPMC` | Provincial referral hospital, Malaybalay City |
 | 2 | `…d2` | Malaybalay City Health DOTS Center | `MLB` | Malaybalay City, Cabanglasan, Impasug-Ong, Lantapan |
@@ -96,16 +96,14 @@ The PSGC city code is already in the schema, unique, and needs no human decision
 
 ---
 
-## 3. What still needs a human
+## 3. Project decision
 
-The codes above are **my proposal, not a confirmed local convention.** If the Valencia CHO or the TB-DOTS head nurse already uses facility abbreviations in their own registers, theirs win — a code that disagrees with the paper record is worse than a longer one that matches. This is the same confirmation route as the outcome vocabulary, and it can be asked in the same conversation.
-
-Unlike the outcome vocabulary, this is **not a hard blocker**: if no local convention exists, the table above is a reasonable default and the migration can proceed on it.
+On 2026-09-09 the user directed implementation to continue without local confirmation because of the defense deadline. The eleven codes above are accepted as TB-Screen's project convention. This does not claim the CHO uses the same abbreviations on paper.
 
 ---
 
-## 4. Open questions
+## 4. Closed questions
 
-1. Do the CHO or TB-DOTS staff already abbreviate these eleven facilities? If so, supply theirs.
-2. `BPMC` versus a uniform three-letter scheme — accept the exception, or force something like `BPM`?
+1. Local abbreviations were not available; use the project mappings above.
+2. Accept `BPMC` as the four-letter exception.
 3. **Confirmed by Codex on 2026-09-09:** the live `facilities` table holds exactly these eleven `tb_dots` rows, with matching IDs and names.

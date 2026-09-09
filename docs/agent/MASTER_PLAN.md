@@ -1,6 +1,8 @@
 # Sprint master plan
 
-2026-09-09: Codex approved and applied migrations **0028** and **0029** in order. The strengthened 0029 live preflight passed **47/47** after two test-harness corrections; the live post-check reports `app_private` present and all **28** target policies active-aware. BASE-01 and BASE-06 are closed. Case/follow-up work may proceed as migration **0030**, subject to its remaining product inputs.
+2026-09-09: Codex approved and applied migration **0030** after its corrected live preflight passed **16/16**. BASE-05 is also approved after **215/215** mobile tests, a clean typecheck, and successful live PostgREST page-size and timestamp round-trip checks. BASE-04 and BASE-05 are closed. The six national treatment outcomes and eleven proposed facility codes are accepted as project conventions; `weight_kg` is omitted. Claude may proceed with case/follow-up migration **0031**, with the old-client upsert compatibility test required during implementation.
+
+2026-09-09: Codex approved and applied migrations **0028** and **0029** in order. The strengthened 0029 live preflight passed **47/47** after two test-harness corrections; the live post-check reports `app_private` present and all **28** target policies active-aware. BASE-01 and BASE-06 are closed.
 
 2026-09-09: Final focused gate **PASSED**. Migration 0028's generated preflight ran against the configured live database and returned **73/73 PASS**, then rolled back; 0028 is approved for application but was not applied by Codex. Revision 4 architecture is **APPROVED** with M28-01..03 and R3-01..06 closed. The live database has exactly the eleven proposed TB-DOTS facility rows. Claude's next unit is BASE-06 as migration **0029**; case/follow-up implementation moves to **0030**. See CODEX_REVIEW.md and DECISIONS.md.
 

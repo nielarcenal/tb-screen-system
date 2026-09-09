@@ -147,7 +147,7 @@ begin
   foreach v_tz in array array['UTC', 'Asia/Manila'] loop
 
     -- ---- 2026-01-01, the Manila day both events belong to -----------------
-    execute format('set local timezone %L', v_tz);
+    execute format('set local time zone %L', v_tz);
     perform pg_temp.as_staff(u_staff);
     select screened_count, positive_count into v_scr, v_pos
       from public.barangay_report(date '2026-01-01', date '2026-01-01')
@@ -170,7 +170,7 @@ begin
     -- ---- 2025-12-31, the day BEFORE. Nothing may leak backwards. ----------
     -- This is the assertion the old code failed: under UTC it filed the 01:00
     -- Manila events here, in the previous day AND the previous YEAR.
-    execute format('set local timezone %L', v_tz);
+    execute format('set local time zone %L', v_tz);
     perform pg_temp.as_staff(u_staff);
     select screened_count, positive_count into v_scr, v_pos
       from public.barangay_report(date '2025-12-31', date '2025-12-31')
@@ -187,7 +187,7 @@ begin
       case when coalesce(v_pos, 0) = 0 then 'PASS' else 'FAIL' end);
 
     -- ---- The full previous YEAR, which is how this report is actually read.
-    execute format('set local timezone %L', v_tz);
+    execute format('set local time zone %L', v_tz);
     perform pg_temp.as_staff(u_staff);
     select positive_count into v_pos
       from public.barangay_report(date '2025-01-01', date '2025-12-31')
@@ -214,7 +214,7 @@ $boundary$;
 do $control$
 declare n_old bigint; n_new bigint;
 begin
-  set local timezone 'UTC';
+  set local time zone 'UTC';
 
   -- The old arithmetic: timestamptz compared to a bare date parameter.
   select count(*) into n_old

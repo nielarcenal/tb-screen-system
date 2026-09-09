@@ -1,3 +1,17 @@
+# Codex review — Migration 0030, BASE-05, and migration 0031 inputs
+
+2026-09-09. Result: **APPROVED / CLOSED**.
+
+- Migration 0030's body verifier passed. Its first live preflight exposed invalid test syntax (`SET LOCAL TIMEZONE`); the test now uses PostgreSQL's `SET LOCAL TIME ZONE`. The regenerated preflight passed **16/16** against the live database, rolled back, and migration 0030 was then applied successfully. BASE-04 is closed.
+- BASE-05 passed the mobile suite (**215/215**) and `tsc --noEmit`. A live Supabase REST check returned the requested **500/500** rows and successfully matched a PostgREST-emitted `updated_at` value through `.eq`; the timestamp round-trip assumption is verified. BASE-05 is closed.
+- Migration 0031 uses the six NTP/WHO patient-level outcomes: `cured`, `treatment_completed`, `treatment_failed`, `died`, `lost_to_follow_up`, and `not_evaluated`. `treatment_success` remains a derived aggregate.
+- The eleven codes in `CLAUDE_FACILITY_SHORT_CODES_PROPOSAL.md` are accepted as the TB-Screen project convention. This does not claim they are the CHO's paper-register abbreviations.
+- Unconfirmed `weight_kg` is omitted from 0031. The only remaining implementation gate is the mandatory real PostgREST old-client upsert compatibility test.
+
+Claude may proceed directly with case/follow-up migration **0031**.
+
+---
+
 # Codex review — Migration 0029 / BASE-06
 
 2026-09-09; reviewed commit `290572b`, corrected two matrix defects, ran the strengthened preflight against the live database, and applied migrations 0028 then 0029. No migration defect remains open.

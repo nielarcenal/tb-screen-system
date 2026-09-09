@@ -2,7 +2,7 @@
 
 Owner: Claude Code. Reviewer: Codex (Task 1.4 gate).
 **Revision 4 — 2026-09-09.** Revised in response to the third gate (NOT APPROVED, R3-01…R3-06). Baseline: repository HEAD `4659d65`.
-Status: **approved design only.** Migration 0028 passed its live preflight and is approved for application. BASE-06 is migration 0029; case work is **migration 0030**.
+Status: **approved for implementation as migration 0031.** Prerequisite migrations 0028, 0029, and 0030 are applied; the outcome vocabulary and facility codes are accepted project conventions. The old-client upsert compatibility test remains mandatory during implementation.
 Read with [CODEX_BASELINE_AUDIT.md](CODEX_BASELINE_AUDIT.md), [CODEX_REVIEW.md](CODEX_REVIEW.md), [Task 1.3](CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md) and [the short-code proposal](CLAUDE_FACILITY_SHORT_CODES_PROPOSAL.md).
 
 ### Revision 4 changelog
@@ -10,17 +10,17 @@ Read with [CODEX_BASELINE_AUDIT.md](CODEX_BASELINE_AUDIT.md), [CODEX_REVIEW.md](
 | Finding | Resolution | Section |
 | --- | --- | --- |
 | R3-03 | The short-code CHECK accepted NULL for TB-DOTS rows — a NULL regex test makes the whole CHECK unknown, which PostgreSQL accepts. `short_code is not null` added, with a constraint test table. | §6 |
-| R3-04 | Every new or replaced RLS policy and helper in 0030 uses `current_user_active_role()` (0028) from its first version, so 0030 does not reproduce BASE-06 in freshly written authorization. | §8 |
-| BASE-06 | Accepted as a release-blocking HIGH and assigned migration 0029 before case work in 0030. | §8.2 |
+| R3-04 | Every new or replaced RLS policy and helper in 0031 uses `current_user_active_role()` (0028) from its first version, so 0031 does not reproduce BASE-06 in freshly written authorization. | §8 |
+| BASE-06 | Accepted as a release-blocking HIGH and assigned migration 0029 before case work in 0031. | §8.2 |
 
 ### Revision 3 changelog
 
 | Finding | Resolution | Section |
 | --- | --- | --- |
-| R2-03 | `audit_logs`, its whitelist trigger and its RLS move **into 0030**, the first migration that creates mutable case data. No RPC ships before its audit dependency exists. | §9 |
+| R2-03 | `audit_logs`, its whitelist trigger and its RLS move **into 0031**, the first migration that creates mutable case data. No RPC ships before its audit dependency exists. | §9 |
 | R2-04 | Treatment start becomes one atomic transition: `set_tb_case_status()` takes the date. `update_tb_case_details()` can no longer touch it. New row invariants pin the date to the states that semantically follow treatment start, and pin it NULL for the states that precede it. | §3.2, §4, §7.2 |
 | R2-08 | `short_code` becomes nullable with a `type = 'tb_dots'` CHECK, populated and verified before the constraint is added. The eleven mappings are proposed separately as reviewable data. | §6 |
-| Renumbering | Every case-work reference to "0028" becomes **0030**; 0028 is now the BASE-01 repair. | throughout |
+| Renumbering | Every case-work reference to "0028" becomes **0031**; 0028 is now the BASE-01 repair. | throughout |
 
 ### Revision 2 changelog
 
@@ -153,20 +153,13 @@ always has a start date; `cancelled` is reachable only from `registered`, so it
 never does. The two CHECKs state that directly rather than leaning on transition
 history to imply it.
 
-### 3.1 Outcome vocabulary — documented source, local confirmation still blocking
+### 3.1 Outcome vocabulary — accepted project standard
 
-Proposed values: `cured`, `treatment_completed`, `treatment_failed`, `died`, `lost_to_follow_up`, `not_evaluated`.
+Accepted values: `cured`, `treatment_completed`, `treatment_failed`, `died`, `lost_to_follow_up`, `not_evaluated`.
 
-**Source.** These are the six treatment outcomes for drug-susceptible TB defined in WHO, *Definitions and reporting framework for tuberculosis — 2013 revision* (and carried through its later updates), which also defines "treatment success" as the aggregate of `cured` + `treatment_completed`. The Philippine DOH NTP Manual of Procedures adopts this framework.
+**Source.** These are the six treatment outcomes in the Philippine DOH NTP Manual of Procedures, 6th Edition, consistent with WHO's *Definitions and reporting framework for tuberculosis — 2013 revision*. `treatment_success` is an aggregate of `cured` plus `treatment_completed`, not a seventh patient-level outcome, so it is not stored in the CHECK.
 
-**What is still unverified, stated plainly:** I have not read the specific MOP edition the facility uses, and I did not consult a primary source in this session. So this is a documented standard rather than an invention, but it is **not yet a verified local requirement.**
-
-Two things must happen before 0030 is written:
-
-1. The TB-DOTS head nurse confirms these six values are the set the facility records — the same confirmation route used for 0024 and 0025 on 2026-09-06.
-2. The migration header cites the confirmed source document and edition, the way 0009 cites its facility list.
-
-If confirmation is delayed, the migration does **not** ship a guessed CHECK and does **not** ship a free-text column. `outcome` is simply omitted from 0030, and `closed` is unreachable until a follow-up migration adds the confirmed vocabulary. A case registry that cannot yet close is honest; one that closes into invented categories is not.
+**Project decision, 2026-09-09:** the user directed implementation to continue without local head-nurse confirmation because of the defense deadline. Migration 0031 uses the six-value national standard above and cites the NTP MOP 6th Edition. This records a project convention; it does not claim that a separate local paper-register convention was verified.
 
 ---
 
@@ -227,7 +220,7 @@ Extend the existing `enforce_immutable_columns` trigger (0020) to `tb_cases`, pi
 
 **Decision: a transfer moves the case; it does not close and re-open it.** Closing a case on transfer would force staff to record an outcome that did not happen and would corrupt every outcome count.
 
-**Revision 2: the transfer RPC ships in migration 0030, not in Priority B.** Only the *UI* is deferred. Codex's point stands — the global one-active-case index (§4) creates a state that only a transfer can resolve, so shipping the constraint without the remedy would strand a receiving facility with no recourse.
+**Revision 2: the transfer RPC ships in migration 0031, not in Priority B.** Only the *UI* is deferred. Codex's point stands — the global one-active-case index (§4) creates a state that only a transfer can resolve, so shipping the constraint without the remedy would strand a receiving facility with no recourse.
 
 ### Making the transfer executable
 
@@ -298,7 +291,7 @@ alter table public.facilities
 
 The CHECK is added **last**, after the eleven rows are populated and after the migration verifies that no `tb_dots` row is left without a code and no other row has one — raising rather than proceeding if either count is non-zero. The baseline audit warns these migrations have been hand-applied, so a live TB-DOTS facility absent from the mapping must stop the migration, not receive an invented code.
 
-The eleven mappings are proposed as reviewable data in [CLAUDE_FACILITY_SHORT_CODES_PROPOSAL.md](CLAUDE_FACILITY_SHORT_CODES_PROPOSAL.md) — never derived from `facilities.name` at runtime, since 0009 itself renamed a facility and a code already printed on patient records must not follow. `short_code` is pinned immutable by the 0020 trigger. Admin facility creation (0013) gains a short-code field, required only when the type is `tb_dots`.
+The eleven mappings are accepted project data in [CLAUDE_FACILITY_SHORT_CODES_PROPOSAL.md](CLAUDE_FACILITY_SHORT_CODES_PROPOSAL.md) — never derived from `facilities.name` at runtime, since 0009 itself renamed a facility and a code already printed on patient records must not follow. `short_code` is pinned immutable by the 0020 trigger. Admin facility creation (0013) gains a short-code field, required only when the type is `tb_dots`.
 
 **Transactional counter.**
 
@@ -391,7 +384,7 @@ The primary key is namespaced by `operation`, so a `create_tb_case` key can neve
 
 **Retention is bounded.** Rows older than 7 days are purged by the existing cron infrastructure (0003). A retry window is measured in minutes; after the purge a replayed key simply creates a new record, which is the correct behaviour for a key that is no longer meaningful. The purge job is part of the migration, not an afterthought.
 
-The table is created in 0030 and reused unchanged by the BASE-03 atomic walk-in registration RPC, per gate decision 3.
+The table is created in 0031 and reused unchanged by the BASE-03 atomic walk-in registration RPC, per gate decision 3.
 
 ---
 
@@ -423,7 +416,7 @@ Per gate decision 2, **BASE-01 is repaired before or inside the first migration 
 - raises `42501` with a uniform message on any failure;
 - is created with `revoke execute ... from public, anon` and an explicit grant to `authenticated` (or nothing, for admin-only functions gated internally).
 
-**BASE-06, confirmed at the third gate, is a prerequisite.** 0028 hardened the RPC gates only; the RLS policies still call `current_user_role()`, so a deactivated account with an unexpired JWT keeps scoped row access until the token expires. Every policy and helper introduced by 0030 uses `current_user_active_role()` from its first version (R3-04), but a table carrying one active-aware policy beside several inactive-aware ones is its own hazard. **Required order: BASE-06 in 0029, then case work in 0030.**
+**BASE-06, confirmed at the third gate, is a prerequisite.** 0028 hardened the RPC gates only; the RLS policies still call `current_user_role()`, so a deactivated account with an unexpired JWT keeps scoped row access until the token expires. Every policy and helper introduced by 0031 uses `current_user_active_role()` from its first version (R3-04), but a table carrying one active-aware policy beside several inactive-aware ones is its own hazard. **Required order: BASE-06 in 0029, then case work in 0031.**
 
 **Required ACL test matrix**, applied to every new and repaired function, using real database roles rather than mocks:
 
@@ -440,9 +433,9 @@ Per gate decision 2, **BASE-01 is repaired before or inside the first migration 
 
 ## 9. `audit_logs`
 
-**Revision 3: this table ships in 0030, not on Day 6.** Codex was right that the previous plan was incoherent — `transfer_tb_case()`, `set_tb_case_status()`, the appointment-assignment RPCs and `record_visit()` are all specified to write audit events and all ship in the case migration, so scheduling `audit_logs` for a later task would leave them either failing outright or silently unaudited, with the early history unreconstructable afterwards.
+**Revision 3: this table ships in 0031, not on Day 6.** Codex was right that the previous plan was incoherent — `transfer_tb_case()`, `set_tb_case_status()`, the appointment-assignment RPCs and `record_visit()` are all specified to write audit events and all ship in the case migration, so scheduling `audit_logs` for a later task would leave them either failing outright or silently unaudited, with the early history unreconstructable afterwards.
 
-So 0030 contains the table, the whitelist trigger function, the RLS policies and the event-writing contract. **No RPC is enabled before its audit dependency exists.** The Day-6 Audit Trail task adds the viewer and widens event coverage to tables beyond the case triad; it does not create the table.
+So 0031 contains the table, the whitelist trigger function, the RLS policies and the event-writing contract. **No RPC is enabled before its audit dependency exists.** The Day-6 Audit Trail task adds the viewer and widens event coverage to tables beyond the case triad; it does not create the table.
 
 ```text
 audit_id       uuid pk
@@ -481,8 +474,9 @@ Rules:
 
 ---
 
-## 11. Remaining blockers
+## 11. Remaining implementation gates
 
-1. **Outcome vocabulary** (§3.1) — the source is now documented, but local confirmation with the TB-DOTS head nurse is still required. If it does not arrive, 0030 ships without `outcome` and without a reachable `closed` state.
-2. **Facility short codes** (§6) — the seed list for existing Bukidnon TB-DOTS facilities must be agreed before the migration; I will propose it from 0009 for confirmation rather than inventing codes.
-3. Everything else raised at the gate is answered above and needs Codex's re-review rather than an external input.
+1. Use the accepted six-value NTP outcome vocabulary in §3.1.
+2. Use the accepted eleven project short codes in §6.
+3. Execute the old-client PostgREST appointment-upsert compatibility test before relying on omitted ownership keys.
+4. Omit follow-up `weight_kg` from migration 0031 because it remains clinically unconfirmed.
