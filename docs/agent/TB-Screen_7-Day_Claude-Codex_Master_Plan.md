@@ -1,6 +1,6 @@
 # TB-Screen System — 7-Day Capstone Upgrade Plan
 
-> **Gate status — 2026-09-10:** Migrations 0028 through 0032 are approved and applied. BASE-01 through BASE-06 are closed. Migration 0032's atomic walk-in RPC passed an 18/18 live rollback preflight and all 391 repository tests pass. Migration 0031's mandatory authenticated old-client BHW run remains open because `TBSCREEN_TEST_PASSWORD` is not configured in this checkout. Start the appointment ownership client-contract unit only after that script prints `GATE: CLOSED`. See `CODEX_REVIEW.md`.
+> **Gate status — 2026-09-10:** Migrations 0028 through 0033 are approved and applied, and BASE-01 through BASE-06 are closed. Migration 0032's atomic walk-in RPC passed 18/18 live checks. Migration 0033's legacy-upsert compatibility boundary passed 13/13 live checks, followed by a disposable authenticated BHW run at 9/9 and `GATE: CLOSED`. The web/mobile/SMS appointment ownership client contract is implemented; full regression is 402/402 with build and typechecks passing. The seven-day Priority A finish remains achievable only with Priority B frozen and the remaining units completed in the recovery sequence below. See `HANDOFF.md` and `CODEX_REVIEW.md`.
 
 **Project:** TB-Screen System  
 **Repository:** `https://github.com/nielarcenal/tb-screen-system`  
@@ -1330,17 +1330,34 @@ If no significant problem exists, explicitly record PASS.
 
 # 12. Daily Checklist
 
+## Recovery sequence — 2026-09-10 through 2026-09-16
+
+This is the critical path for a seven-calendar-day finish. It is aggressive but still
+credible because the schema, lifecycle RPCs, RLS, audit storage, atomic walk-in path,
+and appointment compatibility/client foundations are already complete.
+
+- **Sep 10:** foundations, compatibility gate, and appointment client contract — complete.
+- **Sep 11:** case creation, facility case list/filtering, case detail, focused tests.
+- **Sep 12:** treatment lifecycle actions, follow-up/visit recording, missed logic, tests.
+- **Sep 13:** longitudinal timeline contract, UI, tests, privacy review.
+- **Sep 14:** attention-required dashboard, metrics, query review, tests.
+- **Sep 15:** audit viewer/access checks, security and performance pass; resolve all Highs.
+- **Sep 16:** full regressions, device/offline smoke, demo data/rehearsal, release checkpoint.
+
+Cut rule: if a Priority A unit slips, remove Priority B work immediately; do not compress
+the Sep 16 regression and demo gate.
+
 ## Day 1
 
-- [ ] baseline audit
-- [ ] TB case model
-- [ ] follow-up relationship model
-- [ ] architecture review passed
+- [x] baseline audit
+- [x] TB case model
+- [x] follow-up relationship model
+- [x] architecture review passed
 
 ## Day 2
 
-- [ ] TB case migration
-- [ ] RLS
+- [x] TB case migration
+- [x] RLS
 - [ ] case creation
 - [ ] case list/detail
 - [ ] tests

@@ -221,6 +221,7 @@ export default function PatientDetailScreen() {
 
   const apptChip = (a: AppointmentRow) => {
     if (a.status === 'missed') return followUpChip.missed;
+    if (a.status === 'cancelled') return followUpChip.cancelled;
     return followUpChip.upcoming; // scheduled + attended both wear teal
   };
 

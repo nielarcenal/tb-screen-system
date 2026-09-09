@@ -76,16 +76,12 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
     setOutcome(r?.result_outcome ?? null);
     setSampleId(r?.lab_sample_id ?? '');
     if (r) {
-      // D-13: PATIENT-scoped, deliberately, and the heading now says so.
-      // `appointments` has no referral_id (0001) — a check-up belongs to the
-      // person, not to the referral that prompted it — so a patient referred
-      // twice shows both episodes' check-ups in both panels. Filtering by date
-      // would only guess; renaming the section states the truth, and the full
-      // attendance history is what staff want in front of them anyway.
+      // Migration 0031 makes ownership explicit. This referral panel shows its
+      // pre-case appointments; treatment visits move to the case detail.
       const { data: appts, error: aErr } = await supabase
         .from('appointments')
         .select('*')
-        .eq('patient_id', r.patient_id)
+        .eq('referral_id', r.referral_id)
         .order('scheduled_date', { ascending: false });
       if (aErr) setError(aErr.message);
       setAppointments((appts ?? []) as AppointmentRow[]);
@@ -205,7 +201,12 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
     setScheduleError(null);
     const { error: err } = await supabase
       .from('appointments')
-      .insert({ patient_id: patientId, scheduled_date: scheduleDate });
+      .insert({
+        patient_id: patientId,
+        facility_id: referral.facility_id,
+        referral_id: referral.referral_id,
+        scheduled_date: scheduleDate,
+      });
     if (err) {
       setScheduleError(err.message);
       setScheduling(false);
@@ -542,7 +543,7 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
         </div>
       </div>
 
-      {/* Check-up appointments — the patient's, not this referral's (D-13). */}
+      {/* Check-up appointments owned by this referral (migration 0031). */}
       <div className="rd-section">
         <div className="rd-sectionhead">
           <span className="msym" aria-hidden="true">
@@ -644,7 +645,9 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
                     ? t('detail.apptScheduled')
                     : a.status === 'attended'
                       ? t('detail.apptAttended')
-                      : t('detail.apptMissed')}
+                      : a.status === 'missed'
+                        ? t('detail.apptMissed')
+                        : t('detail.apptCancelled')}
                 </span>
                 {timingNote(a) ? <span className="appt-timing">{timingNote(a)}</span> : null}
                 {attendId === a.appointment_id ? (
@@ -687,6 +690,18 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
                         >
                           {t('detail.markMissed')}
                         </button>
+                        <button
+                          className="appt-cancel"
+                          disabled={busy}
+                          onClick={() =>
+                            void updateAppointment(a.appointment_id, {
+                              attended_date: null,
+                              status: 'cancelled',
+                            })
+                          }
+                        >
+                          {t('detail.cancelAppointment')}
+                        </button>
                       </>
                     ) : a.status === 'attended' ? (
                       <>
@@ -705,7 +720,7 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
                           {t('detail.apptUndo')}
                         </button>
                       </>
-                    ) : (
+                    ) : a.status === 'missed' ? (
                       <>
                         <button
                           className="appt-attend"
@@ -722,6 +737,14 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
                           {t('detail.apptUndo')}
                         </button>
                       </>
+                    ) : (
+                      <button
+                        className="appt-undo"
+                        disabled={busy}
+                        onClick={() => void undoAppointment(a.appointment_id)}
+                      >
+                        {t('detail.apptUndo')}
+                      </button>
                     )}
                   </span>
                 )}

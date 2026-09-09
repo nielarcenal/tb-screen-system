@@ -18,7 +18,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { en } from '../i18n/locales/en';
-import type { ReferralJoined } from '../lib/types';
+import type { AppointmentRow, ReferralJoined } from '../lib/types';
 import { emptyVitals } from '../lib/vitals';
 import ReferralDetail from './ReferralDetail';
 
@@ -37,6 +37,10 @@ const mock = vi.hoisted(() => {
     appointments: [] as unknown[],
     /** Every payload passed to .update(), in order. */
     updates: [] as Record<string, unknown>[],
+    /** Every table/column/value equality used while loading. */
+    selectFilters: [] as Array<[string, string, unknown]>,
+    /** Every appointment payload passed to .insert(). */
+    inserts: [] as Record<string, unknown>[],
     /** When set, what the server ends up holding in `result` regardless of
      *  what was sent — lets a test tell a repaint-from-reload apart from the
      *  local edit that merely happens to match. */
@@ -49,14 +53,20 @@ const mock = vi.hoisted(() => {
         select: () =>
           table === 'referrals'
             ? {
-                eq: () => ({
-                  maybeSingle: () => Promise.resolve({ data: db.referral, error: null }),
-                }),
+                eq: (column: string, value: unknown) => {
+                  db.selectFilters.push([table, column, value]);
+                  return {
+                    maybeSingle: () => Promise.resolve({ data: db.referral, error: null }),
+                  };
+                },
               }
             : {
-                eq: () => ({
-                  order: () => Promise.resolve({ data: db.appointments, error: null }),
-                }),
+                eq: (column: string, value: unknown) => {
+                  db.selectFilters.push([table, column, value]);
+                  return {
+                    order: () => Promise.resolve({ data: db.appointments, error: null }),
+                  };
+                },
               },
         update: (fields: Record<string, unknown>) => ({
           eq: () => {
@@ -70,7 +80,10 @@ const mock = vi.hoisted(() => {
             return Promise.resolve({ error: null });
           },
         }),
-        insert: () => Promise.resolve({ error: null }),
+        insert: (fields: Record<string, unknown>) => {
+          db.inserts.push(fields);
+          return Promise.resolve({ error: null });
+        },
       };
     },
   };
@@ -156,10 +169,28 @@ const notesBox = () =>
 const saveButton = () => screen.getByRole('button', { name: en.detail.saveResult });
 const lastUpdate = () => mock.db.updates[mock.db.updates.length - 1];
 
+function makeAppointment(over: Partial<AppointmentRow> = {}): AppointmentRow {
+  return {
+    appointment_id: 'appt-1',
+    patient_id: 'pat-1',
+    facility_id: 'fac-1',
+    referral_id: 'ref-1',
+    tb_case_id: null,
+    scheduled_date: '2099-09-20',
+    attended_date: null,
+    status: 'scheduled',
+    created_at: '2026-09-10T00:00:00.000Z',
+    updated_at: '2026-09-10T00:00:00.000Z',
+    ...over,
+  };
+}
+
 beforeEach(() => {
   mock.db.referral = null;
   mock.db.appointments = [];
   mock.db.updates = [];
+  mock.db.selectFilters = [];
+  mock.db.inserts = [];
   mock.db.serverResult = undefined;
 });
 
@@ -438,5 +469,46 @@ describe('ReferralDetail referral origin', () => {
       screen.getByText(en.detail.registeredHere.replace('{{name}}', 'Nurse Ana Lim')),
     ).toBeTruthy();
     expect(screen.queryByText(/Screened by/)).toBeNull();
+  });
+});
+
+describe('ReferralDetail appointment ownership', () => {
+  it('loads only appointments owned by the open referral', async () => {
+    await renderDetail(makeReferral({ referral_id: 'ref-owned' }));
+    expect(mock.db.selectFilters).toContainEqual(['appointments', 'referral_id', 'ref-owned']);
+    expect(mock.db.selectFilters).not.toContainEqual(['appointments', 'patient_id', 'pat-1']);
+  });
+
+  it('writes the referral and facility when scheduling', async () => {
+    await renderDetail(makeReferral());
+    fireEvent.click(screen.getByRole('button', { name: en.detail.scheduleBtn }));
+    fireEvent.change(screen.getByLabelText(en.detail.scheduleDateLabel), {
+      target: { value: '2099-09-20' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: en.detail.scheduleConfirm }));
+
+    await waitFor(() => expect(mock.db.inserts).toHaveLength(1));
+    expect(mock.db.inserts[0]).toMatchObject({
+      patient_id: 'pat-1',
+      facility_id: 'fac-1',
+      referral_id: 'ref-1',
+      scheduled_date: '2099-09-20',
+    });
+  });
+
+  it('cancels a scheduled appointment without recording attendance', async () => {
+    mock.db.appointments = [makeAppointment()];
+    await renderDetail(makeReferral());
+    fireEvent.click(screen.getByRole('button', { name: en.detail.cancelAppointment }));
+
+    await waitFor(() => expect(mock.db.updates).toHaveLength(1));
+    expect(lastUpdate()).toEqual({ attended_date: null, status: 'cancelled' });
+  });
+
+  it('renders a cancelled appointment as an inactive state', async () => {
+    mock.db.appointments = [makeAppointment({ status: 'cancelled' })];
+    await renderDetail(makeReferral());
+    expect(screen.getByText(en.detail.apptCancelled)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: en.detail.markAttended })).toBeNull();
   });
 });

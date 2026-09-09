@@ -15,7 +15,7 @@ export type UserRole = 'bhw' | 'tb_dots' | 'midwife' | 'admin';
 export type Sex = 'male' | 'female';
 export type PgisSeverity = 'none' | 'mild' | 'moderate' | 'severe';
 export type ReferralStatus = 'submitted' | 'received' | 'tested' | 'closed';
-export type AppointmentStatus = 'scheduled' | 'attended' | 'missed';
+export type AppointmentStatus = 'scheduled' | 'attended' | 'missed' | 'cancelled';
 export type SmsDeliveryStatus = 'queued' | 'sent' | 'failed' | 'stubbed';
 
 /** Tri-state answer for DOH-NTP symptom items where "unsure" is meaningful (§5). */
@@ -172,6 +172,8 @@ export interface ReferralRow {
 export interface AppointmentRow {
   appointment_id: string;
   patient_id: string;
+  facility_id: string | null;
+  referral_id: string | null;
   scheduled_date: string;
   attended_date: string | null;
   status: AppointmentStatus;

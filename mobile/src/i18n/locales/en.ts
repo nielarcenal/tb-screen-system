@@ -256,6 +256,7 @@ export const en = {
       scheduled: 'Upcoming',
       attended: 'Attended',
       missed: 'Missed',
+      cancelled: 'Cancelled',
     },
     editDetails: 'Edit details',
     saveChanges: 'Save changes',

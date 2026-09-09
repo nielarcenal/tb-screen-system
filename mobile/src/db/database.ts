@@ -253,6 +253,17 @@ const MIGRATIONS: string[] = [
    WHERE last_pull_at <> '1970-01-01T00:00:00.000Z'
      AND instr(last_pull_at, '|') = 0;
   `,
+
+  // v12 — migration 0031 appointment ownership. Existing rows stay nullable;
+  // the server backfill resolves unambiguous rows and pull fills these fields.
+  `
+  ALTER TABLE appointments ADD COLUMN facility_id TEXT;
+  ALTER TABLE appointments ADD COLUMN referral_id TEXT;
+  CREATE INDEX IF NOT EXISTS appointments_facility_date_idx
+    ON appointments(facility_id, scheduled_date);
+  CREATE INDEX IF NOT EXISTS appointments_referral_idx
+    ON appointments(referral_id);
+  `,
 ];
 
 // Bundled PSGC dataset — Bukidnon only (documented delimitation, §6). Generated

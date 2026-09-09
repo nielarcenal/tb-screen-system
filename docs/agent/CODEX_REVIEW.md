@@ -1,3 +1,29 @@
+# Codex review — Migration 0033 and appointment client contract
+
+2026-09-10. Result: **APPROVED, APPLIED, AND COMPATIBILITY GATE CLOSED**.
+
+The required authenticated old-client run initially exposed a real compatibility defect:
+legacy whole-row PostgREST upserts assign `appointment_id` and `created_at`, while migration
+0031 had intentionally granted UPDATE only on business columns. PostgreSQL rejected the
+request before RLS or the ownership trigger could preserve the new links. Migration 0033
+grants those two legacy payload columns while extending the immutable trigger to reject
+any real identifier or `created_at` change. Its live rollback matrix passed **13/13**, and
+the migration was applied atomically.
+
+The final harness used a disposable Auth user with a BHW profile, ran both referral-linked
+and case-linked fixtures, passed **9/9**, printed `GATE: CLOSED`, and removed both profile
+and Auth user afterward. No real account password was changed, committed, or retained.
+
+The formerly blocked client contract is implemented: portal reads and creates appointments
+by explicit referral/facility ownership and supports `cancelled`; mobile schema v12 and sync
+preserve both owner IDs and the status; all English, Tagalog, and Cebuano copies cover the
+state; SMS resolves location from `appointment.facility_id` and uses newest-referral lookup
+only for legacy NULL owners. Focused typechecks and web/mobile/edge tests pass. Full-suite
+regression is **402/402** (web 133, mobile 218, edge 51), and the production build plus
+all TypeScript checks pass.
+
+---
+
 # Codex re-review — Migration 0031
 
 2026-09-09; reviewed commit `09c36bd`. Result: **APPROVED AND APPLIED**.

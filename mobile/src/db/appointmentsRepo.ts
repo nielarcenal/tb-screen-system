@@ -11,6 +11,8 @@ export type LocalAppointmentRow = AppointmentRow & { sync_status: SyncStatus };
 interface AppointmentSqlRow {
   appointment_id: string;
   patient_id: string;
+  facility_id: string | null;
+  referral_id: string | null;
   scheduled_date: string;
   attended_date: string | null;
   status: string;
@@ -23,6 +25,8 @@ function fromSql(r: AppointmentSqlRow): LocalAppointmentRow {
   return {
     appointment_id: r.appointment_id,
     patient_id: r.patient_id,
+    facility_id: r.facility_id,
+    referral_id: r.referral_id,
     scheduled_date: r.scheduled_date,
     attended_date: r.attended_date,
     status: r.status as AppointmentStatus,
@@ -39,10 +43,11 @@ export async function insertLocalAppointment(
   const ts = nowIso();
   await db.runAsync(
     `INSERT INTO appointments
-       (appointment_id, patient_id, scheduled_date, attended_date, status,
-        created_at, updated_at, sync_status)
-     VALUES (?,?,?,?,?,?,?, 'pending')`,
-    [a.appointment_id, a.patient_id, a.scheduled_date, a.attended_date, a.status, ts, ts],
+       (appointment_id, patient_id, facility_id, referral_id,
+        scheduled_date, attended_date, status, created_at, updated_at, sync_status)
+     VALUES (?,?,?,?,?,?,?,?,?, 'pending')`,
+    [a.appointment_id, a.patient_id, a.facility_id, a.referral_id,
+     a.scheduled_date, a.attended_date, a.status, ts, ts],
   );
 }
 
@@ -91,11 +96,13 @@ export async function upsertPulledAppointment(server: AppointmentRow): Promise<v
 
   await db.runAsync(
     `INSERT INTO appointments
-       (appointment_id, patient_id, scheduled_date, attended_date, status,
-        created_at, updated_at, sync_status)
-     VALUES (?,?,?,?,?,?,?, 'synced')
+       (appointment_id, patient_id, facility_id, referral_id,
+        scheduled_date, attended_date, status, created_at, updated_at, sync_status)
+     VALUES (?,?,?,?,?,?,?,?,?, 'synced')
      ON CONFLICT(appointment_id) DO UPDATE SET
        patient_id     = excluded.patient_id,
+       facility_id    = excluded.facility_id,
+       referral_id    = excluded.referral_id,
        scheduled_date = excluded.scheduled_date,
        attended_date  = excluded.attended_date,
        status         = excluded.status,
@@ -105,6 +112,8 @@ export async function upsertPulledAppointment(server: AppointmentRow): Promise<v
     [
       server.appointment_id,
       server.patient_id,
+      server.facility_id,
+      server.referral_id,
       server.scheduled_date,
       server.attended_date,
       server.status,

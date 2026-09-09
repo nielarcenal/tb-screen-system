@@ -1,15 +1,31 @@
 # Sprint master plan
 
-2026-09-10: **BASE-03 is closed.** Migration **0032** adds an active-TB-DOTS-only,
+2026-09-10 latest checkpoint: **the seven-day Priority A finish remains achievable,
+but only as a strict scope-controlled sprint.** All six BASE findings are closed.
+Migration **0033** restored authenticated legacy appointment upsert compatibility
+without making identifiers or timestamps mutable; its live rollback preflight passed
+**13/13**, it was applied atomically, and a disposable real authenticated BHW completed
+the old-client harness at **9/9, `GATE: CLOSED`**. No standing account password was
+changed or stored. The appointment client contract is now implemented across the portal,
+mobile SQLite/sync, all six locale files, and SMS destination selection. The remaining
+critical path is the user-facing case registry, treatment/follow-up UI, timeline,
+attention dashboard, audit viewer/security pass, then the final regression/demo day.
+Priority B work is deferred until that path is green.
+
+Current full regression: portal **133/133**, mobile **218/218**, and edge
+functions **51/51** (**402 total**); production build and all TypeScript checks
+pass. The build retains its pre-existing large-chunk advisory.
+
+2026-09-10 earlier checkpoint (superseded by the latest entry above): **BASE-03 is
+closed.** Migration **0032** adds an active-TB-DOTS-only,
 payload-bound, idempotent `register_walkin()` RPC and the portal now uses that one
 transaction instead of three PostgREST writes. The live rollback preflight passed
 **18/18**, including injected failure at each of the patient, screening, and referral
 steps with zero residual rows. Migration 0032 was then applied atomically; the live
 post-check confirms the function exists, `authenticated` can execute it, and `anon`
 and `service_role` cannot. Full regression: web 129, mobile 215, edge 47; all passing,
-with web production build and both TypeScript checks clean. The 0031 authenticated
-old-client gate remains open because `TBSCREEN_TEST_PASSWORD` is still absent; the
-ownership client-contract unit must continue to wait for `GATE: CLOSED`.
+with web production build and both TypeScript checks clean. At that checkpoint, the
+0031 authenticated old-client gate had not yet been closed.
 
 2026-09-09: Migration **0031 is APPROVED AND APPLIED** after its strengthened live rollback preflight passed **140/140**. BASE-02 is closed. A service-role PostgREST probe preserved all three appointment ownership columns across both fixture shapes, but the release gate still requires the authenticated BHW run; `TBSCREEN_TEST_PASSWORD` is absent from this checkout. The client contract unit remains blocked until `old-client-upsert-check.mjs` prints `GATE: CLOSED` under that identity.
 

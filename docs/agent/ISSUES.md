@@ -1,11 +1,19 @@
 # Issue register
 
-2026-09-10 update: **BASE-03 is resolved and applied** in migration 0032. The
+2026-09-10 latest update: the migration 0031 compatibility gate is **closed**.
+Migration **0033** passed its **13/13** live rollback matrix, was applied, and the
+old-client harness passed **9/9** as a disposable authenticated BHW. The client
+appointment-ownership contract is implemented and focused web/mobile/edge checks pass.
+All BASE-01 through BASE-06 findings are resolved; the active release work is now the
+remaining Priority A case, follow-up, timeline, dashboard, audit, and release workflow.
+Full regression is **402/402** (web 133, mobile 218, edge 51), with production
+build and TypeScript checks passing.
+
+2026-09-10 earlier checkpoint (superseded by the latest update above): **BASE-03 is
+resolved and applied** in migration 0032. The
 atomic `register_walkin()` RPC and portal client passed an 18/18 live rollback matrix,
-all 391 repository tests, production build, and TypeScript checks. The authenticated
-old-client gate from migration 0031 remains open because the local test password is
-not configured; this is the only blocker on the appointment ownership client-contract
-unit.
+all 391 repository tests, production build, and TypeScript checks. At that checkpoint,
+the authenticated old-client gate from migration 0031 had not yet been closed.
 
 Source baseline: `4659d65`, 2026-09-09. Details and recommended fixes are in CODEX_REVIEW.md. No implementation fixes were made during the baseline audit.
 
@@ -13,7 +21,7 @@ Source baseline: `4659d65`, 2026-09-09. Details and recommended fixes are in COD
 | --- | --- | --- | --- |
 | BASE-01 | HIGH | NULL role bypasses reporting RPC authorization | Resolved and applied in migration 0028 |
 | BASE-02 | HIGH | Patient-wide appointment access cannot isolate facilities/episodes | Resolved and applied in migration 0031; strengthened live preflight 140/140 |
-| BASE-03 | HIGH | Walk-in registration partial writes and duplicate retry | Design resolved in Revision 4; implementation pending case migration |
+| BASE-03 | HIGH | Walk-in registration partial writes and duplicate retry | Resolved and applied in migration 0032; live rollback matrix 18/18 |
 | BASE-04 | HIGH | Barangay report date ranges depend on session timezone | Resolved and applied in migration 0030; live preflight 16/16 |
 | BASE-05 | HIGH | Capped sync pull loses rows tied at cursor timestamp | Resolved; 215/215 tests, clean typecheck, and live REST assumptions verified |
 

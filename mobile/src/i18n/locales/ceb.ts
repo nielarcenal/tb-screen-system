@@ -269,6 +269,7 @@ export const ceb: Translation = {
       scheduled: 'Umaabot',
       attended: 'Mitambong',
       missed: 'Wala natuman',
+      cancelled: 'Gikansela',
     },
     editDetails: 'Usba ang detalye',
     saveChanges: 'I-save ang mga kausaban',

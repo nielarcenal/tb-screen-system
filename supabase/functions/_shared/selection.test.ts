@@ -15,16 +15,55 @@ import { describe, expect, it } from 'vitest';
 
 import {
   STALE_QUEUED_MINUTES,
+  SMS_FOLLOWUP_STATUS,
+  SMS_REMINDER_STATUS,
   classifyFollowUpLogs,
+  resolveAppointmentFacilityIds,
   shouldFollowUp,
   shouldRemind,
   staleQueuedCutoff,
   type SmsLogRow,
 } from './selection.ts';
 
+describe('resolveAppointmentFacilityIds', () => {
+  it('uses appointment ownership even when a newer referral points elsewhere', () => {
+    const result = resolveAppointmentFacilityIds(
+      [{ appointment_id: 'a', patient_id: 'p', facility_id: 'original' }],
+      [{ patient_id: 'p', facility_id: 'newer-referral' }],
+    );
+    expect(result.get('a')).toBe('original');
+  });
+
+  it('falls back to the newest referral only for a legacy NULL owner', () => {
+    const result = resolveAppointmentFacilityIds(
+      [{ appointment_id: 'a', patient_id: 'p', facility_id: null }],
+      [
+        { patient_id: 'p', facility_id: 'newest' },
+        { patient_id: 'p', facility_id: 'older' },
+      ],
+    );
+    expect(result.get('a')).toBe('newest');
+  });
+
+  it('returns null when neither ownership nor referral exists', () => {
+    const result = resolveAppointmentFacilityIds(
+      [{ appointment_id: 'a', patient_id: 'p', facility_id: null }],
+      [],
+    );
+    expect(result.get('a')).toBeNull();
+  });
+});
+
 const NOW = Date.parse('2026-08-27T10:00:00.000Z');
 const CUTOFF = staleQueuedCutoff(NOW);
 const ago = (minutes: number) => new Date(NOW - minutes * 60_000).toISOString();
+
+it('cancelled appointments are neither reminder nor missed-follow-up candidates', () => {
+  expect(SMS_REMINDER_STATUS).toBe('scheduled');
+  expect(SMS_FOLLOWUP_STATUS).toBe('missed');
+  expect('cancelled').not.toBe(SMS_REMINDER_STATUS);
+  expect('cancelled').not.toBe(SMS_FOLLOWUP_STATUS);
+});
 
 const row = (
   appointment_id: string,

@@ -269,6 +269,7 @@ export const tl: Translation = {
       scheduled: 'Paparating',
       attended: 'Dumalo',
       missed: 'Hindi natupad',
+      cancelled: 'Kinansela',
     },
     editDetails: 'Baguhin ang detalye',
     saveChanges: 'I-save ang mga pagbabago',

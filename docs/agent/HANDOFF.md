@@ -1,18 +1,21 @@
-# Session handoff — 2026-09-10 (updated: migration 0032 applied)
+# Session handoff — 2026-09-10 (updated: migration 0033 and client contract)
 
 ## 2026-09-10 continuation checkpoint
 
-BASE-03 is fixed and live. Migration 0032 introduces `register_walkin()` and the
-portal registration screen now sends the patient, screening and received referral as
-one idempotent transaction. The 18/18 live rollback preflight forced failure at each
-insert stage and proved that no patient, screening, referral, or ledger row survives.
-The exact migration was applied inside an explicit transaction; its ACL post-check
-passed. Web 129/129, mobile 215/215, and edge 47/47 pass; production build and
-TypeScript checks are clean.
+All BASE findings and the appointment compatibility gate are closed. Migration 0032's
+atomic `register_walkin()` passed its 18/18 live rollback preflight and is live. The
+authenticated old-client run then found a legacy whole-row UPDATE privilege mismatch;
+migration 0033 fixed it while pinning `appointment_id`, `patient_id`, and `created_at`
+as immutable. Its live rollback preflight passed 13/13 and it was applied atomically.
+A disposable authenticated BHW subsequently passed the old-client harness 9/9 with
+`GATE: CLOSED`; cleanup removed both its public profile and Auth user.
 
-The next dependency has not changed: obtain `TBSCREEN_TEST_PASSWORD` locally and run
-`node scripts/old-client-upsert-check.mjs`. Do not start the 0031 appointment ownership
-client-contract unit until it prints `GATE: CLOSED` as the authenticated BHW.
+The client appointment contract is implemented across web, mobile, and SMS: explicit
+facility/referral ownership, referral-scoped portal reads, a reversible `cancelled`
+state, mobile SQLite v12/sync persistence, six locale updates, and legacy-only SMS
+facility fallback. The next unit is the user-facing case registry (Tasks 2.2–2.5).
+Full regression is **402/402** (web 133, mobile 218, edge 51); the portal production
+build and all TypeScript checks pass. Vite still reports the existing large-chunk advisory.
 
 For whoever picks this up next: a new Claude session, Codex, or Niel.
 Branch `feature/capstone-upgrade`, pushed to origin. Baseline was `4659d65` on `main`.
@@ -31,10 +34,11 @@ Read this first, then [MASTER_PLAN.md](MASTER_PLAN.md) for task ownership and [I
 | **BASE-05** sync cursor loses tied rows | **Fixed and approved**, client-side | Ships with the next mobile build |
 | **BASE-02** appointments patient-wide | **Fixed, approved, and applied live** (migration 0031) | Nothing |
 | **BASE-03** walk-in partial writes | **Fixed, approved, and applied live** (migration 0032) | Ships with the portal client checkpoint |
-| **Case / follow-up model** (Tasks 1.2 / 1.3) | **Approved and applied** as migration 0031; strengthened live preflight **140/140 PASS** | Authenticated old-client gate only — see §2 |
-| **Client contract change** (`cancelled`, ownership columns, SMS destination) | Not started | Start after the authenticated old-client gate closes — see §3 |
+| **Case / follow-up model** (Tasks 1.2 / 1.3) | **Approved and applied** as migration 0031; strengthened live preflight **140/140 PASS** | User-facing case/treatment workflow remains |
+| **Legacy appointment compatibility** | **Fixed and applied** (migration 0033); preflight **13/13**, authenticated harness **9/9** | Nothing |
+| **Client contract change** (`cancelled`, ownership columns, SMS destination) | **Implemented and focused checks passing** | Ship with the next web/mobile/function deployment |
 
-Server migrations 0028 through 0031 are applied.
+Server migrations 0028 through 0033 are applied.
 
 Commits on the branch, oldest first:
 
@@ -48,62 +52,53 @@ acb3b17  Add a session handoff
 2b07ee3  Approve BASE-05 and unblock case migration          (Codex)
 288602c  Give TB cases, follow-ups and appointments an owner  (0031, amended by Codex to scrub a credential)
 09c36bd  Make the appointment links agree about the patient, not just the facility
+d430657  Make walk-in registration atomic and retry-safe
 ```
 
-The recent commits are still not pushed. Migration 0031 is now applied, but no push was
-requested in this review turn.
+The feature branch contains migrations 0028 through 0033, their verification artifacts,
+the atomic walk-in portal client, and the appointment client contract.
 
 The only untracked file is `docs/TB-Screen_Barangay_Report_Design_Canvas_Brief.md`, which predates this work and was deliberately left alone.
 
 ---
 
-## 2. Do this first
+## 2. Gate result and next unit
+
+Do the user-facing case registry next (Tasks 2.2–2.5): case creation from an
+eligible referral, facility-scoped list and filters, case detail/lifecycle actions
+through the approved RPCs, and focused tests. The database and RLS half already exists.
+Keep Priority B deferred; the seven-day finish depends on completing case UI,
+treatment/follow-up, timeline, attention dashboard, audit/security, and the release
+day in that order.
 
 Migration 0031 is reviewed and applied. Its final live rollback preflight passed
 **140/140**. The post-apply check confirms `tb_cases`, `treatment_followups`, `audit_logs`,
 `rpc_requests`, all eleven short codes, and the active purge cron job.
 
-**Close the authenticated old-client gate.**
+**The authenticated old-client gate is closed.**
 
-```bash
-TBSCREEN_TEST_PASSWORD='...' node scripts/old-client-upsert-check.mjs
-```
-
-The password has no default and never will: one was committed once as a fallback (M31-07)
-and had to be scrubbed from an unpushed commit. Supply it from the environment or the
-gitignored `.env`.
-
-Stage 1 already passed under the real `bhw.arcenal@tbscreen.ph` identity before application.
-A post-apply service-role run executed both Stage 2 fixtures and preserved `facility_id`,
-`referral_id`, and a non-NULL `tb_case_id`, but service role bypasses RLS and column
-privileges and does not close the gate. This checkout has no `TBSCREEN_TEST_PASSWORD`; add
-it to the gitignored `.env` and rerun the script.
-
-The script prints `GATE: CLOSED` only when an authenticated BHW run completes every required
-ownership assertion without a failure. Missing columns, skipped fixtures, service fallback,
-or a failed assertion all print `GATE: NOT CLOSED` and exit non-zero.
-
-If stage 2 ever fails for real, the compatibility window of Task 1.3 3.4 stops being a
-convenience and becomes mandatory *before* anything relies on ownership.
+The first disposable authenticated run exposed missing UPDATE privileges for the two
+legacy whole-row payload columns `appointment_id` and `created_at`. Migration 0033 grants
+that compatibility while an immutable trigger rejects actual identifier, patient, or
+creation-time changes. Its live rollback matrix passed 13/13, the migration is live, and
+the rerun passed 9/9 with `GATE: CLOSED`. The temporary public/Auth BHW was deleted and no
+standing account password was changed or stored.
 
 ---
 
-## 3. The client half, and why it is not in this commit
+## 3. Completed client contract
 
-`cancelled` in the web and mobile status unions, `facility_id` / `referral_id` on the mobile
-appointment row and the referral screen, the portal's schedule-check-up insert, the three
-locale files, and the SMS destination moving from "latest referral" to
-`appointment.facility_id` - none of it is done, and none of it may go first.
-
-PostgREST rejects an unknown column with a 400, so the database had to go first. Migration
-0031 is now live; close the authenticated compatibility gate, then ship the client unit.
-
-Nothing in it is blocked on a decision. The complete file-by-file surface is Task 1.3 3.3
-and 5.
+- Web appointments are loaded by `referral_id`; scheduling persists `facility_id` and
+  `referral_id`; `cancelled` is inactive and reversible without recording attendance.
+- Mobile SQLite v12, repository insert/pull, shared types, referral scheduling, chips, and
+  English/Tagalog/Cebuano strings preserve the same ownership and status contract.
+- SMS uses `appointment.facility_id`. Only a legacy NULL owner falls back to the newest
+  referral, so a later referral cannot redirect an owned appointment.
+- Focused web, mobile, and edge tests pin those behaviors.
 
 ## 4. The verification harness — use it, do not reinvent it
 
-Three server migrations shipped with the same two-part discipline, and Codex expects it.
+Server migrations 0028 through 0033 shipped with the same two-part discipline.
 
 **Transcription verifiers.** Where a fix required restating existing SQL, a script proves only the intended thing changed. Each self-tests by mutating its own input.
 
@@ -126,9 +121,9 @@ The generated file is gitignored on purpose — regenerate it, never edit it, or
 `psql` or `config.toml`, but `npx supabase db query --file <preflight> --linked
 --project-ref momiqgnhylqijyadldhg` runs a whole file through the Management API and honours
 its own `begin;` / `rollback;`. 0031's matrix was executed, and doing so found three defects
-that reading it would not have. DDL is still applied by the user in the SQL editor; a
-preflight is not an application, because it always rolls back - verify afterwards that it
-did.
+that reading it would not have. A preflight is not an application because it always rolls
+back. Use `scripts/build-migration-apply.mjs` for an explicit transactional apply batch,
+then run a read-only post-check.
 
 ---
 
@@ -136,7 +131,6 @@ did.
 
 Carry these forward; they are not closed.
 
-- **Old-client PostgREST upsert, second half.** The mechanism is now executed rather than assumed: an omitted column survives an upsert against the real stack, as a real signed-in account. The same question about the three ownership columns needs 0031 applied - `node scripts/old-client-upsert-check.mjs`, stage 2.
 - **Device-level offline integration** — real mid-pull connectivity loss, account switch, cache purge. Unit tests do not establish device correctness.
 - **Everything 0031 asserts, against a POPULATED table.** Its matrix builds its own world of known size and rolls it back. The backfill moved the live rows during the preflight and reported none left unowned, but that is only true of the data as it stood; re-read the NOTICE when it is applied for real.
 - **`facility_id NOT NULL` on appointments.** Deliberately not set (Task 1.3 3.4). Its acceptance test is `select count(*) from appointments where facility_id is null` returning 0, once unsupported clients are retired.

@@ -55,6 +55,9 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { createGateway, type SendOutcome } from './gateway.ts';
 import {
   classifyFollowUpLogs,
+  resolveAppointmentFacilityIds,
+  SMS_FOLLOWUP_STATUS,
+  SMS_REMINDER_STATUS,
   shouldFollowUp,
   shouldRemind,
   staleQueuedCutoff,
@@ -159,6 +162,7 @@ function manilaDate(offsetDays: number): string {
 interface ApptRow {
   appointment_id: string;
   patient_id: string;
+  facility_id: string | null;
   scheduled_date: string;
   patients: { contact_number: string | null; preferred_language: string | null };
 }
@@ -247,8 +251,8 @@ Deno.serve(async (req) => {
 
   const { data: dueData, error: dueErr } = await supabase
     .from('appointments')
-    .select('appointment_id, patient_id, scheduled_date, patients!inner(contact_number, sms_consent, preferred_language)')
-    .eq('status', 'scheduled')
+    .select('appointment_id, patient_id, facility_id, scheduled_date, patients!inner(contact_number, sms_consent, preferred_language)')
+    .eq('status', SMS_REMINDER_STATUS)
     .in('scheduled_date', reminderDates)
     .eq('patients.sms_consent', true);
   if (dueErr) return fail(`reminder query failed: ${dueErr.message}`);
@@ -275,24 +279,23 @@ Deno.serve(async (req) => {
     for (const r of logged ?? []) remindedToday.add(r.appointment_id as string);
   }
 
-  // Map each due patient to the (neutral) facility they were referred to — the
-  // "where to go". Appointments carry no facility; the referral does.
-  const facilityByPatient = new Map<string, string | null>();
+  // The appointment owns its destination (0031). Only legacy NULL rows fall
+  // back to the newest referral; a later referral cannot redirect this visit.
+  const facilityByAppointment = new Map<string, string | null>();
   if (due.length > 0) {
-    const pids = [...new Set(due.map((a) => a.patient_id))];
-    const { data: refs, error: refErr } = await supabase
-      .from('referrals')
-      .select('patient_id, facility_id, created_at')
-      .in('patient_id', pids)
-      .order('created_at', { ascending: false });
-    if (refErr) return fail(`referral lookup failed: ${refErr.message}`);
-    const facIdByPatient = new Map<string, string>();
-    for (const r of refs ?? []) {
-      if (!facIdByPatient.has(r.patient_id as string)) {
-        facIdByPatient.set(r.patient_id as string, r.facility_id as string);
-      }
+    const legacyPids = [...new Set(due.filter((a) => !a.facility_id).map((a) => a.patient_id))];
+    let refs: { patient_id: string; facility_id: string }[] = [];
+    if (legacyPids.length > 0) {
+      const { data, error: refErr } = await supabase
+        .from('referrals')
+        .select('patient_id, facility_id, created_at')
+        .in('patient_id', legacyPids)
+        .order('created_at', { ascending: false });
+      if (refErr) return fail(`referral lookup failed: ${refErr.message}`);
+      refs = (data ?? []) as { patient_id: string; facility_id: string }[];
     }
-    const fids = [...new Set(facIdByPatient.values())];
+    const ids = resolveAppointmentFacilityIds(due, refs);
+    const fids = [...new Set([...ids.values()].filter((id): id is string => !!id))];
     const nameByFacility = new Map<string, string>();
     if (fids.length > 0) {
       const { data: facs, error: facErr } = await supabase
@@ -302,7 +305,12 @@ Deno.serve(async (req) => {
       if (facErr) return fail(`facility lookup failed: ${facErr.message}`);
       for (const f of facs ?? []) nameByFacility.set(f.facility_id as string, neutralFacility(f.name as string));
     }
-    for (const [pid, fid] of facIdByPatient) facilityByPatient.set(pid, nameByFacility.get(fid) ?? null);
+    for (const [appointmentId, facilityId] of ids) {
+      facilityByAppointment.set(
+        appointmentId,
+        facilityId ? nameByFacility.get(facilityId) ?? null : null,
+      );
+    }
   }
 
   for (const a of due) {
@@ -321,7 +329,7 @@ Deno.serve(async (req) => {
       reminderMessage(
         asLang(a.patients.preferred_language),
         a.scheduled_date,
-        facilityByPatient.get(a.patient_id) ?? null,
+        facilityByAppointment.get(a.appointment_id) ?? null,
       ),
     );
     if (outcome === 'unreserved') rem.skipped++;
@@ -345,8 +353,8 @@ Deno.serve(async (req) => {
 
   const { data: missedData, error: missedErr } = await supabase
     .from('appointments')
-    .select('appointment_id, patient_id, scheduled_date, patients!inner(contact_number, sms_consent, preferred_language)')
-    .eq('status', 'missed')
+    .select('appointment_id, patient_id, facility_id, scheduled_date, patients!inner(contact_number, sms_consent, preferred_language)')
+    .eq('status', SMS_FOLLOWUP_STATUS)
     .gte('updated_at', windowStart)
     .eq('patients.sms_consent', true);
   if (missedErr) return fail(`missed query failed: ${missedErr.message}`);

@@ -6,7 +6,7 @@
 export type Sex = 'male' | 'female';
 export type PgisSeverity = 'none' | 'mild' | 'moderate' | 'severe';
 export type ReferralStatus = 'submitted' | 'received' | 'tested' | 'closed';
-export type AppointmentStatus = 'scheduled' | 'attended' | 'missed';
+export type AppointmentStatus = 'scheduled' | 'attended' | 'missed' | 'cancelled';
 export type TriState = 'yes' | 'no' | 'unsure';
 
 /** DOH-NTP checklist answers (jsonb). The SOLE basis for referral (§5). */
@@ -177,6 +177,9 @@ export interface BhwActivityRow {
 export interface AppointmentRow {
   appointment_id: string;
   patient_id: string;
+  facility_id: string | null;
+  referral_id: string | null;
+  tb_case_id: string | null;
   scheduled_date: string;
   attended_date: string | null;
   status: AppointmentStatus;

@@ -1,5 +1,13 @@
 # Claude status log
 
+> **Codex handback — 2026-09-10, next unit Tasks 2.2–2.5:** Migration 0033 is
+> approved and applied after a 13/13 live rollback matrix. A disposable
+> authenticated BHW then passed the old-client harness 9/9 with `GATE: CLOSED`
+> and was fully removed. The web/mobile/SMS appointment client contract is
+> implemented. Full regression is 402/402, build and typechecks pass. Proceed
+> with the user-facing case registry; keep Priority B frozen for the seven-day
+> recovery sequence in the master plan.
+
 > **Codex handback — 2026-09-09, migration 0031:** APPROVED AND APPLIED. The corrected live rollback preflight passed **140/140**; the installed schema has all expected tables, eleven coded TB-DOTS facilities, and the active purge cron job. A service-role PostgREST probe preserved `facility_id`, `referral_id`, and a non-NULL `tb_case_id`, but correctly left the gate open because it bypasses RLS. Add `TBSCREEN_TEST_PASSWORD` to the gitignored `.env`, rerun `node scripts/old-client-upsert-check.mjs`, and start the client contract unit only after it prints `GATE: CLOSED` under the authenticated BHW identity.
 
 > **Codex handback — 2026-09-09, migration 0031:** CHANGES REQUIRED; do not apply. Three added live isolation probes failed (3/123): appointment referral/case links omit patient identity, and the TB-DOTS insert policy accepts an unlinked patient outside the caller's referral scope. Also close the parent-outcome/follow-up date gap, define the actually supported `record_visit` status transitions, and make the case-linked old-client upsert test non-vacuous. The hard-coded test credential fallback was removed and the unpushed 0031 commit must be amended before any push. Full details are at the top of `CODEX_REVIEW.md`.

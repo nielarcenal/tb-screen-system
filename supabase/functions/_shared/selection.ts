@@ -49,6 +49,8 @@
 /** Minutes after which an unsettled 'queued' reservation is treated as spent
  *  rather than as a delivery. See the header for how the bound was chosen. */
 export const STALE_QUEUED_MINUTES = 60;
+export const SMS_REMINDER_STATUS = 'scheduled';
+export const SMS_FOLLOWUP_STATUS = 'missed';
 
 /** The `sent_at` cutoff for the above, as an ISO string to compare rows to. */
 export function staleQueuedCutoff(nowMs: number, minutes = STALE_QUEUED_MINUTES): string {
@@ -143,6 +145,37 @@ export function shouldFollowUp(
 export interface ReminderCandidate {
   appointment_id: string;
   contact_number: string | null;
+}
+
+export interface FacilityAppointment {
+  appointment_id: string;
+  patient_id: string;
+  facility_id: string | null;
+}
+
+export interface FacilityReferral {
+  patient_id: string;
+  facility_id: string;
+}
+
+/** Explicit appointment ownership wins. Newest-first referrals are only a
+ * compatibility fallback for legacy appointments whose owner is still NULL. */
+export function resolveAppointmentFacilityIds(
+  appointments: readonly FacilityAppointment[],
+  referrals: readonly FacilityReferral[],
+): Map<string, string | null> {
+  const fallbackByPatient = new Map<string, string>();
+  for (const referral of referrals) {
+    if (!fallbackByPatient.has(referral.patient_id)) {
+      fallbackByPatient.set(referral.patient_id, referral.facility_id);
+    }
+  }
+  return new Map(
+    appointments.map((appointment) => [
+      appointment.appointment_id,
+      appointment.facility_id ?? fallbackByPatient.get(appointment.patient_id) ?? null,
+    ]),
+  );
 }
 
 /** Should this upcoming check-up get a reminder now? See the header for why

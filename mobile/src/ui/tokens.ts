@@ -58,5 +58,6 @@ export const statusChip = {
 export const followUpChip = {
   upcoming: { bg: palette.tealContainer, fg: palette.tealDark },
   missed: { bg: palette.redContainer, fg: palette.red },
+  cancelled: { bg: palette.surfaceVariant, fg: palette.muted },
   noShow: { bg: palette.amberContainer, fg: palette.amberInk },
 } as const;

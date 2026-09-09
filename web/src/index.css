@@ -1301,12 +1301,15 @@ button.amber:hover { background: var(--amber-container); }
 .chip.a-scheduled { background: var(--teal-container); color: var(--teal-dark); }
 .chip.a-attended { background: #dff0ea; color: #12735f; }
 .chip.a-missed { background: #f7ecd8; color: #8a5e00; }
+.chip.a-cancelled { background: #eceae5; color: var(--muted); }
 .appt-actions { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
 .appt-actions button { margin: 0; padding: 5px 10px; border-radius: 8px; font-size: 11.5px; font-weight: 600; }
 .appt-attend { border: 1px solid #a9d7db; background: #eaf6f6; color: #014b57; }
 .appt-attend:hover { background: #dcefef; }
 .appt-miss { border: 1px solid #e6cfa0; background: #fbf4e5; color: #8a5e00; }
 .appt-miss:hover { background: #f6ecd6; }
+.appt-cancel { border: 1px solid #d6d1c8; background: #f4f2ed; color: var(--muted); }
+.appt-cancel:hover { background: #ebe8e1; }
 .appt-empty {
   display: flex;
   flex-direction: column;

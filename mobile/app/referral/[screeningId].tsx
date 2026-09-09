@@ -91,6 +91,8 @@ export default function CreateReferralScreen() {
       await insertLocalAppointment({
         appointment_id: uuid(),
         patient_id: patient.patient_id,
+        facility_id: facilityId,
+        referral_id: referralId,
         scheduled_date: toDateOnly(date),
         attended_date: null,
         status: 'scheduled',
