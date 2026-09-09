@@ -1,5 +1,12 @@
 # Issue register
 
+2026-09-10 update: **BASE-03 is resolved and applied** in migration 0032. The
+atomic `register_walkin()` RPC and portal client passed an 18/18 live rollback matrix,
+all 391 repository tests, production build, and TypeScript checks. The authenticated
+old-client gate from migration 0031 remains open because the local test password is
+not configured; this is the only blocker on the appointment ownership client-contract
+unit.
+
 Source baseline: `4659d65`, 2026-09-09. Details and recommended fixes are in CODEX_REVIEW.md. No implementation fixes were made during the baseline audit.
 
 | ID | Severity | Issue | Status |

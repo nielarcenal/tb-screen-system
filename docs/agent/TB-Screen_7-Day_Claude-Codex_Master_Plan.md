@@ -1,6 +1,6 @@
 # TB-Screen System — 7-Day Capstone Upgrade Plan
 
-> **Gate status — 2026-09-09:** Migrations 0028 through 0031 are approved and applied. BASE-01, BASE-02, BASE-04, BASE-05, and BASE-06 are closed. Migration 0031 passed a 140/140 live rollback preflight. Its service-role PostgREST probe preserved all appointment ownership columns, but the mandatory authenticated BHW run remains open because `TBSCREEN_TEST_PASSWORD` is not configured in this checkout. Start the client contract unit only after that script prints `GATE: CLOSED`. See `CODEX_REVIEW.md`.
+> **Gate status — 2026-09-10:** Migrations 0028 through 0032 are approved and applied. BASE-01 through BASE-06 are closed. Migration 0032's atomic walk-in RPC passed an 18/18 live rollback preflight and all 391 repository tests pass. Migration 0031's mandatory authenticated old-client BHW run remains open because `TBSCREEN_TEST_PASSWORD` is not configured in this checkout. Start the appointment ownership client-contract unit only after that script prints `GATE: CLOSED`. See `CODEX_REVIEW.md`.
 
 **Project:** TB-Screen System  
 **Repository:** `https://github.com/nielarcenal/tb-screen-system`  

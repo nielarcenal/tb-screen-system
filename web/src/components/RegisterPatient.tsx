@@ -35,7 +35,7 @@
  * PRIVACY (§4): the contact number is stored ONLY alongside SMS consent, which
  * the patients_sms_consent_gate CHECK enforces in the database as well.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
@@ -49,7 +49,6 @@ import {
   VITALS_KEYS,
   PgisSeverity,
   ageFromBirthdate,
-  composeFullName,
   manilaToday,
 } from '../lib/types';
 import { evaluateReferral, isChecklistComplete } from '../lib/screeningRules';
@@ -105,7 +104,30 @@ interface Registered {
   referred: boolean;
 }
 
-export default function RegisterPatient({ me, onOpenReferral }: Props) {
+interface RegistrationIds {
+  requestId: string;
+  patientId: string;
+  screeningId: string;
+  referralId: string;
+}
+
+interface RegisterWalkinResult {
+  patient_id: string;
+  screening_id: string;
+  referral_id: string;
+  display_code: string;
+  full_name: string;
+  referred: boolean;
+}
+
+const newRegistrationIds = (): RegistrationIds => ({
+  requestId: crypto.randomUUID(),
+  patientId: crypto.randomUUID(),
+  screeningId: crypto.randomUUID(),
+  referralId: crypto.randomUUID(),
+});
+
+export default function RegisterPatient({ onOpenReferral }: Props) {
   const { t } = useTranslation();
 
   const [firstName, setFirstName] = useState('');
@@ -126,6 +148,8 @@ export default function RegisterPatient({ me, onOpenReferral }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Registered | null>(null);
+  const ids = useRef<RegistrationIds | null>(null);
+  if (!ids.current) ids.current = newRegistrationIds();
 
   // Parse vitals once per render. Blank is always valid and stores null —
   // nothing here is required, and a facility without a working oximeter must
@@ -174,76 +198,54 @@ export default function RegisterPatient({ me, onOpenReferral }: Props) {
     setVitalsText(emptyVitalsText);
     setDone(null);
     setError(null);
+    ids.current = newRegistrationIds();
   };
 
-  /**
-   * Write the three rows in FK order. There is no transaction across PostgREST
-   * calls, so a failure part-way leaves an orphan — which is precisely why
-   * 0025 widened patients_tbdots_read to cover the caller's own enrolments:
-   * a half-written registration stays visible and repairable instead of
-   * disappearing into a table the account can no longer read.
-   */
+  /** Migration 0032 owns the patient -> screening -> referral transaction.
+   * The four ids live across retries, so a lost success response replays the
+   * same request instead of creating a duplicate patient. */
   const save = async () => {
     if (!canSave || !sex || !barangay || age === null || !outcome) return;
     setBusy(true);
     setError(null);
     try {
-      const { data: code, error: codeErr } = await supabase.rpc('next_facility_patient_code');
-      if (codeErr) throw new Error(codeErr.message);
-
-      const patientId = crypto.randomUUID();
-      const screeningId = crypto.randomUUID();
-      const referralId = crypto.randomUUID();
-      const fullName = composeFullName(firstName, middleName, lastName);
-
-      const { error: pErr } = await supabase.from('patients').insert({
-        patient_id: patientId,
-        display_code: code as string,
-        enrolled_by: me.user_id,
-        full_name: fullName,
-        first_name: firstName.trim(),
-        middle_name: middleName.trim() || null,
-        last_name: lastName.trim(),
-        birthdate,
-        age,
-        sex,
-        barangay_code: barangay,
-        sitio: sitio.trim() || null,
-        // §4 / patients_sms_consent_gate: a number and a consent date exist
-        // only alongside SMS consent, and the database refuses anything else.
-        contact_number: smsOptIn ? contactNumber.trim() : null,
-        sms_consent: smsOptIn,
-        consent_date: smsOptIn ? new Date().toISOString() : null,
-        preferred_language: smsOptIn ? smsLanguage : null,
+      const operation = ids.current!;
+      const { data, error: rpcError } = await supabase.rpc('register_walkin', {
+        p_request_id: operation.requestId,
+        p_patient_id: operation.patientId,
+        p_screening_id: operation.screeningId,
+        p_referral_id: operation.referralId,
+        p_first_name: firstName.trim(),
+        p_middle_name: middleName.trim() || null,
+        p_last_name: lastName.trim(),
+        p_birthdate: birthdate,
+        p_sex: sex,
+        p_barangay_code: barangay,
+        p_sitio: sitio.trim() || null,
+        p_sms_consent: smsOptIn,
+        p_contact_number: smsOptIn ? contactNumber.trim() : null,
+        p_preferred_language: smsOptIn ? smsLanguage : null,
+        p_symptom_flags: flags,
+        p_pgis_severity: pgis,
+        p_height_cm: vitals.height_cm,
+        p_weight_kg: vitals.weight_kg,
+        p_temperature_c: vitals.temperature_c,
+        p_systolic_bp: vitals.systolic_bp,
+        p_diastolic_bp: vitals.diastolic_bp,
+        p_pulse_rate: vitals.pulse_rate,
+        p_spo2_percent: vitals.spo2_percent,
       });
-      if (pErr) throw new Error(pErr.message);
-
-      const { error: sErr } = await supabase.from('screenings').insert({
-        screening_id: screeningId,
-        patient_id: patientId,
-        symptom_flags: flags,
-        pgis_severity: pgis,
-        ...vitals,
-        referred: outcome.referred, // checklist alone (§5)
-      });
-      if (sErr) throw new Error(sErr.message);
-
-      const { error: rErr } = await supabase.from('referrals').insert({
-        referral_id: referralId,
-        patient_id: patientId,
-        screening_id: screeningId,
-        facility_id: me.facility_id,
-        // Already here — 'submitted' would describe a journey that never
-        // happened. lab_sample_id stays null until sputum is actually taken.
-        status: 'received',
-      });
-      if (rErr) throw new Error(rErr.message);
+      if (rpcError) throw new Error(rpcError.message);
+      const result = data as RegisterWalkinResult | null;
+      if (!result?.referral_id || !result.display_code || !result.full_name) {
+        throw new Error('Registration succeeded but returned an invalid response. Please retry.');
+      }
 
       setDone({
-        referralId,
-        displayCode: code as string,
-        name: fullName,
-        referred: outcome.referred,
+        referralId: result.referral_id,
+        displayCode: result.display_code,
+        name: result.full_name,
+        referred: result.referred,
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));

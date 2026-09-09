@@ -468,3 +468,21 @@ Recommended fix: Replace those references with the direct-session support backlo
 - Architecture: revise R3-01 through R3-04 before writing migration 0029. R3-05/06 should be corrected in the same revision.
 - Facility codes: provisional data approval only. Local CHO abbreviations override the proposal; confirm the live database has exactly the eleven DOTS rows before populating.
 - Outcome vocabulary remains a human clinical decision. The documented fallback—omit outcome and keep `closed` unreachable—is acceptable.
+# Codex continuation — BASE-03 closed (2026-09-10)
+
+Migration 0032 and its portal contract are **APPROVED AND APPLIED**. The live
+rollback preflight passed **18/18**: only an active TB-DOTS caller is admitted;
+server-owned identity, facility, status, display-code, age and referral-decision
+fields are derived rather than trusted; exact retry returns the original result;
+actor or payload reuse is denied; and injected failures at all three insert stages
+leave zero rows. The portal retains all four IDs after a failed/lost response.
+
+Live ACL post-check: function present; `authenticated` execute true; `anon` and
+`service_role` execute false. Regression: web 129/129 plus production build, mobile
+215/215 plus typecheck, edge 47/47 plus typecheck, all prior SQL verifiers passing.
+
+Remaining gate: `TBSCREEN_TEST_PASSWORD` is absent, so the authenticated migration
+0031 old-client check is still open. Do not begin the appointment ownership client
+contract until `scripts/old-client-upsert-check.mjs` prints `GATE: CLOSED`.
+
+---

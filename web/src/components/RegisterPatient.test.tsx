@@ -1,23 +1,4 @@
-/**
- * RegisterPatient — the walk-in pathway (migration 0025).
- *
- * This screen writes THREE rows across three PostgREST calls with no
- * transaction, and one of them is a clinical record. So these tests pin the
- * payloads themselves rather than the rendering:
- *
- *  - the chain is patient → screening → referral, in FK order;
- *  - the referral is addressed to the staff member's OWN facility and starts at
- *    'received', because the patient is already standing there;
- *  - lab_sample_id is never written at registration — sputum has not been
- *    collected yet, and inventing an id here is the exact mistake the
- *    referral-model correction retired;
- *  - `referred` comes from the DOH-NTP checklist ALONE (§5). The test that
- *    matters most below sets a severe PGI-S and vitals a scoring system would
- *    react to, against a checklist that does not flag, and asserts the record
- *    still says false — and that the patient is registered anyway.
- *  - the SMS privacy invariant (§4) holds on the client too, not only in the
- *    patients_sms_consent_gate CHECK.
- */
+/** RegisterPatient — migration 0032 atomic walk-in client contract. */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -27,38 +8,39 @@ import RegisterPatient from './RegisterPatient';
 
 const mock = vi.hoisted(() => {
   const db = {
-    /** Every insert, as [table, payload], in call order. */
-    inserts: [] as [string, Record<string, unknown>][],
-    rpcCalls: [] as string[],
-    nextCode: 'PAT-DOTS-0007',
-    insertError: null as { message: string } | null,
+    rpcCalls: [] as [string, Record<string, unknown>][],
+    rpcError: null as { message: string } | null,
   };
-
-  const supabase = {
-    rpc(fn: string) {
-      db.rpcCalls.push(fn);
-      return Promise.resolve({ data: db.nextCode, error: null });
-    },
-    from(table: string) {
-      return {
-        insert: (payload: Record<string, unknown>) => {
-          db.inserts.push([table, payload]);
-          return Promise.resolve({ error: db.insertError });
-        },
-      };
+  return {
+    db,
+    supabase: {
+      rpc(fn: string, args: Record<string, unknown>) {
+        db.rpcCalls.push([fn, args]);
+        const flags = args.p_symptom_flags as Record<string, string>;
+        const cardinal = ['cough_2wks', 'weight_loss', 'night_sweats', 'fever', 'hemoptysis'];
+        const referred =
+          cardinal.some((key) => flags[key] === 'yes') ||
+          (flags.tb_contact === 'yes' &&
+            Object.entries(flags).some(([key, value]) => key !== 'tb_contact' && value === 'yes'));
+        return Promise.resolve({
+          data: db.rpcError
+            ? null
+            : {
+                patient_id: args.p_patient_id,
+                screening_id: args.p_screening_id,
+                referral_id: args.p_referral_id,
+                display_code: 'PAT-DOTS-0007',
+                full_name: 'Juan Dela Cruz',
+                referred,
+              },
+          error: db.rpcError,
+        });
+      },
     },
   };
-
-  return { db, supabase };
 });
 
 vi.mock('../lib/supabase', () => ({ supabase: mock.supabase }));
-
-/**
- * The address cascade is four chained ref_* queries of its own and is tested by
- * being used everywhere else in the portal. Stubbed to a single button so these
- * tests can pick a barangay without modelling PSGC.
- */
 vi.mock('./AddressCascadeWeb', () => ({
   default: ({ onChange }: { onChange: (code: string | null) => void }) => (
     <button type="button" onClick={() => onChange('101312012')}>
@@ -77,30 +59,15 @@ const me: PortalUser = {
 };
 
 const renderForm = () => render(<RegisterPatient me={me} onOpenReferral={() => {}} />);
-
-const type = (label: string, value: string) => {
+const type = (label: string, value: string) =>
   fireEvent.change(screen.getByLabelText(label, { exact: false }), { target: { value } });
-};
-
 const saveBtn = () => screen.getByRole('button', { name: en.register.saveCta }) as HTMLButtonElement;
 
-/** Answer every checklist item 'no' unless `overrides` says otherwise, then
- *  pick a PGI-S. Leaves the form one click from saveable. */
-function answerChecklist(overrides: Record<string, string> = {}, pgis = en.pgis.mild) {
-  for (const [key, question] of Object.entries(en.symptoms)) {
-    const row = screen.getByText(question).closest('.sym-ask') as HTMLElement;
-    const answer = overrides[key] ?? en.common.no;
-    fireEvent.click(within(row).getByText(answer));
-  }
-  fireEvent.click(screen.getByRole('button', { name: pgis }));
-}
-
-/** Minimal scoped query — the checklist repeats Yes/No/Unsure nine times. */
 function within(el: HTMLElement) {
   return {
     getByText: (text: string) => {
       const found = Array.from(el.querySelectorAll('button')).find(
-        (b) => b.textContent?.trim() === text,
+        (button) => button.textContent?.trim() === text,
       );
       if (!found) throw new Error(`no button "${text}" in row`);
       return found;
@@ -108,7 +75,14 @@ function within(el: HTMLElement) {
   };
 }
 
-/** Fill everything the form requires, leaving the checklist to the caller. */
+function answerChecklist(overrides: Record<string, string> = {}, pgis = en.pgis.mild) {
+  for (const [key, question] of Object.entries(en.symptoms)) {
+    const row = screen.getByText(question).closest('.sym-ask') as HTMLElement;
+    fireEvent.click(within(row).getByText(overrides[key] ?? en.common.no));
+  }
+  fireEvent.click(screen.getByRole('button', { name: pgis }));
+}
+
 function fillIdentity() {
   type(en.register.firstName, 'Juan');
   type(en.register.lastName, 'Dela Cruz');
@@ -118,163 +92,103 @@ function fillIdentity() {
   fireEvent.click(screen.getByLabelText(en.register.consentConfirm));
 }
 
-const inserted = (table: string) =>
-  mock.db.inserts.find(([t]) => t === table)?.[1] as Record<string, unknown>;
+const payload = () => mock.db.rpcCalls.at(-1)?.[1] as Record<string, unknown>;
 
 beforeEach(() => {
-  mock.db.inserts = [];
   mock.db.rpcCalls = [];
-  mock.db.insertError = null;
+  mock.db.rpcError = null;
 });
 
-describe('RegisterPatient — what it writes', () => {
-  it('writes patient, screening and referral in FK order', async () => {
+describe('RegisterPatient — atomic contract', () => {
+  it('submits the whole registration as one RPC', async () => {
     renderForm();
     fillIdentity();
     answerChecklist({ cough_2wks: en.common.yes });
-
     fireEvent.click(saveBtn());
-    await waitFor(() => expect(mock.db.inserts).toHaveLength(3));
-
-    expect(mock.db.inserts.map(([t]) => t)).toEqual(['patients', 'screenings', 'referrals']);
-    expect(mock.db.rpcCalls).toEqual(['next_facility_patient_code']);
+    await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
+    expect(mock.db.rpcCalls[0][0]).toBe('register_walkin');
+    expect(screen.getByText('PAT-DOTS-0007')).toBeTruthy();
   });
 
-  it('attributes the patient to the signed-in staff member and the server-issued code', async () => {
+  it('sends four stable, distinct operation and row ids', async () => {
     renderForm();
     fillIdentity();
     answerChecklist();
-
     fireEvent.click(saveBtn());
-    await waitFor(() => expect(mock.db.inserts).toHaveLength(3));
-
-    expect(inserted('patients')).toMatchObject({
-      enrolled_by: 'usr-staff',
-      display_code: 'PAT-DOTS-0007',
-      full_name: 'Juan Dela Cruz',
-      barangay_code: '101312012',
-      sex: 'male',
-    });
+    await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
+    const values = ['p_request_id', 'p_patient_id', 'p_screening_id', 'p_referral_id'].map(
+      (key) => payload()[key],
+    );
+    expect(values.every((value) => typeof value === 'string')).toBe(true);
+    expect(new Set(values).size).toBe(4);
   });
 
-  it("files the referral to the staff member's own facility, already received", async () => {
-    renderForm();
-    fillIdentity();
-    answerChecklist({ fever: en.common.yes });
-
-    fireEvent.click(saveBtn());
-    await waitFor(() => expect(mock.db.inserts).toHaveLength(3));
-
-    const referral = inserted('referrals');
-    expect(referral.facility_id).toBe('fac-valencia');
-    // Not 'submitted': there is no waiting-to-arrive phase for a walk-in.
-    expect(referral.status).toBe('received');
-    // Sputum has not been collected. Naming a sample that does not exist is
-    // exactly what the referral-model correction retired.
-    expect('lab_sample_id' in referral).toBe(false);
-  });
-
-  it('links the three rows to each other', async () => {
+  it('leaves server-owned values to the server', async () => {
     renderForm();
     fillIdentity();
     answerChecklist();
-
     fireEvent.click(saveBtn());
-    await waitFor(() => expect(mock.db.inserts).toHaveLength(3));
-
-    const p = inserted('patients');
-    const s = inserted('screenings');
-    const r = inserted('referrals');
-    expect(s.patient_id).toBe(p.patient_id);
-    expect(r.patient_id).toBe(p.patient_id);
-    expect(r.screening_id).toBe(s.screening_id);
+    await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
+    expect(payload()).toMatchObject({ p_barangay_code: '101312012', p_sex: 'male' });
+    for (const key of [
+      'p_enrolled_by', 'p_facility_id', 'p_display_code', 'p_age', 'p_full_name',
+      'p_status', 'p_lab_sample_id', 'p_consent_date',
+    ]) expect(key in payload()).toBe(false);
   });
-});
 
-describe('RegisterPatient — positioning (§1, §5)', () => {
-  it('takes `referred` from the checklist alone, whatever the context says', async () => {
+  it('sends facts but no browser-asserted referral decision or score', async () => {
     renderForm();
     fillIdentity();
-    // Nothing on the checklist flags. Then pile on everything that is NOT part
-    // of the rule: the most severe PGI-S, and readings any scoring system would
-    // react to. The record must still say the checklist did not flag.
     answerChecklist({}, en.pgis.severe);
     type(`${en.vitals.temperature} (${en.vitals.unitC})`, '39.5');
     type(`${en.vitals.spo2} (${en.vitals.unitPercent})`, '88');
-    type(`${en.vitals.systolic} (${en.vitals.unitMmHg})`, '180');
+    fireEvent.click(saveBtn());
+    await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
+    expect('p_referred' in payload()).toBe(false);
+    expect(payload().p_pgis_severity).toBe('severe');
+    expect(payload().p_temperature_c).toBe(39.5);
+    expect(Object.keys(payload()).filter((key) => /score|risk|probab|confidence/i.test(key))).toEqual([]);
+  });
 
+  it('shows that severe context alone does not flag the checklist', () => {
+    renderForm();
+    fillIdentity();
+    answerChecklist({}, en.pgis.severe);
+    type(`${en.vitals.temperature} (${en.vitals.unitC})`, '39.5');
     expect(screen.getByText(en.register.willNotFlag)).toBeTruthy();
-
-    fireEvent.click(saveBtn());
-    await waitFor(() => expect(mock.db.inserts).toHaveLength(3));
-
-    const s = inserted('screenings');
-    expect(s.referred).toBe(false);
-    expect(s.pgis_severity).toBe('severe');
-    expect(s.temperature_c).toBe(39.5);
-    // ...and the patient is registered regardless. "Does not meet presumptive
-    // criteria" is an answer, not a reason to drop the visit.
-    expect(mock.db.inserts.map(([t]) => t)).toEqual(['patients', 'screenings', 'referrals']);
   });
 
-  it('flags on a cardinal symptom, using the same rule as the app', async () => {
+  it('shows that contact plus any symptom does flag the checklist', () => {
     renderForm();
     fillIdentity();
-    answerChecklist({ hemoptysis: en.common.yes });
-
+    answerChecklist({ tb_contact: en.common.yes, fatigue: en.common.yes });
     expect(screen.getByText(en.register.willFlag)).toBeTruthy();
-
-    fireEvent.click(saveBtn());
-    await waitFor(() => expect(mock.db.inserts).toHaveLength(3));
-    expect(inserted('screenings').referred).toBe(true);
   });
 
-  it('stores no score of any kind on the screening', async () => {
-    renderForm();
-    fillIdentity();
-    answerChecklist({ cough_2wks: en.common.yes });
-
-    fireEvent.click(saveBtn());
-    await waitFor(() => expect(mock.db.inserts).toHaveLength(3));
-
-    const keys = Object.keys(inserted('screenings'));
-    expect(keys.filter((k) => /score|risk|probab|confidence/i.test(k))).toEqual([]);
-  });
-});
-
-describe('RegisterPatient — vitals are optional', () => {
-  it('registers with every vital left blank', async () => {
+  it('keeps all vitals optional', async () => {
     renderForm();
     fillIdentity();
     answerChecklist();
-
-    expect(saveBtn().disabled).toBe(false);
     fireEvent.click(saveBtn());
-    await waitFor(() => expect(mock.db.inserts).toHaveLength(3));
-
-    const s = inserted('screenings');
-    for (const k of ['height_cm', 'weight_kg', 'temperature_c', 'spo2_percent']) {
-      expect(s[k], k).toBeNull();
-    }
+    await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
+    for (const key of [
+      'p_height_cm', 'p_weight_kg', 'p_temperature_c', 'p_systolic_bp',
+      'p_diastolic_bp', 'p_pulse_rate', 'p_spo2_percent',
+    ]) expect(payload()[key], key).toBeNull();
   });
 
-  it('blocks the save on a reading the database would reject', async () => {
+  it('blocks a vital outside the database range', () => {
     renderForm();
     fillIdentity();
     answerChecklist();
-
-    // A slipped decimal point: 3.68 °C instead of 36.8.
     type(`${en.vitals.temperature} (${en.vitals.unitC})`, '3.68');
     expect(saveBtn().disabled).toBe(true);
     expect(screen.getByText(en.vitals.outOfRange)).toBeTruthy();
-
-    type(`${en.vitals.temperature} (${en.vitals.unitC})`, '36.8');
-    expect(saveBtn().disabled).toBe(false);
   });
 });
 
-describe('RegisterPatient — consent and privacy (§4)', () => {
-  it('cannot save without the patient consenting', async () => {
+describe('RegisterPatient — consent and privacy', () => {
+  it('cannot save without registration consent', () => {
     renderForm();
     type(en.register.firstName, 'Juan');
     type(en.register.lastName, 'Dela Cruz');
@@ -282,93 +196,82 @@ describe('RegisterPatient — consent and privacy (§4)', () => {
     fireEvent.click(screen.getByRole('button', { name: en.sex.male }));
     fireEvent.click(screen.getByRole('button', { name: 'pick-barangay' }));
     answerChecklist();
-
-    // Everything else is answered; only the consent box is unticked.
     expect(saveBtn().disabled).toBe(true);
-    fireEvent.click(screen.getByLabelText(en.register.consentConfirm));
-    expect(saveBtn().disabled).toBe(false);
   });
 
-  it('stores no number and no consent date when SMS is declined', async () => {
+  it('sends no contact details when SMS is declined', async () => {
     renderForm();
     fillIdentity();
     answerChecklist();
-
     fireEvent.click(saveBtn());
-    await waitFor(() => expect(mock.db.inserts).toHaveLength(3));
-
-    const p = inserted('patients');
-    expect(p.sms_consent).toBe(false);
-    expect(p.contact_number).toBeNull();
-    expect(p.consent_date).toBeNull();
-    expect(p.preferred_language).toBeNull();
+    await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
+    expect(payload().p_sms_consent).toBe(false);
+    expect(payload().p_contact_number).toBeNull();
+    expect(payload().p_preferred_language).toBeNull();
   });
 
-  it('stores the number only alongside an SMS opt-in and a consent date', async () => {
+  it('sends number and language only with SMS opt-in', async () => {
     renderForm();
     fillIdentity();
     answerChecklist();
     fireEvent.click(screen.getByLabelText(en.register.smsOptIn));
     type(en.register.contactNumber, '09171234567');
-
     fireEvent.click(saveBtn());
-    await waitFor(() => expect(mock.db.inserts).toHaveLength(3));
-
-    const p = inserted('patients');
-    expect(p.sms_consent).toBe(true);
-    expect(p.contact_number).toBe('09171234567');
-    expect(typeof p.consent_date).toBe('string');
+    await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
+    expect(payload().p_sms_consent).toBe(true);
+    expect(payload().p_contact_number).toBe('09171234567');
+    expect(payload().p_preferred_language).toBe('en');
   });
 
-  it('drops a number already typed when the opt-in is withdrawn', async () => {
-    // The §4 invariant the UI is responsible for. Without the clear-on-untick,
-    // a number typed and then declined would still be sent — and the database
-    // CHECK would reject the whole registration at the last moment, losing the
-    // rest of the form with it.
+  it('clears the number when SMS opt-in is withdrawn', async () => {
     renderForm();
     fillIdentity();
     answerChecklist();
     fireEvent.click(screen.getByLabelText(en.register.smsOptIn));
     type(en.register.contactNumber, '09171234567');
-    fireEvent.click(screen.getByLabelText(en.register.smsOptIn)); // withdrawn
-
+    fireEvent.click(screen.getByLabelText(en.register.smsOptIn));
     fireEvent.click(saveBtn());
-    await waitFor(() => expect(mock.db.inserts).toHaveLength(3));
-
-    const p = inserted('patients');
-    expect(p.sms_consent).toBe(false);
-    expect(p.contact_number).toBeNull();
-    expect(p.consent_date).toBeNull();
+    await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
+    expect(payload().p_contact_number).toBeNull();
   });
 
-  it('refuses to save a malformed mobile number', async () => {
+  it('refuses a malformed mobile number', () => {
     renderForm();
     fillIdentity();
     answerChecklist();
     fireEvent.click(screen.getByLabelText(en.register.smsOptIn));
     type(en.register.contactNumber, '12345');
-
     expect(saveBtn().disabled).toBe(true);
     expect(screen.getByText(en.register.contactInvalid)).toBeTruthy();
   });
 });
 
-describe('RegisterPatient — failures', () => {
-  it('surfaces a rejected write instead of claiming success', async () => {
-    mock.db.insertError = { message: 'new row violates row-level security policy' };
+describe('RegisterPatient — failure and replay', () => {
+  it('surfaces a rejected RPC without claiming success', async () => {
+    mock.db.rpcError = { message: 'not authorized' };
     renderForm();
     fillIdentity();
     answerChecklist();
-
     fireEvent.click(saveBtn());
-
-    await waitFor(() =>
-      expect(
-        screen.getByText(/new row violates row-level security policy/),
-      ).toBeTruthy(),
-    );
-    // Stopped at the first failure rather than pressing on with the children.
-    expect(mock.db.inserts).toHaveLength(1);
+    await waitFor(() => expect(screen.getByText(/not authorized/)).toBeTruthy());
+    expect(mock.db.rpcCalls).toHaveLength(1);
     expect(screen.queryByText(en.register.openInInbox)).toBeNull();
+  });
+
+  it('reuses every id after a failed or lost response', async () => {
+    mock.db.rpcError = { message: 'network request failed' };
+    renderForm();
+    fillIdentity();
+    answerChecklist();
+    fireEvent.click(saveBtn());
+    await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
+    const first = mock.db.rpcCalls[0][1];
+    mock.db.rpcError = null;
+    fireEvent.click(saveBtn());
+    await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(2));
+    const second = mock.db.rpcCalls[1][1];
+    for (const key of ['p_request_id', 'p_patient_id', 'p_screening_id', 'p_referral_id']) {
+      expect(second[key]).toBe(first[key]);
+    }
   });
 });

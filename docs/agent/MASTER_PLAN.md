@@ -1,5 +1,16 @@
 # Sprint master plan
 
+2026-09-10: **BASE-03 is closed.** Migration **0032** adds an active-TB-DOTS-only,
+payload-bound, idempotent `register_walkin()` RPC and the portal now uses that one
+transaction instead of three PostgREST writes. The live rollback preflight passed
+**18/18**, including injected failure at each of the patient, screening, and referral
+steps with zero residual rows. Migration 0032 was then applied atomically; the live
+post-check confirms the function exists, `authenticated` can execute it, and `anon`
+and `service_role` cannot. Full regression: web 129, mobile 215, edge 47; all passing,
+with web production build and both TypeScript checks clean. The 0031 authenticated
+old-client gate remains open because `TBSCREEN_TEST_PASSWORD` is still absent; the
+ownership client-contract unit must continue to wait for `GATE: CLOSED`.
+
 2026-09-09: Migration **0031 is APPROVED AND APPLIED** after its strengthened live rollback preflight passed **140/140**. BASE-02 is closed. A service-role PostgREST probe preserved all three appointment ownership columns across both fixture shapes, but the release gate still requires the authenticated BHW run; `TBSCREEN_TEST_PASSWORD` is absent from this checkout. The client contract unit remains blocked until `old-client-upsert-check.mjs` prints `GATE: CLOSED` under that identity.
 
 2026-09-09: Migration **0031 is NOT APPROVED**. Codex added four appointment-isolation checks and ran the rollback preflight live: the positive control passed and three security/integrity probes failed (**3/123 FAIL**). The migration must enforce patient agreement in referral/case links, preserve TB-DOTS appointment admission scope, re-check follow-ups when closing a case, define `record_visit`'s supported status transitions, and make the case-linked upsert check non-vacuous. A hard-coded real-account test credential was removed; amend the unpushed 0031 commit before any push. See `CODEX_REVIEW.md`.

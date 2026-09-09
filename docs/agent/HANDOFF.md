@@ -1,4 +1,18 @@
-# Session handoff — 2026-09-09 (updated: migration 0031 applied)
+# Session handoff — 2026-09-10 (updated: migration 0032 applied)
+
+## 2026-09-10 continuation checkpoint
+
+BASE-03 is fixed and live. Migration 0032 introduces `register_walkin()` and the
+portal registration screen now sends the patient, screening and received referral as
+one idempotent transaction. The 18/18 live rollback preflight forced failure at each
+insert stage and proved that no patient, screening, referral, or ledger row survives.
+The exact migration was applied inside an explicit transaction; its ACL post-check
+passed. Web 129/129, mobile 215/215, and edge 47/47 pass; production build and
+TypeScript checks are clean.
+
+The next dependency has not changed: obtain `TBSCREEN_TEST_PASSWORD` locally and run
+`node scripts/old-client-upsert-check.mjs`. Do not start the 0031 appointment ownership
+client-contract unit until it prints `GATE: CLOSED` as the authenticated BHW.
 
 For whoever picks this up next: a new Claude session, Codex, or Niel.
 Branch `feature/capstone-upgrade`, pushed to origin. Baseline was `4659d65` on `main`.
@@ -16,7 +30,7 @@ Read this first, then [MASTER_PLAN.md](MASTER_PLAN.md) for task ownership and [I
 | **BASE-04** report reads session timezone | **Fixed, applied live** (migration 0030) | Nothing |
 | **BASE-05** sync cursor loses tied rows | **Fixed and approved**, client-side | Ships with the next mobile build |
 | **BASE-02** appointments patient-wide | **Fixed, approved, and applied live** (migration 0031) | Nothing |
-| **BASE-03** walk-in partial writes | Design approved; `rpc_requests` is live from 0031 | The atomic registration RPC is its own unit |
+| **BASE-03** walk-in partial writes | **Fixed, approved, and applied live** (migration 0032) | Ships with the portal client checkpoint |
 | **Case / follow-up model** (Tasks 1.2 / 1.3) | **Approved and applied** as migration 0031; strengthened live preflight **140/140 PASS** | Authenticated old-client gate only — see §2 |
 | **Client contract change** (`cancelled`, ownership columns, SMS destination) | Not started | Start after the authenticated old-client gate closes — see §3 |
 
