@@ -1,3 +1,20 @@
+# Codex review — Migration 0031
+
+2026-09-09; reviewed local commit `8c9d4ce`. Result: **CHANGES REQUIRED — DO NOT APPLY**.
+
+The seven declared deviations D1–D7 are accepted, and M31-01's UUID aggregation correction is sound. The original verifier passes 13/13 and Claude's original live preflight passed 119/119 with rollback. The review added four focused appointment checks; the valid positive control passed, while the three isolation checks failed. The live rollback preflight therefore ended at **3/123 FAIL**, proving the defect without changing the database.
+
+- **M31-02 — HIGH: appointment links do not preserve patient identity.** `appointments_referral_facility_agrees` and `appointments_case_facility_agrees` include only the link ID and facility ID. PostgreSQL therefore accepts an appointment for patient A linked to patient B's referral or case at the same facility. `assign_appointment_to_case()` repeats the gap because it checks facility and case status but never compares the appointment patient with the case patient. Make both parent keys and both appointment FKs patient-aware, preserving the reviewed cascades, and keep the new regression checks.
+- **M31-03 — HIGH: the TB-DOTS insert policy widens admission to any patient UUID.** Before 0031, `appointments_tbdots_insert` required `patient_id in app_private.referred_patient_ids()`. The replacement accepts any row naming the caller's facility when `tb_case_id` is NULL. The live probe confirmed DOTS A can insert an unlinked appointment for a patient referred only to DOTS B. Preserve the existing patient-scope predicate for unlinked inserts; linked referral/case rows must prove patient and facility agreement.
+- **M31-04 — HIGH: `set_tb_case_status()` can close a case before an existing live follow-up.** The follow-up trigger enforces `visit_date <= outcome_date` only when the follow-up changes; closing the parent never re-checks existing rows. Closing must reject an outcome date earlier than any non-voided follow-up, with a regression test.
+- **M31-05 — MEDIUM: `record_visit(p_new_case_status)` promises more transitions than it can represent.** It passes NULL treatment/outcome fields to `set_tb_case_status()`, so initial `on_treatment` and every `closed` transition fail, while `cancelled` can leave a clinical follow-up attached to an episode declared opened in error. Restrict and document the parameter's legal transitions or add the required atomic inputs, then test each advertised path.
+- **M31-06 — MEDIUM: the stage-2 `tb_case_id` upsert assertion is vacuous.** The fixture is referral-linked, so `tb_case_id` is NULL before and after. Add a case-linked fixture and require its non-NULL case ID to survive the old-client payload.
+- **M31-07 — HIGH, locally remediated: a real account password was committed as the script's default fallback.** The fallback is removed; the script now requires `TBSCREEN_TEST_PASSWORD` from the environment or `.env`. Because `8c9d4ce` was never pushed, amend that commit so the credential is absent from reachable branch history before any push.
+
+The new regression checks are in `supabase/tests/0031_case_registry_matrix.sql`. After correcting 0031, regenerate and run the full rollback preflight; every row must pass before application. Then apply 0031, run both real upsert fixtures, and only then start the client contract unit.
+
+---
+
 # Codex review — Migration 0030, BASE-05, and migration 0031 inputs
 
 2026-09-09. Result: **APPROVED / CLOSED**.

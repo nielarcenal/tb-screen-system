@@ -1,5 +1,7 @@
 # Claude status log
 
+> **Codex handback — 2026-09-09, migration 0031:** CHANGES REQUIRED; do not apply. Three added live isolation probes failed (3/123): appointment referral/case links omit patient identity, and the TB-DOTS insert policy accepts an unlinked patient outside the caller's referral scope. Also close the parent-outcome/follow-up date gap, define the actually supported `record_visit` status transitions, and make the case-linked old-client upsert test non-vacuous. The hard-coded test credential fallback was removed and the unpushed 0031 commit must be amended before any push. Full details are at the top of `CODEX_REVIEW.md`.
+
 > **Codex handback — 2026-09-09, next unit 0031:** Migration 0030 is approved and applied after a corrected live preflight passed 16/16; BASE-04 is closed. BASE-05 is approved after 215/215 mobile tests, clean typecheck, and successful live PostgREST page-size/timestamp round-trip checks. Use the accepted six-value NTP outcome vocabulary and eleven project facility codes, omit `weight_kg`, and proceed with migration 0031. Run the mandatory old-client upsert compatibility test as part of that implementation.
 
 > **Codex handback — 2026-09-09, migration 0029:** APPROVED AND APPLIED. Codex corrected two matrix issues (`t_brgy.n` ambiguity and missing positive write controls); the strengthened live preflight passed 47/47. Migrations 0028 and 0029 are now live, and the post-check reports all 28 target policies active-aware. BASE-01 and BASE-06 are closed. Proceed to migration 0030 when its product inputs are ready.
@@ -410,3 +412,112 @@ A drain filters `eq('updated_at', <the timestamp PostgREST just returned>)`, whi
 Device-level offline integration (real connectivity loss mid-pull, account switch, cache purge) is also still unexercised — unit tests do not establish device correctness, as the baseline audit says.
 
 **Next:** case/follow-up work is migration 0031, still gated on the treatment-outcome vocabulary. With BASE-05 done, BASE-02 and BASE-03 are the only open HIGHs and both land with that work.
+
+---
+
+## 2026-09-09 - Migration 0031 written and verified (NOT applied)
+
+**Files created:** `supabase/migrations/0031_case_registry_and_followups.sql`,
+`supabase/tests/0031_case_registry_matrix.sql`,
+`scripts/verify-0031-policies.mjs`, `scripts/old-client-upsert-check.mjs`.
+**Files changed:** none outside `supabase/` and `scripts/` - no application code was touched.
+
+Tasks 1.2 and 1.3 at Revision 4, in one migration, as the designs require: the case
+registry, the follow-up record, appointment ownership (BASE-02), `audit_logs`,
+`rpc_requests`, the facility short codes, ten write RPCs and the transactional case-number
+counter.
+
+### The headline result
+
+`supabase/tests/0031_preflight.generated.sql` ran against the live database and returned
+**119/119 PASS**, then reached its explicit `rollback`. Nothing was applied: `tb_cases`,
+`treatment_followups`, `audit_logs` and `rpc_requests` do not exist, `facilities` has no
+`short_code`, and no `rpc-requests-purge` cron job is scheduled. Confirmed by query after
+the run.
+
+This machine has no local Postgres, but `npx supabase db query --file` does honour explicit
+transaction control - probed first with a throwaway `begin; create table ...; rollback;`
+that reported `rolled_back = true`. That is what made a real pre-apply run possible instead
+of a reasoned one.
+
+### Verification performed
+
+| Check | Result |
+| --- | --- |
+| `supabase/tests/0031_preflight.generated.sql`, live | **119/119 PASS**, rolled back |
+| `node scripts/verify-0031-policies.mjs` | 13 OK; all 4 self-tests caught their mutation |
+| `node scripts/verify-0028-bodies.mjs` / `0029-policies` / `0030-report-body` | still pass |
+| `node scripts/old-client-upsert-check.mjs` | stage 1 PASS as a real BHW; **stage 2 blocked on 0031 being applied** |
+
+The matrix covers the short-code CHECK's six three-valued-logic cases, the create_tb_case
+ACL grid and its admission predicate, the global one-active-case index and the transfer
+that is its only remedy, idempotency bound to actor/facility/payload, the lifecycle through
+both the RPC and the trigger, every path of the appointment ownership trigger separately,
+the referral cascade, effective column privileges, the temporal invariants, void and
+replacement, the closing sweep's `manila_today()` boundary, the audit whitelist, and the
+helper surface.
+
+### Three defects my own test found before Codex could
+
+1. **The design's backfill does not run.** Task 1.3 §3.1 uses `min(facility_id)`;
+   PostgreSQL has no `min()` for `uuid`. Replaced with `(array_agg(distinct facility_id))[1]`,
+   which is not a choice - the `HAVING` clause already guarantees one distinct value.
+2. **A vacuous denial check.** "A BHW cannot re-route a referral a case cites" passed as a
+   BHW *for the wrong reason*: once a case cites a referral the referral is `received`, and
+   `referrals_bhw_update` limits a BHW to `submitted` rows, so the statement matched zero
+   rows and raised nothing. It now runs from a direct session - the strongest writer, which
+   no policy filters - with an uncited referral as the positive control.
+3. **A fixture with no room in it.** The follow-up date correction failed against a case
+   registered on the day the test runs, because `visit_date >= registration_date` left
+   exactly one legal date. That read like a broken RPC and was a broken fixture; the
+   fixture case is now registered 30 days back.
+
+The first is a real design defect and is worth carrying into the review. The other two are
+the same class as the ones Codex found in the 0029 matrix.
+
+### Seven deviations from the approved design, each stated in the migration header
+
+`D1` `correct_tb_case_dates()` drops `p_registration_date`, because §4 pins
+`registration_date` immutable and the 0020 trigger reads the *caller's* `auth.role()` even
+inside a SECURITY DEFINER RPC - so the parameter could only ever raise. `D2` the ownership
+trigger exempts a direct session and `service_role`, as 0020 does, because §3.2 makes a
+direct session the remedy for ambiguous legacy rows. `D3` cancelling a case sweeps its
+future appointments the way closing one does. `D4` `rpc_requests` gains `record_visit` /
+`treatment_followup`, which §7.3's vocabulary predates. `D5` no `weight_kg`. `D6`
+`record_visit()` refuses to both book a next visit and end the episode. `D7` the
+referral-free admission arm is facility-scoped rather than caller-scoped, matching the
+sentence §7.1 rule 4 actually writes, and narrowed to TB-DOTS enrolment so a BHW's barangay
+patient does not become admissible by sharing a `facility_id`.
+
+### The mandatory gate: what is closed and what is not
+
+`scripts/old-client-upsert-check.mjs` exists and runs. Signed in as the real
+`bhw.arcenal@tbscreen.ph` account, against the real PostgREST stack, it upserted a row while
+omitting a column from the payload and **the omitted column survived** - PostgREST does
+build `ON CONFLICT DO UPDATE SET` from payload keys.
+
+That is the mechanism, and it is now executed rather than read. It is **not yet the gate**:
+the gate asks the question about `facility_id`, `referral_id` and `tb_case_id`, which do not
+exist until 0031 is applied. The script detects them and runs stage 2 automatically. Run it
+again immediately after applying.
+
+The first version of that script passed stage 1 while proving nothing - it picked its
+fixture patient as `service_role`, the BHW's write was refused by RLS, and "the column
+survived" was true because no write had happened. It now picks the patient as the caller.
+
+### Not done, and why it is sequenced rather than skipped
+
+The client half of the contract change - `cancelled` in the web and mobile status unions,
+`facility_id`/`referral_id` on the mobile appointment row and the referral screen, the
+portal's schedule-check-up insert, the three locale files, and the SMS destination moving to
+`appointment.facility_id` - is **not in this commit**. It cannot ship first: PostgREST
+rejects an unknown column with a 400, so a portal that sends `facility_id` breaks the moment
+it deploys against a database without it. `web/` deploys on push to `main`.
+
+So the order is: review 0031 -> apply 0031 -> run the upsert check's stage 2 -> then the
+client unit. Nothing about it is blocked on a decision; it is blocked on the migration
+being live.
+
+**Next:** Codex reviews migration 0031 and its matrix. If it is approved, apply it, re-run
+`node scripts/old-client-upsert-check.mjs`, and take the client contract change as the
+following unit.

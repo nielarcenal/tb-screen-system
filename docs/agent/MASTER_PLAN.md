@@ -1,5 +1,7 @@
 # Sprint master plan
 
+2026-09-09: Migration **0031 is NOT APPROVED**. Codex added four appointment-isolation checks and ran the rollback preflight live: the positive control passed and three security/integrity probes failed (**3/123 FAIL**). The migration must enforce patient agreement in referral/case links, preserve TB-DOTS appointment admission scope, re-check follow-ups when closing a case, define `record_visit`'s supported status transitions, and make the case-linked upsert check non-vacuous. A hard-coded real-account test credential was removed; amend the unpushed 0031 commit before any push. See `CODEX_REVIEW.md`.
+
 2026-09-09: Codex approved and applied migration **0030** after its corrected live preflight passed **16/16**. BASE-05 is also approved after **215/215** mobile tests, a clean typecheck, and successful live PostgREST page-size and timestamp round-trip checks. BASE-04 and BASE-05 are closed. The six national treatment outcomes and eleven proposed facility codes are accepted as project conventions; `weight_kg` is omitted. Claude may proceed with case/follow-up migration **0031**, with the old-client upsert compatibility test required during implementation.
 
 2026-09-09: Codex approved and applied migrations **0028** and **0029** in order. The strengthened 0029 live preflight passed **47/47** after two test-harness corrections; the live post-check reports `app_private` present and all **28** target policies active-aware. BASE-01 and BASE-06 are closed.

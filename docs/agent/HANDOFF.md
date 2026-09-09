@@ -1,4 +1,4 @@
-# Session handoff — 2026-09-09
+# Session handoff — 2026-09-09 (updated: migration 0031 written)
 
 For whoever picks this up next: a new Claude session, Codex, or Niel.
 Branch `feature/capstone-upgrade`, pushed to origin. Baseline was `4659d65` on `main`.
@@ -13,13 +13,14 @@ Read this first, then [MASTER_PLAN.md](MASTER_PLAN.md) for task ownership and [I
 | --- | --- | --- |
 | **BASE-01** fail-open reporting gates | **Fixed, applied live** (migration 0028) | Nothing |
 | **BASE-06** deactivated accounts keep row access | **Fixed, applied live** (migration 0029) | Nothing |
-| **BASE-04** report reads session timezone | **Written and verified, NOT applied** (migration 0030) | Run its preflight, then apply |
-| **BASE-05** sync cursor loses tied rows | **Fixed in the branch, client-side** | Ships with the next mobile build |
-| **BASE-02** appointments patient-wide | Design approved | Lands with case work (0031) |
-| **BASE-03** walk-in partial writes | Design approved | Lands with case work (0031) |
-| **Case / follow-up model** (Tasks 1.2 / 1.3) | Design **APPROVED** at Revision 4 | Blocked on one clinical input — see §3 |
+| **BASE-04** report reads session timezone | **Fixed, applied live** (migration 0030) | Nothing |
+| **BASE-05** sync cursor loses tied rows | **Fixed and approved**, client-side | Ships with the next mobile build |
+| **BASE-02** appointments patient-wide | **Implemented in 0031, NOT applied** | Review, then apply |
+| **BASE-03** walk-in partial writes | Design approved; `rpc_requests` ships in 0031 | The atomic registration RPC is its own unit |
+| **Case / follow-up model** (Tasks 1.2 / 1.3) | **Written as migration 0031**; live preflight **119/119 PASS**, rolled back; **NOT applied** | Codex review, then apply — see §2 |
+| **Client contract change** (`cancelled`, ownership columns, SMS destination) | Not started | Sequenced AFTER 0031 is applied — see §3 |
 
-Server migration numbering: 0028 and 0029 are applied; **0030 is written but unapplied**; case work is **0031**.
+Server migration numbering: 0028, 0029 and 0030 are applied; **0031 is written and verified but unapplied**.
 
 Commits on the branch, oldest first:
 
@@ -35,39 +36,60 @@ The only untracked file is `docs/TB-Screen_Barangay_Report_Design_Canvas_Brief.m
 
 ---
 
-## 2. Do these two things first
+## 2. Do these things first, in this order
 
-**a. Apply migration 0030.** It is verified but unapplied, so the live barangay report still miscounts at day, month and year boundaries.
+**a. Review migration 0031.** `supabase/migrations/0031_case_registry_and_followups.sql`
+plus `supabase/tests/0031_case_registry_matrix.sql`. Its header lists seven deliberate
+deviations from the approved design (D1-D7), each with the reason it exists; those are the
+parts most worth a second opinion. `CLAUDE_STATUS.md` has the full account.
+
+**b. Re-run its preflight, then apply it.**
 
 ```bash
-node scripts/build-preflight.mjs 0030
-# paste supabase/tests/0030_preflight.generated.sql into the SQL editor
-# every row must read PASS; it always rolls back
-# then apply supabase/migrations/0030_... inside begin; … commit;
+node scripts/build-preflight.mjs 0031
+npx supabase db query --file supabase/tests/0031_preflight.generated.sql --linked --project-ref momiqgnhylqijyadldhg
 ```
 
-The preflight needs a barangay with no existing patients and will raise if none exists.
+Every row must read PASS. It returned **119/119** on 2026-09-09 and reached its explicit
+`rollback`; the rollback was then confirmed by querying for the tables it would have
+created.
 
-**b. Verify the one BASE-05 assumption.** `pullTable` drains a timestamp group with `eq('updated_at', <the value PostgREST just returned>)`, which assumes exact round-trip. It should hold — Postgres keeps microseconds, PostgREST emits full precision — but if it ever did not, the drain would match nothing, the group would look finished, and the tied rows would be skipped. That is BASE-05 in a new costume.
+**This machine CAN run database tests after all.** The old note saying it could not is
+wrong. `npx supabase db query --file` honours explicit `begin;` / `rollback;` - probed with
+a throwaway `begin; create table ...; rollback;` that reported `rolled_back = true`. A
+preflight is therefore safe to run against the live project, and 0031's matrix is the first
+on this branch that was executed rather than reasoned about before review.
 
-The check: pull a table holding more rows at a single `updated_at` than `PULL_PAGE_SIZE` (500) and assert the device ends with all of them.
+**c. Immediately after applying, close the old-client gate.**
+
+```bash
+node scripts/old-client-upsert-check.mjs
+```
+
+Stage 1 already passes: signed in as the real `bhw.arcenal@tbscreen.ph`, an upsert payload
+that omitted a column left that column untouched - so PostgREST does build
+`ON CONFLICT DO UPDATE SET` from payload keys. Stage 2 asks the same question about
+`facility_id`, `referral_id` and `tb_case_id`, and can only run once those columns exist.
+The script detects them and runs it automatically.
+
+If stage 2 ever fails, the compatibility window of Task 1.3 3.4 stops being a convenience
+and becomes mandatory *before* anything relies on ownership.
 
 ---
 
-## 3. The blocker on 0031, and it is not engineering
+## 3. The client half, and why it is not in this commit
 
-Case work cannot be written until the **treatment-outcome vocabulary** is confirmed with the TB-DOTS head nurse — the same route used for migrations 0024 and 0025 on 2026-09-06.
+`cancelled` in the web and mobile status unions, `facility_id` / `referral_id` on the mobile
+appointment row and the referral screen, the portal's schedule-check-up insert, the three
+locale files, and the SMS destination moving from "latest referral" to
+`appointment.facility_id` - none of it is done, and none of it may go first.
 
-Proposed: `cured`, `treatment_completed`, `treatment_failed`, `died`, `lost_to_follow_up`, `not_evaluated` — the WHO 2013 reporting framework the DOH NTP MOP adopts. **This is a documented standard, not a verified local requirement**; nobody in this work has read the MOP edition the facility uses.
+PostgREST rejects an unknown column with a 400, so a portal that sends `facility_id` breaks
+the moment it deploys against a database that does not have the column. `web/` deploys on
+push to `main`. The order is: apply 0031, then ship the client unit.
 
-If it does not arrive, the agreed fallback is to ship 0031 **without** an `outcome` column, leaving `closed` unreachable until a later migration adds the confirmed values. A case registry that cannot yet close is honest; one that closes into invented categories is not.
-
-Two soft inputs, neither blocking:
-
-- **Facility short codes** — eleven proposed in [CLAUDE_FACILITY_SHORT_CODES_PROPOSAL.md](CLAUDE_FACILITY_SHORT_CODES_PROPOSAL.md). If the CHO already abbreviates these facilities, theirs win.
-- **`weight_kg`** on follow-ups — omit from 0031 if unconfirmed; nothing structural depends on it.
-
----
+Nothing in it is blocked on a decision. The complete file-by-file surface is Task 1.3 3.3
+and 5.
 
 ## 4. The verification harness — use it, do not reinvent it
 
@@ -79,6 +101,7 @@ Three server migrations shipped with the same two-part discipline, and Codex exp
 node scripts/verify-0028-bodies.mjs        # six function bodies vs their sources
 node scripts/verify-0029-policies.mjs      # 28 RLS policies, 2 declared exceptions
 node scripts/verify-0030-report-body.mjs   # barangay_report vs 0028's version
+node scripts/verify-0031-policies.mjs      # 2 transcribed policies + the R3-04/R3-05 rules
 ```
 
 **Transactional preflights.** A database test cannot verify a migration "before application" unless both run in one transaction. The generator assembles them and refuses to build if either file carries its own transaction control:
@@ -89,7 +112,13 @@ node scripts/build-preflight.mjs <NNNN>
 
 The generated file is gitignored on purpose — regenerate it, never edit it, or it drifts from the migration it is meant to be verifying.
 
-**This machine cannot run database tests.** No Docker, no `psql`, no `config.toml`; migrations are hand-applied through the SQL editor. Every SQL test written here was reasoned, not executed. Say so plainly rather than implying otherwise.
+**Superseded 2026-09-09 - this machine CAN run database tests.** There is still no Docker,
+`psql` or `config.toml`, but `npx supabase db query --file <preflight> --linked
+--project-ref momiqgnhylqijyadldhg` runs a whole file through the Management API and honours
+its own `begin;` / `rollback;`. 0031's matrix was executed, and doing so found three defects
+that reading it would not have. DDL is still applied by the user in the SQL editor; a
+preflight is not an application, because it always rolls back - verify afterwards that it
+did.
 
 ---
 
@@ -97,10 +126,10 @@ The generated file is gitignored on purpose — regenerate it, never edit it, or
 
 Carry these forward; they are not closed.
 
-- **Old-client PostgREST upsert.** 0031 assumes an old mobile build's whole-row upsert cannot erase `facility_id` / `tb_case_id`, because PostgREST builds `ON CONFLICT DO UPDATE SET` from payload keys. Read from the code, never executed. It is a required 0031 test.
-- **The BASE-05 round-trip assumption** (§2b).
+- **Old-client PostgREST upsert, second half.** The mechanism is now executed rather than assumed: an omitted column survives an upsert against the real stack, as a real signed-in account. The same question about the three ownership columns needs 0031 applied - `node scripts/old-client-upsert-check.mjs`, stage 2.
 - **Device-level offline integration** — real mid-pull connectivity loss, account switch, cache purge. Unit tests do not establish device correctness.
-- **0030's boundary test** until it is run.
+- **Everything 0031 asserts, against a POPULATED table.** Its matrix builds its own world of known size and rolls it back. The backfill moved the live rows during the preflight and reported none left unowned, but that is only true of the data as it stood; re-read the NOTICE when it is applied for real.
+- **`facility_id NOT NULL` on appointments.** Deliberately not set (Task 1.3 3.4). Its acceptance test is `select count(*) from appointments where facility_id is null` returning 0, once unsupported clients are retired.
 
 ---
 
@@ -114,7 +143,10 @@ Four gates ran on the case design before it was approved. The findings that gene
 - **Supabase default privileges grant EXECUTE to `anon` and `service_role` by name**, so `revoke … from public` leaves them standing. Name them.
 - **Fix a construct by searching for it, not by editing the spot the reviewer pointed at.** Three separate findings were the same defect left standing a few sections away.
 - **In a SQL test, a privilege error inside an `EXCEPTION` block looks exactly like a successful denial.** Resolve ids before switching roles, and give every denial check a positive control, or the matrix goes green for the wrong reason.
-- **Don't let a plpgsql variable shadow a column name** (`where n = 2` resolved to the variable, not `t_brgy.n`).
+- **Don't let a plpgsql variable shadow a column name** (`where n = 2` resolved to the variable, not `t_brgy.n`). It happened again in 0031's matrix, in a block copied from the fix.
+- **A denial check can pass because the statement matched zero rows.** "A BHW cannot re-route a cited referral" went green while proving nothing: the referral was `received`, `referrals_bhw_update` only reaches `submitted` rows, so the UPDATE touched nothing and raised nothing. Ask the question from a writer that *could* have succeeded, and pair it with a case that does.
+- **A fixture with no legal alternative value is not a passing test, it is an unfalsifiable one.** A case registered on the day the test runs leaves exactly one valid `visit_date`, so the date-correction RPC could only fail. That reads like a broken function.
+- **PostgreSQL has no `min()` for `uuid`.** The approved design's backfill used one. Reading SQL is not running it — which is the whole argument for §2's preflight.
 
 ---
 

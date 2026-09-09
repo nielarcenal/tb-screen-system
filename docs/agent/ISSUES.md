@@ -69,3 +69,27 @@ Migration 0028 passed 73/73 preflight checks before application. Migration 0029 
 2026-09-09 update: BASE-05 has an implementation awaiting review — client-side only. Remaining open after it: BASE-02 and BASE-03, both landing with case work (migration 0031).
 
 2026-09-09 final update: BASE-04 and BASE-05 passed review and are closed. Migration 0030 is live. The national outcome vocabulary and eleven facility codes are accepted as project conventions, so migration 0031 is unblocked apart from its mandatory old-client upsert compatibility test.
+
+2026-09-09 update: migration **0031** is written and verified but **NOT applied**. Its live
+preflight returned 119/119 PASS and rolled back. BASE-02 (appointment facility ownership) is
+implemented in it; BASE-03 (walk-in partial writes) is **not** — 0031 creates the
+`rpc_requests` ledger that the atomic registration RPC needs, but the RPC itself is a
+separate unit and BASE-03 stays open.
+
+The old-client PostgREST upsert gate is **half closed**. `scripts/old-client-upsert-check.mjs`
+ran against the live stack as a real BHW account and confirmed that a column omitted from an
+upsert payload survives — PostgREST builds `ON CONFLICT DO UPDATE SET` from payload keys.
+The question has not yet been asked about `facility_id`/`referral_id`/`tb_case_id`, which do
+not exist until 0031 is applied; the script runs that stage automatically once they do.
+
+| ID | Severity | Issue | Status |
+| --- | --- | --- | --- |
+| M31-01 | MEDIUM | Task 1.3 §3.1's backfill uses `min(facility_id)`; PostgreSQL has no `min()` for uuid, so the migration as designed would not run | Corrected in 0031 to `(array_agg(distinct facility_id))[1]`; the HAVING clause already guarantees one distinct value |
+| M31-02 | HIGH | Appointment referral/case FKs and assignment RPC enforce facility agreement but not patient agreement | Open; three added live isolation probes fail in the rollback preflight |
+| M31-03 | HIGH | Replacement TB-DOTS appointment insert policy allows an unlinked arbitrary patient UUID | Open; preserve the pre-0031 referred-patient admission boundary |
+| M31-04 | HIGH | Closing a case does not reject an outcome date earlier than an existing live follow-up | Open; parent transition must re-check non-voided children |
+| M31-05 | MEDIUM | `record_visit` status parameter cannot represent initial treatment/closure and permits visit-plus-cancel | Open; narrow or complete the RPC contract and test advertised transitions |
+| M31-06 | MEDIUM | Old-client stage-2 `tb_case_id` check compares NULL to NULL | Open; add a case-linked fixture with a non-NULL ID |
+| M31-07 | HIGH | Real account password committed as a script fallback | Fixed in worktree; amend the unpushed 0031 commit before push |
+
+Codex result: **CHANGES REQUIRED; migration 0031 must not be applied.** The original 119 checks remain useful, but four added appointment checks produce one valid PASS and three expected FAILs against the current migration. The resulting live preflight reports 3/123 failed and rolls back.
