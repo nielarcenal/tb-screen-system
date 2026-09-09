@@ -699,3 +699,86 @@ migrations while writing it.
 **Next:** Codex reviews Task 4.1 whenever the case registry unit reaches its own gate.
 Four open questions are listed in §9. Task 4.2 (timeline UI) is blocked on that review and
 on the case registry landing, since both touch `web/src`.
+
+---
+
+## 2026-09-10 - Task 3.4 implemented as migration 0034 (NOT applied)
+
+Codex still holds the case registry UI in `web/src`, so this unit is SQL and docs only.
+Design: [CLAUDE_TASK_3.4_MISSED_FOLLOWUP_DETECTION.md](CLAUDE_TASK_3.4_MISSED_FOLLOWUP_DETECTION.md).
+
+### The gap
+
+`appointments.status = 'missed'` is read by four things - `barangay_report()`,
+`dashboard_counts()`, the mobile dashboard, and the SMS follow-up nudge - and **written by
+nothing except a human**. `mobile/src/db/dashboardRepo.ts` says so in a comment. An
+appointment whose day passes untouched stays `scheduled` forever: neither attended nor
+missed, invisible to every attention surface, unreachable by the nudge. Three such rows
+live today out of 1100, and nothing ever moves a row out of that state.
+
+### What 0034 adds
+
+`appointment_is_overdue(text, date)` - the rule, named once, on `manila_today()` and never
+`current_date`. `overdue_followups()` - the worklist. A partial index on the open rows.
+
+It is **SECURITY INVOKER**, which is new here; everything else is definer. It reads
+`appointments`, `patients` and `tb_cases`, all of which already carry reviewed RLS, so
+facility and barangay scoping is inherited instead of re-derived. That matters because
+re-deriving is precisely where M31-03 came from - a policy rewritten in passing that let a
+facility name any patient uuid it liked. No policy is added, changed or weakened.
+
+### Why there is no sweep
+
+The obvious build is a nightly pg_cron job flipping past-due rows to `missed`. 0031 already
+has the cron pattern, so it would have been easy. Two reasons it is not here.
+
+**It is an outbound SMS event, not a relabelling.** `appointments_set_updated_at` bumps
+`updated_at` on every UPDATE, and `sms-reminders` selects follow-up candidates as exactly
+`status = 'missed' AND updated_at >= now() - 14 days`. Every row a sweep touches enters
+that window at once. The pipeline is live on a real provider. A first sweep texts real
+handsets about appointments from arbitrary past dates.
+
+**A sweep cannot tell a no-show from a data-entry backlog.** "The patient did not come" and
+"the patient came and nobody recorded it" are the same row. Marking the second `missed`
+messages someone who attended and files a false no-show into a published report. So 0034
+keeps the two claims apart: OVERDUE is derived, MISSED stays a person's assertion. What a
+future sweep must settle first is §4.3 - grace period, SMS decoupling, staging the first
+run, and whether published figures may move.
+
+### Verification
+
+Live rollback preflight **26/26 PASS**, rolled back; re-queried after - no functions, no
+index, 1100 appointments unchanged, no fixture rows. All 17 check kinds produced rows, so
+no section passed by not running.
+
+The negative control is the part worth reading. A timezone test run at 03:00 Manila passes
+whether or not the bug is present, because UTC and Manila agree on the date then - the
+vacuous-fixture trap from HANDOFF §6, twice already in this branch. So this one ignores the
+wall clock: **Pacific/Midway (UTC-11) and Pacific/Kiritimati (UTC+14) are 25 hours apart**,
+so their calendar dates always differ, Midway always behind. One fixture appointment sits on
+Midway's `current_date`. The matrix then shows the naive predicate answering false under
+Midway and true under Kiritimati - same row, same instant, two answers - while
+`overdue_followups()` answers identically under both. A third check asserts the 25-hour
+premise itself, so a tzdata change would fail the control rather than silently defuse it.
+
+Three fixture corrections were needed and each was a fact this checkout got wrong: the
+short-code CHECK is `^[A-Z0-9]{2,8}$` so `OVD-A` was rejected; `users` has no
+`barangay_code` column (it is `assigned_barangay_code`) and `facility_id` is NOT NULL for
+every role including BHW and admin; and a temp fixture table is unreadable after
+`set local role authenticated` unless the run-time `pg_temp_NN` schema is granted
+explicitly. Reading the schema would not have caught any of the three.
+
+### Closes an open question from Task 4.1
+
+Timeline question 4 asked whether `appointment_missed`, dated to `scheduled_date`, would
+agree with whatever Task 5.1 counts. `days_overdue` counts from the same anchor, so they
+agree by construction.
+
+### Raised for someone else's gate
+
+Codex's in-flight `web/src/lib/caseRegistry.ts` filters on `row.status === 'missed'`. That
+under-reports by exactly the rows nobody recorded - the gap this unit exists to close. Not
+touched here; it is uncommitted work in another agent's file.
+
+**Next:** Codex reviews 0034. Do not apply it before the review; the preflight proves the
+behaviour, not the decision in §4. Four open questions in §7.

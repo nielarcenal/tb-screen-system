@@ -1,5 +1,21 @@
 # Sprint master plan
 
+2026-09-10, off the critical path: Claude implemented **Task 3.4 — missed follow-up
+detection** as migration **`0034_overdue_followup_detection.sql`**, **NOT APPLIED**, with
+[CLAUDE_TASK_3.4_MISSED_FOLLOWUP_DETECTION.md](CLAUDE_TASK_3.4_MISSED_FOLLOWUP_DETECTION.md).
+Live rollback preflight **26/26 PASS**, rolled back and re-queried clean. The gap it closes:
+`appointments.status = 'missed'` is read by four consumers and written by nothing but a
+human, so an appointment whose day passes untouched stays `scheduled` forever and is
+counted as neither attended nor missed. 0034 adds `appointment_is_overdue()` and
+`overdue_followups()` — **`SECURITY INVOKER`, so facility and barangay scoping is inherited
+from existing RLS rather than re-derived**, which is where M31-03 came from. It adds no
+policy and writes no row. **It deliberately does not sweep rows to `missed`:**
+`sms-reminders` selects follow-up candidates as `status = 'missed' AND updated_at >= now()
+- 14 days`, and `appointments_set_updated_at` fires on every UPDATE, so a sweep puts every
+row it touches into the live SMS window at once; separately, a sweep cannot distinguish a
+no-show from a data-entry backlog. §4.3 lists what a future sweep must settle first. Four
+open questions in §7. Do not apply before review.
+
 2026-09-10, off the critical path: Claude wrote **Task 4.1 — the Patient Care Timeline
 data contract** as a design document, [CLAUDE_TASK_4.1_TIMELINE_DATA_CONTRACT.md](CLAUDE_TASK_4.1_TIMELINE_DATA_CONTRACT.md).
 Design only — no migration, no schema, no application code. It was taken because Codex
