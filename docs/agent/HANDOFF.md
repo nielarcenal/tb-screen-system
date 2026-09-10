@@ -1,4 +1,4 @@
-# Session handoff — 2026-09-10 (updated: treatment visits and overdue detection)
+# Session handoff — 2026-09-10 (updated: patient care timeline)
 
 ## 2026-09-10 continuation checkpoint
 
@@ -30,6 +30,14 @@ appointments using the Manila calendar but does not assert a patient no-show or 
 the SMS pipeline. Full regression is **425/425** (web 156, mobile 218, edge 51). Next:
 review the timeline contract and implement the timeline UI.
 
+Day 4 is now complete too. Migration 0035's referral audit trail passed its whitelist
+self-tests and **20/20** live rollback matrix; migration 0036's source-isolated timeline
+passed **16/16**. Both are applied. The portal timeline is active-TB-DOTS-only, keeps
+source authorization independent after transfers, omits free text/contact/result values
+and voided follow-ups, distinguishes overdue from missed, and shows historical states
+without fabricating dates. Full regression is **430/430** (web 161, mobile 218, edge 51),
+with production build and all typechecks passing. Next: attention dashboard and metrics.
+
 For whoever picks this up next: a new Claude session, Codex, or Niel.
 Branch `feature/capstone-upgrade`, pushed to origin. Baseline was `4659d65` on `main`.
 
@@ -47,14 +55,16 @@ Read this first, then [MASTER_PLAN.md](MASTER_PLAN.md) for task ownership and [I
 | **BASE-05** sync cursor loses tied rows | **Fixed and approved**, client-side | Ships with the next mobile build |
 | **BASE-02** appointments patient-wide | **Fixed, approved, and applied live** (migration 0031) | Nothing |
 | **BASE-03** walk-in partial writes | **Fixed, approved, and applied live** (migration 0032) | Ships with the portal client checkpoint |
-| **Case / follow-up model** (Tasks 1.2 / 1.3) | **Approved and applied** as migration 0031; strengthened live preflight **140/140 PASS** | Treatment visit/correction UI remains |
+| **Case / follow-up model** (Tasks 1.2 / 1.3) | **Approved and applied** as migration 0031; strengthened live preflight **140/140 PASS** | Nothing |
 | **Case registry UI** (Tasks 2.2–2.5) | **Implemented and approved**; portal **147/147**, build/typecheck pass | Ship with the portal client checkpoint |
 | **Treatment visit UI** (Tasks 3.1–3.3/3.5) | **Implemented and approved**; atomic visit/retry and retained-history corrections | Ship with the portal client checkpoint |
 | **Overdue detection** (Task 3.4) | **Approved and applied** as migration 0034; live rollback matrix **26/26 PASS** | Consume in attention dashboard/timeline |
+| **Referral audit trail** (Task 6.2 foundation) | **Approved and applied** as migration 0035; verifier clean, live matrix **20/20 PASS** | Appointment PATCH auditing remains C41-02 |
+| **Patient timeline** (Tasks 4.1–4.4) | **Implemented and approved** as migration 0036 + portal UI; live matrix **16/16** | Ship with portal checkpoint |
 | **Legacy appointment compatibility** | **Fixed and applied** (migration 0033); preflight **13/13**, authenticated harness **9/9** | Nothing |
 | **Client contract change** (`cancelled`, ownership columns, SMS destination) | **Implemented and focused checks passing** | Ship with the next web/mobile/function deployment |
 
-Server migrations 0028 through 0034 are applied. Migration 0035 is committed but not applied.
+Server migrations 0028 through 0036 are applied.
 
 Commits on the branch, oldest first:
 
@@ -71,8 +81,8 @@ acb3b17  Add a session handoff
 d430657  Make walk-in registration atomic and retry-safe
 ```
 
-The feature branch contains migrations 0028 through 0033, their verification artifacts,
-the atomic walk-in portal client, and the appointment client contract.
+The feature branch contains migrations 0028 through 0036, their verification artifacts,
+the atomic walk-in path, the appointment/case/follow-up clients, and the patient timeline.
 
 The only untracked file is `docs/TB-Screen_Barangay_Report_Design_Canvas_Brief.md`, which predates this work and was deliberately left alone.
 
@@ -80,11 +90,10 @@ The only untracked file is `docs/TB-Screen_Barangay_Report_Design_Canvas_Brief.m
 
 ## 2. Gate result and next unit
 
-Review the Task 4.1 timeline data contract, then implement the timeline UI and tests.
-Migration 0034 supplies the derived overdue event boundary, and migration 0035 may supply
-dated referral audit events only after its separate review. Keep Priority B deferred;
-the remaining critical path is timeline, attention dashboard, audit/security, and the
-release day in that order.
+Implement the attention-required dashboard and operational metrics next, consuming
+`overdue_followups()` rather than silently relabelling overdue appointments as missed.
+Keep Priority B deferred; the remaining critical path is dashboard, audit/security, and
+the release day in that order.
 
 Migration 0031 is reviewed and applied. Its final live rollback preflight passed
 **140/140**. The post-apply check confirms `tb_cases`, `treatment_followups`, `audit_logs`,

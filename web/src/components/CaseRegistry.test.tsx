@@ -34,6 +34,7 @@ const mock = vi.hoisted(() => {
       return builder;
     },
     rpc(name: string, fields: Record<string, unknown>) {
+      if (name === 'patient_timeline') return Promise.resolve({ data: [], error: null });
       db.rpcCalls.push([name, fields]);
       if (!db.rpcError && name === 'set_tb_case_status') {
         db.cases = db.cases.map((row) => row.case_id === fields.p_case_id

@@ -227,6 +227,23 @@ export interface TreatmentFollowupRow {
   updated_at: string;
 }
 
+/** Whitelisted read projection returned by migration 0036. */
+export interface TimelineEventRow {
+  event_id: string;
+  event_type: string;
+  occurred_on: string | null;
+  occurred_at: string | null;
+  is_undated: boolean;
+  occurred_on_is_derived: boolean;
+  rank: number;
+  actor_user_id: string | null;
+  actor_role: string | null;
+  facility_id: string | null;
+  facility_name: string | null;
+  case_id: string | null;
+  detail: Record<string, unknown>;
+}
+
 /**
  * A referral with its embedded patient (+ barangay name) and screening, as
  * returned by the nested select in ReferralInbox/ReferralDetail. RLS already

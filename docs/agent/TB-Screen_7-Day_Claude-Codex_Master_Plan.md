@@ -1,6 +1,6 @@
 # TB-Screen System — 7-Day Capstone Upgrade Plan
 
-> **Gate status — 2026-09-10:** Migrations 0028 through 0034 are approved and applied, and BASE-01 through BASE-06 are closed. The appointment ownership contract, case registry, and atomic treatment-visit/correction workflow are implemented. Migration 0034 independently passed 26/26 live rollback checks and now derives Manila-calendar overdue work without asserting a missed visit or triggering SMS. Full regression is 425/425 (portal 156, mobile 218, edge 51), with production build and all TypeScript checks passing. The seven-day Priority A finish remains achievable only with Priority B frozen and the remaining units completed in the recovery sequence below. See `HANDOFF.md` and `CODEX_REVIEW.md`.
+> **Gate status — 2026-09-10:** Migrations 0028 through 0036 are approved and applied, and BASE-01 through BASE-06 are closed. Appointment ownership, case registry, atomic treatment visits/corrections, overdue detection, forward referral audit, and the source-isolated patient timeline are implemented. Migrations 0035/0036 independently passed 20/20 and 16/16 live rollback checks. Full regression is 430/430 (portal 161, mobile 218, edge 51), with production build and all TypeScript checks passing. The seven-day Priority A finish remains achievable only with Priority B frozen and the remaining units completed in the recovery sequence below. See `HANDOFF.md` and `CODEX_REVIEW.md`.
 
 **Project:** TB-Screen System  
 **Repository:** `https://github.com/nielarcenal/tb-screen-system`  
@@ -1339,7 +1339,7 @@ and appointment compatibility/client foundations are already complete.
 - **Sep 10:** foundations, compatibility gate, and appointment client contract — complete.
 - **Sep 11:** case creation, facility case list/filtering, case detail, focused tests — complete ahead of schedule.
 - **Sep 12:** treatment lifecycle actions, follow-up/visit recording, overdue/missed logic, tests — complete ahead of schedule.
-- **Sep 13:** longitudinal timeline contract, UI, tests, privacy review.
+- **Sep 13:** longitudinal timeline contract, UI, tests, privacy review — complete ahead of schedule.
 - **Sep 14:** attention-required dashboard, metrics, query review, tests.
 - **Sep 15:** audit viewer/access checks, security and performance pass; resolve all Highs.
 - **Sep 16:** full regressions, device/offline smoke, demo data/rehearsal, release checkpoint.
@@ -1374,10 +1374,10 @@ the Sep 16 regression and demo gate.
 
 ## Day 4
 
-- [ ] timeline contract
-- [ ] timeline UI
-- [ ] timeline tests
-- [ ] privacy review passed
+- [x] timeline contract
+- [x] timeline UI
+- [x] timeline tests
+- [x] privacy review passed
 
 ## Day 5
 

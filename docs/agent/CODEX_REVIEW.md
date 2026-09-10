@@ -1,3 +1,32 @@
+# Codex review — Day 4 timeline and migrations 0035/0036
+
+2026-09-10. Result: **APPROVED AND APPLIED**.
+
+Migration 0035 closes the referral-history gap forward-only. Its trigger captures stage,
+presentation, result-date, owner and sample-ID changes while excluding result free text
+and positive/negative findings. It also fixes the latent NULL-whitelist bypass before
+adding referrals to the audit CHECK. The transcription/mutation verifier is clean; Codex
+independently reran the linked rollback matrix at **20/20 PASS** before atomic application.
+
+The Task 4.1 draft required one privacy correction: its proposed BHW timeline exposed
+treatment dates and outcomes that `bhw_case_summary()` deliberately withholds. Migration
+0036 therefore admits active TB-DOTS staff only and authorizes every source arm
+independently. A receiving facility can see its transferred case events without gaining
+the former facility's pre-case/referral history. The contract also adds
+`appointment_overdue` as a derived fact distinct from staff-asserted `appointment_missed`.
+Historical referral state without a 0035 audit record remains explicitly undated.
+
+The 0036 live rollback matrix passed **16/16**: role and cross-facility denial, transferred
+case isolation, event vocabulary, stable order/limit, Manila timezone agreement, detail
+whitelist, clinical-text exclusion and voided-follow-up omission. Migration 0036 is
+applied. The portal renders the bounded stream with a separate honest undated group and
+never receives notes, contact data, symptoms or lab result values.
+
+Full regression is **430/430** (portal 161, mobile 218, edge 51); production build and
+all TypeScript checks pass. Next: attention dashboard and metrics.
+
+---
+
 # Codex review — Day 3 treatment visits and migration 0034
 
 2026-09-10. Result: **APPROVED; MIGRATION 0034 APPLIED**.

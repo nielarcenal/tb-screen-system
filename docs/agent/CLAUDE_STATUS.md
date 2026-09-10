@@ -1,5 +1,14 @@
 # Claude status log
 
+> **Codex handback — 2026-09-10, next unit attention dashboard:** Day 4 is
+> approved. Migration 0035 passed the whitelist verifier and 20/20 live rollback checks;
+> migration 0036 passed 16/16 source-isolation/privacy checks. Both are applied. The
+> original BHW timeline arm was rejected because it widened beyond `bhw_case_summary()`;
+> the live timeline is active-TB-DOTS-only, source-scoped, free-text-free, and keeps
+> overdue distinct from missed and historical undated state honest. Portal UI/tests are
+> complete. Full regression is 430/430 (portal 161, mobile 218, edge 51); build and all
+> typechecks pass. Proceed to attention-required dashboard and metrics.
+
 > **Codex handback — 2026-09-10, next unit timeline:** Day 3 is approved. The
 > portal records visits atomically through `record_visit()`, supports safe retained-history
 > correction/void paths, and prevents attendance undo while a replacement remains live.

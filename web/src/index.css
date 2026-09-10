@@ -2707,6 +2707,27 @@ button.amber:hover { background: var(--amber-container); }
 .case-inline-editor { grid-template-columns: minmax(180px, 1fr) auto auto; align-items: end; }
 .case-notes-editor { grid-template-columns: minmax(220px, 1fr) auto auto; }
 .case-void-summary span { flex: 1; color: var(--muted); }
+.patient-timeline { margin-top: 20px; border: 1px solid var(--line); border-radius: 10px; padding: 16px; background: var(--paper); }
+.patient-timeline-head { display: flex; justify-content: space-between; align-items: start; gap: 16px; margin-bottom: 16px; }
+.patient-timeline-head h3 { margin: 0 0 5px; }
+.patient-timeline-head p, .timeline-undated > p, .timeline-limit { margin: 0; color: var(--muted); font-size: 13px; }
+.patient-timeline-head button { flex: 0 0 auto; }
+.timeline-list { display: grid; }
+.timeline-event { position: relative; display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 10px; padding: 0 0 18px; }
+.timeline-event:not(:last-child)::before { content: ''; position: absolute; left: 5px; top: 12px; bottom: -2px; width: 2px; background: var(--line); }
+.timeline-marker { position: relative; z-index: 1; width: 12px; height: 12px; margin-top: 4px; border: 2px solid var(--paper); border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 1px var(--teal); }
+.timeline-event-body { display: grid; gap: 4px; min-width: 0; }
+.timeline-event-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.timeline-event-body > span, .timeline-meta { color: var(--muted); font-size: 13px; }
+.timeline-meta { display: flex; flex-wrap: wrap; gap: 10px; }
+.timeline-event > time { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.timeline-derived { border-radius: 999px; padding: 2px 7px; background: #fff3cd; color: #725500; font-size: 11px; font-weight: 700; }
+.timeline-event--appointment_overdue .timeline-marker, .timeline-event--appointment_missed .timeline-marker { background: #b45309; box-shadow: 0 0 0 1px #b45309; }
+.timeline-undated { margin-top: 8px; border-top: 1px dashed var(--line); padding-top: 16px; }
+.timeline-undated h4 { margin: 0 0 5px; }
+.timeline-undated .timeline-list { margin-top: 14px; }
+.timeline-undated .timeline-marker { background: var(--muted); box-shadow: 0 0 0 1px var(--muted); }
+.timeline-limit { margin-top: 10px; border-radius: 8px; padding: 9px 10px; background: #fff3cd; color: #725500; }
 
 @media (max-width: 900px) {
   .case-registry { grid-template-columns: 1fr; }
@@ -2719,5 +2740,8 @@ button.amber:hover { background: var(--amber-container); }
   .case-facts, .case-grid { grid-template-columns: 1fr; }
   .case-detail { padding: 16px; }
   .case-visit-form, .case-inline-editor, .case-notes-editor { grid-template-columns: 1fr; }
+  .patient-timeline-head { flex-direction: column; }
+  .timeline-event { grid-template-columns: 18px minmax(0, 1fr); }
+  .timeline-event > time { grid-column: 2; grid-row: 2; }
   .case-link-card, .case-create-row { align-items: stretch; flex-direction: column; }
 }

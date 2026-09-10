@@ -1,6 +1,18 @@
 # Sprint master plan
 
-2026-09-10 latest critical-path checkpoint: **Day 3 treatment/follow-up is
+2026-09-10 latest critical-path checkpoint: **Day 4 timeline is complete and
+approved.** Migration **0035** passed its whitelist mutation verifier and an independent
+**20/20** live rollback matrix before atomic application. Migration **0036** implements
+the read-time patient timeline and passed **16/16** live rollback checks before application.
+The review rejected the draft BHW lifecycle arm because it would have disclosed treatment
+dates/outcomes absent from `bhw_case_summary()`; the live function is active-TB-DOTS-only
+and authorizes each source independently. It keeps overdue distinct from staff-asserted
+missed, omits free text/contact/result values and voided visits, and separates honest
+historical undated state in the UI. Full regression is **430/430**: portal **161/161**,
+mobile **218/218**, edge **51/51**; production build and all TypeScript checks pass.
+Next critical-path unit: attention-required dashboard and operational metrics.
+
+2026-09-10 earlier critical-path checkpoint: **Day 3 treatment/follow-up is
 complete and approved.** The case detail now records an attended or unscheduled
 visit through the idempotent `record_visit()` transaction, with optional lifecycle
 transition and next appointment. Visit-date correction uses the paired RPC, notes
@@ -24,14 +36,13 @@ and all TypeScript checks passing. The next critical-path unit is treatment visi
 recording through `record_visit()` and the correction/void workflow. Priority B
 remains frozen.
 
-**Two off-path units now await Codex review:** Task 4.1 (design only) and migration
-**0035**. Migration 0034 has passed review and is live. Migration 0035 must not be
-applied before its own review.
+No off-path unit currently awaits review. Task 4.1 and migrations 0035/0036 are
+approved and live; appointment PATCH auditing remains a separate Day 6 item (C41-02).
 
 2026-09-10, off the critical path: Claude implemented **Task 6.2 — referral audit events**
-as migration **`0035_referral_audit_trail.sql`**, **NOT APPLIED**. Transcription verifier
-`node scripts/verify-0035-whitelist.mjs` 7 OK with three mutation self-tests caught; live
-rollback preflight **20/20 PASS**, rolled back and re-queried clean. Referrals were entirely
+as migration **`0035_referral_audit_trail.sql`**, **APPROVED AND APPLIED**. Transcription verifier
+`node scripts/verify-0035-whitelist.mjs` 7 OK with three mutation self-tests caught; Codex
+independently reran the live rollback preflight at **20/20 PASS** before application. Referrals were entirely
 outside the audit surface — the `entity_table` CHECK excluded them and no referral write
 path called `write_audit()` — so stage moves, no-shows and re-routes left nothing but a
 mutable `updated_at`. 0035 adds an AFTER UPDATE trigger, **forward only**: no nullable
@@ -58,21 +69,22 @@ policy and writes no row. **It deliberately does not sweep rows to `missed`:**
 `sms-reminders` selects follow-up candidates as `status = 'missed' AND updated_at >= now()
 - 14 days`, and `appointments_set_updated_at` fires on every UPDATE, so a sweep puts every
 row it touches into the live SMS window at once; separately, a sweep cannot distinguish a
-no-show from a data-entry backlog. §4.3 lists what a future sweep must settle first. Four
-open questions in §7. Do not apply before review.
+no-show from a data-entry backlog. §4.3 lists what a future sweep must settle first. The
+review approved this non-mutating boundary and migration 0034 is live.
 
 2026-09-10, off the critical path: Claude wrote **Task 4.1 — the Patient Care Timeline
 data contract** as a design document, [CLAUDE_TASK_4.1_TIMELINE_DATA_CONTRACT.md](CLAUDE_TASK_4.1_TIMELINE_DATA_CONTRACT.md).
-Design only — no migration, no schema, no application code. It was taken because Codex
+Originally design-only; it is now approved with the privacy amendment recorded at the top
+of that document and implemented by migration 0036 plus the portal UI. It was taken because Codex
 holds uncommitted case registry UI work in `web/src` (Tasks 2.2–2.5) and rule 19 puts
 those files off limits; this unit shares none of them. The finding to review first is §2:
 **three of the timeline events the plan asks for cannot be dated** — `referrals` has no
 `received_at`, `closed_at` or `presented_at`, and `audit_logs` cannot cover them because
 its `entity_table` CHECK excludes referrals. Appointment `missed` and `cancelled` are
 audited only on the 0031 RPC paths, not on the ordinary PATCH both clients use. The
-contract marks those events undated rather than adding five nullable columns mid-sprint;
-that decision and three others are the open questions in §9. Task 4.2 (timeline UI) is
-blocked on this review **and** on the case registry landing, since both touch `web/src`.
+contract marks those events undated rather than adding five nullable columns mid-sprint.
+Migration 0035 now dates future transitions while historical state stays honestly undated;
+Task 4.2 and its privacy review are complete.
 
 2026-09-10 earlier checkpoint (superseded by the case-registry entry above): **the seven-day Priority A finish remains achievable,
 but only as a strict scope-controlled sprint.** All six BASE findings are closed.
@@ -86,8 +98,8 @@ critical path was the user-facing case registry, treatment/follow-up UI, timelin
 attention dashboard, audit viewer/security pass, then the final regression/demo day.
 Priority B work is deferred until that path is green.
 
-Current full regression: portal **156/156**, mobile **218/218**, and edge
-functions **51/51** (**425 total**); production build and all TypeScript checks
+Current full regression: portal **161/161**, mobile **218/218**, and edge
+functions **51/51** (**430 total**); production build and all TypeScript checks
 pass. The build retains its pre-existing large-chunk advisory.
 
 2026-09-10 earlier checkpoint (superseded by the latest entry above): **BASE-03 is

@@ -26,6 +26,7 @@ import {
   type TreatmentOutcome,
 } from '../lib/types';
 import CaseVisitWorkflow from './CaseVisitWorkflow';
+import PatientTimeline from './PatientTimeline';
 
 const FILTERS: CaseFilter[] = ['all', 'active', 'closed', 'followup_due', 'missed'];
 const OUTCOMES: TreatmentOutcome[] = [
@@ -187,6 +188,8 @@ function CaseDetail({ item, onChanged }: DetailProps) {
       {error ? <div className="case-error" role="alert">{t('cases.actionError')} {error}</div> : null}
 
       <CaseVisitWorkflow item={item} onChanged={onChanged} />
+
+      <PatientTimeline patientId={tbCase.patient_id} />
 
       <div className="case-grid">
         <section>

@@ -2,7 +2,19 @@
 
 Owner: Claude Code. Reviewer: Codex.
 **Revision 1 — 2026-09-10.** Baseline: branch `feature/capstone-upgrade` at `939ce5f`, with migrations 0028–0033 applied.
-Status: **not implemented.** No migration, no schema, no application code. This document is the contract Task 4.2 (UI), 4.3 (privacy review) and 4.4 (tests) build against.
+Status: **approved with the Codex amendment below and implemented as migration 0036 plus the portal timeline UI.** Migration 0036 passed a **16/16** live rollback matrix and is applied.
+
+> **Codex amendment — 2026-09-10 (supersedes conflicting text below):** The draft's
+> BHW arm is rejected. `bhw_case_summary()` intentionally exposes no treatment dates or
+> outcomes, so expressing those values as lifecycle events would widen the reviewed
+> boundary. `patient_timeline()` is active-TB-DOTS-only and authorizes every source arm
+> independently. This also fixes the transferred-case contradiction: a receiving facility
+> can see its owned case events without gaining another facility's referral/pre-case
+> history. Migration 0035 now supplies forward-only dates for referral receipt, no-show,
+> and closure; historical state without an audit row remains explicitly undated. A
+> nineteenth event, `appointment_overdue`, is distinct from the staff assertion
+> `appointment_missed`. SMS delivery metadata is TB-DOTS-only. These decisions close all
+> four §9 questions and are enforced by the 0036 matrix and portal tests.
 
 Depends on [Task 1.2](CLAUDE_TASK_1.2_CASE_DOMAIN_MODEL.md) and [Task 1.3](CLAUDE_TASK_1.3_FOLLOWUP_MODEL.md) §6, which pinned the timeline as a read-time aggregation and forbade an event table.
 
