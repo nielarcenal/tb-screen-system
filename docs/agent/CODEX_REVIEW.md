@@ -1,3 +1,24 @@
+# Codex review — post-Day 7 shared registry and Barangay Report v2
+
+2026-09-10. Result: **APPROVED AND APPLIED FOR PORTAL TESTING**.
+
+Migration 0039 passed 15/15 linked rollback checks and a live catalog readback. Exact
+name/middle-name/birthdate matching plus optional exact phone returns at most five minimal
+identity rows and masks the stored phone. TB-DOTS may create a new screening/referral
+episode against that canonical patient; the operation is atomic and idempotent. BHW
+cross-barangay matches are visible only as a duplicate notification and cannot be reused
+from the client. The design does not create a browseable province patient list or widen
+clinical RLS.
+
+Barangay Report v2 counts screened, referred, registered cases, explicit cured/completed
+outcomes, and explicit lost-to-follow-up outcomes. It does not infer LTFU from overdue or
+missed appointments and clearly states that TB-Screen does not replace DOH ITIS. Case
+detail groups pre-screening/PGI-S, vitals, lab data, and appointments. Portal 184/184,
+mobile 219/219, edge 51/51; production build and TypeScript pass; Expo Doctor 21/21.
+S7-05/S7-06 remain human checks for only the new Android warning and new translations.
+
+---
+
 # Codex review — Day 7 release/security gate
 
 2026-09-10. Result: **RELEASE GATE PASSED FOR CAPSTONE/DEMO**.

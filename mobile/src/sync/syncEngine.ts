@@ -278,7 +278,34 @@ async function pullTable<T extends { updated_at: string }>(
 const PATIENTS_PUSH: PushSpec<LocalPatientRow> = {
   table: 'patients',
   getPending: getPendingPatients,
-  send: async (row) => await supabase.from('patients').upsert(row, { onConflict: 'patient_id' }),
+  send: async (row) => {
+    // A patient created while offline must receive the same duplicate check as
+    // the online enrollment form before it is allowed into the shared registry.
+    // The current row may already exist after a lost success response, so only
+    // a different canonical id is a duplicate.
+    if (row.first_name && row.last_name && row.birthdate) {
+      const lookup = await supabase.rpc('search_patient_registry', {
+        p_first_name: row.first_name,
+        p_middle_name: row.middle_name,
+        p_last_name: row.last_name,
+        p_birthdate: row.birthdate,
+        p_contact_number: row.contact_number,
+      });
+      if (lookup.error) return { error: lookup.error };
+      const duplicate = (lookup.data ?? []).find(
+        (match: { patient_id: string }) => match.patient_id !== row.patient_id,
+      ) as { display_code?: string } | undefined;
+      if (duplicate) {
+        return {
+          error: {
+            code: 'TBSCREEN_DUPLICATE_PATIENT',
+            message: `Patient ${duplicate.display_code ?? ''} already exists in the shared registry. Do not create another patient record.`,
+          },
+        };
+      }
+    }
+    return await supabase.from('patients').upsert(row, { onConflict: 'patient_id' });
+  },
   markSynced: markPatientSynced,
   idOf: (r) => r.patient_id,
   labelOf: (r) => r.display_code,

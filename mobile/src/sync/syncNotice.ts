@@ -81,6 +81,9 @@ function errorNotice(lastError: SyncError | null, offlineShown: boolean): SyncNo
       return offlineShown ? null : { key: 'home.syncOffline', tone: 'calm' };
 
     case 'partial':
+      if (/TBSCREEN_DUPLICATE_PATIENT|already exists in the shared registry/i.test(lastError.detail)) {
+        return { key: 'home.syncDuplicatePatient', tone: 'alarm' };
+      }
       return {
         key: 'home.syncPartial',
         params: { count: lastError.count ?? 0 },

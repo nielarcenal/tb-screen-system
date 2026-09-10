@@ -92,6 +92,21 @@ export interface PatientRow {
   updated_at: string;
 }
 
+/** Minimal exact-match result from the province-wide patient identity registry.
+ * Clinical records are deliberately absent; care data remains facility-scoped. */
+export interface PatientRegistryMatch {
+  patient_id: string;
+  display_code: string;
+  full_name: string | null;
+  first_name: string | null;
+  middle_name: string | null;
+  last_name: string | null;
+  birthdate: string | null;
+  barangay_code: string;
+  phone_last4: string | null;
+  can_reuse: boolean;
+}
+
 /**
  * Optional vital signs recorded alongside a screening (migration 0024).
  *

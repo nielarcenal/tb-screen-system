@@ -1,5 +1,11 @@
 # Issue register
 
+2026-09-10 post-Day 7 extension: migration 0039 is applied after 15/15 linked rollback
+checks. Portal 184/184 and mobile 219/219 pass; portal build, TypeScript checks, and Expo
+Doctor 21/21 pass. The new workflow is ready for portal testing. The two human checks below
+apply only to the newly added 0039 mobile copy/workflow; they do not reopen the completed
+Day 7 gate for the prior build.
+
 2026-09-10 Day 7 update: no Critical or High finding remains open. Release status is
 **passed for capstone/demo**. The user confirmed that the physical Android
 offline/reconnect/cache-isolation checklist passed and that native-speaker review approved
@@ -13,6 +19,8 @@ See `DAY7_RELEASE_VERIFICATION.md` for evidence and operational controls.
 | S7-02 | LOW | Legacy Supabase grants give `anon`/`authenticated` broader table privileges than least privilege | RLS is live on every public table and clients cannot issue SQL; narrow only in a dedicated migration with a full role matrix |
 | S7-03 | RELEASE CHECK | Physical Android airplane-mode/reconnect/cache-isolation run | Closed 2026-09-10 — full checklist passed by user attestation |
 | S7-04 | RELEASE CHECK | Tagalog/Cebuano native-speaker sign-off | Closed 2026-09-10 — copy approved by user attestation |
+| S7-05 | RELEASE CHECK | Physical Android exercise of the new online registry-match warning and offline-created duplicate reconnect warning | Open for the next Android acceptance pass; automated mobile tests and Expo Doctor pass |
+| S7-06 | RELEASE CHECK | Native-speaker review of the new 0039 registry/duplicate-warning strings only | Open; the earlier sign-off predates these newly added strings |
 
 2026-09-10 Day 6 update: migration 0038 is approved and applied after a strengthened
 **36/36** linked rollback matrix. C41-02 is closed by the single appointment trigger;

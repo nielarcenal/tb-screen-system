@@ -38,6 +38,8 @@ export const en = {
       '1 record could not be uploaded. Everything else synced. It is still saved on this phone and will be tried again — if this keeps happening, tell your coordinator.',
     syncPartial_other:
       '{{count}} records could not be uploaded. Everything else synced. They are still saved on this phone and will be tried again — if this keeps happening, tell your coordinator.',
+    syncDuplicatePatient:
+      'This patient already exists in the shared registry. Do not create another record. Contact the TB-DOTS facility so the referral can use the existing patient record.',
     primaryCta: 'Enroll & screen a patient',
     attentionHeading: 'Needs attention',
     tiles: {
@@ -208,7 +210,7 @@ export const en = {
   enroll: {
     title: 'Enroll patient',
     intro:
-      'A patient code (e.g. PAT-XXXX-0001) is assigned automatically on save. Patient details are shared only with the receiving TB-DOTS facility.',
+      'Before enrollment, the patient identity is checked in the shared Bukidnon registry. Clinical records remain available only to the care facility.',
     requiredHint: 'Fields marked * are required.',
     fullNameLabel: 'Full name',
     firstNameLabel: 'First name',
@@ -225,6 +227,17 @@ export const en = {
     goToSignIn: 'Go to sign-in',
     saveCta: 'Enroll patient',
     missingFields: 'Complete the required fields: consent, name, birthdate, sex, and barangay.',
+    registryTitle: 'Search shared patient registry',
+    registryIntro: 'Required while online. Search the database before adding this patient.',
+    registryOffline: 'You are offline. Enrollment can continue and will be checked when connectivity returns.',
+    registrySearch: 'Search database',
+    registrySearching: 'Searching…',
+    registryRequired: 'Enter the name and birthdate, then search before saving.',
+    registryClear: 'No exact patient record found. A new enrollment can be saved.',
+    registryError: 'The database could not be searched. Check the connection and try again.',
+    registryExisting:
+      'Patient {{code}} (phone {{phone}}) already exists. Do not create another patient record. Coordinate with the TB-DOTS facility for the referral.',
+    registryNoPhone: 'not stored',
   },
   patientDetail: {
     ageSex: 'Age and sex',

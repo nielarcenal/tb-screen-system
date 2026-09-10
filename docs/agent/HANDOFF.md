@@ -1,4 +1,18 @@
-# Session handoff — 2026-09-10, end of Day 6 / start of Day 7
+# Session handoff — 2026-09-10, post-Day 7 shared-registry extension
+
+## Current extension
+
+The seven-day guide is still the architectural baseline, but the user's new Barangay
+Report/shared-patient request is a post-plan extension. Migration 0039 is live after a
+15/15 rollback preflight. It adds an exact-match province identity lookup, atomic reuse
+by TB-DOTS, and count-only Barangay Report v2. The portal case detail now brings together
+pre-screening/PGI-S, vitals, lab report, and check-up appointments. Mobile requires the
+registry search online and repeats it before syncing an offline-created patient.
+
+Verification: portal 184/184, mobile 219/219, edge 51/51; portal production build and
+mobile/portal TypeScript pass; Expo Doctor 21/21. New physical/mobile and translation
+checks are listed as S7-05/S7-06 in `ISSUES.md`. Clinical episodes remain facility-scoped;
+only exact identity matching and aggregate report counts cross facilities.
 
 Read this first, then [MASTER_PLAN.md](MASTER_PLAN.md) for task ownership,
 [DAY7_RELEASE_VERIFICATION.md](DAY7_RELEASE_VERIFICATION.md) for the release gate, and
@@ -31,14 +45,15 @@ completely unaffected by anything you do to this folder.
 
 ```
 ?? docs/TB-Screen_Barangay_Report_Design_Canvas_Brief.md
+?? docs/new design/BarangayReportBody.dc.html
 ```
 
 - **The Expo SDK 57 alignment is now committed as its own maintenance unit.** It contains
   patch bumps across the Expo/React Native dependency set plus the `expo-font` config
   plugin. It was reverified on 2026-09-10: `expo-doctor` **21/21**, mobile tests
   **218/218**, and `tsc --noEmit` clean.
-- **The design brief is the user's own file** and is deliberately untracked. Do not stage,
-  edit, delete, or fold it into any unit. Every handoff in this branch has said so.
+- **Both design input files are the user's own files** and are deliberately untracked. Do
+  not stage, edit, delete, or fold them into any unit.
 
 ---
 

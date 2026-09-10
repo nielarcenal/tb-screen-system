@@ -280,3 +280,13 @@ reading the SQL and a reviewer reading this register see the same labels.
 | --- | --- |
 | D-0031-u | A denial probe must reach the guard it claims to test. The `correct_tb_case_dates()` matrix case now closes the case on a legal date first; otherwise `tb_cases_outcome_shape` rejects an outcome date on an open case before the RPC's follow-up check runs (M31-08). |
 | D-0031-v | The old-client gate closes only for a fully passing authenticated BHW run. Service-role fallback, absent ownership columns, an unavailable fixture, or any failed ownership assertion returns non-zero and reports `GATE: NOT CLOSED` (M31-09). |
+
+## 2026-09-10 — Post-Day 7 shared registry and report extension
+
+| # | Decision |
+| --- | --- |
+| D-0039-a | “Shared patient data across Bukidnon” means one canonical demographic identity discoverable only by exact name + birthdate (and optional exact phone), not a province-wide browseable patient/clinical directory. Clinical episodes remain visible through existing facility-scoped referral/case RLS. |
+| D-0039-b | TB-DOTS may reuse an exact-matched canonical patient by creating a new facility screening and received referral. The operation is atomic and reuses the existing `register_walkin` idempotency ledger contract. |
+| D-0039-c | Online mobile enrollment must search first. Offline enrollment remains available; reconnect sync performs the same exact check and leaves a duplicate pending with a specific BHW warning instead of uploading it. |
+| D-0039-d | Barangay Report “successful outcome” means an explicitly recorded `cured` or `treatment_completed` outcome. “Lost to follow-up” means an explicitly recorded outcome. An overdue or missed appointment is never automatically reclassified as a treatment outcome. |
+| D-0039-e | The report is an operational TB-Screen aggregate that supports, but does not replace, DOH ITIS or clinical judgment. |

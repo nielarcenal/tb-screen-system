@@ -94,6 +94,19 @@ describe('the last-pass line', () => {
     expect(error?.key).toBe('home.syncPartial');
   });
 
+  it('turns an offline-created duplicate into a specific BHW notification', () => {
+    const { error } = syncNotices({
+      isOnline: true,
+      lastError: {
+        kind: 'partial',
+        count: 1,
+        detail: 'PAT-ABC-0001: Patient PAT-OTHER-0004 already exists in the shared registry.',
+      },
+    });
+
+    expect(error).toEqual({ key: 'home.syncDuplicatePatient', tone: 'alarm' });
+  });
+
   it('defaults a partial count to 0 rather than rendering undefined', () => {
     const { error } = syncNotices({
       isOnline: true,

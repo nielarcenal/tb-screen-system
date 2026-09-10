@@ -43,6 +43,8 @@ export const tl: Translation = {
       'May {{count}} talang hindi na-upload. Nai-sync naman ang iba. Nakasave pa rin ito sa teleponong ito at susubukan ulit — kung paulit-ulit ito, sabihin sa iyong coordinator.',
     syncPartial_other:
       'May {{count}} talang hindi na-upload. Nai-sync naman ang iba. Nakasave pa rin ito sa teleponong ito at susubukan ulit — kung paulit-ulit ito, sabihin sa iyong coordinator.',
+    syncDuplicatePatient:
+      'May record na ang pasyenteng ito sa shared registry. Huwag gumawa ng panibagong record. Makipag-ugnayan sa TB-DOTS facility upang magamit ng referral ang kasalukuyang patient record.',
     primaryCta: 'Mag-enroll at mag-screen ng pasyente',
     attentionHeading: 'Kailangan ng atensyon',
     tiles: {
@@ -222,7 +224,7 @@ export const tl: Translation = {
   enroll: {
     title: 'I-enroll ang pasyente',
     intro:
-      'Awtomatikong bibigyan ng patient code (hal. PAT-XXXX-0001) sa pag-save. Ang detalye ng pasyente ay ibinabahagi lamang sa tumatanggap na TB-DOTS facility.',
+      'Bago mag-enroll, tinitingnan ang pagkakakilanlan ng pasyente sa shared Bukidnon registry. Ang clinical records ay makikita lamang ng pasilidad na nangangalaga.',
     requiredHint: 'Kinakailangan ang mga field na may markang *.',
     fullNameLabel: 'Buong pangalan',
     firstNameLabel: 'Pangalan',
@@ -240,6 +242,17 @@ export const tl: Translation = {
     saveCta: 'I-enroll ang pasyente',
     missingFields:
       'Kumpletuhin ang mga kinakailangang field: pahintulot, pangalan, petsa ng kapanganakan, kasarian, at barangay.',
+    registryTitle: 'Maghanap sa shared patient registry',
+    registryIntro: 'Kinakailangan kapag online. Hanapin muna sa database bago idagdag ang pasyente.',
+    registryOffline: 'Offline ka. Maaaring ituloy ang enrollment at susuriin ito kapag bumalik ang koneksiyon.',
+    registrySearch: 'Hanapin sa database',
+    registrySearching: 'Naghahanap…',
+    registryRequired: 'Ilagay ang pangalan at birthdate, pagkatapos ay maghanap bago mag-save.',
+    registryClear: 'Walang eksaktong patient record na nakita. Maaaring mag-save ng bagong enrollment.',
+    registryError: 'Hindi mahanap sa database. Suriin ang koneksiyon at subukan muli.',
+    registryExisting:
+      'May record na ang pasyenteng {{code}} (telepono {{phone}}). Huwag gumawa ng panibagong patient record. Makipag-ugnayan sa TB-DOTS facility para sa referral.',
+    registryNoPhone: 'walang naka-save',
   },
   patientDetail: {
     ageSex: 'Edad at kasarian',

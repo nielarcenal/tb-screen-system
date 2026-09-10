@@ -1,5 +1,17 @@
 # Claude status log
 
+> **Codex handback — 2026-09-10, post-Day 7 requested extension:** migration 0039 is
+> applied after a 15/15 linked rollback matrix. Facility registration must exact-search
+> the shared Bukidnon identity registry before creating a patient and can reuse the
+> canonical identity idempotently. Mobile enforces the same search online and checks
+> offline-created patients during reconnect sync, with a specific duplicate warning.
+> Barangay Report v2 now shows screened, referred, registered cases, staff-recorded
+> successful outcomes, and staff-recorded lost-to-follow-up counts. Case detail groups
+> pre-screening/PGI-S, vitals, lab report, and appointments. Clinical row access remains
+> facility-scoped; the cross-province surface is exact-match identity or aggregate counts,
+> never a browseable patient list. Regression: portal 184/184, mobile 219/219, edge 51/51;
+> production build and both TypeScript checks pass; Expo Doctor 21/21.
+
 > **Codex handback — 2026-09-10, Day 7:** capstone/demo release gate passed.
 > Automated regression is 450/450; builds/typechecks and live security posture pass with
 > no Critical/High finding. Documentation is reconciled and the seven-state synthetic

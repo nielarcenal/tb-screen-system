@@ -2,7 +2,14 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { en } from '../i18n/locales/en';
-import type { AppointmentRow, PatientRow, TbCaseRow, TreatmentFollowupRow } from '../lib/types';
+import type {
+  AppointmentRow,
+  PatientRow,
+  ReferralRow,
+  ScreeningRow,
+  TbCaseRow,
+  TreatmentFollowupRow,
+} from '../lib/types';
 import CaseRegistry from './CaseRegistry';
 
 const mock = vi.hoisted(() => {
@@ -11,6 +18,8 @@ const mock = vi.hoisted(() => {
     patients: [] as Record<string, unknown>[],
     followups: [] as Record<string, unknown>[],
     appointments: [] as Record<string, unknown>[],
+    referrals: [] as Record<string, unknown>[],
+    screenings: [] as Record<string, unknown>[],
     loadError: null as { message: string } | null,
     rpcError: null as { message: string } | null,
     rpcCalls: [] as Array<[string, Record<string, unknown>]>,
@@ -20,7 +29,9 @@ const mock = vi.hoisted(() => {
     data: table === 'tb_cases' ? db.cases
       : table === 'patients' ? db.patients
         : table === 'treatment_followups' ? db.followups
-          : db.appointments,
+          : table === 'appointments' ? db.appointments
+            : table === 'referrals' ? db.referrals
+              : db.screenings,
     error: table === 'tb_cases' ? db.loadError : null,
   });
 
@@ -28,7 +39,9 @@ const mock = vi.hoisted(() => {
     from(table: string) {
       const builder = {
         select: () => builder,
-        in: () => table === 'patients' ? Promise.resolve(result(table)) : builder,
+        in: () => ['patients', 'referrals', 'screenings'].includes(table)
+          ? Promise.resolve(result(table))
+          : builder,
         order: () => Promise.resolve(result(table)),
       };
       return builder;
@@ -84,11 +97,32 @@ const appointment: AppointmentRow = {
   created_at: '2026-09-01T00:00:00Z', updated_at: '2026-09-01T00:00:00Z',
 };
 
+const referral: ReferralRow = {
+  referral_id: 'ref-1', patient_id: 'patient-1', screening_id: 'screen-1', facility_id: 'fac-1',
+  lab_sample_id: 'LAB-2026-001', status: 'closed', result: 'GeneXpert confirmed.',
+  result_outcome: 'positive', result_date: '2026-09-03', presented: true,
+  created_at: '2026-09-01T00:00:00Z', updated_at: '2026-09-03T00:00:00Z',
+};
+
+const screening: ScreeningRow = {
+  screening_id: 'screen-1', patient_id: 'patient-1',
+  symptom_flags: {
+    cough_2wks: 'yes', weight_loss: 'no', night_sweats: 'no', fever: 'no',
+    hemoptysis: 'no', fatigue: 'no', chest_pain: 'no', loss_of_appetite: 'no', tb_contact: 'no',
+  },
+  pgis_severity: 'moderate', referred: true,
+  height_cm: 170, weight_kg: 65, temperature_c: 37.2, systolic_bp: 120,
+  diastolic_bp: 80, pulse_rate: 75, spo2_percent: 98,
+  created_at: '2026-09-01T00:00:00Z', updated_at: '2026-09-01T00:00:00Z',
+};
+
 beforeEach(() => {
   mock.db.cases = [tbCase() as unknown as Record<string, unknown>];
   mock.db.patients = [patient as unknown as Record<string, unknown>];
   mock.db.followups = [followup as unknown as Record<string, unknown>];
   mock.db.appointments = [appointment as unknown as Record<string, unknown>];
+  mock.db.referrals = [referral as unknown as Record<string, unknown>];
+  mock.db.screenings = [screening as unknown as Record<string, unknown>];
   mock.db.loadError = null;
   mock.db.rpcError = null;
   mock.db.rpcCalls = [];
@@ -101,6 +135,10 @@ describe('CaseRegistry', () => {
     expect(screen.getAllByText('Juan Dela Cruz')).toHaveLength(2);
     expect(screen.getAllByText('Patient attended.')).toHaveLength(2);
     expect(screen.getAllByText(new Date('2099-09-20T00:00:00').toLocaleDateString())).toHaveLength(2);
+    expect(screen.getByText(en.cases.preScreening)).toBeTruthy();
+    expect(screen.getByText(en.pgis.moderate)).toBeTruthy();
+    expect(screen.getByText('LAB-2026-001')).toBeTruthy();
+    expect(screen.getByText('GeneXpert confirmed.')).toBeTruthy();
   });
 
   it('starts treatment through the audited lifecycle RPC', async () => {

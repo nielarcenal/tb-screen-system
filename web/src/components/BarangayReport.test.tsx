@@ -32,17 +32,16 @@ const mock = vi.hoisted(() => {
 
 vi.mock('../lib/supabase', () => ({ supabase: mock.supabase }));
 
-/** One barangay_report() row, shaped as 0027 returns it. */
+/** One barangay_report_v2() row, shaped as 0039 returns it. */
 const row = (name: string, over: Partial<Record<string, number>> = {}) => ({
   barangay_code: `code-${name}`,
   barangay_name: name,
   city_name: 'Valencia City',
   screened_count: 0,
   referred_count: 0,
-  presented_count: 0,
-  tested_count: 0,
-  positive_count: 0,
-  missed_count: 0,
+  case_count: 0,
+  successful_outcome_count: 0,
+  lost_to_follow_up_count: 0,
   ...over,
 });
 
@@ -94,8 +93,8 @@ describe('BarangayReport', () => {
 
   it('ranks by the SELECTED measure, not the order the RPC returned', async () => {
     mock.db.byFrom.set(`${thisYear}-01-01`, [
-      row('ALPHA', { positive_count: 9, referred_count: 1 }),
-      row('BETA', { positive_count: 0, referred_count: 7 }),
+      row('ALPHA', { case_count: 9, referred_count: 1 }),
+      row('BETA', { case_count: 0, referred_count: 7 }),
     ]);
     render(<BarangayReport />);
 
@@ -106,7 +105,7 @@ describe('BarangayReport', () => {
       within(screen.getByRole('table')).getAllByRole('row')[2].textContent;
     expect(firstCell()).toContain('BETA');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Positive' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Registered cases' }));
     await waitFor(() => expect(firstCell()).toContain('ALPHA'));
   });
 
@@ -131,7 +130,8 @@ describe('BarangayReport', () => {
     await waitFor(() => expect(screen.getByRole('table')).toBeTruthy());
     // The current year is partial, so the like-for-like sentence must be shown.
     expect(screen.getByText(/same dates/i)).toBeTruthy();
-    expect(screen.getByText(/not a replacement for them/i)).toBeTruthy();
+    expect(screen.getByText(/DOH ITIS/i)).toBeTruthy();
+    expect(screen.getByText(/not automatically classified/i)).toBeTruthy();
   });
   it('search narrows the table without touching the ranking numbers', async () => {
     mock.db.byFrom.set(`${thisYear}-01-01`, [

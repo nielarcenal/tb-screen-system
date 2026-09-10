@@ -1,6 +1,8 @@
 import type {
   AppointmentRow,
   PatientRow,
+  ReferralRow,
+  ScreeningRow,
   TbCaseRow,
   TreatmentFollowupRow,
 } from './types';
@@ -20,6 +22,8 @@ export type CaseAttention = 'interrupted' | 'missed' | 'due' | null;
 export interface CaseRegistryItem {
   tbCase: TbCaseRow;
   patient: PatientRow | null;
+  referral: ReferralRow | null;
+  screening: ScreeningRow | null;
   followups: TreatmentFollowupRow[];
   appointments: AppointmentRow[];
   latestFollowup: TreatmentFollowupRow | null;
@@ -64,8 +68,12 @@ export function buildCaseRegistry(
   followups: readonly TreatmentFollowupRow[],
   appointments: readonly AppointmentRow[],
   today: string,
+  referrals: readonly ReferralRow[] = [],
+  screenings: readonly ScreeningRow[] = [],
 ): CaseRegistryItem[] {
   const patientById = new Map(patients.map((patient) => [patient.patient_id, patient]));
+  const referralById = new Map(referrals.map((referral) => [referral.referral_id, referral]));
+  const screeningById = new Map(screenings.map((screening) => [screening.screening_id, screening]));
 
   return cases.map((tbCase) => {
     const caseFollowups = followups
@@ -91,9 +99,12 @@ export function buildCaseRegistry(
         (row) => row.status === 'scheduled' && row.scheduled_date >= today,
       ) ?? null;
 
+    const referral = tbCase.referral_id ? referralById.get(tbCase.referral_id) ?? null : null;
     return {
       tbCase,
       patient: patientById.get(tbCase.patient_id) ?? null,
+      referral,
+      screening: referral ? screeningById.get(referral.screening_id) ?? null : null,
       followups: caseFollowups,
       appointments: caseAppointments,
       latestFollowup: liveFollowups[0] ?? null,

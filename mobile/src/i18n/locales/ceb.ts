@@ -43,6 +43,8 @@ export const ceb: Translation = {
       'Naay {{count}} ka rekord nga wala ma-upload. Na-sync ra ang uban. Naa pa gihapon kini niining telepono ug sulayan pag-usab — kung magbalik-balik kini, sultihi ang imong coordinator.',
     syncPartial_other:
       'Naay {{count}} ka rekord nga wala ma-upload. Na-sync ra ang uban. Naa pa gihapon kini niining telepono ug sulayan pag-usab — kung magbalik-balik kini, sultihi ang imong coordinator.',
+    syncDuplicatePatient:
+      'Aduna nay record kining pasyente sa shared registry. Ayaw paghimo og laing record. Pakig-coordinate sa TB-DOTS facility aron magamit sa referral ang kasamtangang patient record.',
     primaryCta: 'Pag-enroll ug pag-screen og pasyente',
     attentionHeading: 'Nagkinahanglan og atensyon',
     tiles: {
@@ -222,7 +224,7 @@ export const ceb: Translation = {
   enroll: {
     title: 'I-enroll ang pasyente',
     intro:
-      'Awtomatikong hatagan og patient code (pananglitan PAT-XXXX-0001) inig-save. Ang detalye sa pasyente ipaambit lamang sa nagadawat nga TB-DOTS facility.',
+      'Sa dili pa i-enroll, susihon ang identity sa pasyente sa shared Bukidnon registry. Ang clinical records makita lamang sa pasilidad nga nag-atiman.',
     requiredHint: 'Gikinahanglan ang mga field nga adunay markang *.',
     fullNameLabel: 'Tibuok nga ngalan',
     firstNameLabel: 'Ngalan',
@@ -240,6 +242,17 @@ export const ceb: Translation = {
     saveCta: 'I-enroll ang pasyente',
     missingFields:
       'Kompletoha ang gikinahanglang mga field: pagtugot, ngalan, petsa sa pagkatawo, sekso, ug barangay.',
+    registryTitle: 'Pangita sa shared patient registry',
+    registryIntro: 'Gikinahanglan kung online. Pangitaa una sa database sa dili pa idugang ang pasyente.',
+    registryOffline: 'Offline ka. Mahimong ipadayon ang enrollment ug susihon kini inigbalik sa koneksiyon.',
+    registrySearch: 'Pangita sa database',
+    registrySearching: 'Nagpangita…',
+    registryRequired: 'Ibutang ang ngalan ug birthdate, unya pangitaa una sa dili pa i-save.',
+    registryClear: 'Walay eksaktong patient record nga nakit-an. Mahimong i-save ang bag-ong enrollment.',
+    registryError: 'Dili mapangita ang database. Susiha ang koneksiyon ug sulayi pag-usab.',
+    registryExisting:
+      'Aduna nay record ang pasyenteng {{code}} (telepono {{phone}}). Ayaw paghimo og laing patient record. Pakig-coordinate sa TB-DOTS facility alang sa referral.',
+    registryNoPhone: 'walay naka-save',
   },
   patientDetail: {
     ageSex: 'Edad ug sekso',

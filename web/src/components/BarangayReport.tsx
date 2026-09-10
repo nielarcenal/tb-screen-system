@@ -1,10 +1,10 @@
 /**
- * Barangay Report — screening and referral counts per barangay.
+ * Barangay Report — screening, registered-case and recorded-outcome counts.
  *
  * Laid out to the redesign guide (docs/TB-Screen_Barangay_Report_UI_Redesign_Guide.md):
  * KPI row, compact ranking card, detailed table with search and pagination.
- * The guide is a UI brief — no query, RPC, metric definition or permission
- * changed with it, and no migration was needed.
+ * Migration 0039 supplies the new case/outcome aggregate. This remains a
+ * counts-only view: it never exposes province-wide patient rows.
  *
  * LIKE FOR LIKE, ALWAYS — the one piece of logic here worth guarding. The
  * comparison period ENDS ON THE SAME DAY OF THE YEAR as the selected one. Pick
@@ -14,13 +14,12 @@
  * it was improving — a decline that was really just a calendar.
  *
  * WHAT IT DOES NOT CLAIM, restated in the UI because a screenshot outlives a
- * caveat in the thesis: not the city case register (only patients seen through
- * this system are counted), no treatment-completion column (no treatment
- * register exists in this schema), and "missed check-ups" is an analogue of
- * lost to follow-up, not the same measurement.
+ * caveat in the thesis: this is not DOH ITIS, and an overdue appointment is not
+ * silently reclassified as lost to follow-up. Successful and LTFU totals come
+ * only from outcomes explicitly recorded by authorized TB-DOTS staff.
  *
- * POSITIONING (§1, §5): the positive count is TB-DOTS's entered result, never a
- * conclusion drawn here. No score exists anywhere in this file.
+ * POSITIONING (§1, §5): the system reports staff-entered lifecycle facts; it
+ * does not infer diagnosis or treatment outcome. No score exists in this file.
  *
  * BARS ARE HTML, NOT SVG. They were inline SVG until the redesign. SVG label
  * text keeps its own size while the viewBox shrinks, so below ~460px the values
@@ -40,14 +39,16 @@ interface ReportRow {
   city_name: string;
   screened_count: number;
   referred_count: number;
-  presented_count: number;
-  tested_count: number;
-  positive_count: number;
-  missed_count: number;
+  case_count: number;
+  successful_outcome_count: number;
+  lost_to_follow_up_count: number;
 }
 
 /** Measures the reader can rank by. Keys match ReportRow fields. */
-const METRICS = ['referred_count', 'positive_count', 'screened_count'] as const;
+const METRICS = [
+  'referred_count', 'case_count', 'successful_outcome_count',
+  'lost_to_follow_up_count', 'screened_count',
+] as const;
 type Metric = (typeof METRICS)[number];
 
 /** Ranking card shows this many; the table below holds everything. */
@@ -55,7 +56,7 @@ const TOP_N = 8;
 const PAGE_SIZE = 10;
 
 async function fetchPeriod(from: string, to: string): Promise<ReportRow[]> {
-  const { data, error } = await supabase.rpc('barangay_report', {
+  const { data, error } = await supabase.rpc('barangay_report_v2', {
     from_date: from,
     to_date: to,
   });
@@ -159,9 +160,11 @@ export default function BarangayReport() {
         (a, r) => ({
           screened: a.screened + r.screened_count,
           referred: a.referred + r.referred_count,
-          positive: a.positive + r.positive_count,
+          cases: a.cases + r.case_count,
+          successful: a.successful + r.successful_outcome_count,
+          ltfu: a.ltfu + r.lost_to_follow_up_count,
         }),
-        { screened: 0, referred: 0, positive: 0 },
+        { screened: 0, referred: 0, cases: 0, successful: 0, ltfu: 0 },
       ),
     [rows],
   );
@@ -170,14 +173,18 @@ export default function BarangayReport() {
   const metricNoun = (m: Metric) =>
     ({
       referred_count: t('report.nReferred'),
-      positive_count: t('report.nPositive'),
+      case_count: t('report.nCases'),
+      successful_outcome_count: t('report.nSuccessful'),
+      lost_to_follow_up_count: t('report.nLtfu'),
       screened_count: t('report.nScreened'),
     })[m];
 
   const metricLabel = (m: Metric) =>
     ({
       referred_count: t('report.mReferred'),
-      positive_count: t('report.mPositive'),
+      case_count: t('report.mCases'),
+      successful_outcome_count: t('report.mSuccessful'),
+      lost_to_follow_up_count: t('report.mLtfu'),
       screened_count: t('report.mScreened'),
     })[m];
 
@@ -187,19 +194,24 @@ export default function BarangayReport() {
       t('report.colCity'),
       `${t('report.mScreened')} ${year}`,
       `${t('report.mReferred')} ${year}`,
-      `${t('report.colTested')} ${year}`,
-      `${t('report.mPositive')} ${year}`,
-      `${t('report.mMissed')} ${year}`,
+      `${t('report.mCases')} ${year}`,
+      `${t('report.mSuccessful')} ${year}`,
+      `${t('report.mLtfu')} ${year}`,
+      `${t('report.mScreened')} ${year - 1}`,
       `${t('report.mReferred')} ${year - 1}`,
-      `${t('report.mPositive')} ${year - 1}`,
+      `${t('report.mCases')} ${year - 1}`,
+      `${t('report.mSuccessful')} ${year - 1}`,
+      `${t('report.mLtfu')} ${year - 1}`,
     ];
     const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
     const body = ranked.map((r) => {
       const p = prevByCode.get(r.barangay_code);
       return [
         r.barangay_name, r.city_name,
-        r.screened_count, r.referred_count, r.tested_count, r.positive_count, r.missed_count,
-        p?.referred_count ?? 0, p?.positive_count ?? 0,
+        r.screened_count, r.referred_count, r.case_count,
+        r.successful_outcome_count, r.lost_to_follow_up_count,
+        p?.screened_count ?? 0, p?.referred_count ?? 0, p?.case_count ?? 0,
+        p?.successful_outcome_count ?? 0, p?.lost_to_follow_up_count ?? 0,
       ].map(esc).join(',');
     });
     const csv = [head.map(esc).join(','), ...body].join('\r\n');
@@ -234,9 +246,11 @@ export default function BarangayReport() {
   }
 
   const kpis = [
-    { icon: 'groups', label: t('report.mScreened'), value: totals.screened, desc: t('report.dScreened'), tone: '' },
+    { icon: 'fact_check', label: t('report.mScreened'), value: totals.screened, desc: t('report.dScreened'), tone: '' },
     { icon: 'description', label: t('report.mReferred'), value: totals.referred, desc: t('report.dReferred'), tone: '' },
-    { icon: 'health_and_safety', label: t('report.mPositive'), value: totals.positive, desc: t('report.dPositive'), tone: ' warn' },
+    { icon: 'clinical_notes', label: t('report.mCases'), value: totals.cases, desc: t('report.dCases'), tone: ' warn' },
+    { icon: 'task_alt', label: t('report.mSuccessful'), value: totals.successful, desc: t('report.dSuccessful'), tone: '' },
+    { icon: 'person_alert', label: t('report.mLtfu'), value: totals.ltfu, desc: t('report.dLtfu'), tone: ' warn' },
   ];
 
   const max = top.reduce((m, r) => Math.max(m, r[metric]), 0);
@@ -246,11 +260,14 @@ export default function BarangayReport() {
       {/* Period and year sit above everything: what stretch of calendar these
           numbers cover has to be settled before any of them is read. */}
       <div className="brep-toolbar">
-        <p className="brep-period">
-          {periods.isPartial
-            ? t('report.periodPartial', { end: readableDate(periods.now.to, i18n.language) })
-            : t('report.periodFull', { year })}
-        </p>
+        <div className="brep-context">
+          <span className="brep-city"><span className="msym" aria-hidden="true">location_city</span>{t('report.cityLabel')}</span>
+          <p className="brep-period">
+            {periods.isPartial
+              ? t('report.periodPartial', { end: readableDate(periods.now.to, i18n.language) })
+              : t('report.periodFull', { year })}
+          </p>
+        </div>
         <div className="range-pills" role="group" aria-label={t('report.yearGroup')}>
           {YEARS.map((y) => (
             <button key={y} className={year === y ? 'active' : ''} aria-pressed={year === y} onClick={() => setYear(y)}>
@@ -344,24 +361,33 @@ export default function BarangayReport() {
             </div>
 
             <div className="brep-tablewrap">
+              <p className="brep-citynote">{t('report.cityNote')}</p>
+              <div className="brep-defs">
+                <span><strong>{t('report.mCases')}</strong> — {t('report.defCases')}</span>
+                <span><strong>{t('report.mSuccessful')}</strong> — {t('report.defSuccessful')}</span>
+                <span><strong>{t('report.mLtfu')}</strong> — {t('report.defLtfu')}</span>
+              </div>
               <table className="brep-table">
                 <thead>
-                  {/* Grouped by year so the two are comparable at a glance
-                      (guide §9). Missed check-ups is not a screening or
-                      referral count, so it sits outside both groups (§10). */}
+                  {/* Grouped by year so equivalent staff-recorded measures are
+                      comparable at a glance (guide §9). */}
                   <tr className="brep-grouprow">
                     <th scope="col" rowSpan={2} className="brep-numcol">#</th>
                     <th scope="col" rowSpan={2} className="brep-namecol">{t('report.colBarangay')}</th>
-                    <th scope="colgroup" colSpan={3} className="brep-grp">{year}</th>
-                    <th scope="colgroup" colSpan={2} className="brep-grp brep-sep">{year - 1}</th>
-                    <th scope="col" rowSpan={2} className="brep-sep">{t('report.mMissed')}</th>
+                    <th scope="colgroup" colSpan={5} className="brep-grp">{year}</th>
+                    <th scope="colgroup" colSpan={5} className="brep-grp brep-sep">{year - 1}</th>
                   </tr>
                   <tr>
                     <th scope="col">{t('report.mScreened')}</th>
                     <th scope="col">{t('report.mReferred')}</th>
-                    <th scope="col">{t('report.mPositive')}</th>
-                    <th scope="col" className="brep-sep">{t('report.mReferred')}</th>
-                    <th scope="col">{t('report.mPositive')}</th>
+                    <th scope="col">{t('report.mCases')}</th>
+                    <th scope="col">{t('report.mSuccessful')}</th>
+                    <th scope="col">{t('report.mLtfu')}</th>
+                    <th scope="col" className="brep-sep">{t('report.mScreened')}</th>
+                    <th scope="col">{t('report.mReferred')}</th>
+                    <th scope="col">{t('report.mCases')}</th>
+                    <th scope="col">{t('report.mSuccessful')}</th>
+                    <th scope="col">{t('report.mLtfu')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -373,10 +399,14 @@ export default function BarangayReport() {
                         <th scope="row">{r.barangay_name}</th>
                         <td>{r.screened_count}</td>
                         <td>{r.referred_count}</td>
-                        <td>{r.positive_count}</td>
-                        <td className="brep-prev brep-sep">{p?.referred_count ?? 0}</td>
-                        <td className="brep-prev">{p?.positive_count ?? 0}</td>
-                        <td className="brep-sep">{r.missed_count}</td>
+                        <td>{r.case_count}</td>
+                        <td>{r.successful_outcome_count}</td>
+                        <td>{r.lost_to_follow_up_count}</td>
+                        <td className="brep-prev brep-sep">{p?.screened_count ?? 0}</td>
+                        <td className="brep-prev">{p?.referred_count ?? 0}</td>
+                        <td className="brep-prev">{p?.case_count ?? 0}</td>
+                        <td className="brep-prev">{p?.successful_outcome_count ?? 0}</td>
+                        <td className="brep-prev">{p?.lost_to_follow_up_count ?? 0}</td>
                       </tr>
                     );
                   })}
@@ -384,6 +414,8 @@ export default function BarangayReport() {
               </table>
               {pageRows.length === 0 && <p className="brep-nomatch">{t('report.noMatch', { q: query })}</p>}
             </div>
+
+            <p className="brep-caveat">{t('report.ltfuCaveat')}</p>
 
             <div className="brep-foot">
               <span className="brep-count">
@@ -426,7 +458,7 @@ export default function BarangayReport() {
 
           <p className="brep-scope">
             <span className="msym" aria-hidden="true">info</span>
-            {t('report.scopeNote')}
+            {t('report.scopeNoteV2')}
           </p>
         </>
       )}

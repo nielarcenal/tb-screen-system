@@ -1,5 +1,14 @@
 # Sprint master plan
 
+2026-09-10 post-Day 7 extension: **IMPLEMENTED AND LIVE FOR PORTAL TESTING.** Migration
+0039 adds a shared exact-match Bukidnon patient identity registry without widening
+facility-scoped clinical access, atomic/idempotent facility reuse, and Barangay Report v2
+case/outcome counts. Case detail groups the referred pre-screening/PGI-S, vitals, lab
+report, and appointments. Mobile enforces an online pre-enrollment search and catches an
+offline-created duplicate on reconnect. Linked matrix 15/15; regression 454/454 (portal
+184, mobile 219, edge 51); build/typechecks pass; Expo Doctor 21/21. S7-05/S7-06 are the
+new human acceptance checks for this extension only.
+
 2026-09-10 Day 7 gate: **PASSED FOR CAPSTONE/DEMO.** Automated regression is
 **450/450**, builds/typechecks pass, the live security posture has RLS on every public
 table and fixed search paths on all SECURITY DEFINER functions, and no Critical/High

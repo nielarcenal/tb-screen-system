@@ -67,7 +67,8 @@ const followup = (over: Partial<TreatmentFollowupRow> = {}): TreatmentFollowupRo
 
 function makeItem(over: Partial<CaseRegistryItem> = {}): CaseRegistryItem {
   return {
-    tbCase: tbCase(), patient, followups: [], appointments: [appointment()],
+    tbCase: tbCase(), patient, referral: null, screening: null,
+    followups: [], appointments: [appointment()],
     latestFollowup: null, nextAppointment: appointment(), attention: null, ...over,
   };
 }

@@ -10,11 +10,16 @@ const mock = vi.hoisted(() => {
   const db = {
     rpcCalls: [] as [string, Record<string, unknown>][],
     rpcError: null as { message: string } | null,
+    lookupError: null as { message: string } | null,
+    lookupRows: [] as Record<string, unknown>[],
   };
   return {
     db,
     supabase: {
       rpc(fn: string, args: Record<string, unknown>) {
+        if (fn === 'search_patient_registry') {
+          return Promise.resolve({ data: db.lookupRows, error: db.lookupError });
+        }
         db.rpcCalls.push([fn, args]);
         const flags = args.p_symptom_flags as Record<string, string>;
         const cardinal = ['cough_2wks', 'weight_loss', 'night_sweats', 'fever', 'hemoptysis'];
@@ -32,6 +37,7 @@ const mock = vi.hoisted(() => {
                 display_code: 'PAT-DOTS-0007',
                 full_name: 'Juan Dela Cruz',
                 referred,
+                existing_patient: fn === 'register_existing_patient_walkin',
               },
           error: db.rpcError,
         });
@@ -83,7 +89,12 @@ function answerChecklist(overrides: Record<string, string> = {}, pgis = en.pgis.
   fireEvent.click(screen.getByRole('button', { name: pgis }));
 }
 
-function fillIdentity() {
+async function searchRegistry() {
+  fireEvent.click(screen.getByRole('button', { name: en.register.lookupAction }));
+  await waitFor(() => expect(screen.getByText(en.register.lookupClear)).toBeTruthy());
+}
+
+function fillIdentityFields() {
   type(en.register.firstName, 'Juan');
   type(en.register.lastName, 'Dela Cruz');
   type(en.register.birthdate, '1990-01-01');
@@ -92,17 +103,24 @@ function fillIdentity() {
   fireEvent.click(screen.getByLabelText(en.register.consentConfirm));
 }
 
+async function fillIdentity() {
+  fillIdentityFields();
+  await searchRegistry();
+}
+
 const payload = () => mock.db.rpcCalls.at(-1)?.[1] as Record<string, unknown>;
 
 beforeEach(() => {
   mock.db.rpcCalls = [];
   mock.db.rpcError = null;
+  mock.db.lookupError = null;
+  mock.db.lookupRows = [];
 });
 
 describe('RegisterPatient — atomic contract', () => {
   it('submits the whole registration as one RPC', async () => {
     renderForm();
-    fillIdentity();
+    await fillIdentity();
     answerChecklist({ cough_2wks: en.common.yes });
     fireEvent.click(saveBtn());
     await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
@@ -112,7 +130,7 @@ describe('RegisterPatient — atomic contract', () => {
 
   it('sends four stable, distinct operation and row ids', async () => {
     renderForm();
-    fillIdentity();
+    await fillIdentity();
     answerChecklist();
     fireEvent.click(saveBtn());
     await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
@@ -125,7 +143,7 @@ describe('RegisterPatient — atomic contract', () => {
 
   it('leaves server-owned values to the server', async () => {
     renderForm();
-    fillIdentity();
+    await fillIdentity();
     answerChecklist();
     fireEvent.click(saveBtn());
     await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
@@ -138,7 +156,7 @@ describe('RegisterPatient — atomic contract', () => {
 
   it('sends facts but no browser-asserted referral decision or score', async () => {
     renderForm();
-    fillIdentity();
+    await fillIdentity();
     answerChecklist({}, en.pgis.severe);
     type(`${en.vitals.temperature} (${en.vitals.unitC})`, '39.5');
     type(`${en.vitals.spo2} (${en.vitals.unitPercent})`, '88');
@@ -150,24 +168,24 @@ describe('RegisterPatient — atomic contract', () => {
     expect(Object.keys(payload()).filter((key) => /score|risk|probab|confidence/i.test(key))).toEqual([]);
   });
 
-  it('shows that severe context alone does not flag the checklist', () => {
+  it('shows that severe context alone does not flag the checklist', async () => {
     renderForm();
-    fillIdentity();
+    await fillIdentity();
     answerChecklist({}, en.pgis.severe);
     type(`${en.vitals.temperature} (${en.vitals.unitC})`, '39.5');
     expect(screen.getByText(en.register.willNotFlag)).toBeTruthy();
   });
 
-  it('shows that contact plus any symptom does flag the checklist', () => {
+  it('shows that contact plus any symptom does flag the checklist', async () => {
     renderForm();
-    fillIdentity();
+    await fillIdentity();
     answerChecklist({ tb_contact: en.common.yes, fatigue: en.common.yes });
     expect(screen.getByText(en.register.willFlag)).toBeTruthy();
   });
 
   it('keeps all vitals optional', async () => {
     renderForm();
-    fillIdentity();
+    await fillIdentity();
     answerChecklist();
     fireEvent.click(saveBtn());
     await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
@@ -177,9 +195,9 @@ describe('RegisterPatient — atomic contract', () => {
     ]) expect(payload()[key], key).toBeNull();
   });
 
-  it('blocks a vital outside the database range', () => {
+  it('blocks a vital outside the database range', async () => {
     renderForm();
-    fillIdentity();
+    await fillIdentity();
     answerChecklist();
     type(`${en.vitals.temperature} (${en.vitals.unitC})`, '3.68');
     expect(saveBtn().disabled).toBe(true);
@@ -201,7 +219,7 @@ describe('RegisterPatient — consent and privacy', () => {
 
   it('sends no contact details when SMS is declined', async () => {
     renderForm();
-    fillIdentity();
+    await fillIdentity();
     answerChecklist();
     fireEvent.click(saveBtn());
     await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
@@ -212,10 +230,11 @@ describe('RegisterPatient — consent and privacy', () => {
 
   it('sends number and language only with SMS opt-in', async () => {
     renderForm();
-    fillIdentity();
+    await fillIdentity();
     answerChecklist();
     fireEvent.click(screen.getByLabelText(en.register.smsOptIn));
     type(en.register.contactNumber, '09171234567');
+    await searchRegistry();
     fireEvent.click(saveBtn());
     await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
     expect(payload().p_sms_consent).toBe(true);
@@ -225,19 +244,20 @@ describe('RegisterPatient — consent and privacy', () => {
 
   it('clears the number when SMS opt-in is withdrawn', async () => {
     renderForm();
-    fillIdentity();
+    await fillIdentity();
     answerChecklist();
     fireEvent.click(screen.getByLabelText(en.register.smsOptIn));
     type(en.register.contactNumber, '09171234567');
     fireEvent.click(screen.getByLabelText(en.register.smsOptIn));
+    await searchRegistry();
     fireEvent.click(saveBtn());
     await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
     expect(payload().p_contact_number).toBeNull();
   });
 
-  it('refuses a malformed mobile number', () => {
+  it('refuses a malformed mobile number', async () => {
     renderForm();
-    fillIdentity();
+    await fillIdentity();
     answerChecklist();
     fireEvent.click(screen.getByLabelText(en.register.smsOptIn));
     type(en.register.contactNumber, '12345');
@@ -246,11 +266,63 @@ describe('RegisterPatient — consent and privacy', () => {
   });
 });
 
+describe('RegisterPatient — shared patient registry', () => {
+  const existingMatch = {
+    patient_id: 'patient-existing',
+    display_code: 'PAT-DOTS-0003',
+    full_name: 'Juan Dela Cruz',
+    first_name: 'Juan',
+    middle_name: null,
+    last_name: 'Dela Cruz',
+    birthdate: '1990-01-01',
+    barangay_code: '101312012',
+    phone_last4: '4567',
+    can_reuse: true,
+  };
+
+  it('keeps Save disabled until staff searches the shared registry', () => {
+    renderForm();
+    fillIdentityFields();
+    answerChecklist();
+    expect(saveBtn().disabled).toBe(true);
+    expect(screen.getByText(en.register.lookupRequired)).toBeTruthy();
+  });
+
+  it('reuses the selected patient identity instead of creating a duplicate', async () => {
+    mock.db.lookupRows = [existingMatch];
+    renderForm();
+    fillIdentityFields();
+    answerChecklist({ cough_2wks: en.common.yes });
+    fireEvent.click(screen.getByRole('button', { name: en.register.lookupAction }));
+    const existingButton = await screen.findByRole('button', { name: /PAT-DOTS-0003/ });
+    fireEvent.click(existingButton);
+    fireEvent.click(saveBtn());
+
+    await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
+    expect(mock.db.rpcCalls[0][0]).toBe('register_existing_patient_walkin');
+    expect(payload().p_patient_id).toBe('patient-existing');
+    expect(screen.getByText(en.register.existingReused)).toBeTruthy();
+  });
+
+  it('shows restricted matches without allowing staff to select them', async () => {
+    mock.db.lookupRows = [{ ...existingMatch, can_reuse: false }];
+    renderForm();
+    fillIdentityFields();
+    answerChecklist();
+    fireEvent.click(screen.getByRole('button', { name: en.register.lookupAction }));
+
+    const existingButton = await screen.findByRole('button', { name: /PAT-DOTS-0003/ });
+    expect((existingButton as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(en.register.existingRestricted)).toBeTruthy();
+    expect(saveBtn().disabled).toBe(true);
+  });
+});
+
 describe('RegisterPatient — failure and replay', () => {
   it('surfaces a rejected RPC without claiming success', async () => {
     mock.db.rpcError = { message: 'not authorized' };
     renderForm();
-    fillIdentity();
+    await fillIdentity();
     answerChecklist();
     fireEvent.click(saveBtn());
     await waitFor(() => expect(screen.getByText(/not authorized/)).toBeTruthy());
@@ -261,7 +333,7 @@ describe('RegisterPatient — failure and replay', () => {
   it('reuses every id after a failed or lost response', async () => {
     mock.db.rpcError = { message: 'network request failed' };
     renderForm();
-    fillIdentity();
+    await fillIdentity();
     answerChecklist();
     fireEvent.click(saveBtn());
     await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));

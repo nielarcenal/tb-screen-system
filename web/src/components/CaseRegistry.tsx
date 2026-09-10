@@ -20,11 +20,15 @@ import {
   manilaToday,
   type AppointmentRow,
   type PatientRow,
+  type ReferralRow,
+  type ScreeningRow,
+  SYMPTOM_KEYS,
   type TbCaseRow,
   type TbCaseStatus,
   type TreatmentFollowupRow,
   type TreatmentOutcome,
 } from '../lib/types';
+import { hasAnyVital, vitalsRows } from '../lib/vitals';
 import CaseVisitWorkflow from './CaseVisitWorkflow';
 import PatientTimeline from './PatientTimeline';
 
@@ -134,6 +138,54 @@ function CaseDetail({ item, onChanged }: DetailProps) {
         <div><span>{t('cases.originReferral')}</span><strong>{tbCase.referral_id ?? t('cases.walkIn')}</strong></div>
         <div><span>{t('cases.createdAt')}</span><strong>{new Date(tbCase.created_at).toLocaleString()}</strong></div>
         <div><span>{t('cases.createdBy')}</span><strong>{tbCase.created_by}</strong></div>
+      </div>
+
+      <div className="case-clinical-grid">
+        <section className="case-clinical-card">
+          <h3><span className="msym" aria-hidden="true">checklist</span>{t('cases.preScreening')}</h3>
+          {item.screening ? (
+            <>
+              <div className="case-screening-list">
+                {SYMPTOM_KEYS.map((key) => (
+                  <div key={key}>
+                    <span>{t(`symptoms.${key}`)}</span>
+                    <strong>{item.screening?.symptom_flags[key] ? t(`common.${item.screening.symptom_flags[key]}`) : '—'}</strong>
+                  </div>
+                ))}
+              </div>
+              <div className="case-pgis"><span>{t('detail.pgisLabel')}</span><strong>{item.screening.pgis_severity ? t(`pgis.${item.screening.pgis_severity}`) : '—'}</strong><small>{t('detail.patientReportedTag')}</small></div>
+            </>
+          ) : <p className="case-empty-line">{t('cases.noScreening')}</p>}
+        </section>
+
+        <section className="case-clinical-card">
+          <h3><span className="msym" aria-hidden="true">monitor_heart</span>{t('vitals.heading')}</h3>
+          {item.screening && hasAnyVital(item.screening) ? (
+            <dl className="vitals-grid">
+              {vitalsRows(item.screening, {
+                height: t('vitals.height'), weight: t('vitals.weight'), bmi: t('vitals.bmi'),
+                temperature: t('vitals.temperature'), bloodPressure: t('vitals.bloodPressure'),
+                pulse: t('vitals.pulse'), spo2: t('vitals.spo2'),
+              }, {
+                cm: t('vitals.unitCm'), kg: t('vitals.unitKg'), bmi: t('vitals.unitBmi'),
+                c: t('vitals.unitC'), mmHg: t('vitals.unitMmHg'), bpm: t('vitals.unitBpm'),
+                percent: t('vitals.unitPercent'),
+              }).map((row) => <div key={row.key} className="vitals-cell"><dt>{row.label}</dt><dd>{row.value}</dd></div>)}
+            </dl>
+          ) : <p className="case-empty-line">{t('vitals.noneRecorded')}</p>}
+        </section>
+
+        <section className="case-clinical-card">
+          <h3><span className="msym" aria-hidden="true">biotech</span>{t('cases.labReport')}</h3>
+          {item.referral ? (
+            <dl className="case-lab-grid">
+              <div><dt>{t('detail.sampleIdLabel')}</dt><dd>{item.referral.lab_sample_id ?? '—'}</dd></div>
+              <div><dt>{t('cases.labOutcome')}</dt><dd>{item.referral.result_outcome ? t(`detail.outcome${item.referral.result_outcome === 'positive' ? 'Positive' : 'Negative'}`) : '—'}</dd></div>
+              <div><dt>{t('cases.labDate')}</dt><dd>{formatDate(item.referral.result_date)}</dd></div>
+              <div><dt>{t('cases.labNotes')}</dt><dd>{item.referral.result || '—'}</dd></div>
+            </dl>
+          ) : <p className="case-empty-line">{t('cases.noLabReport')}</p>}
+        </section>
       </div>
 
       {tbCase.outcome ? (
@@ -268,12 +320,22 @@ export default function CaseRegistry({
 
     const caseIds = cases.map((row) => row.case_id);
     const patientIds = [...new Set(cases.map((row) => row.patient_id))];
-    const [patientResult, followupResult, appointmentResult] = await Promise.all([
+    const referralIds = cases.flatMap((row) => row.referral_id ? [row.referral_id] : []);
+    const [patientResult, followupResult, appointmentResult, referralResult] = await Promise.all([
       supabase.from('patients').select('*').in('patient_id', patientIds),
       supabase.from('treatment_followups').select('*').in('case_id', caseIds).order('visit_date', { ascending: false }),
       supabase.from('appointments').select('*').in('tb_case_id', caseIds).order('scheduled_date', { ascending: true }),
+      referralIds.length
+        ? supabase.from('referrals').select('*').in('referral_id', referralIds)
+        : Promise.resolve({ data: [], error: null }),
     ]);
-    const childError = patientResult.error ?? followupResult.error ?? appointmentResult.error;
+    const referrals = (referralResult.data ?? []) as ReferralRow[];
+    const screeningIds = [...new Set(referrals.map((row) => row.screening_id))];
+    const screeningResult = screeningIds.length
+      ? await supabase.from('screenings').select('*').in('screening_id', screeningIds)
+      : { data: [], error: null };
+    const childError = patientResult.error ?? followupResult.error ?? appointmentResult.error
+      ?? referralResult.error ?? screeningResult.error;
     if (childError) {
       setError(childError.message);
       setLoading(false);
@@ -285,6 +347,8 @@ export default function CaseRegistry({
       (followupResult.data ?? []) as TreatmentFollowupRow[],
       (appointmentResult.data ?? []) as AppointmentRow[],
       manilaToday(),
+      referrals,
+      (screeningResult.data ?? []) as ScreeningRow[],
     );
     setItems(joined);
     setSelectedId((current) =>

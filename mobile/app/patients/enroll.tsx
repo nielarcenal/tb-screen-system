@@ -40,10 +40,22 @@ import { Sex } from '../../src/db/types';
 import { ageFromBirthdate, toDateOnly } from '../../src/lib/dates';
 import { composeFullName } from '../../src/lib/names';
 import { nowIso, uuid } from '../../src/lib/uuid';
+import { supabase } from '../../src/lib/supabase';
 import { useAppStore } from '../../src/store/appStore';
 import { useSessionStore } from '../../src/store/sessionStore';
+import { useSyncStore } from '../../src/store/syncStore';
 import { triggerSync } from '../../src/sync/syncManager';
 import { palette } from '../../src/ui/tokens';
+
+type RegistryMatch = {
+  patient_id: string;
+  display_code: string;
+  full_name: string | null;
+  phone_last4: string | null;
+  can_reuse: boolean;
+};
+
+type LookupState = 'idle' | 'searching' | 'clear' | 'matches' | 'error';
 
 /** Pill toggle for sex selection (design: filled teal when selected). */
 function SexPill({
@@ -85,6 +97,7 @@ export default function EnrollScreen() {
   const userId = useSessionStore((s) => s.userId);
   const assignedBarangayCode = useAppStore((s) => s.assignedBarangayCode);
   const allocateDisplayCode = useAppStore((s) => s.allocateDisplayCode);
+  const isOnline = useSyncStore((s) => s.isOnline);
 
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
@@ -96,6 +109,9 @@ export default function EnrollScreen() {
   const [sitio, setSitio] = useState('');
   const [consent, setConsent] = useState<ConsentValue>(emptyConsent);
   const [saving, setSaving] = useState(false);
+  const [lookupState, setLookupState] = useState<LookupState>('idle');
+  const [lookupKey, setLookupKey] = useState<string | null>(null);
+  const [registryMatches, setRegistryMatches] = useState<RegistryMatch[]>([]);
 
   // Pre-fill the cascade from the BHW's assigned barangay (§6) — editable.
   useEffect(() => {
@@ -110,6 +126,27 @@ export default function EnrollScreen() {
   // Middle name is optional — not every patient has one.
   const nameValid = firstName.trim().length > 0 && lastName.trim().length > 0;
   const contactValid = !consent.smsOptIn || isValidPhMobile(consent.contactNumber);
+  const currentLookupKey = JSON.stringify([
+    firstName.trim().toLocaleLowerCase(),
+    middleName.trim().toLocaleLowerCase(),
+    lastName.trim().toLocaleLowerCase(),
+    birthdateStr,
+    consent.smsOptIn ? consent.contactNumber.replace(/\D/g, '') : '',
+  ]);
+  // Offline enrollment remains available. Once connectivity is known (or still
+  // being established), the exact shared-registry lookup is a required gate.
+  const registryClear = isOnline === false || (
+    lookupState === 'clear' && lookupKey === currentLookupKey
+  );
+
+  useEffect(() => {
+    if (lookupKey !== null && lookupKey !== currentLookupKey) {
+      setLookupKey(null);
+      setLookupState('idle');
+      setRegistryMatches([]);
+    }
+  }, [currentLookupKey, lookupKey]);
+
   const canSave =
     !!userId &&
     consent.consentGiven &&
@@ -118,7 +155,31 @@ export default function EnrollScreen() {
     sex !== null &&
     !!address.barangayCode &&
     contactValid &&
+    registryClear &&
     !saving;
+
+  const searchRegistry = async () => {
+    if (!nameValid || !birthdateStr || !contactValid) return;
+    const searchedKey = currentLookupKey;
+    setLookupState('searching');
+    setRegistryMatches([]);
+    const { data, error } = await supabase.rpc('search_patient_registry', {
+      p_first_name: firstName.trim(),
+      p_middle_name: middleName.trim() || null,
+      p_last_name: lastName.trim(),
+      p_birthdate: birthdateStr,
+      p_contact_number: consent.smsOptIn ? consent.contactNumber.trim() : null,
+    });
+    if (error) {
+      setLookupKey(null);
+      setLookupState('error');
+      return;
+    }
+    const matches = (data ?? []) as RegistryMatch[];
+    setLookupKey(searchedKey);
+    setRegistryMatches(matches);
+    setLookupState(matches.length > 0 ? 'matches' : 'clear');
+  };
 
   const save = async () => {
     if (!canSave || !userId || !sex || !address.barangayCode || ageNum === null) return;
@@ -334,6 +395,54 @@ export default function EnrollScreen() {
 
         {/* Consent + SMS cards. */}
         <ConsentFields value={consent} onChange={setConsent} />
+
+        <View
+          style={{
+            backgroundColor: palette.paper,
+            borderWidth: 1,
+            borderColor: palette.border,
+            borderRadius: 16,
+            padding: 16,
+            gap: 10,
+          }}
+        >
+          <Text variant="titleMedium" style={{ color: palette.ink, fontWeight: '700' }}>
+            {t('enroll.registryTitle')}
+          </Text>
+          <Text variant="bodySmall" style={{ color: palette.inkSoft }}>
+            {isOnline === false ? t('enroll.registryOffline') : t('enroll.registryIntro')}
+          </Text>
+          {isOnline !== false ? (
+            <Button
+              mode="outlined"
+              icon="account-search"
+              loading={lookupState === 'searching'}
+              disabled={!nameValid || !birthdateStr || !contactValid || lookupState === 'searching'}
+              onPress={() => void searchRegistry()}
+            >
+              {lookupState === 'searching' ? t('enroll.registrySearching') : t('enroll.registrySearch')}
+            </Button>
+          ) : null}
+          {lookupState === 'idle' && isOnline !== false ? (
+            <HelperText type="info" visible>{t('enroll.registryRequired')}</HelperText>
+          ) : null}
+          {lookupState === 'clear' && lookupKey === currentLookupKey ? (
+            <HelperText type="info" visible>{t('enroll.registryClear')}</HelperText>
+          ) : null}
+          {lookupState === 'error' ? (
+            <HelperText type="error" visible>{t('enroll.registryError')}</HelperText>
+          ) : null}
+          {registryMatches.length > 0 ? (
+            <Banner visible icon="account-alert">
+              {t('enroll.registryExisting', {
+                code: registryMatches[0].display_code,
+                phone: registryMatches[0].phone_last4
+                  ? `•••• ${registryMatches[0].phone_last4}`
+                  : t('enroll.registryNoPhone'),
+              })}
+            </Banner>
+          ) : null}
+        </View>
 
         <HelperText type="info" visible={!canSave && !saving}>
           {t('enroll.missingFields')}

@@ -1,6 +1,6 @@
 # TB-Screen BHW — System Documentation (As Built)
 
-*Reconciled September 10, 2026. Reflects deployed server migrations 0001–0038, the mobile release candidate, and all three web portal entries.*
+*Reconciled September 10, 2026. Reflects deployed server migrations 0001–0039, the mobile release candidate, and all three web portal entries.*
 
 ---
 
@@ -39,8 +39,8 @@ Roles live on the `users` table (`role` column) and are enforced server-side by 
 
 | Role | Interface | Can see patient data? | Scope |
 |---|---|---|---|
-| `bhw` | Mobile app | Yes | Patients of their **assigned barangay**, plus patients they personally enrolled |
-| `tb_dots` | Facility portal | Yes | Patients admitted through a referral, walk-in, appointment, or case owned by their facility; mutations remain facility-scoped |
+| `bhw` | Mobile app | Yes | Patients of their **assigned barangay**, plus patients they personally enrolled; exact demographic lookup can only notify about an existing out-of-scope identity |
+| `tb_dots` | Facility portal | Yes | Exact demographic identity lookup is province-wide; clinical rows require a referral, walk-in, appointment, or case owned by the facility, and mutations remain facility-scoped |
 | `midwife` | Facility portal | **No** — zero patient rows | BHW **accounts** of their assigned barangay only (names + activity counts) |
 | `admin` | Developer portal | **No** — zero patient rows | Midwife and TB-DOTS staff **accounts** (provisioning only) |
 
@@ -167,10 +167,11 @@ Every table has RLS enabled (default-deny). Aggregate reads that must cross row 
 | 0031 | Case registry, treatment follow-ups, appointment ownership, idempotent RPCs, whitelisted audit foundation |
 | 0032–0034 | Atomic walk-in registration; old-client appointment compatibility; non-mutating overdue detection |
 | 0035–0038 | Referral audit, source-isolated timeline, facility attention dashboard, authoritative appointment audit and facility viewer |
+| 0039 | Exact-match shared Bukidnon patient identity registry, atomic existing-identity walk-in, and Barangay Report v2 case/outcome aggregates |
 
 ## 10. Internationalization
 
-All user-facing text in both apps goes through i18next keys in English, Tagalog, and Cebuano — including consent scripts, the symptom checklist, and the printed form. Native-speaker review of the Tagalog/Cebuano copy passed on 2026-09-10. Language is switchable at runtime everywhere (mobile onboarding + settings; portal top bar).
+All user-facing text in both apps goes through i18next keys in English, Tagalog, and Cebuano — including consent scripts, the symptom checklist, and the printed form. Native-speaker review of the pre-0039 Tagalog/Cebuano copy passed on 2026-09-10; the new shared-registry warning strings still need the same human check. Language is switchable at runtime everywhere (mobile onboarding + settings; portal top bar).
 
 ## 11. Design System
 
@@ -187,6 +188,7 @@ Both apps implement a shared visual language from the project's hi-fi design can
 7. Sign-out wipes the device's clinical cache (multi-account safety); sessions are the only thing Supabase persists on-device.
 8. Service-role credentials exist only inside Edge Functions; account mutations are role-gated and scope-checked server-side; deactivation = auth ban, not just a flag.
 9. All secrets (`.env`, service keys, cron secret) are excluded from version control.
+10. Province-wide sharing is an exact-match identity service, not a patient browser. It returns minimal demographics and a masked phone; clinical records still require an existing facility relationship under RLS.
 
 ## 13. Known Limitations and Future Work
 
@@ -195,6 +197,8 @@ Both apps implement a shared visual language from the project's hi-fi design can
 - **Free-text result vs. outcome (settled 2026-09-06):** BHWs see the structured positive/negative outcome; the facility's free-text `result` notes never reach a BHW device at all. D-05 blocked them at three layers — the sync pulls referrals by explicit column list rather than `*` (RLS cannot restrict columns, and a column GRANT cannot separate BHWs from TB-DOTS staff since both authenticate as `authenticated`), local migration v9 NULLs the column before dropping it so cached values are not left recoverable in freed pages, and no screen renders it. Showing the outcome is deliberate: a BHW's follow-up job is getting a positive patient back to the facility to start treatment, which they cannot prioritise without it. An earlier revision of this note described the situation exactly backwards.
 - **Referral model corrected (2026-09-06):** the build had assumed a sputum sample travels from the BHW to TB-DOTS, and shipped a "specimen form" and a BHW-generated `specimen_id` on that assumption. Confirmed with the TB-DOTS head nurse that collection and testing happen **only** at the facility. The concept is now an optional printed **referral document**, and `lab_sample_id` is entered by facility staff. Full account, including what was verified against the live database: `docs/TBScreen_Referral_Model_Correction_and_Vitals_Addendum.md`.
 - **Walk-in registration is transactional.** Migration 0032's idempotent `register_walkin()` RPC writes patient, screening, referral, and replay record together or rolls them all back.
+- **Existing-patient reuse is transactional.** Migration 0039's exact lookup lets TB-DOTS attach a new screening/referral episode to the canonical patient without copying the patient row; offline-created mobile patients are checked before reconnect upload.
+- **Barangay Report v2 is not ITIS.** It reports TB-Screen counts and only explicit staff-recorded treatment outcomes. Overdue/missed appointments are not inferred as lost to follow-up.
 - **Vitals are recorded but not yet used anywhere except display and print.** No trend view, no comparison across a patient's screenings. Any such feature must stay descriptive — vitals must never acquire a threshold, a category, or a colour that reads as a verdict (§1, §5).
 - Appointments carry patient/facility-agreeing composite links to either a referral or a TB case; the links are mutually exclusive.
 - Attribution of screenings to BHWs uses the enrolling BHW (screenings carry no creator column) — accurate for the normal workflow.

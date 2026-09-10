@@ -35,7 +35,7 @@
  * PRIVACY (§4): the contact number is stored ONLY alongside SMS consent, which
  * the patients_sms_consent_gate CHECK enforces in the database as well.
  */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
@@ -48,6 +48,7 @@ import {
   Vitals,
   VITALS_KEYS,
   PgisSeverity,
+  PatientRegistryMatch,
   ageFromBirthdate,
   manilaToday,
 } from '../lib/types';
@@ -102,6 +103,7 @@ interface Registered {
   displayCode: string;
   name: string;
   referred: boolean;
+  reused: boolean;
 }
 
 interface RegistrationIds {
@@ -118,6 +120,7 @@ interface RegisterWalkinResult {
   display_code: string;
   full_name: string;
   referred: boolean;
+  existing_patient?: boolean;
 }
 
 const newRegistrationIds = (): RegistrationIds => ({
@@ -148,6 +151,9 @@ export default function RegisterPatient({ onOpenReferral }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Registered | null>(null);
+  const [lookupState, setLookupState] = useState<'idle' | 'searching' | 'clear' | 'matches' | 'error'>('idle');
+  const [matches, setMatches] = useState<PatientRegistryMatch[]>([]);
+  const [selectedMatch, setSelectedMatch] = useState<PatientRegistryMatch | null>(null);
   const ids = useRef<RegistrationIds | null>(null);
   if (!ids.current) ids.current = newRegistrationIds();
 
@@ -168,6 +174,7 @@ export default function RegisterPatient({ onOpenReferral }: Props) {
   const checklistComplete = isChecklistComplete(flags);
   const outcome = checklistComplete ? evaluateReferral(flags) : null;
   const contactValid = !smsOptIn || isValidPhMobile(contactNumber);
+  const lookupComplete = lookupState === 'clear' || selectedMatch !== null;
 
   const canSave =
     consentGiven &&
@@ -180,7 +187,37 @@ export default function RegisterPatient({ onOpenReferral }: Props) {
     pgis !== null &&
     vitalsValid &&
     contactValid &&
+    lookupComplete &&
     !busy;
+
+  useEffect(() => {
+    setLookupState('idle');
+    setMatches([]);
+    setSelectedMatch(null);
+  }, [firstName, middleName, lastName, birthdate, contactNumber]);
+
+  const searchRegistry = async () => {
+    if (!firstName.trim() || !lastName.trim() || age === null) return;
+    setLookupState('searching');
+    setSelectedMatch(null);
+    setError(null);
+    const { data, error: lookupError } = await supabase.rpc('search_patient_registry', {
+      p_first_name: firstName.trim(),
+      p_middle_name: middleName.trim() || null,
+      p_last_name: lastName.trim(),
+      p_birthdate: birthdate,
+      p_contact_number: contactNumber.trim() || null,
+    });
+    if (lookupError) {
+      setMatches([]);
+      setLookupState('error');
+      setError(lookupError.message);
+      return;
+    }
+    const found = (data ?? []) as PatientRegistryMatch[];
+    setMatches(found);
+    setLookupState(found.length ? 'matches' : 'clear');
+  };
 
   const reset = () => {
     setFirstName('');
@@ -198,6 +235,9 @@ export default function RegisterPatient({ onOpenReferral }: Props) {
     setVitalsText(emptyVitalsText);
     setDone(null);
     setError(null);
+    setLookupState('idle');
+    setMatches([]);
+    setSelectedMatch(null);
     ids.current = newRegistrationIds();
   };
 
@@ -210,21 +250,11 @@ export default function RegisterPatient({ onOpenReferral }: Props) {
     setError(null);
     try {
       const operation = ids.current!;
-      const { data, error: rpcError } = await supabase.rpc('register_walkin', {
+      const screeningFields = {
         p_request_id: operation.requestId,
-        p_patient_id: operation.patientId,
+        p_patient_id: selectedMatch?.patient_id ?? operation.patientId,
         p_screening_id: operation.screeningId,
         p_referral_id: operation.referralId,
-        p_first_name: firstName.trim(),
-        p_middle_name: middleName.trim() || null,
-        p_last_name: lastName.trim(),
-        p_birthdate: birthdate,
-        p_sex: sex,
-        p_barangay_code: barangay,
-        p_sitio: sitio.trim() || null,
-        p_sms_consent: smsOptIn,
-        p_contact_number: smsOptIn ? contactNumber.trim() : null,
-        p_preferred_language: smsOptIn ? smsLanguage : null,
         p_symptom_flags: flags,
         p_pgis_severity: pgis,
         p_height_cm: vitals.height_cm,
@@ -234,7 +264,29 @@ export default function RegisterPatient({ onOpenReferral }: Props) {
         p_diastolic_bp: vitals.diastolic_bp,
         p_pulse_rate: vitals.pulse_rate,
         p_spo2_percent: vitals.spo2_percent,
-      });
+      };
+      const registration = selectedMatch
+        ? supabase.rpc('register_existing_patient_walkin', {
+            ...screeningFields,
+            p_first_name: firstName.trim(),
+            p_middle_name: middleName.trim() || null,
+            p_last_name: lastName.trim(),
+            p_birthdate: birthdate,
+          })
+        : supabase.rpc('register_walkin', {
+            ...screeningFields,
+            p_first_name: firstName.trim(),
+            p_middle_name: middleName.trim() || null,
+            p_last_name: lastName.trim(),
+            p_birthdate: birthdate,
+            p_sex: sex,
+            p_barangay_code: barangay,
+            p_sitio: sitio.trim() || null,
+            p_sms_consent: smsOptIn,
+            p_contact_number: smsOptIn ? contactNumber.trim() : null,
+            p_preferred_language: smsOptIn ? smsLanguage : null,
+          });
+      const { data, error: rpcError } = await registration;
       if (rpcError) throw new Error(rpcError.message);
       const result = data as RegisterWalkinResult | null;
       if (!result?.referral_id || !result.display_code || !result.full_name) {
@@ -246,6 +298,7 @@ export default function RegisterPatient({ onOpenReferral }: Props) {
         displayCode: result.display_code,
         name: result.full_name,
         referred: result.referred,
+        reused: result.existing_patient === true,
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -268,6 +321,7 @@ export default function RegisterPatient({ onOpenReferral }: Props) {
         <p className="regdone-body">
           {done.referred ? t('register.doneFlagged') : t('register.doneNotFlagged')}
         </p>
+        {done.reused ? <p className="reg-reused">{t('register.existingReused')}</p> : null}
         <p className="mutedline">{t('common.nonDiagnostic')}</p>
         <div className="regdone-actions">
           <button onClick={() => onOpenReferral(done.referralId)}>
@@ -425,6 +479,44 @@ export default function RegisterPatient({ onOpenReferral }: Props) {
         ) : null}
         {smsOptIn && contactNumber.length > 0 && !contactValid ? (
           <p className="error">{t('register.contactInvalid')}</p>
+        ) : null}
+      </section>
+
+      <section className="card regsec patient-lookup">
+        <div className="regsec-head">
+          <h3>{t('register.lookupTitle')}</h3>
+          <span className="ro-tag">{t('register.required')}</span>
+        </div>
+        <p className="dfield-hint">{t('register.lookupIntro')}</p>
+        <button
+          type="button"
+          className="retry"
+          disabled={!firstName.trim() || !lastName.trim() || age === null || lookupState === 'searching'}
+          onClick={() => void searchRegistry()}
+        >
+          <span className="msym" aria-hidden="true">person_search</span>
+          {lookupState === 'searching' ? t('register.lookupSearching') : t('register.lookupAction')}
+        </button>
+        {lookupState === 'idle' ? <p className="lookup-note">{t('register.lookupRequired')}</p> : null}
+        {lookupState === 'clear' ? <p className="lookup-clear">{t('register.lookupClear')}</p> : null}
+        {lookupState === 'error' ? <p className="error">{t('register.lookupError')}</p> : null}
+        {matches.length > 0 ? (
+          <div className="lookup-matches">
+            <strong>{t('register.lookupFound')}</strong>
+            {matches.map((match) => (
+              <button
+                type="button"
+                key={match.patient_id}
+                className={selectedMatch?.patient_id === match.patient_id ? 'selected' : ''}
+                disabled={!match.can_reuse}
+                onClick={() => setSelectedMatch(match)}
+              >
+                <span><b>{match.full_name ?? match.display_code}</b><small>{match.display_code}</small></span>
+                <span>{match.phone_last4 ? `•••• ${match.phone_last4}` : t('register.noStoredPhone')}</span>
+                <small>{match.can_reuse ? t('register.useExisting') : t('register.existingRestricted')}</small>
+              </button>
+            ))}
+          </div>
         ) : null}
       </section>
 
