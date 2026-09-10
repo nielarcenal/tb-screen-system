@@ -246,6 +246,28 @@ export interface TreatmentFollowupRow {
 }
 
 /** Whitelisted read projection returned by migration 0036. */
+/**
+ * One row of `facility_audit_events()` (migration 0038).
+ *
+ * `changes` is the server-side whitelist and carries no clinical value, no free
+ * text and no contact data — see the whitelist trigger in 0031/0035.
+ * `actor_name` is a LEFT JOIN through the `users` RLS, so it is null both for a
+ * write with no signed-in actor and for an actor the reader may not resolve.
+ */
+export interface AuditEventRow {
+  audit_id: string;
+  entity_table: string;
+  entity_id: string;
+  action: string;
+  actor_user_id: string | null;
+  actor_role: string | null;
+  actor_name: string | null;
+  patient_id: string | null;
+  facility_id: string | null;
+  changes: Record<string, unknown>;
+  occurred_at: string;
+}
+
 export interface TimelineEventRow {
   event_id: string;
   event_type: string;

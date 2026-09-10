@@ -907,3 +907,108 @@ actor.
 **Next:** three units now await Codex - Task 4.1 (design), 0034 and 0035 (both unapplied
 migrations). They are independent of each other and of the case registry. Do not apply
 either migration before its review.
+
+---
+
+## 2026-09-10 - Day 6 audit and security unit. NOT APPLIED; AWAITING CODEX REVIEW.
+
+Continuation of `CLAUDE_DAY6_CONTINUATION.md`. Four deliverables: C41-02, the audit
+viewer, the SMS wording, and a security review.
+
+### Files
+
+| File | State |
+| --- | --- |
+| `supabase/migrations/0038_appointment_audit_trail.sql` | New. **NOT APPLIED.** |
+| `supabase/tests/0038_appointment_audit_matrix.sql` | New. 35/35 live, rolled back. |
+| `scripts/verify-0038-bodies.mjs` | New transcription verifier, 11 OK + 3 self-tests. |
+| `web/src/components/AuditLog.tsx` / `.test.tsx` | New. 9 tests. |
+| `web/src/lib/types.ts` | `AuditEventRow` added. |
+| `web/src/App.tsx` | `audit` page, TB-DOTS nav only. |
+| `web/src/i18n/locales/{en,tl,ceb}.ts` | Audit keys; SMS `sent` rewording. |
+| `docs/agent/CLAUDE_DAY6_SECURITY_REVIEW.md` | New. Four findings, none HIGH. |
+
+### C41-02: one authoritative path, chosen the expensive way
+
+The brief allowed either a trigger that replaces the six explicit RPC calls, or a skip
+flag. **I took the trigger.** The flag needs the same five function bodies restated anyway
+in order to set it, and in exchange asks the reviewer to accept four separate proofs
+(unspoofable, doesn't suppress a later unrelated update, rolls back with its mutation, set
+before every audited mutation). Worse, it fails **silently** if a future RPC forgets it -
+the row simply never appears. The trigger has exactly one failure mode, transcription,
+which is mechanical.
+
+So §3 of 0038 restates **471 lines of applied plpgsql to delete 6 statements**.
+`verify-0038-bodies.mjs` proves that is all it deletes: it takes 0031's text, applies the
+same mechanical removal, and requires the result to equal 0038's character for character.
+Its self-tests confirm it catches a dropped `for update`, a loosened denial, and an audit
+call left in - not merely that it prints OK on the real file.
+
+The action vocabulary is 0031's exactly - created / cancelled / updated. `status_changed`
+is **not** adopted for appointments even though 0035 uses it for referrals, because 0031
+already wrote `updated` for an appointment reaching `attended` and those rows are live. A
+vocabulary that changes halfway through one entity_table is worse than one that differs
+between two.
+
+One local, `v_next` in `record_visit()`, is now written and never read. Left in place
+deliberately: deleting it would be a seventh change and the value of §3 is that the diff
+is exactly six deletions.
+
+### Verification
+
+`node scripts/verify-0038-bodies.mjs` - 11 OK, 3 mutation self-tests caught.
+`node scripts/verify-0035-whitelist.mjs` - still 7 OK after 0038, as the brief requires.
+Live rollback preflight **35/35 PASS** across 35 distinct check kinds, rolled back;
+re-queried after - no trigger, no new functions, no appointment audit rows, 1100
+appointments, no fixture facilities. Output preserved at
+`<scratchpad>/0038_run.json` for review.
+
+Every one of the brief's required checks has a named row: PATCH logs once; each of the
+five RPC paths logs exactly once; no-op and rejected writes log zero; multi-row updates log
+once per changed row and nothing for an unmatched row; key exactness plus named forbidden
+keys plus a positive control; facility A/B isolation both directions; BHW, midwife,
+deactivated and anon denial; keyset pagination across a tie; security posture, ACLs,
+search_path, RLS; and referral/case/follow-up audit regression.
+
+Two fixture defects the run found, both correct system behaviour rejecting my test:
+`enforce_tb_case_transition()` refuses to reopen a closed case, so the closure check had to
+move last; and `p.provolatile` is `"char"`, which has no unique `||` with text.
+
+### The audit viewer
+
+`facility_audit_events()` is keyset-paginated on `(occurred_at desc, audit_id desc)` and
+**SECURITY INVOKER**. The facility boundary is `audit_logs`' own RLS, so the function
+cannot widen it even if its predicates were wrong - the alternative, a definer reader
+restating `facility_id = current_user_facility()`, is one careless edit from M31-03.
+
+The tie-break is load bearing, not decorative: `occurred_at` defaults to `now()`, which is
+transaction-stable (C35-03), so a case closure that cancels three appointments writes four
+rows with an identical timestamp. Ordering on the timestamp alone would let a keyset cursor
+skip or repeat them. The matrix pages through exactly that case.
+
+The UI renders a sentence per change key and never raw JSON, shortens uuids, and says "not
+set" rather than "null". BHW and midwife get no nav item **and** no rows - two independent
+reasons.
+
+### SMS wording
+
+Per `CODEX_TASK_6.4_SMS_FEASIBILITY.md`: `sent` now displays as "Accepted by provider
+(delivery unknown)" in en/tl/ceb. One display site exists (`PatientTimeline`), mobile has
+no `sms_log` display at all, and no stored value, selection query or retry cap changed.
+
+### Regression
+
+Portal **179/179** (was 170; +9 audit viewer), mobile **218/218**, edge **51/51** -
+**448 total**. Portal production build passes with its pre-existing large-chunk advisory.
+Portal, mobile and edge typechecks clean. `git diff --check` clean. Secret scan clean.
+`docs/TB-Screen_Barangay_Report_Design_Canvas_Brief.md` remains untracked and untouched.
+
+### Unresolved findings
+
+D6-01 MEDIUM (no retention decision for a table that now grows on every appointment write -
+a health-office call, not an engineering default), D6-02 LOW (`patient_id` returned but not
+rendered), D6-03 LOW (`actor_name` resolves per reader), D6-04 INFO (a support write is
+indistinguishable from an Edge Function write). None HIGH. Details in
+`CLAUDE_DAY6_SECURITY_REVIEW.md`.
+
+**MIGRATION 0038 IS NOT APPLIED AND IS NOT APPROVED. AWAITING CODEX REVIEW.**

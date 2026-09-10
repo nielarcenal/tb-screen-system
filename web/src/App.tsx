@@ -39,9 +39,10 @@ import BhwManagement from './components/BhwManagement';
 import ChangePasswordGate from './components/ChangePasswordGate';
 import AccountStateGate, { AccountState } from './components/AccountStateGate';
 import CaseRegistry from './components/CaseRegistry';
+import AuditLog from './components/AuditLog';
 import type { CaseFilter } from './lib/caseRegistry';
 
-type Page = 'dashboard' | 'inbox' | 'cases' | 'register' | 'hotspot' | 'report' | 'bhw';
+type Page = 'dashboard' | 'inbox' | 'cases' | 'register' | 'hotspot' | 'report' | 'bhw' | 'audit';
 
 /** The page a role signs in to. Null means "wherever they are is fine": 'bhw'
  *  is the mobile app's role and has no portal of its own, so a BHW who signs in
@@ -263,6 +264,12 @@ export default function App({ portal }: { portal: PortalKind }) {
         // The per-barangay counts the health office compiles by hand (0027).
         // Only once its function answers — see reportReady.
         ...(reportReady ? [navItem('report', 'summarize', t('nav.report'))] : []),
+        // Task 6.3. TB-DOTS only, and only because that is the one role whose
+        // access matrix passes: audit_logs has read policies for tb_dots and
+        // admin alone (0031). A midwife never reaches this branch, and a BHW
+        // never reaches this portal. Adding the item for anyone else would put
+        // a nav entry above a view the server would answer with nothing.
+        navItem('audit', 'history', t('nav.audit')),
       ];
 
   const headers: Record<Page, { title: string; sub: string }> = {
@@ -276,6 +283,7 @@ export default function App({ portal }: { portal: PortalKind }) {
     hotspot: { title: t('nav.hotspot'), sub: t('shell.hotspotsSub') },
     report: { title: t('nav.report'), sub: t('shell.reportSub') },
     bhw: { title: t('nav.bhw'), sub: t('shell.bhwSub') },
+    audit: { title: t('nav.audit'), sub: t('shell.auditSub') },
   };
 
   return (
@@ -311,6 +319,8 @@ export default function App({ portal }: { portal: PortalKind }) {
             setOpenReferralId(id);
           }}
         />
+      ) : activePage === 'audit' ? (
+        <AuditLog />
       ) : activePage === 'cases' ? (
         <CaseRegistry initialCaseId={openCaseId} initialFilter={caseFilter} />
       ) : (
