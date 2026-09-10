@@ -1,6 +1,6 @@
 # TB-Screen BHW — System Documentation (As Built)
 
-*Documentation date: July 8, 2026; revised September 6, 2026. Reflects the deployed system: server migrations 0001–0025, mobile release build, facility portal, and developer portal.*
+*Reconciled September 10, 2026. Reflects deployed server migrations 0001–0038, the mobile release candidate, and all three web portal entries.*
 
 ---
 
@@ -17,7 +17,8 @@ The system is a **pre-screening support tool, not a diagnostic tool**. It never 
 | Component | Users | Technology | Connectivity |
 |---|---|---|---|
 | Mobile application | BHWs | Expo (React Native), TypeScript | Offline-first; syncs when online |
-| Facility portal (`/`) | TB-DOTS staff, Barangay Midwives | React + Vite, TypeScript | Online |
+| Facility portal (`/`) | TB-DOTS staff | React + Vite, TypeScript | Online |
+| Midwife portal (`/midwife.html`) | Barangay Midwives | React + Vite, TypeScript | Online |
 | Developer portal (`/admin.html`) | System administrator | React + Vite (same build, separate entry) | Online |
 | Backend | — | Supabase: PostgreSQL, Auth, Edge Functions (Deno), pg_cron | Cloud |
 
@@ -26,9 +27,9 @@ The system is a **pre-screening support tool, not a diagnostic tool**. It never 
 ## 2. Technology Stack
 
 - **Mobile:** Expo SDK 57 / React Native, TypeScript (strict), React Native Paper (Material Design 3), Expo Router (file-based navigation), Zustand (state; persistent app store + transient session store), expo-sqlite (offline cache), i18next (en/tl/ceb), react-native-qrcode-svg, expo-print, expo-sharing, react-native-paper-dates.
-- **Web:** React 18 + Vite (two HTML entries: facility portal and developer portal), TypeScript, i18next, plain CSS design system (no UI framework), supabase-js.
+- **Web:** React 19 + Vite (facility, midwife, and developer HTML entries), TypeScript, i18next, plain CSS design system (no UI framework), supabase-js.
 - **Backend:** Supabase — PostgreSQL 15 with Row-Level Security on every table; GoTrue email/password auth; two Deno Edge Functions (`manage-bhw`, `sms-reminders`); `pg_cron` + `pg_net` for the daily SMS schedule.
-- **Version control:** three Git repositories (`mobile/`, `web/`, `supabase/`).
+- **Version control:** one repository; the original mobile/web/Supabase histories remain reachable through subtree merges.
 
 ---
 
@@ -39,7 +40,7 @@ Roles live on the `users` table (`role` column) and are enforced server-side by 
 | Role | Interface | Can see patient data? | Scope |
 |---|---|---|---|
 | `bhw` | Mobile app | Yes | Patients of their **assigned barangay**, plus patients they personally enrolled |
-| `tb_dots` | Facility portal | Yes | All patients (read); referrals/appointments **addressed to their facility** (act) |
+| `tb_dots` | Facility portal | Yes | Patients admitted through a referral, walk-in, appointment, or case owned by their facility; mutations remain facility-scoped |
 | `midwife` | Facility portal | **No** — zero patient rows | BHW **accounts** of their assigned barangay only (names + activity counts) |
 | `admin` | Developer portal | **No** — zero patient rows | Midwife and TB-DOTS staff **accounts** (provisioning only) |
 
@@ -105,6 +106,8 @@ The on-device SQLite database is the working store; every syncable row carries a
 - **Referral inbox** — master-detail: a Patient / Barangay / Date / Status list (search by name, patient code, or laboratory sample ID; status filter) with a side detail panel: patient header, the enroller's name ("Screened by … (BHW)", or "Registered at this facility by …" for a walk-in), a compact read-only screening summary with the PGI-S tagged *patient-reported* and any vital signs shown as plain measurements with units and no interpretation, and the action stack — mark received (tap again to undo; locked once tested), enter the **laboratory sample ID** (offered only once the referral is received, because before the patient arrives there is no sample to name), record the laboratory outcome (**structured Positive/Negative buttons** + optional free-text notes; recorded by staff, never computed), presented / no-show flags (no-show updates the referring BHW's follow-up list), per-appointment attended/missed, and closing the referral.
 - **Register patient** — for walk-in and self-referred patients who never went through a BHW. Records the same details, the same DOH-NTP checklist, the same PGI-S and the same optional vitals the mobile app collects, then writes the whole chain — patient → screening → referral — with the referral filed as already `received`, since the patient is standing at the desk. A facility-registered patient behaves identically to a BHW-referred one everywhere downstream (hotspot counts, result recording, follow-up). Patient codes here are `PAT-DOTS-####`, issued by a server-side sequence rather than the mobile app's offline `PAT-<device>-<seq>` scheme.
 - **Barangay hotspots** — presumptive-referral counts grouped **only** by barangay (PSGC code) over Last 30/60/90 days, rendered as ranked bars. Deliberately **surveillance, not contact tracing**: no household, sitio, address, or patient-level drill-down exists, and the counts come from a SECURITY DEFINER function that returns aggregates only.
+- **Case registry and treatment follow-up** — explicit case enrolment, reviewed lifecycle transitions, attended/missed scheduling, retained follow-up history with correction/void flows, and a source-isolated patient timeline.
+- **Attention dashboard and audit viewer** — count-only facility metrics and a keyset-paginated activity trail. The viewer inherits `audit_logs` RLS and appears only for TB-DOTS staff.
 
 **Midwives** signing into the same portal see exactly one view — **BHW management**: their barangay's BHW accounts with 30-day activity counts (screenings/referrals attributed by enrolling BHW), add BHW (always into their own barangay), edit, reset password, deactivate/reactivate. A standing note states that no patient data appears in this view — and none can: midwives have no patient-data policies at all.
 
@@ -136,7 +139,10 @@ A scheduled Edge Function (`sms-reminders`) runs daily at 09:00 Asia/Manila (pg_
 | `patients` | `display_code` (unique), `full_name`, `birthdate`, `age`, `sex`, `barangay_code`, `sitio`, `contact_number`, `sms_consent`, `consent_date`, `enrolled_by`. CHECK: number/consent-date only with consent |
 | `screenings` | `symptom_flags` (jsonb tri-state answers), `pgis_severity`, seven nullable vital-sign columns (`height_cm`, `weight_kg`, `temperature_c`, `systolic_bp`, `diastolic_bp`, `pulse_rate`, `spo2_percent`), `referred` (boolean — **no score column by design**; BMI is computed at display time, never stored) |
 | `referrals` | `facility_id` (receiving), `lab_sample_id` (**owned by TB-DOTS**, entered when the sample is collected on-site), `status` (submitted/received/tested/closed), `result_outcome` (positive/negative, staff-recorded), `result` (free-text notes), `result_date`, `presented` (no-show flag) |
-| `appointments` | `scheduled_date`, `attended_date`, `status` (scheduled/attended/missed) |
+| `appointments` | Facility-owned scheduler; referral or case link, `scheduled_date`, `attended_date`, status (scheduled/attended/missed/cancelled) |
+| `tb_cases` | One treatment episode per patient at a time; facility owner, lifecycle, treatment start and accepted outcome vocabulary |
+| `treatment_followups` | Retained visit record linked to a case and optional case appointment; correction/void metadata |
+| `audit_logs` | Server-written, fail-closed whitelisted change history; facility/admin SELECT policies only |
 | `sms_log` | One row per reminder attempt; `delivery_status` (queued/sent/failed/stubbed) |
 
 Every table has RLS enabled (default-deny). Aggregate reads that must cross row boundaries (`hotspot_counts`, `dashboard_counts`, `bhw_activity`) and policy helper lookups (`current_user_role/facility/barangay`, `bhw_visible_patient_ids`, `referred_patient_ids/screening_ids`) are SECURITY DEFINER functions with explicit role gates — a pattern that also eliminated a policy-recursion bug (patients ⇄ referrals cycle) found in live testing.
@@ -157,6 +163,10 @@ Every table has RLS enabled (default-deny). Aggregate reads that must cross row 
 | 0010–0023 | Patient name parts; TB-DOTS appointment insert; admin overview and facility writes; BHW profile fields; SMS language and kinds; RLS hardening (column-scoped `users` update, narrow BHW referral update); Manila business calendar; password-change gate; immutable identity columns; `patients_tbdots_read` narrowed back to referred-only; admin BHW management |
 | 0024 | Referral-model correction: `referrals.specimen_id` → `lab_sample_id` (ownership moves to TB-DOTS); seven optional vital-sign columns on `screenings` |
 | 0025 | TB-DOTS may register walk-in patients directly: insert policies on `patients`/`screenings`/`referrals`, `own_enrolled_patient_ids()`, `next_facility_patient_code()` |
+| 0026–0030 | Midwife rename; barangay report; null-safe role gates; active-aware RLS; Manila report boundaries |
+| 0031 | Case registry, treatment follow-ups, appointment ownership, idempotent RPCs, whitelisted audit foundation |
+| 0032–0034 | Atomic walk-in registration; old-client appointment compatibility; non-mutating overdue detection |
+| 0035–0038 | Referral audit, source-isolated timeline, facility attention dashboard, authoritative appointment audit and facility viewer |
 
 ## 10. Internationalization
 
@@ -171,7 +181,7 @@ Both apps implement a shared visual language from the project's hi-fi design can
 1. Default-deny RLS on every table; the UI is never the security boundary.
 2. Midwives and admins can read **zero** patient rows — account management is fully separated from clinical data.
 3. BHW visibility is barangay-scoped; facility staff act only on referrals addressed to them.
-4. Laboratory outcomes are facility-visible; BHW devices do not store the structured outcome — BHWs track referral *progress*.
+4. BHW devices receive the structured positive/negative referral outcome needed for follow-up, but never the facility's free-text result notes.
 5. Contact numbers exist only alongside recorded SMS consent (database-enforced); the QR payload and SMS text carry no identifying clinical detail.
 6. Hotspot surveillance is aggregate-only by barangay — structurally incapable of contact tracing.
 7. Sign-out wipes the device's clinical cache (multi-account safety); sessions are the only thing Supabase persists on-device.
@@ -184,10 +194,13 @@ Both apps implement a shared visual language from the project's hi-fi design can
 - **Translations pending native review** (`TODO i18n verify` markers).
 - **Free-text result vs. outcome (settled 2026-09-06):** BHWs see the structured positive/negative outcome; the facility's free-text `result` notes never reach a BHW device at all. D-05 blocked them at three layers — the sync pulls referrals by explicit column list rather than `*` (RLS cannot restrict columns, and a column GRANT cannot separate BHWs from TB-DOTS staff since both authenticate as `authenticated`), local migration v9 NULLs the column before dropping it so cached values are not left recoverable in freed pages, and no screen renders it. Showing the outcome is deliberate: a BHW's follow-up job is getting a positive patient back to the facility to start treatment, which they cannot prioritise without it. An earlier revision of this note described the situation exactly backwards.
 - **Referral model corrected (2026-09-06):** the build had assumed a sputum sample travels from the BHW to TB-DOTS, and shipped a "specimen form" and a BHW-generated `specimen_id` on that assumption. Confirmed with the TB-DOTS head nurse that collection and testing happen **only** at the facility. The concept is now an optional printed **referral document**, and `lab_sample_id` is entered by facility staff. Full account, including what was verified against the live database: `docs/TBScreen_Referral_Model_Correction_and_Vitals_Addendum.md`.
-- **Walk-in registration is not transactional.** The portal writes patient → screening → referral as three separate PostgREST calls; there is no transaction across them, so a failure part-way can leave an orphan patient or screening. Mitigated rather than solved: 0025 widened the facility's read scope to its own enrolments, so a half-written registration stays visible and repairable instead of disappearing into a table the account can no longer read. A single `SECURITY DEFINER` function taking all three rows would close it properly.
+- **Walk-in registration is transactional.** Migration 0032's idempotent `register_walkin()` RPC writes patient, screening, referral, and replay record together or rolls them all back.
 - **Vitals are recorded but not yet used anywhere except display and print.** No trend view, no comparison across a patient's screenings. Any such feature must stay descriptive — vitals must never acquire a threshold, a category, or a colour that reads as a verdict (§1, §5).
-- `appointments` has no foreign key to `referrals` (the form shows the most recent scheduled appointment); flagged for a future migration.
+- Appointments carry patient/facility-agreeing composite links to either a referral or a TB case; the links are mutually exclusive.
 - Attribution of screenings to BHWs uses the enrolling BHW (screenings carry no creator column) — accurate for the normal workflow.
 - The portals are not yet publicly hosted (local/dev serving); the mobile app is installed via direct APK, not a store.
 - Offline sign-out cannot push pending work (the dialog warns).
 - SMS reminders send for real (verified 2026-09-06), but `sms_log.delivery_status` records provider *acceptance*, not handset delivery — there is no delivery-receipt callback. The reminder path does not retry, so a reminder lost after acceptance is lost silently. The system now runs on `semaphore`; on the `textbee` fallback the pipeline would additionally depend on one physical Android phone staying awake and in signal.
+- **Mobile data at rest:** the clinical cache is ordinary app-sandboxed SQLite and the Supabase session uses AsyncStorage; neither is application-level encrypted. Managed devices should require a device PIN/biometric and remote-wipe process. An encrypted cache/session design is required before a higher-risk production deployment.
+- **Database grants:** legacy Supabase table grants are broader than least privilege, although every public table has RLS and clients contain only the anon key. Narrow them in a dedicated reviewed migration; do not rewrite them casually during release.
+- **Audit retention:** no automatic purge is configured. That conservative release-candidate choice avoids destroying a health-record trail; real production needs a health-office-approved retention/archive and capacity policy.

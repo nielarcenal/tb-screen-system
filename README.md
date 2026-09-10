@@ -9,7 +9,7 @@ A tuberculosis **pre-screening and referral follow-up system** connecting Barang
 | Path | Component | Users | Stack |
 |---|---|---|---|
 | `mobile/` | Android application | BHWs | Expo SDK 57 / React Native, TypeScript, offline-first |
-| `web/` | Facility portal (`/`) + developer portal (`/admin.html`) | TB-DOTS staff, Barangay Midwives, admin | React 18 + Vite, TypeScript |
+| `web/` | Facility (`/`), midwife (`/midwife.html`) and developer (`/admin.html`) portals | TB-DOTS staff, Barangay Midwives, admin | React 19 + Vite, TypeScript |
 | `supabase/` | Database, auth, Edge Functions | — | PostgreSQL 15 + RLS, GoTrue, Deno, pg_cron |
 | `docs/` | System documentation and design handoffs | — | — |
 
@@ -29,7 +29,7 @@ Row-Level Security is enforced on every table. The client UI adapts to the role 
 Each component takes its own `.env`, copied from the adjacent `.env.example`. **Never commit a real `.env`** — the `service_role` key is server-side only and must never reach a browser or the mobile bundle.
 
 ```bash
-# Backend — apply migrations 0001–0025 to your Supabase project
+# Backend — apply migrations 0001–0038 to your Supabase project
 cd supabase && supabase db push
 
 # Web portals
@@ -40,6 +40,10 @@ cd mobile && npm install && npx expo start
 ```
 
 Useful scripts: `web` — `npm run dev`, `npm run build`, `npm run typecheck`. `mobile` — `npm start`, `npm run android`.
+
+The rollback-safe Day 7 synthetic story is `supabase/seed_capstone_day7.sql`.
+It ends in `ROLLBACK` by default; review its selected facility and explicit
+instructions before deliberately changing that to `COMMIT` for a demo.
 
 ## Documentation
 

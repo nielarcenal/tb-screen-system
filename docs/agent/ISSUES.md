@@ -1,5 +1,18 @@
 # Issue register
 
+2026-09-10 Day 7 update: no Critical or High finding remains open. Release status is
+**conditional** on the physical Android offline/reconnect/cache-isolation checklist and
+native-speaker locale review. S7-01 (MEDIUM) records unencrypted app-sandboxed mobile
+SQLite/session storage; S7-02 (LOW) records legacy broad Supabase table grants under RLS.
+See `DAY7_RELEASE_VERIFICATION.md` for evidence and operational controls.
+
+| ID | Severity | Issue | Status |
+| --- | --- | --- | --- |
+| S7-01 | MEDIUM | Mobile clinical SQLite and the persisted Supabase session are app-sandboxed but not application-level encrypted | Accepted for the capstone with managed-device PIN/biometric and remote-wipe controls; encrypted cache/session design required before a higher-risk production rollout |
+| S7-02 | LOW | Legacy Supabase grants give `anon`/`authenticated` broader table privileges than least privilege | RLS is live on every public table and clients cannot issue SQL; narrow only in a dedicated migration with a full role matrix |
+| S7-03 | RELEASE CHECK | Physical Android airplane-mode/reconnect/cache-isolation run is not executable from this workstation | Open human check; exact steps in `DAY7_RELEASE_VERIFICATION.md` |
+| S7-04 | RELEASE CHECK | Tagalog/Cebuano copy is best-effort and lacks native-speaker sign-off | Open human check |
+
 2026-09-10 Day 6 update: migration 0038 is approved and applied after a strengthened
 **36/36** linked rollback matrix. C41-02 is closed by the single appointment trigger;
 the audit viewer is RLS-scoped and TB-DOTS-only in both server behavior and navigation.
@@ -131,6 +144,10 @@ ran against the live stack as a real BHW account and confirmed that a column omi
 upsert payload survives — PostgREST builds `ON CONFLICT DO UPDATE SET` from payload keys.
 The question has not yet been asked about `facility_id`/`referral_id`/`tb_case_id`, which do
 not exist until 0031 is applied; the script runs that stage automatically once they do.
+
+**Historical snapshot only:** the open statuses in the next table were the first 0031
+review result and are superseded by the resolved round below and the final 140/140 applied
+result. They are retained as review history, not current release findings.
 
 | ID | Severity | Issue | Status |
 | --- | --- | --- | --- |

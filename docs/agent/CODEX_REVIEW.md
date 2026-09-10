@@ -1,3 +1,27 @@
+# Codex review — Day 7 release/security gate
+
+2026-09-10. Result: **CONDITIONAL RELEASE CANDIDATE**.
+
+The full automated gate remains **450/450**, production build and typechecks pass, all
+public tables have live RLS, and every SECURITY DEFINER function has a fixed search path.
+No Critical or High finding remains open. Migration history, roles, case/follow-up,
+appointment ownership, audit, timeline, dashboard, SMS semantics, and known limitations
+were reconciled in `docs/SYSTEM_DOCUMENTATION.md`.
+
+Migration 0032 and the portal confirm walk-in registration is one idempotent transaction,
+not three client writes. The new `seed_capstone_day7.sql` covers all seven synthetic demo
+states, contains no contact/consent or credential, and passed a live-schema run ending in
+ROLLBACK. It remains rollback-safe by default.
+
+Two human checks remain: a physical Android airplane-mode/reconnect/cache-isolation smoke
+test, and native-speaker review of Tagalog/Cebuano. Medium production gates are unencrypted
+mobile data at rest and the health-office audit-retention decision; legacy broad Supabase
+table grants are a Low defense-in-depth finding because RLS is enabled everywhere and
+clients cannot issue SQL. Full evidence and the physical checklist are in
+`DAY7_RELEASE_VERIFICATION.md`.
+
+---
+
 # Codex review — Day 6 audit/security and migration 0038
 
 2026-09-10. Result: **APPROVED AND APPLIED**.

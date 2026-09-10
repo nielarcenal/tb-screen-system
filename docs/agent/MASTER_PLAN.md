@@ -1,5 +1,13 @@
 # Sprint master plan
 
+2026-09-10 Day 7 gate: **CONDITIONAL RELEASE CANDIDATE.** Automated regression is
+**450/450**, builds/typechecks pass, the live security posture has RLS on every public
+table and fixed search paths on all SECURITY DEFINER functions, and no Critical/High
+finding remains. System documentation is reconciled through migration 0038. The
+rollback-safe synthetic capstone seed covers all seven required demo states. Remaining
+human checks are the physical Android offline/reconnect/cache-isolation run and
+native-speaker Tagalog/Cebuano review. See `DAY7_RELEASE_VERIFICATION.md`.
+
 2026-09-10 latest critical-path checkpoint: **Day 6 audit/security is complete and
 approved. Migration `0038_appointment_audit_trail.sql` is applied.** It closes C41-02:
 appointment writes from the ordinary client PATCH produced no audit row, only the 0031
