@@ -51,7 +51,7 @@ export const en = {
   },
   audit: {
     title: 'Facility activity log',
-    privacy: 'Who changed what, and when. Record changes only — no clinical notes, results or contact details are stored here.',
+    privacy: 'Who changed what, and when. No clinical notes, lab-result values or contact details are stored here.',
     filterLabel: 'Filter by record type',
     empty: 'No recorded activity yet.',
     end: 'That is the whole log.',

@@ -46,7 +46,7 @@ export const tl: Translation = {
   },
   audit: {
     title: 'Talaan ng aktibidad ng pasilidad',
-    privacy: 'Sino ang nagbago, ano, at kailan. Mga pagbabago lang sa talaan — walang clinical notes, resulta o contact details dito.',
+    privacy: 'Sino ang nagbago, ano, at kailan. Walang clinical notes, halaga ng lab result, o contact details dito.',
     filterLabel: 'Salain ayon sa uri ng talaan',
     empty: 'Wala pang naitalang aktibidad.',
     end: 'Iyan na ang buong talaan.',

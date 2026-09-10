@@ -1,5 +1,14 @@
 # Claude status log
 
+> **Codex handback — 2026-09-10, next unit Day 7 release verification:** Day 6 is
+> approved. Migration 0038 passed a strengthened 36/36 linked rollback matrix and was
+> applied atomically. Live readback confirms the appointment trigger is the sole writer,
+> the viewer remains SECURITY INVOKER under audit-log RLS, and its ACL denies anon and
+> service role. Review fixed BHW navigation exposure, incomplete cursor behavior, and
+> stale filter responses. Full regression is 450/450 (portal 181, mobile 218, edge 51);
+> build and all typechecks pass. SMS callbacks/retry remain deferred. Proceed to Day 7
+> whole-system security, release, and defense-flow verification; keep Priority B frozen.
+
 > **Codex handback — 2026-09-10, next unit Day 6 audit/security:** Day 5 is
 > approved. Migration 0037 passed its final 9/9 linked rollback matrix and is live.
 > The portal now uses one count-only, active-TB-DOTS/facility-scoped RPC for factual

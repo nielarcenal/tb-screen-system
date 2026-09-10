@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 import type { Session } from '@supabase/supabase-js';
 
 import { supabase } from './lib/supabase';
-import { manilaToday, PortalUser, reportTabVisible, UserRole } from './lib/types';
+import { auditTabVisible, manilaToday, PortalUser, reportTabVisible, UserRole } from './lib/types';
 import AppShell, { ShellNavItem } from './components/AppShell';
 import LoginForm, { PortalKind } from './components/LoginForm';
 import Dashboard, { type DashboardTarget } from './components/Dashboard';
@@ -264,12 +264,10 @@ export default function App({ portal }: { portal: PortalKind }) {
         // The per-barangay counts the health office compiles by hand (0027).
         // Only once its function answers — see reportReady.
         ...(reportReady ? [navItem('report', 'summarize', t('nav.report'))] : []),
-        // Task 6.3. TB-DOTS only, and only because that is the one role whose
-        // access matrix passes: audit_logs has read policies for tb_dots and
-        // admin alone (0031). A midwife never reaches this branch, and a BHW
-        // never reaches this portal. Adding the item for anyone else would put
-        // a nav entry above a view the server would answer with nothing.
-        navItem('audit', 'history', t('nav.audit')),
+        // Task 6.3. BHW credentials can authenticate on this page and homeFor()
+        // deliberately leaves them where they landed, so this must be a role
+        // check rather than an assumption that only facility staff arrive here.
+        ...(auditTabVisible(me.role) ? [navItem('audit', 'history', t('nav.audit'))] : []),
       ];
 
   const headers: Record<Page, { title: string; sub: string }> = {

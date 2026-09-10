@@ -713,9 +713,11 @@ as $fn$
     left join public.users u on u.user_id = a.actor_user_id
    where (p_entity_table is null or a.entity_table = p_entity_table)
      and (
-       p_before_at is null
-       or a.occurred_at < p_before_at
-       or (a.occurred_at = p_before_at and p_before_id is not null and a.audit_id < p_before_id)
+       (p_before_at is null and p_before_id is null)
+       or (
+         p_before_at is not null and p_before_id is not null
+         and (a.occurred_at, a.audit_id) < (p_before_at, p_before_id)
+       )
      )
    order by a.occurred_at desc, a.audit_id desc
    limit least(greatest(coalesce(p_limit, 50), 1), 200);
@@ -725,12 +727,14 @@ comment on function public.facility_audit_events(int, timestamptz, uuid, text) i
   'Keyset-paginated audit read for the portal viewer (0038). SECURITY INVOKER: '
   'the facility boundary is audit_logs'' own RLS from 0031, not a predicate '
   'here, so this cannot widen it. Returns only whitelisted `changes`; the '
-  'whitelist trigger is what keeps clinical values out of that column.';
+  'whitelist trigger keeps forbidden sensitive values out of that column. A '
+  'cursor is either wholly null (first page) or a complete occurred_at/id pair; '
+  'an incomplete cursor returns no rows rather than repeating or skipping data.';
 
 -- The actor's name is joined from `users`, which has its own RLS. A TB-DOTS
 -- account can read `users` rows for bhw staff and itself (0029 §4), so a
 -- colleague's name resolves and anyone out of scope comes back NULL rather than
--- leaking. The viewer falls back to the role and the id, which is why the
+-- leaking. The viewer falls back to the role and then a system label, which is why the
 -- column is nullable and the UI must not assume it.
 
 do $acl$

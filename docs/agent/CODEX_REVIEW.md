@@ -1,3 +1,30 @@
+# Codex review — Day 6 audit/security and migration 0038
+
+2026-09-10. Result: **APPROVED AND APPLIED**.
+
+Migration 0038 makes the appointment trigger the single authoritative audit writer.
+Codex independently confirmed that the five restated RPC bodies differ from migration
+0031 only by deletion of the six appointment audit calls, and that the fail-closed
+whitelist remains unchanged. The strengthened linked rollback matrix passed **36/36**
+before atomic application. Live readback confirms the AFTER INSERT/UPDATE trigger, sole
+writer, fixed search paths, SECURITY DEFINER trigger function, SECURITY INVOKER/STABLE
+viewer, and authenticated-only viewer ACL with anon and service role denied.
+
+Review closed three client/contract gaps before approval: BHW accounts can in fact land
+on the facility portal, so the Audit navigation now checks `role === 'tb_dots'`; partial
+pagination cursors fail closed instead of repeating or skipping rows; and stale responses
+cannot overwrite a newer filter. The misleading cumulative multi-row expectation was
+also corrected. SMS `sent` remains a display-only provider-acceptance label; delivery
+callbacks and retry expansion remain deferred.
+
+Full regression is **450/450** (portal 181, mobile 218, edge 51); production build and
+all TypeScript checks pass. The existing large-chunk advisory remains non-blocking.
+D6-01 has a conservative release-candidate decision: no automatic audit purge; real
+production deployment requires a health-office-approved retention/archive policy.
+Next: Day 7 whole-system security, release, and defense-flow verification.
+
+---
+
 # Codex review — Day 5 attention dashboard and migration 0037
 
 2026-09-10. Result: **APPROVED AND APPLIED**.

@@ -46,6 +46,11 @@ export const SYMPTOM_KEYS = [
 export type UserRole = 'bhw' | 'tb_dots' | 'midwife' | 'admin';
 export type ResultOutcome = 'positive' | 'negative';
 
+/** Only facility clinicians receive the portal audit viewer. */
+export function auditTabVisible(role: UserRole): boolean {
+  return role === 'tb_dots';
+}
+
 /** The signed-in account's own users row (role drives which portal shows). */
 export interface PortalUser {
   user_id: string;
@@ -245,12 +250,11 @@ export interface TreatmentFollowupRow {
   updated_at: string;
 }
 
-/** Whitelisted read projection returned by migration 0036. */
 /**
  * One row of `facility_audit_events()` (migration 0038).
  *
- * `changes` is the server-side whitelist and carries no clinical value, no free
- * text and no contact data — see the whitelist trigger in 0031/0035.
+ * `changes` is the server-side whitelist and carries no free text, lab-result
+ * value or contact data — see the whitelist trigger in 0031/0035.
  * `actor_name` is a LEFT JOIN through the `users` RLS, so it is null both for a
  * write with no signed-in actor and for an actor the reader may not resolve.
  */
@@ -268,6 +272,7 @@ export interface AuditEventRow {
   occurred_at: string;
 }
 
+/** Whitelisted read projection returned by migration 0036. */
 export interface TimelineEventRow {
   event_id: string;
   event_type: string;

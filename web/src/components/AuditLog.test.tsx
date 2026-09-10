@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { en } from '../i18n/locales/en';
@@ -12,12 +12,17 @@ const mock = vi.hoisted(() => {
     pages: [] as AuditEventRow[][],
     error: null as { message: string } | null,
     calls: [] as Array<Record<string, unknown>>,
+    pending: [] as Array<
+      Promise<{ data: AuditEventRow[] | null; error: { message: string } | null }>
+    >,
   };
   return {
     state,
     supabase: {
       rpc(_name: string, fields: Record<string, unknown>) {
         state.calls.push(fields);
+        const pending = state.pending.shift();
+        if (pending) return pending;
         if (state.error) return Promise.resolve({ data: null, error: state.error });
         const page = state.pages.shift() ?? [];
         return Promise.resolve({ data: page, error: null });
@@ -56,6 +61,7 @@ beforeEach(() => {
   mock.state.pages = [];
   mock.state.error = null;
   mock.state.calls = [];
+  mock.state.pending = [];
 });
 
 describe('AuditLog', () => {
@@ -150,6 +156,36 @@ describe('AuditLog', () => {
     // A filter change starts a new scan; carrying the old cursor would skip rows.
     expect(mock.state.calls[1].p_before_at).toBeNull();
     expect(mock.state.calls[1].p_before_id).toBeNull();
+  });
+
+  it('ignores a stale page that resolves after a newer filter request', async () => {
+    let resolveAll!: (value: { data: AuditEventRow[]; error: null }) => void;
+    let resolveReferrals!: (value: { data: AuditEventRow[]; error: null }) => void;
+    mock.state.pending = [
+      new Promise((resolve) => { resolveAll = resolve; }),
+      new Promise((resolve) => { resolveReferrals = resolve; }),
+    ];
+    render(<AuditLog />);
+
+    await waitFor(() => expect(mock.state.calls.length).toBe(1));
+    fireEvent.click(screen.getByText(en.audit.entity.referrals));
+    await waitFor(() => expect(mock.state.calls.length).toBe(2));
+
+    await act(async () => {
+      resolveReferrals({
+        data: [row({ audit_id: 'new', entity_table: 'referrals' })],
+        error: null,
+      });
+    });
+    await screen.findByText(en.audit.end);
+
+    await act(async () => {
+      resolveAll({ data: [row({ audit_id: 'stale', entity_table: 'appointments' })], error: null });
+    });
+
+    const list = document.querySelector('.audit-list') as HTMLElement;
+    expect(within(list).getByText(en.audit.entity.referrals)).toBeTruthy();
+    expect(within(list).queryByText(en.audit.entity.appointments)).toBeNull();
   });
 
   it('shows an empty state rather than an error when the facility has no events', async () => {

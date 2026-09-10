@@ -12,11 +12,11 @@
  *    the pair (occurred_at, audit_id) and the order must match the server's.
  *
  * `changes` is rendered as a sentence per key, never as raw JSON. The keys are a
- * server-side whitelist and hold no clinical value, no free text and no contact
- * data; the renderer still names the keys it knows and falls back to the key
- * name rather than printing whatever arrives.
+ * server-side whitelist and hold no free text, lab-result value or contact data;
+ * the renderer still names the keys it knows and falls back to the key name
+ * rather than printing whatever arrives.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
@@ -118,6 +118,10 @@ export default function AuditLog() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  // Invalidates older reads when a refresh or filter change starts. Without
+  // this, a slow response for the previous filter can arrive last and put its
+  // rows under the newly selected chip.
+  const requestId = useRef(0);
 
   const fetchPage = useCallback(
     async (cursor: AuditEventRow | null, currentFilter: AuditFilter) => {
@@ -135,18 +139,22 @@ export default function AuditLog() {
 
   const load = useCallback(
     async (currentFilter: AuditFilter) => {
+      const thisRequest = ++requestId.current;
       setLoading(true);
+      setLoadingMore(false);
       setError(null);
       setDone(false);
       try {
         const page = await fetchPage(null, currentFilter);
+        if (thisRequest !== requestId.current) return;
         setRows(page);
         setDone(page.length < PAGE_SIZE);
       } catch (e) {
+        if (thisRequest !== requestId.current) return;
         setError(e instanceof Error ? e.message : String(e));
         setRows([]);
       }
-      setLoading(false);
+      if (thisRequest === requestId.current) setLoading(false);
     },
     [fetchPage],
   );
@@ -161,16 +169,26 @@ export default function AuditLog() {
     // breaks the tie on both sides.
     const cursor = rows[rows.length - 1];
     if (!cursor || loadingMore || done) return;
+    const thisRequest = requestId.current;
     setLoadingMore(true);
     setError(null);
     try {
       const page = await fetchPage(cursor, filter);
+      if (thisRequest !== requestId.current) return;
       setRows((prev) => [...prev, ...page]);
       if (page.length < PAGE_SIZE) setDone(true);
     } catch (e) {
+      if (thisRequest !== requestId.current) return;
       setError(e instanceof Error ? e.message : String(e));
     }
-    setLoadingMore(false);
+    if (thisRequest === requestId.current) setLoadingMore(false);
+  };
+
+  const selectFilter = (next: AuditFilter) => {
+    // Invalidate synchronously in the click handler; a pending Promise can
+    // otherwise settle before React runs the next effect.
+    if (next !== filter) requestId.current += 1;
+    setFilter(next);
   };
 
   return (
@@ -192,7 +210,7 @@ export default function AuditLog() {
             type="button"
             className={filter === key ? 'chip chip--on' : 'chip'}
             aria-pressed={filter === key}
-            onClick={() => setFilter(key)}
+            onClick={() => selectFilter(key)}
           >
             {t(key === 'all' ? 'audit.filter.all' : ENTITY_KEY[key])}
           </button>

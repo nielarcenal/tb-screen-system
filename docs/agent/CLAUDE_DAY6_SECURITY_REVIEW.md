@@ -1,7 +1,9 @@
 # Day 6 — security review of the audit surface
 
 Author: Claude Code. Reviewer: Codex.
-**2026-09-10.** Covers migration **0038** (not applied) and the portal audit viewer.
+**2026-09-10.** Covers migration **0038** and the portal audit viewer. Codex subsequently
+strengthened the matrix to 36/36, closed the BHW navigation/cursor/stale-response gaps,
+approved the migration, and applied it atomically. See `CODEX_REVIEW.md`.
 Scope: what Day 6 adds. It is not Task 6.6, which is Codex's whole-system audit.
 
 ---
@@ -110,11 +112,11 @@ an already-`missed` row that the predicate did not match produces none.
 
 | ID | Severity | Finding | Status |
 | --- | --- | --- | --- |
-| D6-01 | MEDIUM | The trail's volume goes from "RPC writes only" to "every appointment write". At current scale that is small, but nothing prunes `audit_logs` — unlike `rpc_requests`, which 0031 purges on a cron at 7 days. An audit trail should not be purged on the same reflex, but it should have a stated retention decision rather than growing silently forever | **Open.** Not fixed here: retention of a health-record audit trail is a health-office decision, not an engineering default |
+| D6-01 | MEDIUM | The trail's volume goes from "RPC writes only" to "every appointment write". At current scale that is small, but nothing prunes `audit_logs` — unlike `rpc_requests`, which 0031 purges on a cron at 7 days. An audit trail should not be purged on the same reflex, but it should have a stated retention decision rather than growing silently forever | **Accepted for the release candidate after review:** no automatic purge. A health-office-approved retention/archive and capacity policy is required before real production use |
 | D6-02 | LOW | `facility_audit_events()` returns `patient_id`. The viewer does not render it, but the RPC exposes it to any TB-DOTS caller who reads the raw response. That caller can already read the patient through `patients` RLS if the row is theirs — so this discloses nothing new — but it is a column the UI does not need | **Open.** Left because removing it forecloses linking an event to a patient record later, which is the obvious next feature. Flagged so the choice is explicit |
 | D6-03 | LOW | `actor_name` comes from a LEFT JOIN through `users` RLS, so the same event can render a name for one reader and a role for another. That is correct behaviour, not a leak — but it means two staff comparing screens may see different text for one event | Accepted. The viewer falls back to role, then to a system label; tested |
 | D6-04 | INFO | A support write from a direct database session records `actor_user_id = null`. The viewer shows "System or support action", which is honest but indistinguishable from an Edge Function write | Accepted. Distinguishing them needs a provenance column and its own migration |
-| C41-02 | — | Closed by this migration, pending review | Was open since 0035 |
+| C41-02 | — | Closed by migration 0038; approved and applied after review | Was open since 0035 |
 
 No CRITICAL or HIGH findings. Nothing in this unit widens a read boundary, weakens a
 policy, or adds a write path to `audit_logs`.

@@ -286,7 +286,7 @@ begin
   n_a2 := pg_temp.appt_events(a2);
 
   insert into t_result values ('multi-row: one event each', 'tb_dots A',
-    '1 and 1', n_a1::text || ' and ' || n_a2::text,
+    '2 and 2 total', n_a1::text || ' and ' || n_a2::text,
     'FOR EACH ROW, so a two-row statement is two events, not one and not four',
     case when n_a1 = 2 and n_a2 = 2 then 'PASS' else 'FAIL' end);
     -- 2 each: one 'created' from the insert above, one from this update.
@@ -588,6 +588,21 @@ begin
   insert into t_result values ('viewer: limit is honoured', 'tb_dots A',
     '3 rows', coalesce(array_length(v_page1, 1), 0)::text || ' rows', '',
     case when array_length(v_page1, 1) = 3 then 'PASS' else 'FAIL' end);
+
+  -- A cursor is one logical value split across two PostgREST parameters. If a
+  -- future caller sends only half, fail closed instead of silently repeating
+  -- page one or skipping every row tied at that timestamp.
+  perform pg_temp.as_user((select v from t_ids where k = 'staff_a'));
+  select count(*) into n_a
+    from public.facility_audit_events(3, null, v_last_id);
+  select count(*) into n_b
+    from public.facility_audit_events(3, v_last_at + interval '1 second', null);
+  reset role;
+
+  insert into t_result values ('viewer: partial cursor fails closed', 'tb_dots A',
+    '0 / 0 rows', n_a::text || ' / ' || n_b::text || ' rows',
+    'occurred_at and audit_id must be supplied together',
+    case when n_a = 0 and n_b = 0 then 'PASS' else 'FAIL' end);
 end;
 $viewer$;
 

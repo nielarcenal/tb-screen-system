@@ -46,7 +46,7 @@ export const ceb: Translation = {
   },
   audit: {
     title: 'Talaan sa kalihokan sa pasilidad',
-    privacy: 'Kinsa ang nag-usab, unsa, ug kanus-a. Mga kausaban lang sa rekord — walay clinical notes, resulta o contact details dinhi.',
+    privacy: 'Kinsa ang nag-usab, unsa, ug kanus-a. Walay clinical notes, bili sa lab result, o contact details dinhi.',
     filterLabel: 'Sala sumala sa matang sa rekord',
     empty: 'Wala pay natala nga kalihokan.',
     end: 'Kana na ang tibuok talaan.',

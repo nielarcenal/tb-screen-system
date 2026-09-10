@@ -1,5 +1,16 @@
 # Architecture decision register
 
+## 2026-09-10 — Migration 0038 and audit retention
+
+| # | Decision |
+| --- | --- |
+| D-0038-authority | Migration 0038 is approved and applied. The appointment row trigger is the single audit writer; the five restated RPC bodies remove only their six appointment audit calls, as proved by the mutation-tested transcription verifier. |
+| D-0038-viewer | The facility viewer remains SECURITY INVOKER and inherits `audit_logs` RLS. Its cursor is a complete `(occurred_at, audit_id)` pair or wholly null; incomplete cursors fail closed. Portal navigation admits `tb_dots` only. |
+| D-0038-retention | Do not automatically purge `audit_logs` for the capstone/release candidate. This is the conservative non-destructive choice, not a claim about statutory retention. Before real production use, the health office must approve a retention/archive policy and its operational capacity plan. |
+| D-0038-sms | `sent` means provider acceptance with handset delivery unknown. Stored states and retry behavior remain unchanged; callbacks/retry expansion stay deferred. |
+
+---
+
 ## 2026-09-09 — Migration 0030, BASE-05, and migration 0031 inputs
 
 | # | Decision |

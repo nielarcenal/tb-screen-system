@@ -1,5 +1,13 @@
 # Issue register
 
+2026-09-10 Day 6 update: migration 0038 is approved and applied after a strengthened
+**36/36** linked rollback matrix. C41-02 is closed by the single appointment trigger;
+the audit viewer is RLS-scoped and TB-DOTS-only in both server behavior and navigation.
+Review also made incomplete cursors fail closed and prevented stale filter responses.
+Full regression is **450/450** (portal 181, mobile 218, edge 51); build and all typechecks
+pass. No Critical or High finding is open for this unit. D6-01 is accepted for the
+release candidate with no automatic purge and remains a real-production governance gate.
+
 2026-09-10 Day 5 update: migration 0037 is approved and live after its final **9/9**
 rollback matrix. Attention and program counts are active-TB-DOTS-only, facility-scoped,
 count-only, and loaded in one RPC. Destination filters share the SQL boundary rules;
@@ -170,7 +178,7 @@ rediscovered.
 | ID | Severity | Issue | Status |
 | --- | --- | --- | --- |
 | C41-01 | MEDIUM | `referrals` records `status` as one mutable column with a single `updated_at`, so `received`, `closed` and `presented = false` have no recorded moment. `audit_logs` could not cover them: its `entity_table` CHECK excluded referrals | **Resolved and applied** forward-only in migration 0035. Historical transitions stay honestly undated; migration 0036 marks them `is_undated` |
-| C41-02 | MEDIUM | Appointment `attended`/`missed`/`cancelled` set by the ordinary PostgREST PATCH write no audit row. Only the 0031 RPC paths call `write_audit()`, and that is not the path either client uses | **Closed by migration 0038 (not applied, awaiting review).** The trigger is the single writer; the six RPC calls were removed under a mutation-tested transcription verifier. Was: Deliberately not fixed in 0035: the same trigger would double-log every RPC-driven change. Needs either five applied functions replaced to drop their explicit calls, or a transaction-local "already audited" flag. Its own unit and review |
+| C41-02 | MEDIUM | Appointment `attended`/`missed`/`cancelled` set by the ordinary PostgREST PATCH wrote no audit row. Only the 0031 RPC paths called `write_audit()`, and that was not the path either client used | **Resolved and applied in migration 0038.** The trigger is the single writer; the six RPC calls were removed under a mutation-tested transcription verifier and the strengthened live matrix passed 36/36 |
 | C34-01 | MEDIUM | `appointments.status = 'missed'` is read by four consumers and written by nothing but a human, so an appointment whose day passes untouched is counted as neither attended nor missed and reaches no attention surface | **Resolved and applied** in migration 0034 as a derived `overdue`. Whether a future sweep should assert `missed` is deferred with its prerequisites in Task 3.4 §4.3 |
 | C34-02 | HIGH | A sweep marking past-due appointments `missed` would bump `updated_at` on every row it touched, and `sms-reminders` selects follow-up candidates as `status = 'missed' AND updated_at >= now() - 14 days`. Every swept row becomes an outbound SMS candidate at once, on a live provider | **Avoided; no sweep exists.** Migration 0034 is read-only. Reopen this constraint only if automatic mutation is proposed, and decouple SMS first |
 | C35-01 | HIGH | `enforce_audit_changes_whitelist()` builds its allowed-key list with a CASE that has no ELSE, so an unlisted `entity_table` leaves `allowed` NULL, every membership test evaluates to NULL, and the guard raises nothing — it accepts every key. Masked only by the `entity_table` CHECK, which is evaluated after the BEFORE trigger | **Resolved and applied** in migration 0035. Same shape as R3-03; the matrix proves the guard itself raises `22023` |
@@ -180,11 +188,11 @@ rediscovered.
 
 ## Day 6 audit surface (2026-09-10)
 
-From `CLAUDE_DAY6_SECURITY_REVIEW.md`. Migration 0038 is not applied.
+From `CLAUDE_DAY6_SECURITY_REVIEW.md`, with Codex's final gate applied. Migration 0038 is live.
 
 | ID | Severity | Issue | Status |
 | --- | --- | --- | --- |
-| D6-01 | MEDIUM | `audit_logs` now receives a row for every appointment write, and nothing prunes it. `rpc_requests` is purged at 7 days by a cron; an audit trail must not be purged on that reflex, but it needs a stated retention decision rather than growing silently | **Open.** Retention of a health-record audit trail is a health-office decision, not an engineering default |
+| D6-01 | MEDIUM | `audit_logs` now receives a row for every appointment write, and nothing prunes it. `rpc_requests` is purged at 7 days by a cron; an audit trail must not be purged on that reflex, but it needs a stated retention decision rather than growing silently | **Accepted for the capstone/release candidate:** no automatic purge. Before real production use, the health office must approve retention/archive and capacity policy; this is a governance gate, not an engineering default |
 | D6-02 | LOW | `facility_audit_events()` returns `patient_id`, which the viewer does not render. It discloses nothing a TB-DOTS caller cannot already read through `patients` RLS, but the UI does not need it | **Open by choice.** Removing it forecloses linking an event to a patient record, the obvious next feature. Flagged so the decision is explicit |
 | D6-03 | LOW | `actor_name` is a LEFT JOIN through `users` RLS, so one event can render a name for one reader and a role for another | Accepted; the viewer falls back to role then to a system label, and that is tested |
 | D6-04 | INFO | A direct-session support write records a null actor and is indistinguishable from an Edge Function write | Accepted. Distinguishing them needs a provenance column and its own migration |

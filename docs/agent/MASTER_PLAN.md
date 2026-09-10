@@ -1,21 +1,24 @@
 # Sprint master plan
 
-2026-09-10 Day 6 unit prepared: **audit coverage, audit viewer, SMS wording, security
-review. Migration `0038_appointment_audit_trail.sql` is NOT APPLIED and NOT APPROVED —
-it awaits Codex review.** Closes C41-02: appointment writes from the ordinary client PATCH
-produced no audit row, only the 0031 RPC paths did. 0038 makes an AFTER INSERT OR UPDATE
+2026-09-10 latest critical-path checkpoint: **Day 6 audit/security is complete and
+approved. Migration `0038_appointment_audit_trail.sql` is applied.** It closes C41-02:
+appointment writes from the ordinary client PATCH produced no audit row, only the 0031
+RPC paths did. 0038 makes an AFTER INSERT OR UPDATE
 trigger the single writer and **removes the six explicit RPC calls**, restating 471 lines
 of applied plpgsql under `scripts/verify-0038-bodies.mjs`, whose self-tests catch a dropped
 row lock, a loosened denial and a left-in audit call. The skip-flag alternative was
 rejected: it needs the same restatement and fails silently when a future RPC forgets it.
-Live rollback preflight **35/35**, rolled back and re-queried clean; `verify-0035-whitelist`
-still 7 OK. Adds `facility_audit_events()` — keyset-paginated, **SECURITY INVOKER**, so the
+The strengthened live rollback preflight passed **36/36** and rolled back cleanly;
+`verify-0035-whitelist` still reports 7 OK. Adds `facility_audit_events()` —
+keyset-paginated, **SECURITY INVOKER**, so the
 facility boundary stays `audit_logs`' own RLS — and a TB-DOTS-only portal viewer that
-renders sentences, never raw JSON. SMS `sent` now reads "accepted by provider (delivery
-unknown)" in three languages, with no stored value, selection or retry change (Task 6.5
-stays deferred). Regression **448/448**: portal 179, mobile 218, edge 51; build and all
-typechecks pass. Findings D6-01..04 in [CLAUDE_DAY6_SECURITY_REVIEW.md](CLAUDE_DAY6_SECURITY_REVIEW.md);
-none HIGH.
+renders sentences, never raw JSON. Review added an explicit BHW navigation gate, complete
+cursor-pair handling, and stale-response suppression. SMS `sent` reads "accepted by
+provider (delivery unknown)" in three languages, with no stored value, selection or retry change (Task 6.5
+stays deferred). Regression **450/450**: portal 181, mobile 218, edge 51; build and all
+typechecks pass. D6-01 is accepted for the release candidate with no automatic purge;
+health-office retention/archive approval remains required before real production use.
+Next: Day 7 whole-system security, release, and defense-flow verification.
 
 
 2026-09-10 latest critical-path checkpoint: **Day 5 attention dashboard and
