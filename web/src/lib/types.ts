@@ -160,6 +160,24 @@ export interface DashboardCounts {
   scheduled_today: number;
 }
 
+/** One count-only row from facility_dashboard_overview() (0037). */
+export interface FacilityDashboardOverview extends DashboardCounts {
+  attention_overdue_followups: number;
+  attention_missed_followups: number;
+  attention_due_soon: number;
+  attention_referrals_awaiting: number;
+  attention_stale_cases: number;
+  attention_appointments_today: number;
+  metric_screened: number;
+  metric_referred: number;
+  metric_referral_received: number;
+  metric_cases_created: number;
+  metric_active_treatment_cases: number;
+  metric_followups_due: number;
+  metric_missed_followups: number;
+  metric_closed_cases: number;
+}
+
 /** One row of the bhw_activity() RPC (0006, extended 0014) — accounts + counts,
  *  no patients. Name parts / purok / email are the BHW's own account fields. */
 export interface BhwActivityRow {

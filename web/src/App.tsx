@@ -28,9 +28,9 @@ import { supabase } from './lib/supabase';
 import { manilaToday, PortalUser, reportTabVisible, UserRole } from './lib/types';
 import AppShell, { ShellNavItem } from './components/AppShell';
 import LoginForm, { PortalKind } from './components/LoginForm';
-import Dashboard from './components/Dashboard';
+import Dashboard, { type DashboardTarget } from './components/Dashboard';
 import MidwifeDashboard from './components/MidwifeDashboard';
-import ReferralInbox from './components/ReferralInbox';
+import ReferralInbox, { type InboxFilter } from './components/ReferralInbox';
 import ReferralDetail from './components/ReferralDetail';
 import BarangayReport from './components/BarangayReport';
 import HotspotView from './components/HotspotView';
@@ -39,6 +39,7 @@ import BhwManagement from './components/BhwManagement';
 import ChangePasswordGate from './components/ChangePasswordGate';
 import AccountStateGate, { AccountState } from './components/AccountStateGate';
 import CaseRegistry from './components/CaseRegistry';
+import type { CaseFilter } from './lib/caseRegistry';
 
 type Page = 'dashboard' | 'inbox' | 'cases' | 'register' | 'hotspot' | 'report' | 'bhw';
 
@@ -63,6 +64,8 @@ export default function App({ portal }: { portal: PortalKind }) {
   const [page, setPage] = useState<Page>('dashboard');
   const [openReferralId, setOpenReferralId] = useState<string | null>(null);
   const [openCaseId, setOpenCaseId] = useState<string | null>(null);
+  const [inboxFilter, setInboxFilter] = useState<InboxFilter>('all');
+  const [caseFilter, setCaseFilter] = useState<CaseFilter>('all');
   // Bumped when the password gate finishes, to re-read the users row (and with
   // it the now-cleared must_change_password) without disturbing the session.
   const [meVersion, setMeVersion] = useState(0);
@@ -224,6 +227,16 @@ export default function App({ portal }: { portal: PortalKind }) {
     setPage(key);
     setOpenReferralId(null);
     setOpenCaseId(null);
+    setInboxFilter('all');
+    setCaseFilter('all');
+  };
+
+  const openDashboardTarget = (target: DashboardTarget) => {
+    setPage(target.page);
+    setOpenReferralId(null);
+    setOpenCaseId(null);
+    if (target.page === 'cases') setCaseFilter(target.filter);
+    else setInboxFilter(target.filter);
   };
 
   const navItem = (key: Page, icon: string, label: string): ShellNavItem => ({
@@ -284,7 +297,7 @@ export default function App({ portal }: { portal: PortalKind }) {
           <MidwifeDashboard />
         )
       ) : activePage === 'dashboard' ? (
-        <Dashboard />
+        <Dashboard onNavigate={openDashboardTarget} />
       ) : activePage === 'hotspot' ? (
         <HotspotView />
       ) : activePage === 'report' ? (
@@ -294,16 +307,21 @@ export default function App({ portal }: { portal: PortalKind }) {
           me={me}
           onOpenReferral={(id) => {
             setPage('inbox');
+            setInboxFilter('all');
             setOpenReferralId(id);
           }}
         />
       ) : activePage === 'cases' ? (
-        <CaseRegistry initialCaseId={openCaseId} />
+        <CaseRegistry initialCaseId={openCaseId} initialFilter={caseFilter} />
       ) : (
         /* Inbox: master-detail split (design 1b). */
         <div className="split">
           <div className="master">
-            <ReferralInbox onOpen={setOpenReferralId} selectedId={openReferralId} />
+            <ReferralInbox
+              onOpen={setOpenReferralId}
+              selectedId={openReferralId}
+              initialFilter={inboxFilter}
+            />
           </div>
           <div className="detailpanel">
             {openReferralId ? (
@@ -312,6 +330,7 @@ export default function App({ portal }: { portal: PortalKind }) {
                 onBack={() => setOpenReferralId(null)}
                 onOpenCase={(caseId) => {
                   setOpenCaseId(caseId);
+                  setCaseFilter('all');
                   setPage('cases');
                 }}
               />

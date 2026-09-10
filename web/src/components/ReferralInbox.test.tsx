@@ -190,4 +190,18 @@ describe('ReferralInbox repeat-referral marker', () => {
     await waitFor(() => expect(rows()).toHaveLength(1));
     expect(markerOf(rows()[0])?.title).toBe(hintFor(2));
   });
+
+  it('opens directly on the dashboard awaiting-action queue', async () => {
+    mock.db.rows = [
+      makeRow({ id: 'submitted', patient: 'pat-1', at: '2026-09-10T01:00:00Z' }),
+      makeRow({ id: 'received', patient: 'pat-2', at: '2026-09-09T01:00:00Z', status: 'received' }),
+      makeRow({ id: 'tested', patient: 'pat-3', at: '2026-09-08T01:00:00Z', status: 'tested' }),
+    ];
+    const { container } = render(
+      <ReferralInbox onOpen={() => {}} selectedId={null} initialFilter="awaiting" />,
+    );
+    await waitFor(() => expect(container.querySelectorAll('.inbox-row:not(.skel)')).toHaveLength(2));
+    expect((screen.getByLabelText(en.inbox.statusFilter) as HTMLSelectElement).value).toBe('awaiting');
+    expect(screen.queryByText('Patient pat-3')).toBeNull();
+  });
 });

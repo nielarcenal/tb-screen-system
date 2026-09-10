@@ -28,7 +28,10 @@ import {
 import CaseVisitWorkflow from './CaseVisitWorkflow';
 import PatientTimeline from './PatientTimeline';
 
-const FILTERS: CaseFilter[] = ['all', 'active', 'closed', 'followup_due', 'missed'];
+const FILTERS: CaseFilter[] = [
+  'all', 'active', 'closed', 'followup_due', 'overdue', 'due_soon',
+  'appointments_today', 'stale', 'missed',
+];
 const OUTCOMES: TreatmentOutcome[] = [
   'cured',
   'treatment_completed',
@@ -60,6 +63,10 @@ const FILTER_KEY: Record<CaseFilter, string> = {
   active: 'cases.filterValue.active',
   closed: 'cases.filterValue.closed',
   followup_due: 'cases.filterValue.followup_due',
+  overdue: 'cases.filterValue.overdue',
+  due_soon: 'cases.filterValue.due_soon',
+  appointments_today: 'cases.filterValue.appointments_today',
+  stale: 'cases.filterValue.stale',
   missed: 'cases.filterValue.missed',
 };
 
@@ -223,11 +230,17 @@ function CaseDetail({ item, onChanged }: DetailProps) {
   );
 }
 
-export default function CaseRegistry({ initialCaseId = null }: { initialCaseId?: string | null }) {
+export default function CaseRegistry({
+  initialCaseId = null,
+  initialFilter = 'all',
+}: {
+  initialCaseId?: string | null;
+  initialFilter?: CaseFilter;
+}) {
   const { t } = useTranslation();
   const [items, setItems] = useState<CaseRegistryItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(initialCaseId);
-  const [filter, setFilter] = useState<CaseFilter>('all');
+  const [filter, setFilter] = useState<CaseFilter>(initialFilter);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -286,6 +299,7 @@ export default function CaseRegistry({ initialCaseId = null }: { initialCaseId?:
   useEffect(() => {
     if (initialCaseId) setSelectedId(initialCaseId);
   }, [initialCaseId]);
+  useEffect(() => { setFilter(initialFilter); }, [initialFilter]);
 
   const visible = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -319,7 +333,7 @@ export default function CaseRegistry({ initialCaseId = null }: { initialCaseId?:
           : visible.length === 0 ? <div className="case-list-state">{t('cases.empty')}</div>
           : <div className="case-list">
               {visible.map((item) => (
-                <button key={item.tbCase.case_id} className={item.tbCase.case_id === selectedId ? 'selected' : ''} onClick={() => setSelectedId(item.tbCase.case_id)}>
+                <button key={item.tbCase.case_id} className={item.tbCase.case_id === selected?.tbCase.case_id ? 'selected' : ''} onClick={() => setSelectedId(item.tbCase.case_id)}>
                   <div><strong>{item.patient?.full_name ?? item.patient?.display_code ?? t('cases.unknownPatient')}</strong><span>{item.tbCase.case_number}</span></div>
                   <span className={`case-status ${item.tbCase.case_status}`}>{t(STATUS_KEY[item.tbCase.case_status])}</span>
                   <dl>

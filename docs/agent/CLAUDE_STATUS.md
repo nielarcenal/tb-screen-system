@@ -1,5 +1,15 @@
 # Claude status log
 
+> **Codex handback — 2026-09-10, next unit Day 6 audit/security:** Day 5 is
+> approved. Migration 0037 passed its final 9/9 linked rollback matrix and is live.
+> The portal now uses one count-only, active-TB-DOTS/facility-scoped RPC for factual
+> attention queues, supported program totals, and today's activity. Each attention card
+> opens a predicate-matched case/referral filter. Overdue remains separate from missed,
+> a later scheduled/attended visit resolves the missed queue, and no risk score exists.
+> Full regression is 439/439 (portal 170, mobile 218, edge 51); build and all typechecks
+> pass. Proceed to the audit viewer/access, C41-02 appointment coverage, SMS/security
+> review, and High closure. Keep Priority B frozen.
+
 > **Codex handback — 2026-09-10, next unit attention dashboard:** Day 4 is
 > approved. Migration 0035 passed the whitelist verifier and 20/20 live rollback checks;
 > migration 0036 passed 16/16 source-isolation/privacy checks. Both are applied. The

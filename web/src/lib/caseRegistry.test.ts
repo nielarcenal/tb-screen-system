@@ -87,17 +87,27 @@ describe('buildCaseRegistry', () => {
     expect(items[0].latestFollowup?.followup_id).toBe('live');
   });
 
-  it('derives next appointment and factual missed attention without scoring', () => {
+  it('keeps an unresolved staff-recorded miss as factual attention', () => {
     const items = buildCaseRegistry(
       [tbCase()],
       [patient],
       [],
+      [appointment('missed', '2026-09-08', 'missed')],
+      '2026-09-10',
+    );
+    expect(items[0].attention).toBe('missed');
+    expect(caseMatchesFilter(items[0], 'missed', '2026-09-10')).toBe(true);
+  });
+
+  it('keeps a resolved miss in history but removes it from the missed queue', () => {
+    const [item] = buildCaseRegistry(
+      [tbCase()], [patient], [],
       [appointment('missed', '2026-09-08', 'missed'), appointment('next', '2026-09-12', 'scheduled')],
       '2026-09-10',
     );
-    expect(items[0].nextAppointment?.appointment_id).toBe('next');
-    expect(items[0].attention).toBe('missed');
-    expect(caseMatchesFilter(items[0], 'missed', '2026-09-10')).toBe(true);
+    expect(item.nextAppointment?.appointment_id).toBe('next');
+    expect(item.attention).toBeNull();
+    expect(caseMatchesFilter(item, 'missed', '2026-09-10')).toBe(false);
   });
 
   it('treats a scheduled visit on or before today as due', () => {
@@ -123,5 +133,45 @@ describe('buildCaseRegistry', () => {
     expect(caseMatchesFilter(active, 'active', '2026-09-10')).toBe(true);
     expect(caseMatchesFilter(closed, 'active', '2026-09-10')).toBe(false);
     expect(caseMatchesFilter(closed, 'closed', '2026-09-10')).toBe(true);
+  });
+
+  it('matches the dashboard date windows at yesterday, today, +7, and +8', () => {
+    const [item] = buildCaseRegistry(
+      [tbCase()], [patient], [],
+      [
+        appointment('yesterday', '2026-09-09', 'scheduled'),
+        appointment('today', '2026-09-10', 'scheduled'),
+        appointment('plus-seven', '2026-09-17', 'scheduled'),
+        appointment('plus-eight', '2026-09-18', 'scheduled'),
+      ],
+      '2026-09-10',
+    );
+    expect(caseMatchesFilter(item, 'overdue', '2026-09-10')).toBe(true);
+    expect(caseMatchesFilter(item, 'appointments_today', '2026-09-10')).toBe(true);
+    expect(caseMatchesFilter(item, 'due_soon', '2026-09-10')).toBe(true);
+    expect(caseMatchesFilter(item, 'followup_due', '2026-09-10')).toBe(true);
+
+    const [outside] = buildCaseRegistry(
+      [tbCase()], [patient], [], [appointment('plus-eight', '2026-09-18', 'scheduled')],
+      '2026-09-10',
+    );
+    expect(caseMatchesFilter(outside, 'due_soon', '2026-09-10')).toBe(false);
+  });
+
+  it('flags only 31-day-old active cases without a live visit in 30 days', () => {
+    const [stale] = buildCaseRegistry(
+      [tbCase({ registration_date: '2026-08-10' })], [patient],
+      [followup('old', '2026-08-10')], [], '2026-09-10',
+    );
+    const [boundary] = buildCaseRegistry(
+      [tbCase({ registration_date: '2026-08-11' })], [patient], [], [], '2026-09-10',
+    );
+    const [recent] = buildCaseRegistry(
+      [tbCase({ registration_date: '2026-08-01' })], [patient],
+      [followup('recent', '2026-08-11')], [], '2026-09-10',
+    );
+    expect(caseMatchesFilter(stale, 'stale', '2026-09-10')).toBe(true);
+    expect(caseMatchesFilter(boundary, 'stale', '2026-09-10')).toBe(false);
+    expect(caseMatchesFilter(recent, 'stale', '2026-09-10')).toBe(false);
   });
 });

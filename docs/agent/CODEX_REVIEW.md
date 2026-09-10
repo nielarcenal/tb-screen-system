@@ -1,3 +1,28 @@
+# Codex review — Day 5 attention dashboard and migration 0037
+
+2026-09-10. Result: **APPROVED AND APPLIED**.
+
+Migration 0037 exposes one count-only `facility_dashboard_overview()` row to active
+TB-DOTS staff and no row to other authenticated personas. Every source predicate derives
+the caller's facility server-side. Its final linked rollback matrix passed **9/9**, covering
+two populated facilities, an empty facility, Manila timestamp boundaries, +7/+8 date
+edges, 30/31-day stale edges, resolved versus unresolved missed appointments, closed-case
+exclusion, inactive/non-clinical denial, exact totals, and the function ACL/posture.
+
+The portal makes one RPC rather than loading rows to count them. Six attention cards open
+matching case/referral filters; eight supported program totals and the six existing today
+counts share the response. Attention is factual: overdue is an open past appointment,
+missed is a staff assertion with no later scheduled/attended visit, and stale uses the
+documented age/live-visit window. No patient row, clinical text, ranking, inferred
+diagnosis, or risk score reaches the dashboard. Existing appointment, case, and follow-up
+indexes cover the filters; 0037 adds `(facility_id, status)` for the referral queue.
+
+Full regression is **439/439** (portal 170, mobile 218, edge 51); production build and all
+TypeScript checks pass. The remaining Vite large-chunk message is the pre-existing advisory.
+Next: Day 6 audit viewer/access, appointment audit coverage, SMS and security review.
+
+---
+
 # Codex review — Day 4 timeline and migrations 0035/0036
 
 2026-09-10. Result: **APPROVED AND APPLIED**.

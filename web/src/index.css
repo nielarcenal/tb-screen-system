@@ -873,7 +873,55 @@ button.amber:hover { background: var(--amber-container); }
 .dcard-foot p { margin: 0; font-size: 11.5px; color: var(--muted); line-height: 1.5; }
 
 .dgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
-.dtile { border: 1px solid #efeadf; border-radius: 12px; padding: 15px 16px; background: #fdfcfa; }
+.dashboard-stack { display: flex; flex-direction: column; gap: 16px; }
+.dashboard-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.dashboard-toolbar .refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--paper);
+  color: var(--ink-mid);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.dashboard-toolbar .refresh .msym { font-size: 17px; }
+.dtile {
+  position: relative;
+  border: 1px solid #efeadf;
+  border-radius: 12px;
+  padding: 15px 16px;
+  background: #fdfcfa;
+}
+.dtile.dashboard-action {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.dtile.dashboard-action:hover,
+.dtile.dashboard-action:focus-visible {
+  border-color: #9bc7c4;
+  background: #f7fbfa;
+  box-shadow: 0 2px 8px rgba(20, 48, 51, 0.08);
+}
+.dtile.dashboard-action .open {
+  position: absolute;
+  top: 17px;
+  right: 16px;
+  color: var(--muted);
+  font-size: 18px;
+}
 .dtile .chip {
   width: 34px;
   height: 34px;
@@ -882,8 +930,15 @@ button.amber:hover { background: var(--amber-container); }
   align-items: center;
   justify-content: center;
 }
+.dtile .chip.teal { background: #e6f2f2; color: #028090; }
+.dtile .chip.amber { background: #f7ecd8; color: #8a5e00; }
+.dtile .chip.red { background: #fbe7e5; color: #b0473b; }
+.dtile .chip.green { background: #dff0ea; color: #17876e; }
+.dtile .chip.slate { background: #eef2f1; color: #46514e; }
 .dtile .chip .msym { font-size: 20px; }
 .dtile .val {
+  display: block;
+  color: var(--ink);
   font-size: 30px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -891,8 +946,8 @@ button.amber:hover { background: var(--amber-container); }
   margin-top: 12px;
   line-height: 1;
 }
-.dtile .lbl { font-size: 12.5px; font-weight: 600; color: #3f4b48; margin-top: 7px; }
-.dtile .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.dtile .lbl { display: block; font-size: 12.5px; font-weight: 600; color: #3f4b48; margin-top: 7px; }
+.dtile .sub { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; padding-right: 18px; }
 
 /* loading skeleton tiles */
 .dtile.skel { background: #fbfaf7; border-color: #f0ece4; }

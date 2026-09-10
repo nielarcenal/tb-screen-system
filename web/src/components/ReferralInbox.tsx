@@ -26,14 +26,17 @@ const STATUSES: ReferralStatus[] = ['submitted', 'received', 'tested', 'closed']
 interface Props {
   onOpen: (referralId: string) => void;
   selectedId: string | null;
+  initialFilter?: InboxFilter;
 }
 
-export default function ReferralInbox({ onOpen, selectedId }: Props) {
+export type InboxFilter = 'all' | 'awaiting' | ReferralStatus;
+
+export default function ReferralInbox({ onOpen, selectedId, initialFilter = 'all' }: Props) {
   const { t } = useTranslation();
   const [rows, setRows] = useState<ReferralJoined[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<'all' | ReferralStatus>('all');
+  const [statusFilter, setStatusFilter] = useState<InboxFilter>(initialFilter);
   const [search, setSearch] = useState('');
 
   const load = useCallback(async () => {
@@ -54,10 +57,12 @@ export default function ReferralInbox({ onOpen, selectedId }: Props) {
   useEffect(() => {
     void load();
   }, [load]);
+  useEffect(() => { setStatusFilter(initialFilter); }, [initialFilter]);
 
   const q = search.trim().toLowerCase();
   const visible = rows.filter((r) => {
-    if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+    if (statusFilter === 'awaiting' && !['submitted', 'received'].includes(r.status)) return false;
+    if (statusFilter !== 'all' && statusFilter !== 'awaiting' && r.status !== statusFilter) return false;
     if (!q) return true;
     return (
       // lab_sample_id is this facility's own id (0024) and is null until staff
@@ -138,9 +143,10 @@ export default function ReferralInbox({ onOpen, selectedId }: Props) {
             <select
               value={statusFilter}
               aria-label={t('inbox.statusFilter')}
-              onChange={(e) => setStatusFilter(e.target.value as 'all' | ReferralStatus)}
+              onChange={(e) => setStatusFilter(e.target.value as InboxFilter)}
             >
               <option value="all">{t('common.all')}</option>
+              <option value="awaiting">{t('inbox.awaitingAction')}</option>
               {STATUSES.map((s) => (
                 <option key={s} value={s}>
                   {t(`status.${s}`)}

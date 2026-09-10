@@ -1,4 +1,4 @@
-# Session handoff — 2026-09-10 (updated: patient care timeline)
+# Session handoff — 2026-09-10 (updated: attention dashboard and analytics)
 
 ## 2026-09-10 continuation checkpoint
 
@@ -38,6 +38,16 @@ and voided follow-ups, distinguishes overdue from missed, and shows historical s
 without fabricating dates. Full regression is **430/430** (web 161, mobile 218, edge 51),
 with production build and all typechecks passing. Next: attention dashboard and metrics.
 
+Day 5 is complete. Migration 0037's final live rollback matrix passed **9/9** and the
+migration is applied. `facility_dashboard_overview()` returns only aggregate counts to
+active staff at the owning TB-DOTS facility: six factual attention categories, eight
+program totals, and today's activity in one request. Attention cards open predicate-matched
+case/referral filters. Overdue remains derived, missed remains staff-recorded, a later
+scheduled/attended visit resolves the active missed queue, and stale is an explicit 31-day
+case/30-day live-visit rule. No risk score or patient data is returned. Full regression is
+**439/439** (web 170, mobile 218, edge 51), with production build and all typechecks
+passing. Next: Day 6 audit viewer/access, appointment audit coverage, SMS/security review.
+
 For whoever picks this up next: a new Claude session, Codex, or Niel.
 Branch `feature/capstone-upgrade`, pushed to origin. Baseline was `4659d65` on `main`.
 
@@ -61,10 +71,11 @@ Read this first, then [MASTER_PLAN.md](MASTER_PLAN.md) for task ownership and [I
 | **Overdue detection** (Task 3.4) | **Approved and applied** as migration 0034; live rollback matrix **26/26 PASS** | Consume in attention dashboard/timeline |
 | **Referral audit trail** (Task 6.2 foundation) | **Approved and applied** as migration 0035; verifier clean, live matrix **20/20 PASS** | Appointment PATCH auditing remains C41-02 |
 | **Patient timeline** (Tasks 4.1–4.4) | **Implemented and approved** as migration 0036 + portal UI; live matrix **16/16** | Ship with portal checkpoint |
+| **Attention dashboard / metrics** (Tasks 5.1–5.5) | **Implemented and approved** as migration 0037 + portal UI; live matrix **9/9** | Ship with portal checkpoint |
 | **Legacy appointment compatibility** | **Fixed and applied** (migration 0033); preflight **13/13**, authenticated harness **9/9** | Nothing |
 | **Client contract change** (`cancelled`, ownership columns, SMS destination) | **Implemented and focused checks passing** | Ship with the next web/mobile/function deployment |
 
-Server migrations 0028 through 0036 are applied.
+Server migrations 0028 through 0037 are applied.
 
 Commits on the branch, oldest first:
 
@@ -81,7 +92,7 @@ acb3b17  Add a session handoff
 d430657  Make walk-in registration atomic and retry-safe
 ```
 
-The feature branch contains migrations 0028 through 0036, their verification artifacts,
+The feature branch contains migrations 0028 through 0037, their verification artifacts,
 the atomic walk-in path, the appointment/case/follow-up clients, and the patient timeline.
 
 The only untracked file is `docs/TB-Screen_Barangay_Report_Design_Canvas_Brief.md`, which predates this work and was deliberately left alone.
@@ -90,10 +101,9 @@ The only untracked file is `docs/TB-Screen_Barangay_Report_Design_Canvas_Brief.m
 
 ## 2. Gate result and next unit
 
-Implement the attention-required dashboard and operational metrics next, consuming
-`overdue_followups()` rather than silently relabelling overdue appointments as missed.
-Keep Priority B deferred; the remaining critical path is dashboard, audit/security, and
-the release day in that order.
+Implement Day 6 next: the audit viewer and access checks, close C41-02 appointment PATCH
+coverage without double-logging RPC paths, review the SMS boundary, and run the security
+pass. Keep Priority B deferred; Day 7 regression/device/demo remains protected.
 
 Migration 0031 is reviewed and applied. Its final live rollback preflight passed
 **140/140**. The post-apply check confirms `tb_cases`, `treatment_followups`, `audit_logs`,

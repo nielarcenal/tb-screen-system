@@ -1,6 +1,6 @@
 # TB-Screen System — 7-Day Capstone Upgrade Plan
 
-> **Gate status — 2026-09-10:** Migrations 0028 through 0036 are approved and applied, and BASE-01 through BASE-06 are closed. Appointment ownership, case registry, atomic treatment visits/corrections, overdue detection, forward referral audit, and the source-isolated patient timeline are implemented. Migrations 0035/0036 independently passed 20/20 and 16/16 live rollback checks. Full regression is 430/430 (portal 161, mobile 218, edge 51), with production build and all TypeScript checks passing. The seven-day Priority A finish remains achievable only with Priority B frozen and the remaining units completed in the recovery sequence below. See `HANDOFF.md` and `CODEX_REVIEW.md`.
+> **Gate status — 2026-09-10:** Migrations 0028 through 0037 are approved and applied, and BASE-01 through BASE-06 are closed. Appointment ownership, case registry, atomic treatment visits/corrections, overdue detection, forward referral audit, the source-isolated patient timeline, and the facility attention/program dashboard are implemented. Migration 0037 passed its final 9/9 live rollback matrix. Full regression is 439/439 (portal 170, mobile 218, edge 51), with production build and all TypeScript checks passing. The seven-day Priority A finish remains achievable only with Priority B frozen and Day 6 security/audit plus Day 7 release verification completed in the recovery sequence below. See `HANDOFF.md` and `CODEX_REVIEW.md`.
 
 **Project:** TB-Screen System  
 **Repository:** `https://github.com/nielarcenal/tb-screen-system`  
@@ -1340,7 +1340,7 @@ and appointment compatibility/client foundations are already complete.
 - **Sep 11:** case creation, facility case list/filtering, case detail, focused tests — complete ahead of schedule.
 - **Sep 12:** treatment lifecycle actions, follow-up/visit recording, overdue/missed logic, tests — complete ahead of schedule.
 - **Sep 13:** longitudinal timeline contract, UI, tests, privacy review — complete ahead of schedule.
-- **Sep 14:** attention-required dashboard, metrics, query review, tests.
+- **Sep 14:** attention-required dashboard, metrics, query review, tests — complete ahead of schedule.
 - **Sep 15:** audit viewer/access checks, security and performance pass; resolve all Highs.
 - **Sep 16:** full regressions, device/offline smoke, demo data/rehearsal, release checkpoint.
 
@@ -1381,11 +1381,11 @@ the Sep 16 regression and demo gate.
 
 ## Day 5
 
-- [ ] attention-required rules
-- [ ] dashboard section
-- [ ] operational metrics
-- [ ] query-performance review
-- [ ] dashboard tests
+- [x] attention-required rules
+- [x] dashboard section
+- [x] operational metrics
+- [x] query-performance review
+- [x] dashboard tests
 
 ## Day 6
 

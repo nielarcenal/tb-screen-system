@@ -5,7 +5,16 @@ import type {
   TreatmentFollowupRow,
 } from './types';
 
-export type CaseFilter = 'all' | 'active' | 'closed' | 'followup_due' | 'missed';
+export type CaseFilter =
+  | 'all'
+  | 'active'
+  | 'closed'
+  | 'followup_due'
+  | 'overdue'
+  | 'due_soon'
+  | 'appointments_today'
+  | 'stale'
+  | 'missed';
 export type CaseAttention = 'interrupted' | 'missed' | 'due' | null;
 
 export interface CaseRegistryItem {
@@ -20,6 +29,31 @@ export interface CaseRegistryItem {
 
 export function isActiveCase(tbCase: TbCaseRow): boolean {
   return ['registered', 'on_treatment', 'interrupted'].includes(tbCase.case_status);
+}
+
+function shiftIsoDate(value: string, days: number): string {
+  const date = new Date(`${value}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+/** A later scheduled or attended visit means staff have acted on the missed
+ * appointment, so the old assertion stays in history but leaves the queue. */
+export function hasUnresolvedMissedAppointment(item: CaseRegistryItem): boolean {
+  return item.appointments.some(
+    (missed) => missed.status === 'missed'
+      && !item.appointments.some(
+        (later) => later.scheduled_date > missed.scheduled_date
+          && (later.status === 'scheduled' || later.status === 'attended'),
+      ),
+  );
+}
+
+export function isStaleCase(item: CaseRegistryItem, today: string): boolean {
+  const cutoff = shiftIsoDate(today, -30);
+  return isActiveCase(item.tbCase)
+    && item.tbCase.registration_date < cutoff
+    && !item.followups.some((row) => !row.voided_at && row.visit_date >= cutoff);
 }
 
 /** Join already-RLS-scoped case rows with their children without inventing a
@@ -42,7 +76,13 @@ export function buildCaseRegistry(
       .filter((row) => row.tb_case_id === tbCase.case_id)
       .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date));
     const operationallyActive = isActiveCase(tbCase);
-    const missed = operationallyActive && caseAppointments.some((row) => row.status === 'missed');
+    const missed = operationallyActive && caseAppointments.some(
+      (row) => row.status === 'missed'
+        && !caseAppointments.some(
+          (later) => later.scheduled_date > row.scheduled_date
+            && (later.status === 'scheduled' || later.status === 'attended'),
+        ),
+    );
     const due = operationallyActive && caseAppointments.some(
       (row) => row.status === 'scheduled' && row.scheduled_date <= today,
     );
@@ -77,6 +117,25 @@ export function caseMatchesFilter(
       (row) => row.status === 'scheduled' && row.scheduled_date <= today,
     );
   }
-  return isActiveCase(item.tbCase)
-    && item.appointments.some((row) => row.status === 'missed');
+  if (filter === 'overdue') {
+    return isActiveCase(item.tbCase) && item.appointments.some(
+      (row) => row.status === 'scheduled' && row.scheduled_date < today,
+    );
+  }
+  if (filter === 'due_soon') {
+    const tomorrow = shiftIsoDate(today, 1);
+    const horizon = shiftIsoDate(today, 7);
+    return isActiveCase(item.tbCase) && item.appointments.some(
+      (row) => row.status === 'scheduled'
+        && row.scheduled_date >= tomorrow
+        && row.scheduled_date <= horizon,
+    );
+  }
+  if (filter === 'appointments_today') {
+    return isActiveCase(item.tbCase) && item.appointments.some(
+      (row) => row.status === 'scheduled' && row.scheduled_date === today,
+    );
+  }
+  if (filter === 'stale') return isStaleCase(item, today);
+  return isActiveCase(item.tbCase) && hasUnresolvedMissedAppointment(item);
 }

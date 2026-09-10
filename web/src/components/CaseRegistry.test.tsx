@@ -154,4 +154,23 @@ describe('CaseRegistry', () => {
     expect(screen.queryByText('TBC-MLB-2026-00001')).toBeNull();
     expect(screen.getAllByText('TBC-MLB-2026-00002')).toHaveLength(2);
   });
+
+  it('opens on a dashboard filter and highlights its visible detail', async () => {
+    mock.db.cases = [
+      tbCase() as unknown as Record<string, unknown>,
+      tbCase({ case_id: 'case-2', case_number: 'TBC-MLB-2026-00002' }) as unknown as Record<string, unknown>,
+    ];
+    mock.db.appointments = [{
+      ...appointment,
+      appointment_id: 'appt-overdue',
+      tb_case_id: 'case-2',
+      scheduled_date: '2020-01-01',
+    } as unknown as Record<string, unknown>];
+
+    const { container } = render(<CaseRegistry initialFilter="overdue" />);
+    expect(await screen.findAllByText('TBC-MLB-2026-00002')).toHaveLength(2);
+    expect(screen.queryByText('TBC-MLB-2026-00001')).toBeNull();
+    expect(container.querySelector('.case-list > button.selected')?.textContent)
+      .toContain('TBC-MLB-2026-00002');
+  });
 });

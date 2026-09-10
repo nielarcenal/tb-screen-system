@@ -1,5 +1,12 @@
 # Issue register
 
+2026-09-10 Day 5 update: migration 0037 is approved and live after its final **9/9**
+rollback matrix. Attention and program counts are active-TB-DOTS-only, facility-scoped,
+count-only, and loaded in one RPC. Destination filters share the SQL boundary rules;
+overdue remains distinct from missed and no risk score is present. Full regression is
+**439/439** (portal 170, mobile 218, edge 51); build and all typechecks pass. No new
+Critical or High finding was opened. C41-02 remains the first Day 6 audit item.
+
 2026-09-10 Day 4 update: migrations 0035 and 0036 are approved and applied after
 independent **20/20** and **16/16** live rollback matrices. The timeline review closed a
 privacy defect in the draft by removing BHW lifecycle dates/outcomes, enforcing
@@ -169,3 +176,4 @@ rediscovered.
 | C35-01 | HIGH | `enforce_audit_changes_whitelist()` builds its allowed-key list with a CASE that has no ELSE, so an unlisted `entity_table` leaves `allowed` NULL, every membership test evaluates to NULL, and the guard raises nothing — it accepts every key. Masked only by the `entity_table` CHECK, which is evaluated after the BEFORE trigger | **Resolved and applied** in migration 0035. Same shape as R3-03; the matrix proves the guard itself raises `22023` |
 | C35-02 | LOW | In the SQL test harness, `reset role` does not clear `request.jwt.claims`: `set_config(..., true)` is transaction-local and outlives the role change, so `auth.uid()` keeps returning the last persona. A block intended as an unauthenticated "direct session" silently tests an authenticated one | Fixed in the 0035 matrix via `pg_temp.as_direct_session()`. **Other matrices in `supabase/tests/` have not been audited for the same pattern** |
 | C35-03 | LOW | `audit_logs.occurred_at` defaults to `now()`, which is transaction-stable, so every audit row written in one transaction carries an identical timestamp. Nothing may sequence audit rows by that column alone | Noted. The 0035 matrix selects rows by content rather than position; Task 4.1 §3 already makes `event_id` the total-order fallback |
+| C50-01 | MEDIUM | The dashboard itself is one bounded count-only RPC, but its existing destination views load every RLS-visible referral or case plus case children before filtering in the browser. This is batched rather than N+1 and facility-scoped, but unpaginated growth can eventually increase latency and memory | **Open, not release-blocking at current volume.** Add cursor pagination or server-side filtered worklist RPCs before large-scale rollout; preserve stable ordering and exact attention predicates |

@@ -1,5 +1,18 @@
 # Sprint master plan
 
+2026-09-10 latest critical-path checkpoint: **Day 5 attention dashboard and
+analytics are complete and approved.** Migration **0037** is live after its final
+**9/9** rollback matrix passed. The portal loads today activity, six factual attention
+categories, and eight current program totals in one count-only, facility-scoped RPC.
+Every attention card opens the matching case or referral filter. Derived overdue is
+kept separate from staff-recorded missed; resolved misses leave the active queue, stale
+means an active case older than 30 days with no live visit in the last 30 days, and no
+risk score is computed. Query review found no client N+1 or bulk-row count path; existing
+case/appointment/follow-up indexes plus the new facility/status referral index cover the
+predicates. Full regression is **439/439**: portal **170/170**, mobile **218/218**, edge
+**51/51**; production build and all TypeScript checks pass. Next critical-path unit:
+Day 6 audit viewer, appointment audit coverage, SMS/security review, and High closure.
+
 2026-09-10 latest critical-path checkpoint: **Day 4 timeline is complete and
 approved.** Migration **0035** passed its whitelist mutation verifier and an independent
 **20/20** live rollback matrix before atomic application. Migration **0036** implements
