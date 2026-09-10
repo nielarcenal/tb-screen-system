@@ -1,5 +1,12 @@
 # Claude status log
 
+> **Codex handback — 2026-09-10, next unit treatment visits:** Tasks 2.2–2.5 are
+> approved. The portal now has explicit idempotent case enrolment, a facility-scoped
+> case registry/detail, factual lifecycle/follow-up filters, and RPC-only lifecycle
+> actions. Full regression is 416/416 (portal 147, mobile 218, edge 51); production
+> build and all TypeScript checks pass. Proceed with `record_visit()` plus the
+> retained-history correction/void workflow; keep Priority B frozen.
+
 > **Codex handback — 2026-09-10, next unit Tasks 2.2–2.5:** Migration 0033 is
 > approved and applied after a 13/13 live rollback matrix. A disposable
 > authenticated BHW then passed the old-client harness 9/9 with `GATE: CLOSED`

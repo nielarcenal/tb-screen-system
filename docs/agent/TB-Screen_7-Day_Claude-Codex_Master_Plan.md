@@ -1,6 +1,6 @@
 # TB-Screen System — 7-Day Capstone Upgrade Plan
 
-> **Gate status — 2026-09-10:** Migrations 0028 through 0033 are approved and applied, and BASE-01 through BASE-06 are closed. Migration 0032's atomic walk-in RPC passed 18/18 live checks. Migration 0033's legacy-upsert compatibility boundary passed 13/13 live checks, followed by a disposable authenticated BHW run at 9/9 and `GATE: CLOSED`. The web/mobile/SMS appointment ownership client contract is implemented; full regression is 402/402 with build and typechecks passing. The seven-day Priority A finish remains achievable only with Priority B frozen and the remaining units completed in the recovery sequence below. See `HANDOFF.md` and `CODEX_REVIEW.md`.
+> **Gate status — 2026-09-10:** Migrations 0028 through 0033 are approved and applied, and BASE-01 through BASE-06 are closed. Migration 0032's atomic walk-in RPC passed 18/18 live checks. Migration 0033's legacy-upsert compatibility boundary passed 13/13 live checks, followed by a disposable authenticated BHW run at 9/9 and `GATE: CLOSED`. The appointment ownership contract and Tasks 2.2–2.5 case registry are implemented; full regression is 416/416 (portal 147, mobile 218, edge 51), with production build and all TypeScript checks passing. The seven-day Priority A finish remains achievable only with Priority B frozen and the remaining units completed in the recovery sequence below. See `HANDOFF.md` and `CODEX_REVIEW.md`.
 
 **Project:** TB-Screen System  
 **Repository:** `https://github.com/nielarcenal/tb-screen-system`  
@@ -1337,7 +1337,7 @@ credible because the schema, lifecycle RPCs, RLS, audit storage, atomic walk-in 
 and appointment compatibility/client foundations are already complete.
 
 - **Sep 10:** foundations, compatibility gate, and appointment client contract — complete.
-- **Sep 11:** case creation, facility case list/filtering, case detail, focused tests.
+- **Sep 11:** case creation, facility case list/filtering, case detail, focused tests — complete ahead of schedule.
 - **Sep 12:** treatment lifecycle actions, follow-up/visit recording, missed logic, tests.
 - **Sep 13:** longitudinal timeline contract, UI, tests, privacy review.
 - **Sep 14:** attention-required dashboard, metrics, query review, tests.
@@ -1358,10 +1358,10 @@ the Sep 16 regression and demo gate.
 
 - [x] TB case migration
 - [x] RLS
-- [ ] case creation
-- [ ] case list/detail
-- [ ] tests
-- [ ] Codex review passed
+- [x] case creation
+- [x] case list/detail
+- [x] tests
+- [x] Codex review passed
 
 ## Day 3
 

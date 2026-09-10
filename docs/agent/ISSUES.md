@@ -1,5 +1,12 @@
 # Issue register
 
+2026-09-10 case-registry update: Tasks 2.2–2.5 are implemented and approved. Case
+creation is manual and idempotent, failed duplicate checks fail closed, registry reads
+remain facility-scoped by RLS, and case status/outcome mutations use the audited RPC.
+Full regression is **416/416** (portal 147, mobile 218, edge 51), with production
+build and all TypeScript checks passing. No new Critical or High finding was opened
+by this unit; treatment visit/correction UI is next.
+
 2026-09-10 latest update: the migration 0031 compatibility gate is **closed**.
 Migration **0033** passed its **13/13** live rollback matrix, was applied, and the
 old-client harness passed **9/9** as a disposable authenticated BHW. The client

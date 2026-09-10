@@ -1,5 +1,16 @@
 # Sprint master plan
 
+2026-09-10 latest critical-path checkpoint: **Tasks 2.2–2.5 are complete and
+approved.** The portal now has manual, idempotent case enrolment from an eligible
+referral, a facility-scoped searchable/filterable registry, case detail with factual
+visit and appointment context, and audited lifecycle actions through
+`set_tb_case_status()`. It does not infer a diagnosis from screening or laboratory
+results and does not write cases directly. Full regression is **416/416**: portal
+**147/147**, mobile **218/218**, and edge functions **51/51**, with production build
+and all TypeScript checks passing. The next critical-path unit is treatment visit
+recording through `record_visit()` and the correction/void workflow. Priority B
+remains frozen.
+
 **Three units now await Codex review**, all written off the critical path while Codex held
 `web/src`: Task 4.1 (design only), migration **0034** and migration **0035**. They are
 independent of each other and of the case registry. **Neither migration may be applied
@@ -51,7 +62,7 @@ contract marks those events undated rather than adding five nullable columns mid
 that decision and three others are the open questions in §9. Task 4.2 (timeline UI) is
 blocked on this review **and** on the case registry landing, since both touch `web/src`.
 
-2026-09-10 latest checkpoint: **the seven-day Priority A finish remains achievable,
+2026-09-10 earlier checkpoint (superseded by the case-registry entry above): **the seven-day Priority A finish remains achievable,
 but only as a strict scope-controlled sprint.** All six BASE findings are closed.
 Migration **0033** restored authenticated legacy appointment upsert compatibility
 without making identifiers or timestamps mutable; its live rollback preflight passed
@@ -59,12 +70,12 @@ without making identifiers or timestamps mutable; its live rollback preflight pa
 the old-client harness at **9/9, `GATE: CLOSED`**. No standing account password was
 changed or stored. The appointment client contract is now implemented across the portal,
 mobile SQLite/sync, all six locale files, and SMS destination selection. The remaining
-critical path is the user-facing case registry, treatment/follow-up UI, timeline,
+critical path was the user-facing case registry, treatment/follow-up UI, timeline,
 attention dashboard, audit viewer/security pass, then the final regression/demo day.
 Priority B work is deferred until that path is green.
 
-Current full regression: portal **133/133**, mobile **218/218**, and edge
-functions **51/51** (**402 total**); production build and all TypeScript checks
+Current full regression: portal **147/147**, mobile **218/218**, and edge
+functions **51/51** (**416 total**); production build and all TypeScript checks
 pass. The build retains its pre-existing large-chunk advisory.
 
 2026-09-10 earlier checkpoint (superseded by the latest entry above): **BASE-03 is

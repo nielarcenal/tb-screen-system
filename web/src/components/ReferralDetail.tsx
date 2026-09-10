@@ -20,12 +20,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
-import { AppointmentRow, ReferralJoined, SYMPTOM_KEYS, manilaToday } from '../lib/types';
+import { AppointmentRow, ReferralJoined, SYMPTOM_KEYS, TbCaseRow, manilaToday } from '../lib/types';
 import { hasAnyVital, vitalsRows } from '../lib/vitals';
 
 interface Props {
   referralId: string;
   onBack: () => void;
+  onOpenCase?: (caseId: string) => void;
 }
 
 /** Whole-day difference toIso − fromIso for local YYYY-MM-DD strings. */
@@ -35,10 +36,11 @@ function dayDiff(fromIso: string, toIso: string): number {
   return Math.round((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / 86_400_000);
 }
 
-export default function ReferralDetail({ referralId, onBack }: Props) {
+export default function ReferralDetail({ referralId, onBack, onOpenCase }: Props) {
   const { t } = useTranslation();
   const [referral, setReferral] = useState<ReferralJoined | null>(null);
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
+  const [linkedCase, setLinkedCase] = useState<TbCaseRow | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resultText, setResultText] = useState('');
@@ -55,9 +57,14 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
   // patient ACTUALLY came (may differ from the scheduled date — early or late).
   const [attendId, setAttendId] = useState<string | null>(null);
   const [attendDate, setAttendDate] = useState('');
+  const [caseBusy, setCaseBusy] = useState(false);
+  const [caseError, setCaseError] = useState<string | null>(null);
+  const [caseLookupError, setCaseLookupError] = useState(false);
+  const [caseRequestId, setCaseRequestId] = useState(() => crypto.randomUUID());
 
   const load = useCallback(async () => {
     setError(null);
+    setCaseLookupError(false);
     const { data, error: err } = await supabase
       .from('referrals')
       .select(
@@ -75,6 +82,7 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
     setResultText(r?.result ?? '');
     setOutcome(r?.result_outcome ?? null);
     setSampleId(r?.lab_sample_id ?? '');
+    setLinkedCase(null);
     if (r) {
       // Migration 0031 makes ownership explicit. This referral panel shows its
       // pre-case appointments; treatment visits move to the case detail.
@@ -85,12 +93,30 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
         .order('scheduled_date', { ascending: false });
       if (aErr) setError(aErr.message);
       setAppointments((appts ?? []) as AppointmentRow[]);
+
+      const { data: caseRows, error: caseLoadError } = await supabase
+        .from('tb_cases')
+        .select('*')
+        .eq('patient_id', r.patient_id)
+        .order('created_at', { ascending: false });
+      if (caseLoadError) {
+        setError(caseLoadError.message);
+        setCaseLookupError(true);
+      }
+      const cases = (caseRows ?? []) as TbCaseRow[];
+      setLinkedCase(
+        cases.find((row) => row.referral_id === r.referral_id)
+          ?? cases.find((row) => ['registered', 'on_treatment', 'interrupted'].includes(row.case_status))
+          ?? null,
+      );
     }
     setLoaded(true);
   }, [referralId]);
 
   useEffect(() => {
     setLoaded(false);
+    setCaseRequestId(crypto.randomUUID());
+    setCaseError(null);
     void load();
   }, [load]);
 
@@ -216,6 +242,29 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
     setScheduleOpen(false);
     setScheduleDate('');
     await load();
+  };
+
+  /** Record a clinician's enrolment decision. This is deliberately manual:
+   * a positive result may prompt the action, but never creates a case itself. */
+  const createCase = async () => {
+    setCaseBusy(true);
+    setCaseError(null);
+    const { data, error: createError } = await supabase.rpc('create_tb_case', {
+      p_patient_id: referral.patient_id,
+      p_referral_id: referral.referral_id,
+      p_registration_date: manilaToday(),
+      p_request_id: caseRequestId,
+    });
+    if (createError || !data) {
+      setCaseError(createError?.message ?? '');
+      setCaseBusy(false);
+      return;
+    }
+    const created = data as TbCaseRow;
+    setLinkedCase(created);
+    setCaseRequestId(crypto.randomUUID());
+    setCaseBusy(false);
+    onOpenCase?.(created.case_id);
   };
 
   return (
@@ -541,6 +590,35 @@ export default function ReferralDetail({ referralId, onBack }: Props) {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="rd-section case-enrolment">
+        <div className="rd-sectionhead">
+          <span className="msym" aria-hidden="true">clinical_notes</span>
+          <h3>{t('detail.caseSection')}</h3>
+        </div>
+        <p className="rd-note">{t('detail.caseDecisionNote')}</p>
+        {caseLookupError ? (
+          <p className="case-pending">{t('detail.caseLookupError')}</p>
+        ) : linkedCase ? (
+          <div className="case-link-card">
+            <div>
+              <strong>{linkedCase.case_number}</strong>
+              <span>{t(`cases.status.${linkedCase.case_status === 'on_treatment' ? 'onTreatment' : linkedCase.case_status}`)}</span>
+            </div>
+            {onOpenCase ? <button onClick={() => onOpenCase(linkedCase.case_id)}>{t('detail.openCase')}</button> : null}
+          </div>
+        ) : status === 'submitted' ? (
+          <p className="case-pending">{t('detail.caseArrivalRequired')}</p>
+        ) : (
+          <div className="case-create-row">
+            <span>{t('detail.noCase')}</span>
+            <button disabled={caseBusy} onClick={() => void createCase()}>
+              {caseBusy ? t('detail.creatingCase') : t('detail.createCase')}
+            </button>
+          </div>
+        )}
+        {caseError ? <div className="case-error" role="alert">{t('detail.caseCreateError')} {caseError}</div> : null}
       </div>
 
       {/* Check-up appointments owned by this referral (migration 0031). */}

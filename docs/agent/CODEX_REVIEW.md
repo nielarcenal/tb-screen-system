@@ -1,3 +1,24 @@
+# Codex review — Tasks 2.2–2.5 case registry
+
+2026-09-10. Result: **APPROVED**.
+
+The portal now creates a case only from an explicit clinician action after referral
+arrival, using `create_tb_case()` with a stable retry request ID. A failed existing-case
+lookup suppresses creation, and an existing referral or active patient case is opened
+instead of offering a duplicate. The registry reads only RLS-scoped rows, batches child
+queries, supports lifecycle and factual follow-up filters, and keeps its detail pane
+inside the selected filter.
+
+All lifecycle changes use `set_tb_case_status()`; the client performs no direct case
+UPDATE. Closed/cancelled cases are not labelled as needing attention, voided visits remain
+visible but do not become the latest live visit, and the UI uses the accepted six-outcome
+vocabulary. English, Tagalog, and Cebuano keys are aligned. Full regression is
+**416/416** (portal 147, mobile 218, edge 51); production build and all TypeScript checks
+pass. The only build output is the existing Vite chunk-size advisory. Next: implement
+the treatment visit and correction/void workflow through the approved RPCs.
+
+---
+
 # Codex review — Migration 0033 and appointment client contract
 
 2026-09-10. Result: **APPROVED, APPLIED, AND COMPATIBILITY GATE CLOSED**.

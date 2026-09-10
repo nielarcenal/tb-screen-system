@@ -38,8 +38,9 @@ import RegisterPatient from './components/RegisterPatient';
 import BhwManagement from './components/BhwManagement';
 import ChangePasswordGate from './components/ChangePasswordGate';
 import AccountStateGate, { AccountState } from './components/AccountStateGate';
+import CaseRegistry from './components/CaseRegistry';
 
-type Page = 'dashboard' | 'inbox' | 'register' | 'hotspot' | 'report' | 'bhw';
+type Page = 'dashboard' | 'inbox' | 'cases' | 'register' | 'hotspot' | 'report' | 'bhw';
 
 /** The page a role signs in to. Null means "wherever they are is fine": 'bhw'
  *  is the mobile app's role and has no portal of its own, so a BHW who signs in
@@ -61,6 +62,7 @@ export default function App({ portal }: { portal: PortalKind }) {
   const [facilityName, setFacilityName] = useState<string | null>(null);
   const [page, setPage] = useState<Page>('dashboard');
   const [openReferralId, setOpenReferralId] = useState<string | null>(null);
+  const [openCaseId, setOpenCaseId] = useState<string | null>(null);
   // Bumped when the password gate finishes, to re-read the users row (and with
   // it the now-cleared must_change_password) without disturbing the session.
   const [meVersion, setMeVersion] = useState(0);
@@ -221,6 +223,7 @@ export default function App({ portal }: { portal: PortalKind }) {
   const openPage = (key: Page) => {
     setPage(key);
     setOpenReferralId(null);
+    setOpenCaseId(null);
   };
 
   const navItem = (key: Page, icon: string, label: string): ShellNavItem => ({
@@ -239,6 +242,7 @@ export default function App({ portal }: { portal: PortalKind }) {
     : [
         navItem('dashboard', 'space_dashboard', t('nav.dashboard')),
         navItem('inbox', 'move_to_inbox', t('nav.inbox')),
+        navItem('cases', 'clinical_notes', t('nav.cases')),
         // Walk-ins and self-referrals (0025) — the second way a patient reaches
         // this facility, and until now the one the registry could not describe.
         navItem('register', 'person_add', t('nav.register')),
@@ -254,6 +258,7 @@ export default function App({ portal }: { portal: PortalKind }) {
       sub: isMidwife ? t('shell.midwifeDashSub') : t('shell.dashboardSub'),
     },
     inbox: { title: t('nav.inbox'), sub: t('shell.referralsSub') },
+    cases: { title: t('nav.cases'), sub: t('shell.casesSub') },
     register: { title: t('nav.register'), sub: t('shell.registerSub') },
     hotspot: { title: t('nav.hotspot'), sub: t('shell.hotspotsSub') },
     report: { title: t('nav.report'), sub: t('shell.reportSub') },
@@ -292,6 +297,8 @@ export default function App({ portal }: { portal: PortalKind }) {
             setOpenReferralId(id);
           }}
         />
+      ) : activePage === 'cases' ? (
+        <CaseRegistry initialCaseId={openCaseId} />
       ) : (
         /* Inbox: master-detail split (design 1b). */
         <div className="split">
@@ -300,7 +307,14 @@ export default function App({ portal }: { portal: PortalKind }) {
           </div>
           <div className="detailpanel">
             {openReferralId ? (
-              <ReferralDetail referralId={openReferralId} onBack={() => setOpenReferralId(null)} />
+              <ReferralDetail
+                referralId={openReferralId}
+                onBack={() => setOpenReferralId(null)}
+                onOpenCase={(caseId) => {
+                  setOpenCaseId(caseId);
+                  setPage('cases');
+                }}
+              />
             ) : (
               <div className="rd-empty">
                 <div className="badge">

@@ -7,6 +7,14 @@ export type Sex = 'male' | 'female';
 export type PgisSeverity = 'none' | 'mild' | 'moderate' | 'severe';
 export type ReferralStatus = 'submitted' | 'received' | 'tested' | 'closed';
 export type AppointmentStatus = 'scheduled' | 'attended' | 'missed' | 'cancelled';
+export type TbCaseStatus = 'registered' | 'on_treatment' | 'interrupted' | 'closed' | 'cancelled';
+export type TreatmentOutcome =
+  | 'cured'
+  | 'treatment_completed'
+  | 'treatment_failed'
+  | 'died'
+  | 'lost_to_follow_up'
+  | 'not_evaluated';
 export type TriState = 'yes' | 'no' | 'unsure';
 
 /** DOH-NTP checklist answers (jsonb). The SOLE basis for referral (§5). */
@@ -183,6 +191,38 @@ export interface AppointmentRow {
   scheduled_date: string;
   attended_date: string | null;
   status: AppointmentStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+/** One clinician-enrolled treatment episode (migration 0031). */
+export interface TbCaseRow {
+  case_id: string;
+  patient_id: string;
+  referral_id: string | null;
+  facility_id: string;
+  case_number: string;
+  registration_date: string;
+  case_status: TbCaseStatus;
+  treatment_start_date: string | null;
+  outcome: TreatmentOutcome | null;
+  outcome_date: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** A visit recorded inside one case. Scheduling remains in appointments. */
+export interface TreatmentFollowupRow {
+  followup_id: string;
+  case_id: string;
+  appointment_id: string | null;
+  visit_date: string;
+  notes: string | null;
+  recorded_by: string;
+  voided_at: string | null;
+  voided_by: string | null;
+  void_reason: string | null;
   created_at: string;
   updated_at: string;
 }

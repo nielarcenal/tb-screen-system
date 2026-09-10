@@ -18,7 +18,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { en } from '../i18n/locales/en';
-import type { AppointmentRow, ReferralJoined } from '../lib/types';
+import type { AppointmentRow, ReferralJoined, TbCaseRow } from '../lib/types';
 import { emptyVitals } from '../lib/vitals';
 import ReferralDetail from './ReferralDetail';
 
@@ -35,12 +35,16 @@ const mock = vi.hoisted(() => {
   const db = {
     referral: null as Record<string, unknown> | null,
     appointments: [] as unknown[],
+    cases: [] as unknown[],
+    caseLoadError: null as { message: string } | null,
     /** Every payload passed to .update(), in order. */
     updates: [] as Record<string, unknown>[],
     /** Every table/column/value equality used while loading. */
     selectFilters: [] as Array<[string, string, unknown]>,
     /** Every appointment payload passed to .insert(). */
     inserts: [] as Record<string, unknown>[],
+    rpcCalls: [] as Array<[string, Record<string, unknown>]>,
+    rpcError: null as { message: string } | null,
     /** When set, what the server ends up holding in `result` regardless of
      *  what was sent — lets a test tell a repaint-from-reload apart from the
      *  local edit that merely happens to match. */
@@ -64,7 +68,10 @@ const mock = vi.hoisted(() => {
                 eq: (column: string, value: unknown) => {
                   db.selectFilters.push([table, column, value]);
                   return {
-                    order: () => Promise.resolve({ data: db.appointments, error: null }),
+                    order: () => Promise.resolve({
+                      data: table === 'tb_cases' ? db.cases : db.appointments,
+                      error: table === 'tb_cases' ? db.caseLoadError : null,
+                    }),
                   };
                 },
               },
@@ -85,6 +92,13 @@ const mock = vi.hoisted(() => {
           return Promise.resolve({ error: null });
         },
       };
+    },
+    rpc(name: string, fields: Record<string, unknown>) {
+      db.rpcCalls.push([name, fields]);
+      return Promise.resolve({
+        data: db.cases[0] ?? null,
+        error: db.rpcError,
+      });
     },
   };
 
@@ -150,10 +164,10 @@ function makeReferral(over: Partial<ReferralJoined> = {}): ReferralJoined {
 }
 
 /** Render the detail pane for `referral` and wait for the load to settle. */
-async function renderDetail(referral: ReferralJoined) {
+async function renderDetail(referral: ReferralJoined, onOpenCase?: (caseId: string) => void) {
   mock.db.referral = referral as unknown as Record<string, unknown>;
   const { rerender } = render(
-    <ReferralDetail referralId={referral.referral_id} onBack={() => {}} />,
+    <ReferralDetail referralId={referral.referral_id} onBack={() => {}} onOpenCase={onOpenCase} />,
   );
   const box = (await screen.findByPlaceholderText(
     en.detail.resultPlaceholder,
@@ -185,12 +199,35 @@ function makeAppointment(over: Partial<AppointmentRow> = {}): AppointmentRow {
   };
 }
 
+function makeCase(over: Partial<TbCaseRow> = {}): TbCaseRow {
+  return {
+    case_id: 'case-1',
+    patient_id: 'pat-1',
+    referral_id: 'ref-1',
+    facility_id: 'fac-1',
+    case_number: 'TBC-MLB-2026-00001',
+    registration_date: '2026-09-10',
+    case_status: 'registered',
+    treatment_start_date: null,
+    outcome: null,
+    outcome_date: null,
+    created_by: 'staff-1',
+    created_at: '2026-09-10T00:00:00.000Z',
+    updated_at: '2026-09-10T00:00:00.000Z',
+    ...over,
+  };
+}
+
 beforeEach(() => {
   mock.db.referral = null;
   mock.db.appointments = [];
+  mock.db.cases = [];
+  mock.db.caseLoadError = null;
   mock.db.updates = [];
   mock.db.selectFilters = [];
   mock.db.inserts = [];
+  mock.db.rpcCalls = [];
+  mock.db.rpcError = null;
   mock.db.serverResult = undefined;
 });
 
@@ -510,5 +547,58 @@ describe('ReferralDetail appointment ownership', () => {
     await renderDetail(makeReferral());
     expect(screen.getByText(en.detail.apptCancelled)).toBeTruthy();
     expect(screen.queryByRole('button', { name: en.detail.markAttended })).toBeNull();
+  });
+});
+
+describe('ReferralDetail TB case enrolment', () => {
+  it('does not offer case creation before the patient is received', async () => {
+    await renderDetail(makeReferral({ status: 'submitted' }));
+    expect(screen.queryByRole('button', { name: en.detail.createCase })).toBeNull();
+    expect(screen.getByText(en.detail.caseArrivalRequired)).toBeTruthy();
+  });
+
+  it('does not offer creation when the existing-case lookup failed', async () => {
+    mock.db.caseLoadError = { message: 'network unavailable' };
+    await renderDetail(makeReferral());
+    expect(screen.queryByRole('button', { name: en.detail.createCase })).toBeNull();
+    expect(screen.getByText(en.detail.caseLookupError)).toBeTruthy();
+  });
+
+  it('creates a clinician-enrolled case through the idempotent RPC', async () => {
+    const openCase = vi.fn();
+    await renderDetail(makeReferral({ status: 'received' }), openCase);
+    mock.db.cases = [makeCase()];
+    fireEvent.click(screen.getByRole('button', { name: en.detail.createCase }));
+
+    await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
+    const [name, payload] = mock.db.rpcCalls[0];
+    expect(name).toBe('create_tb_case');
+    expect(payload).toMatchObject({
+      p_patient_id: 'pat-1',
+      p_referral_id: 'ref-1',
+    });
+    expect(payload.p_request_id).toMatch(/^[0-9a-f-]{36}$/);
+    await waitFor(() => expect(openCase).toHaveBeenCalledWith('case-1'));
+  });
+
+  it('keeps the same request id when a failed create is retried', async () => {
+    mock.db.rpcError = { message: 'this patient already has an open TB case' };
+    await renderDetail(makeReferral({ status: 'tested' }));
+    const button = screen.getByRole('button', { name: en.detail.createCase });
+    fireEvent.click(button);
+    await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(1));
+    fireEvent.click(button);
+    await waitFor(() => expect(mock.db.rpcCalls).toHaveLength(2));
+    expect(mock.db.rpcCalls[1][1].p_request_id).toBe(mock.db.rpcCalls[0][1].p_request_id);
+    expect(screen.getByRole('alert').textContent).toContain('already has an open TB case');
+  });
+
+  it('opens an existing case instead of offering a duplicate', async () => {
+    const openCase = vi.fn();
+    mock.db.cases = [makeCase()];
+    await renderDetail(makeReferral(), openCase);
+    expect(screen.queryByRole('button', { name: en.detail.createCase })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: en.detail.openCase }));
+    expect(openCase).toHaveBeenCalledWith('case-1');
   });
 });
