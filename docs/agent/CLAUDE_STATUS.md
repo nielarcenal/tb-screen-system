@@ -1,11 +1,12 @@
 # Claude status log
 
-> **Codex handback — 2026-09-10, Day 7:** repository is a conditional release
-> candidate. Automated regression is 450/450; builds/typechecks and live security posture
-> pass with no Critical/High finding. Documentation is reconciled and the seven-state
-> synthetic demo seed passed a rollback-only live-schema validation. Remaining human
-> checks: physical Android offline/reconnect/cache isolation and native-speaker locale
-> review. Full evidence: `DAY7_RELEASE_VERIFICATION.md`.
+> **Codex handback — 2026-09-10, Day 7:** capstone/demo release gate passed.
+> Automated regression is 450/450; builds/typechecks and live security posture pass with
+> no Critical/High finding. Documentation is reconciled and the seven-state synthetic
+> demo seed passed a rollback-only live-schema validation. The user confirmed that the
+> physical Android offline/reconnect/cache-isolation checklist passed and native-speaker
+> review approved the Tagalog/Cebuano copy. Full evidence:
+> `DAY7_RELEASE_VERIFICATION.md`.
 
 > **Codex handback — 2026-09-10, next unit Day 7 release verification:** Day 6 is
 > approved. Migration 0038 passed a strengthened 36/36 linked rollback matrix and was

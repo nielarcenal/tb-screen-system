@@ -45,8 +45,9 @@ completely unaffected by anything you do to this folder.
 ## 2. Where things stand
 
 **Days 1–6 are complete and approved. Migrations 0028 through 0038 are applied live.**
-Day 7 is a conditional release candidate; the only two open items are human checks that
-cannot be done from this workstation.
+Day 7 has passed the capstone/demo release gate. On 2026-09-10, the user confirmed that
+the physical Android offline/reconnect/cache-isolation run passed and that native-speaker
+review approved the Tagalog/Cebuano copy.
 
 | Day | Unit | State |
 | --- | --- | --- |
@@ -103,17 +104,15 @@ newly selected chip.
 
 ---
 
-## 4. The two things that actually block release
+## 4. Final human release checks — closed
 
-Both are human, and neither can be truthfully completed from this machine:
+Both checks were completed outside this workstation and confirmed by the user on
+2026-09-10:
 
-1. **A physical Android offline/reconnect smoke test.** The checklist is in
-   `DAY7_RELEASE_VERIFICATION.md`. Unit tests do not establish device correctness —
-   real mid-pull connectivity loss, account switch and cache purge are still unproven, and
-   have been on every handoff in this branch.
-2. **Native-speaker review of the Tagalog and Cebuano copy.** Three locales are key-complete
-   and tested for parity, but parity is not fluency. The Day 6 strings I added — the whole
-   `audit.*` block and the reworded SMS `sent` label — have had no native review at all.
+1. **Physical Android offline/reconnect/cache-isolation smoke test — PASSED.** The full
+   seven-step checklist in `DAY7_RELEASE_VERIFICATION.md` was exercised successfully.
+2. **Native-speaker review of the Tagalog and Cebuano copy — PASSED.** The reviewer found
+   the localized user-facing copy acceptable.
 
 ---
 

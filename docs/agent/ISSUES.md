@@ -1,8 +1,9 @@
 # Issue register
 
 2026-09-10 Day 7 update: no Critical or High finding remains open. Release status is
-**conditional** on the physical Android offline/reconnect/cache-isolation checklist and
-native-speaker locale review. S7-01 (MEDIUM) records unencrypted app-sandboxed mobile
+**passed for capstone/demo**. The user confirmed that the physical Android
+offline/reconnect/cache-isolation checklist passed and that native-speaker review approved
+the Tagalog/Cebuano copy. S7-01 (MEDIUM) records unencrypted app-sandboxed mobile
 SQLite/session storage; S7-02 (LOW) records legacy broad Supabase table grants under RLS.
 See `DAY7_RELEASE_VERIFICATION.md` for evidence and operational controls.
 
@@ -10,8 +11,8 @@ See `DAY7_RELEASE_VERIFICATION.md` for evidence and operational controls.
 | --- | --- | --- | --- |
 | S7-01 | MEDIUM | Mobile clinical SQLite and the persisted Supabase session are app-sandboxed but not application-level encrypted | Accepted for the capstone with managed-device PIN/biometric and remote-wipe controls; encrypted cache/session design required before a higher-risk production rollout |
 | S7-02 | LOW | Legacy Supabase grants give `anon`/`authenticated` broader table privileges than least privilege | RLS is live on every public table and clients cannot issue SQL; narrow only in a dedicated migration with a full role matrix |
-| S7-03 | RELEASE CHECK | Physical Android airplane-mode/reconnect/cache-isolation run is not executable from this workstation | Open human check; exact steps in `DAY7_RELEASE_VERIFICATION.md` |
-| S7-04 | RELEASE CHECK | Tagalog/Cebuano copy is best-effort and lacks native-speaker sign-off | Open human check |
+| S7-03 | RELEASE CHECK | Physical Android airplane-mode/reconnect/cache-isolation run | Closed 2026-09-10 — full checklist passed by user attestation |
+| S7-04 | RELEASE CHECK | Tagalog/Cebuano native-speaker sign-off | Closed 2026-09-10 — copy approved by user attestation |
 
 2026-09-10 Day 6 update: migration 0038 is approved and applied after a strengthened
 **36/36** linked rollback matrix. C41-02 is closed by the single appointment trigger;

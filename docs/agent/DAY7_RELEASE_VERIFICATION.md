@@ -1,11 +1,11 @@
 # Day 7 release verification
 
-Date: 2026-09-10. Status: **CONDITIONAL RELEASE CANDIDATE**.
+Date: 2026-09-10. Status: **RELEASE GATE PASSED FOR CAPSTONE/DEMO**.
 
 No Critical or High finding remains open. Automated, database, build, and source-review
-gates pass. A physical Android offline/reconnect smoke test and native-speaker review of
-Tagalog/Cebuano copy cannot be truthfully completed from this workstation and remain the
-two human release checks.
+gates pass. On 2026-09-10, the user confirmed that the complete physical Android
+offline/reconnect/cache-isolation checklist passed and that native-speaker review approved
+the Tagalog and Cebuano copy. The two final human release checks are therefore closed.
 
 ## Automated gate
 
@@ -61,17 +61,20 @@ three-locale key parity, case/treatment transitions, timeline isolation, dashboa
 predicates, audit paging, sync error isolation, tied-timestamp pull recovery, pending-row
 sign-out protection, and clinical-cache deletion after confirmed sign-out.
 
-Physical Android checklist (must be initialled before production/demo handoff):
+Physical Android checklist — **PASSED by user attestation on 2026-09-10**:
 
-1. Sign in as a dedicated BHW test account and sync once online.
-2. Enable airplane mode; create patient, screening, referral, and appointment.
-3. Confirm all four remain visible and pending after force-close/reopen.
-4. Reconnect; wait for auto-sync, then confirm all rows land once and become synced.
-5. Create an intentional permanent rejection and confirm later rows still sync while the
+1. [x] Sign in as a dedicated BHW test account and sync once online.
+2. [x] Enable airplane mode; create patient, screening, referral, and appointment.
+3. [x] Confirm all four remain visible and pending after force-close/reopen.
+4. [x] Reconnect; wait for auto-sync, then confirm all rows land once and become synced.
+5. [x] Create an intentional permanent rejection and confirm later rows still sync while the
    rejected row remains pending with a partial-failure message.
-6. Trigger a reconnect during a sync and confirm serialization/rerun, not two passes.
-7. Cancel sign-out with pending work and confirm the cache remains. Then sync, sign out,
+6. [x] Trigger a reconnect during a sync and confirm serialization/rerun, not two passes.
+7. [x] Cancel sign-out with pending work and confirm the cache remains. Then sync, sign out,
    sign in as another test account, and confirm the prior clinical cache is absent.
+
+Native-speaker review of the Tagalog and Cebuano user-facing copy — **PASSED by user
+attestation on 2026-09-10**.
 
 ## Walk-in atomicity
 

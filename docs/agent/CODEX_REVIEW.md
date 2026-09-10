@@ -1,6 +1,6 @@
 # Codex review — Day 7 release/security gate
 
-2026-09-10. Result: **CONDITIONAL RELEASE CANDIDATE**.
+2026-09-10. Result: **RELEASE GATE PASSED FOR CAPSTONE/DEMO**.
 
 The full automated gate remains **450/450**, production build and typechecks pass, all
 public tables have live RLS, and every SECURITY DEFINER function has a fixed search path.
@@ -13,11 +13,12 @@ not three client writes. The new `seed_capstone_day7.sql` covers all seven synth
 states, contains no contact/consent or credential, and passed a live-schema run ending in
 ROLLBACK. It remains rollback-safe by default.
 
-Two human checks remain: a physical Android airplane-mode/reconnect/cache-isolation smoke
-test, and native-speaker review of Tagalog/Cebuano. Medium production gates are unencrypted
+The user confirmed on 2026-09-10 that the physical Android
+airplane-mode/reconnect/cache-isolation checklist passed and that native-speaker review
+approved the Tagalog/Cebuano copy. Medium production-governance items remain unencrypted
 mobile data at rest and the health-office audit-retention decision; legacy broad Supabase
 table grants are a Low defense-in-depth finding because RLS is enabled everywhere and
-clients cannot issue SQL. Full evidence and the physical checklist are in
+clients cannot issue SQL. Full evidence and the completed physical checklist are in
 `DAY7_RELEASE_VERIFICATION.md`.
 
 ---

@@ -170,7 +170,7 @@ Every table has RLS enabled (default-deny). Aggregate reads that must cross row 
 
 ## 10. Internationalization
 
-All user-facing text in both apps goes through i18next keys in English, Tagalog, and Cebuano — including consent scripts, the symptom checklist, and the printed form. Tagalog/Cebuano strings are best-effort and flagged `TODO i18n verify` pending native-speaker review. Language is switchable at runtime everywhere (mobile onboarding + settings; portal top bar).
+All user-facing text in both apps goes through i18next keys in English, Tagalog, and Cebuano — including consent scripts, the symptom checklist, and the printed form. Native-speaker review of the Tagalog/Cebuano copy passed on 2026-09-10. Language is switchable at runtime everywhere (mobile onboarding + settings; portal top bar).
 
 ## 11. Design System
 
