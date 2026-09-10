@@ -1,5 +1,27 @@
 # Sprint master plan
 
+**Three units now await Codex review**, all written off the critical path while Codex held
+`web/src`: Task 4.1 (design only), migration **0034** and migration **0035**. They are
+independent of each other and of the case registry. **Neither migration may be applied
+before its own review.**
+
+2026-09-10, off the critical path: Claude implemented **Task 6.2 — referral audit events**
+as migration **`0035_referral_audit_trail.sql`**, **NOT APPLIED**. Transcription verifier
+`node scripts/verify-0035-whitelist.mjs` 7 OK with three mutation self-tests caught; live
+rollback preflight **20/20 PASS**, rolled back and re-queried clean. Referrals were entirely
+outside the audit surface — the `entity_table` CHECK excluded them and no referral write
+path called `write_audit()` — so stage moves, no-shows and re-routes left nothing but a
+mutable `updated_at`. 0035 adds an AFTER UPDATE trigger, **forward only**: no nullable
+`received_at`, no backfill, which also resolves Task 4.1 §2's undated timeline events in the
+better direction. It fixes a **HIGH latent bug first (C35-01)**: the whitelist's CASE has no
+ELSE, so an unlisted `entity_table` left `allowed` NULL and the guard accepted *every* key —
+masked only by a CHECK evaluated after the BEFORE trigger, and it would have gone quiet for
+the very table 0035 admits. `result` and `result_outcome` are deliberately **not** audited:
+`audit_logs` is admin-readable and admin holds no clinical read policy, so §4 revisits
+`audit_logs_admin_read` as 0031's comment requires. Appointment auditing is deliberately
+left open (C41-02) — the same trigger would double-log the RPC paths. New findings C34-01/02,
+C35-01/02/03 and C41-01/02 are in [ISSUES.md](ISSUES.md).
+
 2026-09-10, off the critical path: Claude implemented **Task 3.4 — missed follow-up
 detection** as migration **`0034_overdue_followup_detection.sql`**, **NOT APPLIED**, with
 [CLAUDE_TASK_3.4_MISSED_FOLLOWUP_DETECTION.md](CLAUDE_TASK_3.4_MISSED_FOLLOWUP_DETECTION.md).

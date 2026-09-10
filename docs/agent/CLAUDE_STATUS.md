@@ -782,3 +782,94 @@ touched here; it is uncommitted work in another agent's file.
 
 **Next:** Codex reviews 0034. Do not apply it before the review; the preflight proves the
 behaviour, not the decision in §4. Four open questions in §7.
+
+---
+
+## 2026-09-10 - Task 6.2 implemented as migration 0035 (NOT applied)
+
+Third unit off `web/src`, which Codex still holds. Referral audit trail.
+
+### The gap
+
+0031 audits the case triad well. **Referrals are entirely outside it**: the
+`entity_table` CHECK admits only `tb_cases`, `treatment_followups` and `appointments`, and
+no referral write path calls `write_audit()` at all. A referral moving submitted → received
+→ tested → closed, a facility recording that the patient did not present, and a re-route
+all leave nothing behind but one mutable `updated_at`.
+
+That is Task 6.2's "major referral status changes", and it is also why Task 4.1 §2 could
+not date three timeline events. 0035 closes it **forward only** - no nullable `received_at`,
+no backfill. An audit row needs no backfill to be truthful, which makes this strictly better
+than the column-adding option 4.1 weighed and rejected.
+
+### A trigger, not RPC call sites
+
+Referrals are written by ordinary PATCHes from both clients; there is no referral RPC to
+add a call to. A trigger catches the change whatever path made it and needs no client
+release, so rule 20 is not engaged.
+
+**Appointments have the same hole and are deliberately left alone.** The same trigger there
+would double-log every RPC-driven change, because those five functions already write their
+own audit rows. Reconciling that needs either those functions replaced or a
+transaction-local "already audited" flag - its own unit. Recorded as C41-02.
+
+### The latent bug this had to fix first (C35-01, HIGH)
+
+`enforce_audit_changes_whitelist()` builds its allowed-key list with a CASE that has **no
+ELSE**. For an unlisted table `allowed` is NULL, `k = any(NULL)` is NULL, `not NULL` is
+NULL, and the raise never fires - the whitelist accepts every key. It is masked today only
+by the `entity_table` CHECK, which is evaluated *after* the BEFORE trigger. The instant
+0035 added 'referrals' to that CHECK, the guard would have gone quiet for exactly the table
+being admitted. Same shape as R3-03. Fixed with an explicit `allowed is null` raise, and
+the matrix asks for `22023` from the guard rather than `23514` from the constraint, so it
+cannot pass on the constraint's behalf.
+
+### What is not recorded, and why that is the argument
+
+`result` is free clinical text - excluded as everywhere else. **`result_outcome` is
+excluded too**, and that is the decision worth arguing with. `audit_logs` is readable by
+`admin`, a role holding **no clinical read policy at all**. Putting positive/negative into
+`changes` would hand every patient's TB status to that role through the audit viewer. 0031's
+own comment on `audit_logs_admin_read` pins the obligation - "if the whitelist is ever
+widened, this policy must be revisited in the same migration" - so §4 of the migration
+revisits it explicitly and leaves it unchanged, with the reasoning written down rather than
+inferred.
+
+So the trail records THAT an outcome was recorded and WHEN (`result_date` moving from null
+to a date) and never what it said. Same line Task 4.1 drew for the timeline.
+
+### Verification
+
+`node scripts/verify-0035-whitelist.mjs` - 7 OK; the three existing whitelist arms are
+byte-identical to 0031, the referrals arm holds exactly the five approved keys, no clinical
+key appears anywhere, and the NULL guard is present. Three mutation self-tests all caught.
+
+Live rollback preflight **20/20 PASS** across all 20 distinct check kinds, rolled back;
+re-queried after - the CHECK is back to three tables, no trigger, no function, no referral
+audit rows, no fixture facilities.
+
+### Two defects the run found in my own test
+
+Both would have made assertions pass while reading the wrong thing, and neither is visible
+by reading SQL.
+
+- **`occurred_at` is transaction-stable.** It defaults to `now()`, so every audit row
+  written inside one transaction carries an identical timestamp, and `order by occurred_at`
+  fell back to a random uuid. Every positional `offset N limit 1` lookup read the wrong
+  row. Rows are now selected by what they record. This is true of the real system too, so
+  nothing may sequence audit rows by that column alone (C35-03).
+- **`reset role` does not clear `request.jwt.claims`.** `set_config(..., true)` is
+  transaction-local and outlives the role change, so `auth.uid()` kept returning the last
+  persona and the block modelling an unauthenticated direct session was silently testing an
+  authenticated one. Fixed with `pg_temp.as_direct_session()`. **Other matrices in
+  `supabase/tests/` have not been audited for the same pattern** (C35-02).
+
+A third correction was a real policy working as intended: `referrals_tbdots_update` scopes
+to the caller's own facility on both sides, so a facility cannot hand a referral to another
+one and the first draft's re-route failed with 42501. The fixture now models the support
+path that really performs it, and gains an assertion that a direct session records a null
+actor.
+
+**Next:** three units now await Codex - Task 4.1 (design), 0034 and 0035 (both unapplied
+migrations). They are independent of each other and of the case registry. Do not apply
+either migration before its review.
