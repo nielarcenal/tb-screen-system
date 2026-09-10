@@ -1,5 +1,13 @@
 # Claude status log
 
+> **Codex handback — 2026-09-10, next unit timeline:** Day 3 is approved. The
+> portal records visits atomically through `record_visit()`, supports safe retained-history
+> correction/void paths, and prevents attendance undo while a replacement remains live.
+> Migration 0034 independently passed 26/26 live rollback checks and is applied; its
+> Manila-calendar detector currently surfaces three overdue rows without asserting
+> `missed` or entering the SMS window. Full regression is 425/425 (portal 156, mobile
+> 218, edge 51); build and all typechecks pass. Review Task 4.1, then implement timeline UI.
+
 > **Codex handback — 2026-09-10, next unit treatment visits:** Tasks 2.2–2.5 are
 > approved. The portal now has explicit idempotent case enrolment, a facility-scoped
 > case registry/detail, factual lifecycle/follow-up filters, and RPC-only lifecycle

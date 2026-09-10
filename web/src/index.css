@@ -2688,6 +2688,25 @@ button.amber:hover { background: var(--amber-container); }
 .case-link-card, .case-create-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-radius: 10px; padding: 12px 14px; background: #f0fdfa; }
 .case-link-card > div { display: flex; flex-direction: column; gap: 3px; }
 .case-link-card span, .case-create-row span, .case-pending { color: var(--muted); font-size: 13px; }
+.case-visit-workflow { margin-top: 20px; border: 1px solid var(--line); border-radius: 10px; padding: 16px; background: #fbfdff; }
+.case-visit-workflow > h3 { margin: 0 0 14px; }
+.case-visit-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: end; }
+.case-visit-form label, .case-inline-editor { display: grid; gap: 6px; }
+.case-visit-form label > span { color: var(--muted); font-size: 12px; font-weight: 700; }
+.case-visit-form input, .case-visit-form select, .case-visit-form textarea, .case-inline-editor input, .case-inline-editor textarea { min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; background: #fff; color: var(--ink); font: inherit; }
+.case-visit-form textarea, .case-inline-editor textarea { min-height: 74px; resize: vertical; }
+.case-visit-notes { grid-column: 1 / -1; }
+.case-visit-form > button { justify-self: start; }
+.case-corrections-heading { margin-top: 24px !important; }
+.case-correction-list { display: grid; gap: 10px; }
+.case-correction-list article { display: grid; gap: 10px; border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--paper); }
+.case-correction-list article > div:first-child { display: flex; justify-content: space-between; gap: 12px; }
+.case-correction-list article > div:first-child span { color: var(--muted); }
+.case-correction-list article.voided { opacity: .75; border-style: dashed; }
+.case-correction-actions, .case-void-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.case-inline-editor { grid-template-columns: minmax(180px, 1fr) auto auto; align-items: end; }
+.case-notes-editor { grid-template-columns: minmax(220px, 1fr) auto auto; }
+.case-void-summary span { flex: 1; color: var(--muted); }
 
 @media (max-width: 900px) {
   .case-registry { grid-template-columns: 1fr; }
@@ -2699,5 +2718,6 @@ button.amber:hover { background: var(--amber-container); }
   .case-tools input { grid-column: 1 / -1; }
   .case-facts, .case-grid { grid-template-columns: 1fr; }
   .case-detail { padding: 16px; }
+  .case-visit-form, .case-inline-editor, .case-notes-editor { grid-template-columns: 1fr; }
   .case-link-card, .case-create-row { align-items: stretch; flex-direction: column; }
 }

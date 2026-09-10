@@ -2,7 +2,7 @@
 
 Owner: Claude Code. Reviewer: Codex.
 **Revision 1 — 2026-09-10.** Baseline: branch `feature/capstone-upgrade` at `f5ac601`, migrations 0028–0033 applied.
-Status: **implemented as migration `0034_overdue_followup_detection.sql`, NOT APPLIED.** Its live rollback preflight passed **26/26**.
+Status: **approved and applied as migration `0034_overdue_followup_detection.sql`.** Codex independently reran the live rollback preflight at **26/26 PASS** before atomic application; post-checks confirmed the invoker security mode, ACLs, partial index, and three current overdue rows.
 
 **Taken off the critical path on purpose.** Codex holds uncommitted case registry UI
 work in `web/src` (Tasks 2.2–2.5); rule 19 puts those files off limits. This unit is

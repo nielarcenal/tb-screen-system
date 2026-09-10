@@ -1,6 +1,19 @@
 # Sprint master plan
 
-2026-09-10 latest critical-path checkpoint: **Tasks 2.2–2.5 are complete and
+2026-09-10 latest critical-path checkpoint: **Day 3 treatment/follow-up is
+complete and approved.** The case detail now records an attended or unscheduled
+visit through the idempotent `record_visit()` transaction, with optional lifecycle
+transition and next appointment. Visit-date correction uses the paired RPC, notes
+use the one permitted column update, and voiding retains history; attendance can be
+undone only after no live follow-up remains. Migration **0034** is approved and
+applied after Codex independently reran its **26/26** live rollback matrix. Its
+Manila-calendar worklist currently derives three overdue rows without relabelling
+them `missed`, changing published reports, or entering the SMS window. Full regression
+is **425/425**: portal **156/156**, mobile **218/218**, edge **51/51**; production
+build and all TypeScript checks pass. Next critical-path unit: approve the timeline
+contract and implement its UI. Priority B remains frozen.
+
+2026-09-10 earlier critical-path checkpoint: **Tasks 2.2–2.5 are complete and
 approved.** The portal now has manual, idempotent case enrolment from an eligible
 referral, a facility-scoped searchable/filterable registry, case detail with factual
 visit and appointment context, and audited lifecycle actions through
@@ -11,10 +24,9 @@ and all TypeScript checks passing. The next critical-path unit is treatment visi
 recording through `record_visit()` and the correction/void workflow. Priority B
 remains frozen.
 
-**Three units now await Codex review**, all written off the critical path while Codex held
-`web/src`: Task 4.1 (design only), migration **0034** and migration **0035**. They are
-independent of each other and of the case registry. **Neither migration may be applied
-before its own review.**
+**Two off-path units now await Codex review:** Task 4.1 (design only) and migration
+**0035**. Migration 0034 has passed review and is live. Migration 0035 must not be
+applied before its own review.
 
 2026-09-10, off the critical path: Claude implemented **Task 6.2 — referral audit events**
 as migration **`0035_referral_audit_trail.sql`**, **NOT APPLIED**. Transcription verifier
@@ -34,9 +46,9 @@ left open (C41-02) — the same trigger would double-log the RPC paths. New find
 C35-01/02/03 and C41-01/02 are in [ISSUES.md](ISSUES.md).
 
 2026-09-10, off the critical path: Claude implemented **Task 3.4 — missed follow-up
-detection** as migration **`0034_overdue_followup_detection.sql`**, **NOT APPLIED**, with
+detection** as migration **`0034_overdue_followup_detection.sql`**, now **APPROVED AND APPLIED**, with
 [CLAUDE_TASK_3.4_MISSED_FOLLOWUP_DETECTION.md](CLAUDE_TASK_3.4_MISSED_FOLLOWUP_DETECTION.md).
-Live rollback preflight **26/26 PASS**, rolled back and re-queried clean. The gap it closes:
+Codex independently reran the live rollback preflight at **26/26 PASS** before atomic application. The gap it closes:
 `appointments.status = 'missed'` is read by four consumers and written by nothing but a
 human, so an appointment whose day passes untouched stays `scheduled` forever and is
 counted as neither attended nor missed. 0034 adds `appointment_is_overdue()` and
@@ -74,8 +86,8 @@ critical path was the user-facing case registry, treatment/follow-up UI, timelin
 attention dashboard, audit viewer/security pass, then the final regression/demo day.
 Priority B work is deferred until that path is green.
 
-Current full regression: portal **147/147**, mobile **218/218**, and edge
-functions **51/51** (**416 total**); production build and all TypeScript checks
+Current full regression: portal **156/156**, mobile **218/218**, and edge
+functions **51/51** (**425 total**); production build and all TypeScript checks
 pass. The build retains its pre-existing large-chunk advisory.
 
 2026-09-10 earlier checkpoint (superseded by the latest entry above): **BASE-03 is

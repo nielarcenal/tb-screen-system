@@ -25,6 +25,7 @@ import {
   type TreatmentFollowupRow,
   type TreatmentOutcome,
 } from '../lib/types';
+import CaseVisitWorkflow from './CaseVisitWorkflow';
 
 const FILTERS: CaseFilter[] = ['all', 'active', 'closed', 'followup_due', 'missed'];
 const OUTCOMES: TreatmentOutcome[] = [
@@ -84,13 +85,6 @@ function CaseDetail({ item, onChanged }: DetailProps) {
   const [startDate, setStartDate] = useState(manilaToday());
   const [outcome, setOutcome] = useState<TreatmentOutcome>('cured');
   const [outcomeDate, setOutcomeDate] = useState(manilaToday());
-
-  useEffect(() => {
-    setError(null);
-    setStartDate(tbCase.treatment_start_date ?? manilaToday());
-    setOutcome(tbCase.outcome ?? 'cured');
-    setOutcomeDate(tbCase.outcome_date ?? manilaToday());
-  }, [tbCase.case_id, tbCase.outcome, tbCase.outcome_date, tbCase.treatment_start_date]);
 
   const transition = async (next: TbCaseStatus) => {
     setBusy(true);
@@ -191,6 +185,8 @@ function CaseDetail({ item, onChanged }: DetailProps) {
       ) : null}
 
       {error ? <div className="case-error" role="alert">{t('cases.actionError')} {error}</div> : null}
+
+      <CaseVisitWorkflow item={item} onChanged={onChanged} />
 
       <div className="case-grid">
         <section>
@@ -333,7 +329,13 @@ export default function CaseRegistry({ initialCaseId = null }: { initialCaseId?:
             </div>}
       </aside>
       <div className="case-detail-pane">
-        {selected ? <CaseDetail item={selected} onChanged={load} /> : <div className="case-list-state">{t('cases.selectCase')}</div>}
+        {selected ? (
+          <CaseDetail
+            key={`${selected.tbCase.case_id}:${selected.tbCase.updated_at}`}
+            item={selected}
+            onChanged={load}
+          />
+        ) : <div className="case-list-state">{t('cases.selectCase')}</div>}
       </div>
     </div>
   );

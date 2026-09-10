@@ -1,3 +1,29 @@
+# Codex review — Day 3 treatment visits and migration 0034
+
+2026-09-10. Result: **APPROVED; MIGRATION 0034 APPLIED**.
+
+The portal visit workflow calls `record_visit()` once for attendance, a retained
+follow-up, an optional supported case transition, and an optional next appointment. Its
+request ID remains stable across failed retries. Closing suppresses next scheduling and
+requires an accepted national outcome. Terminal cases accept no new visits but retain
+correction tools. Paired date correction and voiding use their owning-facility RPCs;
+note correction uses only the granted `notes` column. The UI prevents attendance from
+being undone while a live replacement follow-up still depends on that appointment.
+
+Migration 0034 correctly keeps two claims separate: overdue is derived from
+`scheduled_date < manila_today()`, while missed remains a staff assertion. A sweep would
+both risk false no-shows and push every touched row into the live SMS function's
+`updated_at` window, so non-mutating detection is the safe boundary. The function is
+`STABLE SECURITY INVOKER`; existing appointment/patient/case RLS scopes every result.
+Codex independently reran the linked rollback matrix at **26/26 PASS**, then applied the
+migration atomically. Post-apply checks confirm authenticated-only execution, no
+`SECURITY DEFINER`, the partial scheduled-date index, and three currently overdue rows.
+
+Full regression is **425/425** (portal 156, mobile 218, edge 51); production build and
+all TypeScript checks pass. Next: timeline contract review and UI.
+
+---
+
 # Codex review — Tasks 2.2–2.5 case registry
 
 2026-09-10. Result: **APPROVED**.

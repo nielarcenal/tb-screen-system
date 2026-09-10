@@ -98,7 +98,7 @@ describe('CaseRegistry', () => {
     render(<CaseRegistry />);
     expect(await screen.findAllByText('TBC-MLB-2026-00001')).toHaveLength(2);
     expect(screen.getAllByText('Juan Dela Cruz')).toHaveLength(2);
-    expect(screen.getByText('Patient attended.')).toBeTruthy();
+    expect(screen.getAllByText('Patient attended.')).toHaveLength(2);
     expect(screen.getAllByText(new Date('2099-09-20T00:00:00').toLocaleDateString())).toHaveLength(2);
   });
 
