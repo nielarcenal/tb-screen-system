@@ -863,6 +863,12 @@ Inspect the current SMS provider implementation and determine whether it can saf
 
 If delivery callbacks are unreliable or the change creates too much risk, defer it.
 
+**2026-09-10 review decision:** defer Task 6.5. Both configured gateways currently
+record HTTP/provider acceptance as `sent`; no provider message ID is persisted and no
+authenticated callback or polling path exists, so handset delivery cannot be stated or
+reconstructed safely in this sprint. Existing bounded follow-up retry/reservation logic
+stays unchanged. See `CODEX_TASK_6.4_SMS_FEASIBILITY.md`.
+
 ---
 
 ## Task 6.5 — SMS Delivery / Retry Improvement
@@ -1392,7 +1398,7 @@ the Sep 16 regression and demo gate.
 - [ ] audit-log migration
 - [ ] audit events
 - [ ] audit access control
-- [ ] SMS feasibility review
+- [x] SMS feasibility review — delivery callbacks/retry expansion deferred
 - [ ] security audit
 - [ ] Critical/High findings resolved
 
