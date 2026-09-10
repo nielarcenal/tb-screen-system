@@ -20,6 +20,12 @@ two human release checks.
 The production build retains only the known chunk-size advisory. Migration 0038 passed
 36/36 linked rollback checks before atomic application; its live posture was read back.
 
+After the release-candidate commit, the mobile dependency manifest was aligned with the
+Expo SDK 57 patch set and `expo-font` was registered as a config plugin. The focused
+post-alignment gate passed on 2026-09-10: Expo Doctor **21/21**, mobile tests **218/218**,
+and mobile `tsc --noEmit` clean. This changes dependency/native configuration only; it
+does not satisfy the physical-device checklist below.
+
 ## Security audit
 
 Live catalog inspection found RLS enabled on every public table and a fixed search path

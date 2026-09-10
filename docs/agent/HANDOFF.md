@@ -6,7 +6,8 @@ Read this first, then [MASTER_PLAN.md](MASTER_PLAN.md) for task ownership,
 and [CODEX_REVIEW.md](CODEX_REVIEW.md) are the chronological logs — detail lives there.
 
 For whoever picks this up: a new Claude session, Codex, or Niel.
-Branch `feature/capstone-upgrade`, **fully pushed** at `afd6f6c`.
+Branch `feature/capstone-upgrade`. The Day 7 release candidate and the follow-up Expo
+SDK 57 dependency alignment described below are separate, verified units.
 
 ---
 
@@ -29,18 +30,13 @@ completely unaffected by anything you do to this folder.
 ### What is uncommitted right now, and whether it matters
 
 ```
- M mobile/app.json
- M mobile/package.json
- M mobile/package-lock.json
 ?? docs/TB-Screen_Barangay_Report_Design_Canvas_Brief.md
 ```
 
-- **The three mobile files are Expo SDK 57 alignment** — patch bumps across nine
-  `expo-*` packages plus the `expo-font` config plugin. I verified them at 17:02 on
-  2026-09-10: `expo-doctor` **21/21**, mobile tests **218/218**, `tsc --noEmit` clean.
-  They are healthy and were left uncommitted rather than folded into someone else's unit.
-  **Decide before the move whether to commit them** — they are safe to keep, and safe to
-  `git checkout --` if you would rather Day 7 start from a clean tree.
+- **The Expo SDK 57 alignment is now committed as its own maintenance unit.** It contains
+  patch bumps across the Expo/React Native dependency set plus the `expo-font` config
+  plugin. It was reverified on 2026-09-10: `expo-doctor` **21/21**, mobile tests
+  **218/218**, and `tsc --noEmit` clean.
 - **The design brief is the user's own file** and is deliberately untracked. Do not stage,
   edit, delete, or fold it into any unit. Every handoff in this branch has said so.
 
