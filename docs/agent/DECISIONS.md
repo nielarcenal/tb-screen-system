@@ -290,3 +290,14 @@ reading the SQL and a reviewer reading this register see the same labels.
 | D-0039-c | Online mobile enrollment must search first. Offline enrollment remains available; reconnect sync performs the same exact check and leaves a duplicate pending with a specific BHW warning instead of uploading it. |
 | D-0039-d | Barangay Report “successful outcome” means an explicitly recorded `cured` or `treatment_completed` outcome. “Lost to follow-up” means an explicitly recorded outcome. An overdue or missed appointment is never automatically reclassified as a treatment outcome. |
 | D-0039-e | The report is an operational TB-Screen aggregate that supports, but does not replace, DOH ITIS or clinical judgment. |
+
+## 2026-09-11 — Case lab results and vitals (0040)
+
+| # | Decision |
+| --- | --- |
+| D-0040-a | Monitoring lab results and vitals during a case live in two new case-scoped, append-only tables (`case_lab_results`, `case_vitals`). The diagnostic result stays on `referrals`; nothing is moved. |
+| D-0040-b | The user's request ("add vital signs … in the TB case registry") is the clinical confirmation D-0031-weight was waiting for. Weight is stored in `case_vitals`, not on `treatment_followups`, so `record_visit` (restated in 0038) is not touched. |
+| D-0040-c | Corrections are void-with-reason via `void_case_lab_result` / `void_case_vitals`. No client UPDATE or DELETE grant; `recorded_by` is not in the INSERT column grant and takes `auth.uid()`. |
+| D-0040-d | Only dates and void fields are audited (`result_date`, `measured_on`, `voided_at`, `void_reason`). Result values and measurements never reach the admin-readable log; `audit_logs_admin_read` stays unchanged. |
+| D-0040-e | The system never derives an outcome from the results. The close-case form shows the DOH-NTP definition of "Cured" as text; the nurse still chooses the outcome. |
+| D-0040-f | The three-axis TB classification from the Barangay Report brief §8.1 (result / site / drug resistance) is **not** part of 0040. It stays a separate unit. |

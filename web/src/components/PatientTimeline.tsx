@@ -23,6 +23,8 @@ const EVENT_KEY: Record<string, string> = {
   appointment_missed: 'cases.timeline.event.appointment_missed',
   appointment_cancelled: 'cases.timeline.event.appointment_cancelled',
   followup_recorded: 'cases.timeline.event.followup_recorded',
+  case_vitals_recorded: 'cases.timeline.event.case_vitals_recorded',
+  case_lab_result_recorded: 'cases.timeline.event.case_lab_result_recorded',
   case_status_changed: 'cases.timeline.event.case_status_changed',
   case_transferred: 'cases.timeline.event.case_transferred',
   case_closed: 'cases.timeline.event.case_closed',
@@ -31,6 +33,23 @@ const EVENT_KEY: Record<string, string> = {
 const MESSAGE_KIND_KEY: Record<string, string> = {
   reminder: 'cases.timeline.messageKind.reminder',
   follow_up: 'cases.timeline.messageKind.follow_up',
+};
+
+// 0041: the lab event names the test and the treatment point, never the
+// result — the same rule as the referral's lab_result_recorded event.
+const LAB_TEST_KEY: Record<string, string> = {
+  xpert: 'cases.lab.test.xpert',
+  smear: 'cases.lab.test.smear',
+  culture: 'cases.lab.test.culture',
+  other: 'cases.lab.test.other',
+};
+
+const LAB_PURPOSE_KEY: Record<string, string> = {
+  baseline: 'cases.lab.purpose.baseline',
+  month_2: 'cases.lab.purpose.month_2',
+  month_5: 'cases.lab.purpose.month_5',
+  end_of_treatment: 'cases.lab.purpose.end_of_treatment',
+  other: 'cases.lab.purpose.other',
 };
 
 const DELIVERY_KEY: Record<string, string> = {
@@ -78,6 +97,14 @@ function EventDetail({ event }: { event: TimelineEventRow }) {
           : outcome === 'not_evaluated' ? 'notEvaluated'
             : outcome;
     return <span>{t(`cases.outcome.${key}`)}</span>;
+  }
+  if (event.event_type === 'case_lab_result_recorded') {
+    const test = asText(d.test_type);
+    const purpose = asText(d.purpose);
+    if (test && purpose) return <span>{t('cases.timeline.labDetail', {
+      test: t(LAB_TEST_KEY[test] ?? test),
+      purpose: t(LAB_PURPOSE_KEY[purpose] ?? purpose),
+    })}</span>;
   }
   if (event.event_type === 'appointment_scheduled' && asText(d.scheduled_date)) {
     return <span>{t('cases.timeline.scheduledFor', { date: displayDate(asText(d.scheduled_date)) })}</span>;

@@ -322,13 +322,14 @@ export default function RegisterPatient({ onOpenReferral }: Props) {
           {done.referred ? t('register.doneFlagged') : t('register.doneNotFlagged')}
         </p>
         {done.reused ? <p className="reg-reused">{t('register.existingReused')}</p> : null}
+        <p className="regdone-body">{t('register.nextStep')}</p>
         <p className="mutedline">{t('common.nonDiagnostic')}</p>
         <div className="regdone-actions">
           <button onClick={() => onOpenReferral(done.referralId)}>
             <span className="msym" aria-hidden="true">
-              move_to_inbox
+              biotech
             </span>
-            {t('register.openInInbox')}
+            {t('register.recordLab')}
           </button>
           <button className="secondary" onClick={reset}>
             {t('register.registerAnother')}

@@ -234,6 +234,7 @@ export default function CaseVisitWorkflow({ item, onChanged }: Props) {
                 <span>{t('cases.outcomeDate')}</span>
                 <input type="date" min={visitDate} max={today} value={outcomeDate} onChange={(event) => setOutcomeDate(event.target.value)} />
               </label>
+              <p className="case-outcome-hint case-visit-notes">{t('cases.outcomeHint')}</p>
             </>
           ) : (
             <label>

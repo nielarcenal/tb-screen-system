@@ -320,7 +320,15 @@ export default function App({ portal }: { portal: PortalKind }) {
       ) : activePage === 'audit' ? (
         <AuditLog />
       ) : activePage === 'cases' ? (
-        <CaseRegistry initialCaseId={openCaseId} initialFilter={caseFilter} />
+        <CaseRegistry
+          initialCaseId={openCaseId}
+          initialFilter={caseFilter}
+          onOpenReferral={(id) => {
+            setPage('inbox');
+            setInboxFilter('all');
+            setOpenReferralId(id);
+          }}
+        />
       ) : (
         /* Inbox: master-detail split (design 1b). */
         <div className="split">

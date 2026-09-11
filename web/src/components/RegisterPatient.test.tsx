@@ -128,6 +128,17 @@ describe('RegisterPatient — atomic contract', () => {
     expect(screen.getByText('PAT-DOTS-0007')).toBeTruthy();
   });
 
+  it('leads straight on to the lab result on the new referral', async () => {
+    const onOpenReferral = vi.fn();
+    render(<RegisterPatient me={me} onOpenReferral={onOpenReferral} />);
+    await fillIdentity();
+    answerChecklist({ cough_2wks: en.common.yes });
+    fireEvent.click(saveBtn());
+    fireEvent.click(await screen.findByRole('button', { name: new RegExp(en.register.recordLab) }));
+    expect(screen.getByText(en.register.nextStep)).toBeTruthy();
+    expect(onOpenReferral).toHaveBeenCalledWith(payload().p_referral_id);
+  });
+
   it('sends four stable, distinct operation and row ids', async () => {
     renderForm();
     await fillIdentity();
@@ -327,7 +338,7 @@ describe('RegisterPatient — failure and replay', () => {
     fireEvent.click(saveBtn());
     await waitFor(() => expect(screen.getByText(/not authorized/)).toBeTruthy());
     expect(mock.db.rpcCalls).toHaveLength(1);
-    expect(screen.queryByText(en.register.openInInbox)).toBeNull();
+    expect(screen.queryByText(en.register.recordLab)).toBeNull();
   });
 
   it('reuses every id after a failed or lost response', async () => {

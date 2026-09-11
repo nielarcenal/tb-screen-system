@@ -29,7 +29,9 @@ import {
   type TreatmentOutcome,
 } from '../lib/types';
 import { hasAnyVital, vitalsRows } from '../lib/vitals';
+import CaseLabResults from './CaseLabResults';
 import CaseVisitWorkflow from './CaseVisitWorkflow';
+import CaseVitalsLog from './CaseVitalsLog';
 import PatientTimeline from './PatientTimeline';
 
 const FILTERS: CaseFilter[] = [
@@ -87,9 +89,10 @@ function formatDate(value: string | null): string {
 interface DetailProps {
   item: CaseRegistryItem;
   onChanged: () => Promise<void>;
+  onOpenReferral?: (referralId: string) => void;
 }
 
-function CaseDetail({ item, onChanged }: DetailProps) {
+function CaseDetail({ item, onChanged, onOpenReferral }: DetailProps) {
   const { t } = useTranslation();
   const { tbCase, patient } = item;
   const [busy, setBusy] = useState(false);
@@ -159,7 +162,7 @@ function CaseDetail({ item, onChanged }: DetailProps) {
         </section>
 
         <section className="case-clinical-card">
-          <h3><span className="msym" aria-hidden="true">monitor_heart</span>{t('vitals.heading')}</h3>
+          <h3><span className="msym" aria-hidden="true">monitor_heart</span>{t('cases.vitalsAtScreening')}</h3>
           {item.screening && hasAnyVital(item.screening) ? (
             <dl className="vitals-grid">
               {vitalsRows(item.screening, {
@@ -185,8 +188,21 @@ function CaseDetail({ item, onChanged }: DetailProps) {
               <div><dt>{t('cases.labNotes')}</dt><dd>{item.referral.result || '—'}</dd></div>
             </dl>
           ) : <p className="case-empty-line">{t('cases.noLabReport')}</p>}
+          {item.referral && onOpenReferral ? (
+            <button type="button" className="case-card-link" onClick={() => onOpenReferral(item.referral!.referral_id)}>
+              {item.referral.result_outcome ? t('cases.openReferral') : t('cases.recordDiagnosticResult')}
+            </button>
+          ) : null}
         </section>
       </div>
+
+      <CaseLabResults caseId={tbCase.case_id} caseStatus={tbCase.case_status} />
+      <CaseVitalsLog
+        caseId={tbCase.case_id}
+        caseStatus={tbCase.case_status}
+        registrationDate={tbCase.registration_date}
+        outcomeDate={tbCase.outcome_date}
+      />
 
       {tbCase.outcome ? (
         <div className="case-outcome">
@@ -241,6 +257,7 @@ function CaseDetail({ item, onChanged }: DetailProps) {
           <button disabled={busy || !outcomeDate} onClick={() => void transition('closed')}>
             {t('cases.closeCase')}
           </button>
+          <p className="case-outcome-hint">{t('cases.outcomeHint')}</p>
         </div>
       ) : null}
 
@@ -285,9 +302,11 @@ function CaseDetail({ item, onChanged }: DetailProps) {
 export default function CaseRegistry({
   initialCaseId = null,
   initialFilter = 'all',
+  onOpenReferral,
 }: {
   initialCaseId?: string | null;
   initialFilter?: CaseFilter;
+  onOpenReferral?: (referralId: string) => void;
 }) {
   const { t } = useTranslation();
   const [items, setItems] = useState<CaseRegistryItem[]>([]);
@@ -415,6 +434,7 @@ export default function CaseRegistry({
             key={`${selected.tbCase.case_id}:${selected.tbCase.updated_at}`}
             item={selected}
             onChanged={load}
+            onOpenReferral={onOpenReferral}
           />
         ) : <div className="case-list-state">{t('cases.selectCase')}</div>}
       </div>

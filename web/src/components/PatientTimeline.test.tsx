@@ -107,6 +107,24 @@ describe('PatientTimeline', () => {
     expect(mock.state.calls).toHaveLength(2);
   });
 
+  it('names case lab tests and vitals without showing values', async () => {
+    mock.state.events = [
+      event({
+        event_id: 'case_vitals_recorded:1', event_type: 'case_vitals_recorded',
+        occurred_on: '2026-10-30', rank: 122, detail: {},
+      }),
+      event({
+        event_id: 'case_lab_result_recorded:1', event_type: 'case_lab_result_recorded',
+        occurred_on: '2026-10-30', rank: 124, detail: { test_type: 'smear', purpose: 'month_2' },
+      }),
+    ];
+    const { container } = render(<PatientTimeline patientId="patient-1" />);
+    expect(await screen.findByText(en.cases.timeline.event.case_vitals_recorded)).toBeTruthy();
+    expect(screen.getByText(en.cases.timeline.event.case_lab_result_recorded)).toBeTruthy();
+    expect(screen.getByText(`${en.cases.lab.test.smear} · ${en.cases.lab.purpose.month_2}`)).toBeTruthy();
+    expect(container.textContent ?? '').not.toMatch(/positive|negative|kg\b/i);
+  });
+
   it('warns when the bounded server result reaches its limit', async () => {
     mock.state.events = Array.from({ length: 500 }, (_, index) => event({
       event_id: `event:${index}`,

@@ -2798,6 +2798,24 @@ button.amber:hover { background: var(--amber-container); }
 .case-inline-editor { grid-template-columns: minmax(180px, 1fr) auto auto; align-items: end; }
 .case-notes-editor { grid-template-columns: minmax(220px, 1fr) auto auto; }
 .case-void-summary span { flex: 1; color: var(--muted); }
+/* 0040: lab results and vitals recorded during a case. */
+.case-records { margin-bottom: 18px; border: 1px solid var(--line); border-radius: 10px; padding: 16px; background: #fbfdff; }
+.case-records-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.case-records-head h3 { display: flex; align-items: center; gap: 7px; margin: 0; color: var(--navy); font-size: 15px; }
+.case-records-head h3 .msym { color: var(--teal-dark); font-size: 18px; }
+.case-records-head button, .case-records-actions button { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 8px; padding: 9px 13px; background: var(--navy); color: #fff; font-weight: 700; }
+.case-records-head button .msym { font-size: 18px; }
+.case-records-actions button.secondary { border: 1px solid var(--line); background: #fff; color: var(--ink); }
+.case-records-note { margin: 8px 0 14px; color: var(--muted); font-size: 12.5px; }
+.case-records-form { margin-bottom: 14px; border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: #fff; }
+.case-records-form .derived-box { min-height: 38px; }
+.case-records-form input.bad { border-color: #dc2626; }
+.case-records-outcome { display: grid; gap: 6px; grid-column: 1 / -1; }
+.case-records-outcome > span { color: var(--muted); font-size: 12px; font-weight: 700; }
+.case-records-actions { display: flex; flex-wrap: wrap; gap: 8px; grid-column: 1 / -1; }
+.case-records .case-correction-list article > div:first-child strong { color: var(--navy); }
+.case-card-link { margin-top: 12px; border: 1px solid var(--teal); border-radius: 8px; padding: 7px 10px; background: #fff; color: var(--teal-dark); font-size: 12px; font-weight: 700; }
+.case-outcome-hint { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
 .patient-timeline { margin-top: 20px; border: 1px solid var(--line); border-radius: 10px; padding: 16px; background: var(--paper); }
 .patient-timeline-head { display: flex; justify-content: space-between; align-items: start; gap: 16px; margin-bottom: 16px; }
 .patient-timeline-head h3 { margin: 0 0 5px; }

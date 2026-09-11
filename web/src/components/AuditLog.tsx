@@ -29,6 +29,8 @@ const ENTITY_KEY: Record<string, string> = {
   tb_cases: 'audit.entity.tb_cases',
   treatment_followups: 'audit.entity.treatment_followups',
   referrals: 'audit.entity.referrals',
+  case_lab_results: 'audit.entity.case_lab_results',
+  case_vitals: 'audit.entity.case_vitals',
 };
 
 const ACTION_KEY: Record<string, string> = {
@@ -60,9 +62,13 @@ const FIELD_KEY: Record<string, string> = {
   presented: 'audit.field.presented',
   result_date: 'audit.field.result_date',
   lab_sample_id: 'audit.field.lab_sample_id',
+  measured_on: 'audit.field.measured_on',
 };
 
-const FILTERS = ['all', 'appointments', 'tb_cases', 'treatment_followups', 'referrals'] as const;
+const FILTERS = [
+  'all', 'appointments', 'tb_cases', 'treatment_followups', 'referrals',
+  'case_lab_results', 'case_vitals',
+] as const;
 type AuditFilter = (typeof FILTERS)[number];
 
 /**

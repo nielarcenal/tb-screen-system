@@ -42,7 +42,13 @@ const mock = vi.hoisted(() => {
         in: () => ['patients', 'referrals', 'screenings'].includes(table)
           ? Promise.resolve(result(table))
           : builder,
-        order: () => Promise.resolve(result(table)),
+        // 0040 sections load their own rows by case id.
+        eq: () => builder,
+        order: () => Promise.resolve(
+          ['case_lab_results', 'case_vitals'].includes(table)
+            ? { data: [], error: null }
+            : result(table),
+        ),
       };
       return builder;
     },

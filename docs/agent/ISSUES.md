@@ -222,3 +222,11 @@ From `CLAUDE_DAY6_SECURITY_REVIEW.md`, with Codex's final gate applied. Migratio
 | D6-02 | LOW | `facility_audit_events()` returns `patient_id`, which the viewer does not render. It discloses nothing a TB-DOTS caller cannot already read through `patients` RLS, but the UI does not need it | **Open by choice.** Removing it forecloses linking an event to a patient record, the obvious next feature. Flagged so the decision is explicit |
 | D6-03 | LOW | `actor_name` is a LEFT JOIN through `users` RLS, so one event can render a name for one reader and a role for another | Accepted; the viewer falls back to role then to a system label, and that is tested |
 | D6-04 | INFO | A direct-session support write records a null actor and is indistinguishable from an Edge Function write | Accepted. Distinguishing them needs a provenance column and its own migration |
+
+## Case lab results and vitals (2026-09-11)
+
+| ID | Severity | Issue | Status |
+| --- | --- | --- | --- |
+| S40-01 | MEDIUM | Migration 0040 needed applying before the new case-registry sections could load | **Resolved 2026-09-11:** 42/42 rolled-back preflight, then applied atomically on the user's go-ahead; tables, policies, RPCs and the audit CHECK verified live, and the portal sections load with no console errors |
+| S40-02 | LOW | New tl/ceb strings for the case lab/vitals sections, the "Cured" hint and the walk-in next step are best-effort translations | Open: needs the same native-speaker review as S7-06 |
+| S40-03 | LOW | `patient_timeline()` (0036) did not list case lab results or vitals | **Resolved 2026-09-11 by 0041:** 0036 restated verbatim (built by script from the file, live body confirmed identical first) plus two arms. Events name the test and treatment point only, never result values or measurements, matching 0036's rule. 12/12 preflight, applied on the user's go-ahead |

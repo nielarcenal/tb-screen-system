@@ -265,6 +265,39 @@ export interface TreatmentFollowupRow {
   updated_at: string;
 }
 
+export type CaseLabTest = 'xpert' | 'smear' | 'culture' | 'other';
+export type CaseLabPurpose = 'baseline' | 'month_2' | 'month_5' | 'end_of_treatment' | 'other';
+export type CaseLabOutcome = 'positive' | 'negative' | 'invalid';
+
+/** A laboratory result entered by facility staff during a case (0040). */
+export interface CaseLabResultRow {
+  lab_result_id: string;
+  case_id: string;
+  test_type: CaseLabTest;
+  purpose: CaseLabPurpose;
+  result_date: string;
+  result_outcome: CaseLabOutcome;
+  lab_sample_id: string | null;
+  notes: string | null;
+  recorded_by: string;
+  created_at: string;
+  voided_at: string | null;
+  voided_by: string | null;
+  void_reason: string | null;
+}
+
+/** One set of measurements taken during a case (0040). Measurements only. */
+export interface CaseVitalsRow extends Vitals {
+  vitals_id: string;
+  case_id: string;
+  measured_on: string;
+  recorded_by: string;
+  created_at: string;
+  voided_at: string | null;
+  voided_by: string | null;
+  void_reason: string | null;
+}
+
 /**
  * One row of `facility_audit_events()` (migration 0038).
  *
