@@ -97,3 +97,6 @@ screenshots/
 docs/v2 design/
 Images/
 docs/data/
+
+# Local database backups — may contain personal data, never commit
+backups/
