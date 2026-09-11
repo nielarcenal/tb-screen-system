@@ -47,6 +47,16 @@ The "why" paragraph in the About section is the author's own words. It is the
 only part of the page that says why the system exists rather than what it does.
 Leave it alone.
 
+### The embedded video (added 2026-09-11)
+
+The "What is tuberculosis?" band embeds a third-party video:
+*What is tuberculosis?* by **KNCV TB Plus**
+(<https://www.youtube.com/watch?v=UytL_4suU_Q>). It is not ours. The credit
+line under the player — title, channel, a link to both, and "not affiliated" —
+must stay whenever the video does. It uses the `youtube-nocookie.com` embed so
+nothing is set in the visitor's browser until they press play. If the video is
+removed from YouTube, remove the whole band rather than leave an empty frame.
+
 ### The APK link
 
 The APK is a **GitHub release asset**, which needs the repository to be public —

@@ -630,6 +630,73 @@ a:hover {
   color: var(--seafoam);
 }
 
+/* ---------- learn about TB (embedded, credited video) ---------- */
+.learn {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.video {
+  margin: 0;
+}
+
+.video-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  max-width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--navy);
+  border: 1px solid var(--line);
+}
+
+.video-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.video-credit {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.video-credit a {
+  color: var(--teal-dark);
+  font-weight: 600;
+}
+
+.learn-facts {
+  display: grid;
+  gap: 14px;
+}
+
+.learn-facts article {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--seafoam);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+
+.learn-facts h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.learn-facts p {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
 /* ---------- features ---------- */
 .features {
   display: grid;
@@ -1137,7 +1204,8 @@ a:hover {
   .hero .wrap,
   .dl,
   .about,
-  .rule {
+  .rule,
+  .learn {
     grid-template-columns: minmax(0, 1fr);
     gap: 34px;
   }
