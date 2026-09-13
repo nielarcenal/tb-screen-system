@@ -20,8 +20,27 @@ const mock = vi.hoisted(() => {
   const db = {
     byFrom: new Map<string, unknown[]>(),
     calls: [] as { from: string; to: string }[],
+    extra: [] as { barangay_code: string; city_code: string; name: string }[],
   };
   const supabase = {
+    from(table: string) {
+      const builder = {
+        select: () => builder, eq: () => builder, in: () => builder,
+        order: () => table === 'ref_cities'
+          ? Promise.resolve({ data: [{ city_code: 'val', name: 'Valencia City' }, { city_code: 'mal', name: 'Malaybalay' }], error: null })
+          : builder,
+        range: (from: number, to: number) => {
+          const entries = new Map<string, { barangay_code: string; city_code: string; name: string }>();
+          for (const rows of db.byFrom.values()) for (const raw of rows) {
+            const r = raw as { barangay_code: string; barangay_name: string };
+            entries.set(r.barangay_code, { barangay_code: r.barangay_code, city_code: 'val', name: r.barangay_name });
+          }
+          for (const r of db.extra) entries.set(r.barangay_code, r);
+          return Promise.resolve({ data: [...entries.values()].slice(from, to + 1), error: null });
+        },
+      };
+      return builder;
+    },
     rpc: (_fn: string, args: { from_date: string; to_date: string }) => {
       db.calls.push({ from: args.from_date, to: args.to_date });
       return Promise.resolve({ data: db.byFrom.get(args.from_date) ?? [], error: null });
@@ -50,9 +69,52 @@ const thisYear = new Date().getFullYear();
 beforeEach(() => {
   mock.db.byFrom.clear();
   mock.db.calls.length = 0;
+  mock.db.extra = [{ barangay_code: 'default-zero', city_code: 'val', name: 'Zero record barangay' }];
 });
 
 describe('BarangayReport', () => {
+  it('shows zero-record barangays and filters the table and exports by city code', async () => {
+    mock.db.byFrom.set(`${thisYear}-01-01`, [row('VALENCIA ACTIVE', { referred_count: 3 })]);
+    mock.db.extra.push({ barangay_code: 'mal-zero', city_code: 'mal', name: 'MALAYBALAY ZERO' });
+    render(<BarangayReport />);
+    await screen.findByRole('table');
+    fireEvent.change(screen.getByLabelText('City / municipality (view and download)'), { target: { value: 'mal' } });
+    const table = screen.getByRole('table');
+    expect(table.textContent).toContain('MALAYBALAY ZERO');
+    expect(table.textContent).not.toContain('VALENCIA ACTIVE');
+    expect(within(table).getAllByRole('row')).toHaveLength(3);
+    expect(within(table).getAllByRole('cell').slice(1).every(cell => cell.textContent === '0')).toBe(true);
+  });
+
+  it('downloads all rows even when search hides them and includes the demo disclaimer', async () => {
+    mock.db.byFrom.set(`${thisYear}-01-01`, [row('ALPHA'), row('BETA')]);
+    mock.db.byFrom.set(`${thisYear - 1}-01-01`, [row('PREVIOUS ONLY')]);
+    let captured: Blob | undefined;
+    const create = vi.fn((blob: Blob) => { captured = blob; return 'blob:report'; });
+    vi.stubGlobal('URL', { createObjectURL: create, revokeObjectURL: vi.fn() });
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    try {
+      render(<BarangayReport />);
+      const download = await screen.findByRole('button', { name: 'Download printable report' });
+      fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'ALPHA' } });
+      fireEvent.click(download);
+      expect(click).toHaveBeenCalledOnce();
+      expect(captured?.type).toBe('text/html;charset=utf-8');
+      const html = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.readAsText(captured!);
+      });
+      expect(html).toContain('BETA');
+      expect(html).toContain('PREVIOUS ONLY');
+      expect(html).toContain('All data in this report is fictional');
+      expect((click.mock.instances[0] as HTMLAnchorElement).download).toContain('capstone-demo');
+    } finally {
+      click.mockRestore();
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('compares LIKE FOR LIKE: both periods end on the same month and day', async () => {
     mock.db.byFrom.set(`${thisYear}-01-01`, [row('POBLACION', { referred_count: 3 })]);
     render(<BarangayReport />);
@@ -167,6 +229,6 @@ describe('BarangayReport', () => {
     expect(bodyRows()).toHaveLength(10);
 
     fireEvent.click(screen.getByRole('button', { name: '3' }));
-    await waitFor(() => expect(bodyRows()).toHaveLength(3)); // 23 = 10 + 10 + 3
+    await waitFor(() => expect(bodyRows()).toHaveLength(4)); // 23 counted + 1 zero-record barangay
   });
 });

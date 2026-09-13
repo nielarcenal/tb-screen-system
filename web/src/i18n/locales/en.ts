@@ -351,6 +351,14 @@ export const en = {
     hoConfirm: 'Deactivate BHW',
   },
   report: {
+    cityFilter: 'City / municipality (view and download)',
+    downloadPdf: 'Download PDF',
+    pdfError: 'PDF download failed. Please try again or download the printable HTML.',
+    demoDisclaimer: 'CAPSTONE DEMO ONLY — All data in this report is fictional and does not represent real patients or actual health statistics. This is not an official DOH/ITIS report and must not be used for clinical or public-health decisions.',
+    downloadPrintable: 'Download printable report',
+    printInstruction: 'To print or save as PDF, use your browser’s Print command (Ctrl+P). Select A4 landscape. This file works offline.',
+    generatedOn: 'Generated on',
+    exportScope: 'Downloads include every barangay in the selected city/municipality (or all Bukidnon), including zero-record barangays, for both periods. Search and pagination do not limit downloads.',
     periodFull: 'Showing all of {{year}}, compared with all of the year before.',
     periodPartial:
       'Showing 1 January to {{end}}. The year before covers the SAME dates, so the two columns can be compared fairly.',
@@ -484,6 +492,11 @@ export const en = {
     female: 'Female',
   },
   cases: {
+    sectionsLabel: 'Case record sections',
+    sections: { overview: 'Screening & referral', treatment: 'Treatment & visits', results: 'Lab & vital signs', history: 'Patient history' },
+    recordDetails: 'Record identifiers & audit details',
+    chooseOutcome: 'Select a treatment outcome',
+    returnNotice: 'Returning after lost to follow-up? Keep this episode closed. A clinician must reassess the patient before a new treatment episode is registered under the same patient record. Do not create a duplicate patient.',
     detailTitle: 'TB case details',
     caseNumber: 'Case number',
     unknownPatient: 'Patient record unavailable',

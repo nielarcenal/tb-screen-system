@@ -349,6 +349,14 @@ export const ceb: Translation = {
     hoConfirm: 'I-deactivate ang BHW',
   },
   report: {
+    cityFilter: 'Siyudad / munisipalidad (tan-awon ug i-download)',
+    downloadPdf: 'I-download ang PDF',
+    pdfError: 'Napakyas ang PDF download. Sulayi pag-usab o i-download ang ma-print nga HTML.',
+    demoDisclaimer: 'CAPSTONE DEMO LAMANG — Hinimo-himo ang tanang datos niini nga report ug wala kini nagrepresentar sa tinuod nga mga pasyente o aktuwal nga estadistika sa panglawas. Dili kini opisyal nga DOH/ITIS report ug dili gamiton sa mga desisyong klinikal o panglawas sa publiko.',
+    downloadPrintable: 'I-download ang ma-print nga report',
+    printInstruction: 'Aron ma-print o ma-save isip PDF, gamita ang Print sa browser (Ctrl+P). Pilia ang A4 landscape. Magamit kini nga file offline.',
+    generatedOn: 'Gihimo niadtong',
+    exportScope: 'Apil sa download ang tanang barangay sa napiling siyudad/munisipalidad (o tibuok Bukidnon), bisan walay rekord, sa duha ka panahon. Dili limitahan sa pagpangita o pahina ang download.',
     periodFull: 'Tibuok {{year}}, itandi sa tibuok tuig una niini.',
     periodPartial:
       'Gikan 1 Enero hangtod {{end}}. PAREHO nga petsa ang sakop sa miaging tuig, busa patas ang pagtandi.',
@@ -488,6 +496,11 @@ export const ceb: Translation = {
     female: 'Babaye',
   },
   cases: {
+    sectionsLabel: 'Mga seksyon sa rekord sa kaso',
+    sections: { overview: 'Screening ug referral', treatment: 'Pagtambal ug mga pagbisita', results: 'Laboratoryo ug vital signs', history: 'Kasaysayan sa pasyente' },
+    recordDetails: 'Mga identifier ug detalye sa audit',
+    chooseOutcome: 'Pagpili og resulta sa pagtambal',
+    returnNotice: 'Nibalik human ma-lost to follow-up? Ipadayon nga sirado kini nga episode. Kinahanglang susihon pag-usab sa clinician ang pasyente sa dili pa magparehistro og bag-ong episode sa pagtambal ubos sa samang rekord sa pasyente. Ayaw paghimo og duplicate nga pasyente.',
     detailTitle: 'Mga detalye sa TB case',
     caseNumber: 'Numero sa case',
     unknownPatient: 'Dili makuha ang rekord sa pasyente',

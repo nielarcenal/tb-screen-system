@@ -349,6 +349,14 @@ export const tl: Translation = {
     hoConfirm: 'I-deactivate ang BHW',
   },
   report: {
+    cityFilter: 'Lungsod / munisipalidad (tingnan at i-download)',
+    downloadPdf: 'I-download ang PDF',
+    pdfError: 'Hindi na-download ang PDF. Subukan muli o i-download ang napi-print na HTML.',
+    demoDisclaimer: 'CAPSTONE DEMO LAMANG — Kathang-isip ang lahat ng datos sa ulat na ito at hindi kumakatawan sa tunay na mga pasyente o aktuwal na estadistika ng kalusugan. Hindi ito opisyal na ulat ng DOH/ITIS at hindi dapat gamitin sa mga desisyong klinikal o pampublikong kalusugan.',
+    downloadPrintable: 'I-download ang napi-print na ulat',
+    printInstruction: 'Upang i-print o i-save bilang PDF, gamitin ang Print ng browser (Ctrl+P). Piliin ang A4 landscape. Gumagana ang file na ito offline.',
+    generatedOn: 'Ginawa noong',
+    exportScope: 'Kasama sa download ang lahat ng barangay sa napiling lungsod/munisipalidad (o buong Bukidnon), kahit walang rekord, sa parehong panahon. Hindi nililimitahan ng paghahanap o pahina ang download.',
     periodFull: 'Buong {{year}}, kumpara sa buong taon bago nito.',
     periodPartial:
       'Mula 1 Enero hanggang {{end}}. PAREHONG petsa ang saklaw ng nakaraang taon, kaya patas ang paghahambing.',
@@ -488,6 +496,11 @@ export const tl: Translation = {
     female: 'Babae',
   },
   cases: {
+    sectionsLabel: 'Mga seksyon ng rekord ng kaso',
+    sections: { overview: 'Screening at referral', treatment: 'Paggamot at mga pagbisita', results: 'Laboratoryo at vital signs', history: 'Kasaysayan ng pasyente' },
+    recordDetails: 'Mga identifier at detalye ng audit',
+    chooseOutcome: 'Pumili ng kinalabasan ng paggamot',
+    returnNotice: 'Bumalik matapos ma-lost to follow-up? Panatilihing sarado ang episode na ito. Kailangang suriin muli ng clinician ang pasyente bago magrehistro ng bagong episode ng paggamot sa parehong rekord ng pasyente. Huwag gumawa ng duplicate na pasyente.',
     detailTitle: 'Detalye ng TB case',
     caseNumber: 'Numero ng case',
     unknownPatient: 'Hindi makuha ang rekord ng pasyente',

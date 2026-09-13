@@ -1493,6 +1493,12 @@ button.amber:hover { background: var(--amber-container); }
    shrinks, so the values clipped below ~460px; a div track with a
    percentage-width fill reflows at any width. */
 .brep { display: flex; flex-direction: column; gap: 14px; }
+.brep button { margin: 0; border-radius: 6px; }
+.brep-demo-notice { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border: 1px solid #e6cb8a; border-left: 4px solid #9a6300; background: #fff8e6; color: #704700; }
+.brep-demo-notice p { margin: 0; font-size: 12px; line-height: 1.6; }
+.brep-exportbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; padding: 16px; background: var(--paper); border: 1px solid var(--line); }
+.brep-exportbar p { flex: 1 1 260px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.brep-exportbar button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; }
 
 .brep-toolbar {
   display: flex;
@@ -1504,11 +1510,13 @@ button.amber:hover { background: var(--amber-container); }
 /* Which stretch of calendar the numbers cover, before any is read. */
 .brep-period { margin: 0; font-size: 12px; color: var(--ink-soft); max-width: 70ch; line-height: 1.5; }
 .brep-context { display: flex; flex-direction: column; gap: 5px; }
+.brep-city-select { display: grid; gap: 5px; margin: 0; flex: 1 1 250px; max-width: 340px; }
+.brep-city-select select { width: 100%; min-width: 0; height: 40px; border-radius: 6px; }
 .brep-city { align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; background: var(--teal-container); color: var(--teal-dark); font-size: 11.5px; font-weight: 600; }
 .brep-city .msym { font-size: 14px; }
 
 /* ---- KPI cards ---- */
-.brep-kpirow { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+.brep-kpirow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
 .brep-kpi {
   display: flex;
   align-items: flex-start;
@@ -1516,7 +1524,7 @@ button.amber:hover { background: var(--amber-container); }
   padding: 16px 18px;
   background: var(--paper);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 0;
 }
 .brep-kpi-ic {
   flex: 0 0 auto;
@@ -1539,7 +1547,7 @@ button.amber:hover { background: var(--amber-container); }
 .brep-kpi.skel .b.d { width: 130px; height: 10px; }
 
 /* ---- cards ---- */
-.brep-card { padding: 0; }
+.brep-card { padding: 0; border-radius: 0; min-width: 0; }
 .brep-cardhead {
   display: flex; align-items: center; justify-content: space-between;
   gap: 12px; flex-wrap: wrap;
@@ -1579,8 +1587,8 @@ button.amber:hover { background: var(--amber-container); }
 /* ---- search ---- */
 .brep-search {
   display: inline-flex; align-items: center; gap: 7px;
-  padding: 0 11px; height: 32px;
-  border: 1px solid var(--line); border-radius: 999px; background: var(--paper);
+  padding: 0 11px; height: 40px; margin: 0;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--paper);
 }
 .brep-search:focus-within { border-color: var(--teal-border); }
 .brep-search .msym { font-size: 17px; color: var(--muted); }
@@ -1596,6 +1604,9 @@ button.amber:hover { background: var(--amber-container); }
 .brep-caveat { padding: 0 18px; }
 .brep-table th, .brep-table td { padding: 8px 12px; text-align: right; white-space: nowrap; }
 .brep-table thead th { font-size: 10.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+.brep-table thead { background: #edf3f2; }
+.brep-table tbody tr:nth-child(even) { background: #f8faf9; }
+.brep-table tbody th small { display: block; color: var(--muted); font-weight: 400; }
 .brep-table thead .brep-grouprow th { border-bottom: 1px solid #f0ece4; }
 .brep-table thead .brep-grp { text-align: center; color: var(--ink-mid); }
 .brep-table tbody tr { border-top: 1px solid #f4f1ea; }
@@ -1640,9 +1651,17 @@ button.amber:hover { background: var(--amber-container); }
 .brep-scope .msym { font-size: 16px; flex: 0 0 auto; margin-top: 1px; }
 
 @media (max-width: 760px) {
+  .brep-kpirow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .brep-rank li { grid-template-columns: 20px minmax(74px, 104px) 1fr 34px; gap: 8px; }
   .brep-search input { width: 100%; }
   .brep-search { flex: 1 1 100%; }
+}
+@media (min-width: 761px) and (max-width: 1200px) {
+  .brep-kpirow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 420px) {
+  .brep-kpi { padding: 12px; gap: 8px; flex-direction: column; }
+  .brep-exportbar button { width: 100%; }
 }
 
 /* ---------- account-management list (shared: BHW / midwife / staff) + states (§4) ---------- */
@@ -2714,13 +2733,14 @@ button.amber:hover { background: var(--amber-container); }
 }
 
 /* TB case registry — facility-scoped master/detail treatment workspace. */
-.case-registry { display: grid; grid-template-columns: minmax(300px, 390px) minmax(0, 1fr); min-height: 620px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--paper); }
+.case-registry { display: grid; grid-template-columns: minmax(260px, 310px) minmax(0, 1fr); min-height: 620px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--paper); }
 .case-master { border-right: 1px solid var(--line); background: #f8fafc; }
-.case-tools { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 14px; border-bottom: 1px solid var(--line); }
+.case-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 14px; border-bottom: 1px solid var(--line); }
+.case-tools input { grid-column: 1 / -1; width: 100%; }
 .case-tools input, .case-tools select, .case-action-card input, .case-close-card input, .case-close-card select { min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; background: #fff; color: var(--ink); }
 .case-tools button { border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 7px 10px; color: var(--navy); }
-.case-list { display: flex; flex-direction: column; }
-.case-list > button { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 16px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); text-align: left; }
+.case-list { display: flex; flex-direction: column; max-height: 70vh; overflow-y: auto; }
+.case-list > button { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; margin: 0; padding: 16px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; color: var(--ink); text-align: left; }
 .case-list > button:hover, .case-list > button.selected { background: #fff; box-shadow: inset 3px 0 var(--teal); }
 .case-list > button > div:first-child { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
 .case-list > button strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -2743,16 +2763,25 @@ button.amber:hover { background: var(--amber-container); }
 .case-detail-head { display: flex; align-items: start; justify-content: space-between; gap: 16px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
 .case-detail-head h2 { margin: 4px 0; font-size: 24px; color: var(--navy); }
 .case-detail-head p { margin: 0; color: var(--muted); }
+.case-detail-head > div { min-width: 0; overflow-wrap: anywhere; }
+.case-section-nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0; padding: 6px; border: 1px solid var(--line); border-radius: 12px; background: #f8fafc; }
+.case-section-nav button { flex: 1 1 auto; border: 0; border-radius: 8px; padding: 11px 12px; background: transparent; color: var(--muted); font: inherit; font-size: 13px; font-weight: 700; }
+.case-section-nav button[aria-pressed="true"] { background: var(--navy); color: #fff; }
+.case-section-nav button:focus-visible, .case-list > button:focus-visible, .case-metadata summary:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
+.case-metadata { margin-bottom: 16px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+.case-metadata summary { cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600; }
+.case-return-notice { border-left: 3px solid #b45309; padding: 12px 14px; border-radius: 6px; background: #fffbeb; color: #78350f; font-size: 13px; line-height: 1.6; }
 .case-kicker { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 .case-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding: 18px 0; }
 .case-facts div { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
 .case-facts span { color: var(--muted); font-size: 11px; }
 .case-facts strong { overflow-wrap: anywhere; font-size: 13px; }
-.case-clinical-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.case-clinical-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.case-clinical-card:first-child { grid-column: 1 / -1; }
 .case-clinical-card { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--subtle); }
 .case-clinical-card h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 12px; color: var(--navy); font-size: 14px; }
 .case-clinical-card h3 .msym { color: var(--teal-dark); font-size: 18px; }
-.case-screening-list { display: flex; flex-direction: column; gap: 5px; }
+.case-screening-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 24px; }
 .case-screening-list > div, .case-pgis { display: flex; justify-content: space-between; gap: 10px; font-size: 11.5px; }
 .case-screening-list span, .case-pgis span, .case-lab-grid dt { color: var(--muted); }
 .case-pgis { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); flex-wrap: wrap; }
@@ -2760,11 +2789,13 @@ button.amber:hover { background: var(--amber-container); }
 .case-lab-grid { display: grid; gap: 9px; margin: 0; }
 .case-lab-grid > div { display: grid; grid-template-columns: minmax(90px, .8fr) minmax(0, 1.2fr); gap: 8px; }
 .case-lab-grid dt, .case-lab-grid dd { margin: 0; font-size: 11.5px; overflow-wrap: anywhere; }
-.case-outcome { display: flex; align-items: center; gap: 12px; border-radius: 10px; padding: 12px 14px; background: #eff6ff; color: #1e3a8a; }
+.case-outcome { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border-radius: 10px; padding: 12px 14px; background: #eff6ff; color: #1e3a8a; }
 .case-outcome span:first-child { color: #64748b; font-size: 12px; }
 .case-action-card, .case-close-card { display: flex; align-items: end; flex-wrap: wrap; gap: 10px; margin-top: 14px; border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: #f8fafc; }
-.case-action-card label, .case-close-card label { display: flex; flex-direction: column; gap: 5px; color: var(--muted); font-size: 12px; }
+.case-action-card label, .case-close-card label { display: flex; flex-direction: column; gap: 5px; margin: 0; color: var(--muted); font-size: 12px; }
 .case-action-card button, .case-close-card button, .case-link-card button, .case-create-row button { border: 0; border-radius: 8px; padding: 10px 14px; background: var(--navy); color: #fff; font-weight: 700; }
+.case-action-card button, .case-close-card button { margin: 0; }
+.case-action-card input, .case-action-card button, .case-close-card input, .case-close-card select, .case-close-card button { box-sizing: border-box; min-height: 40px; }
 .case-action-card .danger-outline { border: 1px solid #fca5a5; background: #fff; color: #b91c1c; }
 .case-close-card h3 { flex-basis: 100%; margin: 0; color: var(--navy); }
 .case-error { margin-top: 12px; border-radius: 8px; padding: 10px 12px; background: #fef2f2; color: #b91c1c; font-size: 13px; }
@@ -2841,6 +2872,7 @@ button.amber:hover { background: var(--amber-container); }
 @media (max-width: 900px) {
   .case-registry { grid-template-columns: 1fr; }
   .case-master { border-right: 0; border-bottom: 1px solid var(--line); }
+  .case-list { max-height: 280px; }
   .case-facts, .case-clinical-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
@@ -2848,6 +2880,10 @@ button.amber:hover { background: var(--amber-container); }
   .case-tools input { grid-column: 1 / -1; }
   .case-facts, .case-grid, .case-clinical-grid { grid-template-columns: 1fr; }
   .case-detail { padding: 16px; }
+  .case-section-nav button { flex-basis: 40%; }
+  .case-screening-list { grid-template-columns: 1fr; }
+  .case-records-head { align-items: flex-start; flex-direction: column; }
+  .case-action-card label, .case-close-card label { min-width: 0; width: 100%; }
   .case-visit-form, .case-inline-editor, .case-notes-editor { grid-template-columns: 1fr; }
   .patient-timeline-head { flex-direction: column; }
   .timeline-event { grid-template-columns: 18px minmax(0, 1fr); }

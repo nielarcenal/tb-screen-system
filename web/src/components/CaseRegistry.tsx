@@ -82,6 +82,13 @@ const ATTENTION_KEY = {
   due: 'cases.attention.due',
 } as const;
 
+const SECTION_KEY = {
+  overview: 'cases.sections.overview',
+  treatment: 'cases.sections.treatment',
+  results: 'cases.sections.results',
+  history: 'cases.sections.history',
+} as const;
+
 function formatDate(value: string | null): string {
   return value ? new Date(`${value}T00:00:00`).toLocaleDateString() : '—';
 }
@@ -98,10 +105,12 @@ function CaseDetail({ item, onChanged, onOpenReferral }: DetailProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [startDate, setStartDate] = useState(manilaToday());
-  const [outcome, setOutcome] = useState<TreatmentOutcome>('cured');
+  const [outcome, setOutcome] = useState<TreatmentOutcome | ''>('');
   const [outcomeDate, setOutcomeDate] = useState(manilaToday());
+  const [section, setSection] = useState('overview');
 
   const transition = async (next: TbCaseStatus) => {
+    if (next === 'closed' && !outcome) return;
     setBusy(true);
     setError(null);
     const { error: rpcError } = await supabase.rpc('set_tb_case_status', {
@@ -137,72 +146,7 @@ function CaseDetail({ item, onChanged, onOpenReferral }: DetailProps) {
         <div><span>{t('cases.patientCode')}</span><strong>{patient?.display_code ?? '—'}</strong></div>
         <div><span>{t('cases.registrationDate')}</span><strong>{formatDate(tbCase.registration_date)}</strong></div>
         <div><span>{t('cases.treatmentStart')}</span><strong>{formatDate(tbCase.treatment_start_date)}</strong></div>
-        <div><span>{t('cases.owningFacility')}</span><strong>{tbCase.facility_id}</strong></div>
-        <div><span>{t('cases.originReferral')}</span><strong>{tbCase.referral_id ?? t('cases.walkIn')}</strong></div>
-        <div><span>{t('cases.createdAt')}</span><strong>{new Date(tbCase.created_at).toLocaleString()}</strong></div>
-        <div><span>{t('cases.createdBy')}</span><strong>{tbCase.created_by}</strong></div>
       </div>
-
-      <div className="case-clinical-grid">
-        <section className="case-clinical-card">
-          <h3><span className="msym" aria-hidden="true">checklist</span>{t('cases.preScreening')}</h3>
-          {item.screening ? (
-            <>
-              <div className="case-screening-list">
-                {SYMPTOM_KEYS.map((key) => (
-                  <div key={key}>
-                    <span>{t(`symptoms.${key}`)}</span>
-                    <strong>{item.screening?.symptom_flags[key] ? t(`common.${item.screening.symptom_flags[key]}`) : '—'}</strong>
-                  </div>
-                ))}
-              </div>
-              <div className="case-pgis"><span>{t('detail.pgisLabel')}</span><strong>{item.screening.pgis_severity ? t(`pgis.${item.screening.pgis_severity}`) : '—'}</strong><small>{t('detail.patientReportedTag')}</small></div>
-            </>
-          ) : <p className="case-empty-line">{t('cases.noScreening')}</p>}
-        </section>
-
-        <section className="case-clinical-card">
-          <h3><span className="msym" aria-hidden="true">monitor_heart</span>{t('cases.vitalsAtScreening')}</h3>
-          {item.screening && hasAnyVital(item.screening) ? (
-            <dl className="vitals-grid">
-              {vitalsRows(item.screening, {
-                height: t('vitals.height'), weight: t('vitals.weight'), bmi: t('vitals.bmi'),
-                temperature: t('vitals.temperature'), bloodPressure: t('vitals.bloodPressure'),
-                pulse: t('vitals.pulse'), spo2: t('vitals.spo2'),
-              }, {
-                cm: t('vitals.unitCm'), kg: t('vitals.unitKg'), bmi: t('vitals.unitBmi'),
-                c: t('vitals.unitC'), mmHg: t('vitals.unitMmHg'), bpm: t('vitals.unitBpm'),
-                percent: t('vitals.unitPercent'),
-              }).map((row) => <div key={row.key} className="vitals-cell"><dt>{row.label}</dt><dd>{row.value}</dd></div>)}
-            </dl>
-          ) : <p className="case-empty-line">{t('vitals.noneRecorded')}</p>}
-        </section>
-
-        <section className="case-clinical-card">
-          <h3><span className="msym" aria-hidden="true">biotech</span>{t('cases.labReport')}</h3>
-          {item.referral ? (
-            <dl className="case-lab-grid">
-              <div><dt>{t('detail.sampleIdLabel')}</dt><dd>{item.referral.lab_sample_id ?? '—'}</dd></div>
-              <div><dt>{t('cases.labOutcome')}</dt><dd>{item.referral.result_outcome ? t(`detail.outcome${item.referral.result_outcome === 'positive' ? 'Positive' : 'Negative'}`) : '—'}</dd></div>
-              <div><dt>{t('cases.labDate')}</dt><dd>{formatDate(item.referral.result_date)}</dd></div>
-              <div><dt>{t('cases.labNotes')}</dt><dd>{item.referral.result || '—'}</dd></div>
-            </dl>
-          ) : <p className="case-empty-line">{t('cases.noLabReport')}</p>}
-          {item.referral && onOpenReferral ? (
-            <button type="button" className="case-card-link" onClick={() => onOpenReferral(item.referral!.referral_id)}>
-              {item.referral.result_outcome ? t('cases.openReferral') : t('cases.recordDiagnosticResult')}
-            </button>
-          ) : null}
-        </section>
-      </div>
-
-      <CaseLabResults caseId={tbCase.case_id} caseStatus={tbCase.case_status} />
-      <CaseVitalsLog
-        caseId={tbCase.case_id}
-        caseStatus={tbCase.case_status}
-        registrationDate={tbCase.registration_date}
-        outcomeDate={tbCase.outcome_date}
-      />
 
       {tbCase.outcome ? (
         <div className="case-outcome">
@@ -211,89 +155,181 @@ function CaseDetail({ item, onChanged, onOpenReferral }: DetailProps) {
           <span>{formatDate(tbCase.outcome_date)}</span>
         </div>
       ) : null}
-
-      {tbCase.case_status === 'registered' ? (
-        <div className="case-action-card">
-          <label>
-            <span>{t('cases.startDate')}</span>
-            <input type="date" max={manilaToday()} value={startDate} onChange={(event) => setStartDate(event.target.value)} />
-          </label>
-          <button disabled={busy || !startDate} onClick={() => void transition('on_treatment')}>
-            {t('cases.startTreatment')}
-          </button>
-          <button className="danger-outline" disabled={busy} onClick={() => void transition('cancelled')}>
-            {t('cases.cancelCase')}
-          </button>
-        </div>
-      ) : tbCase.case_status === 'on_treatment' ? (
-        <div className="case-action-card">
-          <button disabled={busy} onClick={() => void transition('interrupted')}>
-            {t('cases.markInterrupted')}
-          </button>
-          <span>{t('cases.orCloseBelow')}</span>
-        </div>
-      ) : tbCase.case_status === 'interrupted' ? (
-        <div className="case-action-card">
-          <button disabled={busy} onClick={() => void transition('on_treatment')}>
-            {t('cases.resumeTreatment')}
-          </button>
-          <span>{t('cases.orCloseBelow')}</span>
-        </div>
+      {tbCase.outcome === 'lost_to_follow_up' ? (
+        <p className="case-return-notice">{t('cases.returnNotice')}</p>
       ) : null}
 
-      {tbCase.case_status === 'on_treatment' || tbCase.case_status === 'interrupted' ? (
-        <div className="case-close-card">
-          <h3>{t('cases.closeCase')}</h3>
-          <label>
-            <span>{t('cases.outcomeLabel')}</span>
-            <select value={outcome} onChange={(event) => setOutcome(event.target.value as TreatmentOutcome)}>
-              {OUTCOMES.map((value) => <option key={value} value={value}>{t(OUTCOME_KEY[value])}</option>)}
-            </select>
-          </label>
-          <label>
-            <span>{t('cases.outcomeDate')}</span>
-            <input type="date" max={manilaToday()} value={outcomeDate} onChange={(event) => setOutcomeDate(event.target.value)} />
-          </label>
-          <button disabled={busy || !outcomeDate} onClick={() => void transition('closed')}>
-            {t('cases.closeCase')}
+      <nav className="case-section-nav" aria-label={t('cases.sectionsLabel')}>
+        {(['overview', 'treatment', 'results', 'history'] as const).map((value) => (
+          <button key={value} type="button" aria-pressed={section === value}
+            aria-controls={`case-section-${value}`} onClick={() => setSection(value)}>
+            {t(SECTION_KEY[value])}
           </button>
-          <p className="case-outcome-hint">{t('cases.outcomeHint')}</p>
+        ))}
+      </nav>
+
+      <div id="case-section-overview" hidden={section !== 'overview'}>
+        <details className="case-metadata">
+          <summary>{t('cases.recordDetails')}</summary>
+          <div className="case-facts">
+          <div><span>{t('cases.owningFacility')}</span><strong>{tbCase.facility_id}</strong></div>
+          <div><span>{t('cases.originReferral')}</span><strong>{tbCase.referral_id ?? t('cases.walkIn')}</strong></div>
+          <div><span>{t('cases.createdAt')}</span><strong>{new Date(tbCase.created_at).toLocaleString()}</strong></div>
+          <div><span>{t('cases.createdBy')}</span><strong>{tbCase.created_by}</strong></div>
+          </div>
+        </details>
+
+        <div className="case-clinical-grid">
+          <section className="case-clinical-card">
+            <h3><span className="msym" aria-hidden="true">checklist</span>{t('cases.preScreening')}</h3>
+            {item.screening ? (
+              <>
+                <div className="case-screening-list">
+                  {SYMPTOM_KEYS.map((key) => (
+                    <div key={key}>
+                      <span>{t(`symptoms.${key}`)}</span>
+                      <strong>{item.screening?.symptom_flags[key] ? t(`common.${item.screening.symptom_flags[key]}`) : '—'}</strong>
+                    </div>
+                  ))}
+                </div>
+                <div className="case-pgis"><span>{t('detail.pgisLabel')}</span><strong>{item.screening.pgis_severity ? t(`pgis.${item.screening.pgis_severity}`) : '—'}</strong><small>{t('detail.patientReportedTag')}</small></div>
+              </>
+            ) : <p className="case-empty-line">{t('cases.noScreening')}</p>}
+          </section>
+
+          <section className="case-clinical-card">
+            <h3><span className="msym" aria-hidden="true">monitor_heart</span>{t('cases.vitalsAtScreening')}</h3>
+            {item.screening && hasAnyVital(item.screening) ? (
+              <dl className="vitals-grid">
+                {vitalsRows(item.screening, {
+                  height: t('vitals.height'), weight: t('vitals.weight'), bmi: t('vitals.bmi'),
+                  temperature: t('vitals.temperature'), bloodPressure: t('vitals.bloodPressure'),
+                  pulse: t('vitals.pulse'), spo2: t('vitals.spo2'),
+                }, {
+                  cm: t('vitals.unitCm'), kg: t('vitals.unitKg'), bmi: t('vitals.unitBmi'),
+                  c: t('vitals.unitC'), mmHg: t('vitals.unitMmHg'), bpm: t('vitals.unitBpm'),
+                  percent: t('vitals.unitPercent'),
+                }).map((row) => <div key={row.key} className="vitals-cell"><dt>{row.label}</dt><dd>{row.value}</dd></div>)}
+              </dl>
+            ) : <p className="case-empty-line">{t('vitals.noneRecorded')}</p>}
+          </section>
+
+          <section className="case-clinical-card">
+            <h3><span className="msym" aria-hidden="true">biotech</span>{t('cases.labReport')}</h3>
+            {item.referral ? (
+              <dl className="case-lab-grid">
+                <div><dt>{t('detail.sampleIdLabel')}</dt><dd>{item.referral.lab_sample_id ?? '—'}</dd></div>
+                <div><dt>{t('cases.labOutcome')}</dt><dd>{item.referral.result_outcome ? t(`detail.outcome${item.referral.result_outcome === 'positive' ? 'Positive' : 'Negative'}`) : '—'}</dd></div>
+                <div><dt>{t('cases.labDate')}</dt><dd>{formatDate(item.referral.result_date)}</dd></div>
+                <div><dt>{t('cases.labNotes')}</dt><dd>{item.referral.result || '—'}</dd></div>
+              </dl>
+            ) : <p className="case-empty-line">{t('cases.noLabReport')}</p>}
+            {item.referral && onOpenReferral ? (
+              <button type="button" className="case-card-link" onClick={() => onOpenReferral(item.referral!.referral_id)}>
+                {item.referral.result_outcome ? t('cases.openReferral') : t('cases.recordDiagnosticResult')}
+              </button>
+            ) : null}
+          </section>
         </div>
-      ) : null}
+      </div>
 
-      {error ? <div className="case-error" role="alert">{t('cases.actionError')} {error}</div> : null}
+      <div id="case-section-results" hidden={section !== 'results'}>
+        <CaseLabResults caseId={tbCase.case_id} caseStatus={tbCase.case_status} />
+        <CaseVitalsLog
+          caseId={tbCase.case_id}
+          caseStatus={tbCase.case_status}
+          registrationDate={tbCase.registration_date}
+          outcomeDate={tbCase.outcome_date}
+        />
+      </div>
 
-      <CaseVisitWorkflow item={item} onChanged={onChanged} />
+      <div id="case-section-treatment" hidden={section !== 'treatment'}>
+        {tbCase.case_status === 'registered' ? (
+          <div className="case-action-card">
+            <label>
+              <span>{t('cases.startDate')}</span>
+              <input type="date" max={manilaToday()} value={startDate} onChange={(event) => setStartDate(event.target.value)} />
+            </label>
+            <button disabled={busy || !startDate} onClick={() => void transition('on_treatment')}>
+              {t('cases.startTreatment')}
+            </button>
+            <button className="danger-outline" disabled={busy} onClick={() => void transition('cancelled')}>
+              {t('cases.cancelCase')}
+            </button>
+          </div>
+        ) : tbCase.case_status === 'on_treatment' ? (
+          <div className="case-action-card">
+            <button disabled={busy} onClick={() => void transition('interrupted')}>
+              {t('cases.markInterrupted')}
+            </button>
+            <span>{t('cases.orCloseBelow')}</span>
+          </div>
+        ) : tbCase.case_status === 'interrupted' ? (
+          <div className="case-action-card">
+            <button disabled={busy} onClick={() => void transition('on_treatment')}>
+              {t('cases.resumeTreatment')}
+            </button>
+            <span>{t('cases.orCloseBelow')}</span>
+          </div>
+        ) : null}
 
-      <PatientTimeline patientId={tbCase.patient_id} />
+        {tbCase.case_status === 'on_treatment' || tbCase.case_status === 'interrupted' ? (
+          <div className="case-close-card">
+            <h3>{t('cases.closeCase')}</h3>
+            <label>
+              <span>{t('cases.outcomeLabel')}</span>
+              <select value={outcome} onChange={(event) => setOutcome(event.target.value as TreatmentOutcome)}>
+                <option value="" disabled>{t('cases.chooseOutcome')}</option>
+                {OUTCOMES.map((value) => <option key={value} value={value}>{t(OUTCOME_KEY[value])}</option>)}
+              </select>
+            </label>
+            <label>
+              <span>{t('cases.outcomeDate')}</span>
+              <input type="date" max={manilaToday()} value={outcomeDate} onChange={(event) => setOutcomeDate(event.target.value)} />
+            </label>
+            <button disabled={busy || !outcome || !outcomeDate} onClick={() => void transition('closed')}>
+              {t('cases.closeCase')}
+            </button>
+            <p className="case-outcome-hint">{t('cases.outcomeHint')}</p>
+          </div>
+        ) : null}
 
-      <div className="case-grid">
-        <section>
-          <h3>{t('cases.followups')}</h3>
-          {item.followups.length === 0 ? <p className="case-empty-line">{t('cases.noFollowups')}</p> : (
-            <div className="case-event-list">
-              {item.followups.map((row) => (
-                <article key={row.followup_id} className={row.voided_at ? 'voided' : ''}>
-                  <strong>{formatDate(row.visit_date)}</strong>
-                  <span>{row.voided_at ? t('cases.voided') : row.notes || t('cases.noNotes')}</span>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-        <section>
-          <h3>{t('cases.appointments')}</h3>
-          {item.appointments.length === 0 ? <p className="case-empty-line">{t('cases.noAppointments')}</p> : (
-            <div className="case-event-list">
-              {item.appointments.map((row) => (
-                <article key={row.appointment_id}>
-                  <strong>{formatDate(row.scheduled_date)}</strong>
-                  <span>{t(`detail.appt${row.status === 'attended' ? 'Attended' : row.status === 'missed' ? 'Missed' : row.status === 'cancelled' ? 'Cancelled' : 'Scheduled'}`)}</span>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+        {error ? <div className="case-error" role="alert">{t('cases.actionError')} {error}</div> : null}
+
+        <CaseVisitWorkflow item={item} onChanged={onChanged} />
+      </div>
+
+      <div id="case-section-history" hidden={section !== 'history'}>
+        <PatientTimeline patientId={tbCase.patient_id} />
+
+        <div className="case-grid">
+          <section>
+            <h3>{t('cases.followups')}</h3>
+            {item.followups.length === 0 ? <p className="case-empty-line">{t('cases.noFollowups')}</p> : (
+              <div className="case-event-list">
+                {item.followups.map((row) => (
+                  <article key={row.followup_id} className={row.voided_at ? 'voided' : ''}>
+                    <strong>{formatDate(row.visit_date)}</strong>
+                    <span>{row.voided_at ? t('cases.voided') : row.notes || t('cases.noNotes')}</span>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+          <section>
+            <h3>{t('cases.appointments')}</h3>
+            {item.appointments.length === 0 ? <p className="case-empty-line">{t('cases.noAppointments')}</p> : (
+              <div className="case-event-list">
+                {item.appointments.map((row) => (
+                  <article key={row.appointment_id}>
+                    <strong>{formatDate(row.scheduled_date)}</strong>
+                    <span>{t(`detail.appt${row.status === 'attended' ? 'Attended' : row.status === 'missed' ? 'Missed' : row.status === 'cancelled' ? 'Cancelled' : 'Scheduled'}`)}</span>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
     </section>
   );
@@ -416,7 +452,7 @@ export default function CaseRegistry({
           : visible.length === 0 ? <div className="case-list-state">{t('cases.empty')}</div>
           : <div className="case-list">
               {visible.map((item) => (
-                <button key={item.tbCase.case_id} className={item.tbCase.case_id === selected?.tbCase.case_id ? 'selected' : ''} onClick={() => setSelectedId(item.tbCase.case_id)}>
+                <button key={item.tbCase.case_id} aria-pressed={item.tbCase.case_id === selected?.tbCase.case_id} className={item.tbCase.case_id === selected?.tbCase.case_id ? 'selected' : ''} onClick={() => setSelectedId(item.tbCase.case_id)}>
                   <div><strong>{item.patient?.full_name ?? item.patient?.display_code ?? t('cases.unknownPatient')}</strong><span>{item.tbCase.case_number}</span></div>
                   <span className={`case-status ${item.tbCase.case_status}`}>{t(STATUS_KEY[item.tbCase.case_status])}</span>
                   <dl>

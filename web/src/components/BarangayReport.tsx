@@ -27,11 +27,13 @@
  * reflows at any width, needs no scroll container, and is what HotspotView
  * already does.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
 import { manilaToday } from '../lib/types';
+import { buildPrintableReport } from '../lib/printableReport';
+import { completeReport, type ReportCity, type ReportBarangay } from '../lib/reportGeography';
 
 interface ReportRow {
   barangay_code: string;
@@ -107,12 +109,19 @@ export default function BarangayReport() {
   const [page, setPage] = useState(1);
   const [rows, setRows] = useState<ReportRow[]>([]);
   const [prev, setPrev] = useState<ReportRow[]>([]);
+  const [cities, setCities] = useState<ReportCity[]>([]);
+  const [barangays, setBarangays] = useState<ReportBarangay[]>([]);
+  const [cityCode, setCityCode] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
+  const loadVersion = useRef(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const periods = useMemo(() => periodsFor(year, today), [year, today]);
 
   const load = useCallback(async () => {
+    const version = ++loadVersion.current;
     setLoading(true);
     setError(null);
     try {
@@ -120,9 +129,29 @@ export default function BarangayReport() {
         fetchPeriod(periods.now.from, periods.now.to),
         fetchPeriod(periods.before.from, periods.before.to),
       ]);
+      const cityResult = await supabase.from('ref_cities').select('city_code, name')
+        .eq('province_code', '101300000').order('name');
+      if (cityResult.error) throw new Error(cityResult.error.message);
+      const cityRows = (cityResult.data ?? []) as ReportCity[];
+      if (!cityRows.length) throw new Error('Bukidnon reference directory is unavailable');
+      const allBarangays: ReportBarangay[] = [];
+      // Explicit pagination avoids silently dropping zero-record barangays at an API row limit.
+      for (let offset = 0; ; offset += 500) {
+        const result = await supabase.from('ref_barangays').select('barangay_code, city_code, name')
+          .in('city_code', cityRows.map(c => c.city_code)).order('barangay_code').range(offset, offset + 499);
+        if (result.error) throw new Error(result.error.message);
+        const batch = (result.data ?? []) as ReportBarangay[];
+        allBarangays.push(...batch);
+        if (batch.length < 500) break;
+      }
+      if (!allBarangays.length) throw new Error('Barangay reference directory is unavailable');
+      if (version !== loadVersion.current) return;
+      setCities(cityRows);
+      setBarangays(allBarangays);
       setRows(a);
       setPrev(b);
     } catch (e) {
+      if (version !== loadVersion.current) return;
       setError(e instanceof Error ? e.message : String(e));
     }
     setLoading(false);
@@ -132,14 +161,17 @@ export default function BarangayReport() {
     void load();
   }, [load]);
 
-  const prevByCode = useMemo(() => new Map(prev.map((r) => [r.barangay_code, r])), [prev]);
+  const scopedRows = useMemo(() => completeReport(rows, barangays, cities, cityCode), [rows, barangays, cities, cityCode]);
+  const scopedPrev = useMemo(() => completeReport(prev, barangays, cities, cityCode), [prev, barangays, cities, cityCode]);
+  const scopeName = cities.find(c => c.city_code === cityCode)?.name ?? t('report.cityLabel');
+  const prevByCode = useMemo(() => new Map(scopedPrev.map((r) => [r.barangay_code, r])), [scopedPrev]);
 
   const ranked = useMemo(
     () =>
-      [...rows].sort(
+      [...scopedRows].sort(
         (a, b) => b[metric] - a[metric] || a.barangay_name.localeCompare(b.barangay_name),
       ),
-    [rows, metric],
+    [scopedRows, metric],
   );
   const top = useMemo(() => ranked.filter((r) => r[metric] > 0).slice(0, TOP_N), [ranked, metric]);
 
@@ -152,11 +184,12 @@ export default function BarangayReport() {
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
   const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  useEffect(() => { setPage(1); setQuery(''); }, [cityCode]);
   useEffect(() => setPage(1), [query, metric, year]);
 
   const totals = useMemo(
     () =>
-      rows.reduce(
+      scopedRows.reduce(
         (a, r) => ({
           screened: a.screened + r.screened_count,
           referred: a.referred + r.referred_count,
@@ -166,7 +199,7 @@ export default function BarangayReport() {
         }),
         { screened: 0, referred: 0, cases: 0, successful: 0, ltfu: 0 },
       ),
-    [rows],
+    [scopedRows],
   );
 
   /** Noun form for prose: "Top barangays by referrals", not "by referred". */
@@ -223,6 +256,47 @@ export default function BarangayReport() {
     URL.revokeObjectURL(url);
   };
 
+  const printableData = () => ({
+      language: i18n.language,
+      title: t('nav.report'),
+      disclaimer: t('report.demoDisclaimer'),
+      instruction: t('report.printInstruction'),
+      scope: scopeName,
+      generated: `${t('report.generatedOn')} ${readableDate(today, i18n.language)}`,
+      columns: [t('report.colBarangay'), t('report.colCity'),
+        t('report.mScreened'), t('report.mReferred'), t('report.mCases'),
+        t('report.mSuccessful'), t('report.mLtfu')],
+      periods: [
+        { period: periods.now, data: ranked },
+        { period: periods.before, data: [...scopedPrev].sort((a, b) => a.barangay_name.localeCompare(b.barangay_name)) },
+      ].map(({ period, data }) => ({
+        label: `${readableDate(period.from, i18n.language)} – ${readableDate(period.to, i18n.language)}`,
+        rows: data.map(r => [r.barangay_name, r.city_name, r.screened_count, r.referred_count,
+          r.case_count, r.successful_outcome_count, r.lost_to_follow_up_count]),
+      })),
+      notes: [t('report.exportScope'), t('report.defCases'), t('report.defSuccessful'), t('report.ltfuCaveat')],
+    });
+  const exportPdf = async () => {
+    setExporting(true);
+    setExportError(false);
+    try {
+      const data = printableData();
+      const { buildReportPdf } = await import('../lib/reportPdf');
+      buildReportPdf(data).save(`barangay-report-capstone-demo-${cityCode || 'bukidnon'}-${year}.pdf`);
+    } catch { setExportError(true); }
+    finally { setExporting(false); }
+  };
+  const exportPrintable = () => {
+    const html = buildPrintableReport(printableData());
+    const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `barangay-report-capstone-demo-${year}.html`;
+    link.click();
+    // Give the browser time to start the download before releasing the blob.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   const goToTable = () => {
     document.getElementById('brep-all')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -257,17 +331,24 @@ export default function BarangayReport() {
 
   return (
     <div className="brep">
+      <div className="brep-demo-notice"><span className="msym" aria-hidden="true">info</span><p>{t('report.demoDisclaimer')}</p></div>
       {/* Period and year sit above everything: what stretch of calendar these
           numbers cover has to be settled before any of them is read. */}
       <div className="brep-toolbar">
         <div className="brep-context">
-          <span className="brep-city"><span className="msym" aria-hidden="true">location_city</span>{t('report.cityLabel')}</span>
+          <span className="brep-city"><span className="msym" aria-hidden="true">location_city</span>{scopeName}</span>
           <p className="brep-period">
             {periods.isPartial
               ? t('report.periodPartial', { end: readableDate(periods.now.to, i18n.language) })
               : t('report.periodFull', { year })}
           </p>
         </div>
+        <label className="brep-city-select"><span>{t('report.cityFilter')}</span>
+          <select value={cityCode} onChange={e => setCityCode(e.target.value)} disabled={loading}>
+            <option value="">{t('report.cityLabel')}</option>
+            {cities.map(c => <option key={c.city_code} value={c.city_code}>{c.name}</option>)}
+          </select>
+        </label>
         <div className="range-pills" role="group" aria-label={t('report.yearGroup')}>
           {YEARS.map((y) => (
             <button key={y} className={year === y ? 'active' : ''} aria-pressed={year === y} onClick={() => setYear(y)}>
@@ -279,7 +360,7 @@ export default function BarangayReport() {
 
       {loading ? (
         <div className="brep-kpirow" aria-busy="true">
-          {[0, 1, 2].map((i) => (
+          {[0, 1, 2, 3, 4].map((i) => (
             <div key={i} className="brep-kpi skel" aria-hidden="true">
               <span className="b l" />
               <span className="b v" />
@@ -303,6 +384,13 @@ export default function BarangayReport() {
               </div>
             ))}
           </div>
+
+          <div className="brep-exportbar">
+            <p>{t('report.exportScope')}</p>
+            <button type="button" disabled={exporting} onClick={() => void exportPdf()}><span className="msym" aria-hidden="true">picture_as_pdf</span>{t('report.downloadPdf')}</button>
+            <button type="button" onClick={exportPrintable}><span className="msym" aria-hidden="true">print</span>{t('report.downloadPrintable')}</button>
+          </div>
+          {exportError ? <p role="alert">{t('report.pdfError')}</p> : null}
 
           <section className="dcard brep-card" aria-labelledby="brep-rank-h">
             <div className="brep-cardhead">
@@ -334,7 +422,7 @@ export default function BarangayReport() {
                 {top.map((r) => (
                   <li key={r.barangay_code}>
                     <span className="brep-rk" aria-hidden="true">{ranked.indexOf(r) + 1}</span>
-                    <span className="brep-nm">{r.barangay_name}</span>
+                    <span className="brep-nm" title={`${r.barangay_name}, ${r.city_name}`}>{r.barangay_name}</span>
                     <span className="brep-trk">
                       <span className="brep-fill" style={{ width: max ? `${(r[metric] / max) * 100}%` : '0%' }} />
                     </span>
@@ -396,7 +484,7 @@ export default function BarangayReport() {
                     return (
                       <tr key={r.barangay_code}>
                         <td className="brep-numcol">{ranked.indexOf(r) + 1}</td>
-                        <th scope="row">{r.barangay_name}</th>
+                        <th scope="row">{r.barangay_name}<small>{r.city_name}</small></th>
                         <td>{r.screened_count}</td>
                         <td>{r.referred_count}</td>
                         <td>{r.case_count}</td>
@@ -431,7 +519,7 @@ export default function BarangayReport() {
                 <button type="button" onClick={() => setPage(safePage - 1)} disabled={safePage <= 1} aria-label={t('report.prevPage')}>
                   <span className="msym" aria-hidden="true">chevron_left</span>
                 </button>
-                {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
+                {Array.from({ length: pageCount }, (_, i) => i + 1).filter(n => n === 1 || n === pageCount || Math.abs(n - safePage) <= 1).map((n) => (
                   <button
                     key={n}
                     type="button"

@@ -135,6 +135,29 @@ beforeEach(() => {
 });
 
 describe('CaseRegistry', () => {
+  it('separates the workspace into sections and preserves treatment drafts while navigating', async () => {
+    const { container } = render(<CaseRegistry />);
+    fireEvent.click(await screen.findByRole('button', { name: en.cases.sections.treatment }));
+    fireEvent.change(screen.getByLabelText(en.cases.startDate), { target: { value: '2026-09-05' } });
+    fireEvent.click(screen.getByRole('button', { name: en.cases.sections.results }));
+    expect(container.querySelector('#case-section-treatment')?.hasAttribute('hidden')).toBe(true);
+    expect(container.querySelector('#case-section-results')?.hasAttribute('hidden')).toBe(false);
+    expect(screen.queryByRole('button', { name: en.cases.startTreatment })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: en.cases.sections.treatment }));
+    expect((screen.getByLabelText(en.cases.startDate) as HTMLInputElement).value).toBe('2026-09-05');
+    expect(mock.db.rpcCalls).toHaveLength(0);
+  });
+
+  it('preserves a lost-to-follow-up episode and explains reassessment without offering resume', async () => {
+    mock.db.cases = [tbCase({ case_status: 'closed', outcome: 'lost_to_follow_up', outcome_date: '2026-09-10' }) as unknown as Record<string, unknown>];
+    render(<CaseRegistry />);
+    expect(await screen.findByText(en.cases.returnNotice)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: en.cases.sections.treatment }));
+    expect(screen.queryByRole('button', { name: en.cases.resumeTreatment })).toBeNull();
+    expect(screen.queryByRole('button', { name: en.cases.closeCase })).toBeNull();
+    expect(mock.db.rpcCalls).toHaveLength(0);
+  });
+
   it('shows facility-visible cases with visit and appointment context', async () => {
     render(<CaseRegistry />);
     expect(await screen.findAllByText('TBC-MLB-2026-00001')).toHaveLength(2);
@@ -150,6 +173,7 @@ describe('CaseRegistry', () => {
   it('starts treatment through the audited lifecycle RPC', async () => {
     render(<CaseRegistry />);
     await screen.findByText(en.cases.startTreatment);
+    fireEvent.click(screen.getByRole('button', { name: en.cases.sections.treatment }));
     fireEvent.change(screen.getByLabelText(en.cases.startDate), { target: { value: '2026-09-05' } });
     fireEvent.click(screen.getByRole('button', { name: en.cases.startTreatment }));
 
@@ -162,7 +186,8 @@ describe('CaseRegistry', () => {
   it('closes treatment only with the chosen national outcome and date', async () => {
     mock.db.cases = [tbCase({ case_status: 'on_treatment', treatment_start_date: '2026-09-02' }) as unknown as Record<string, unknown>];
     render(<CaseRegistry />);
-    await screen.findByRole('button', { name: en.cases.closeCase });
+    fireEvent.click(await screen.findByRole('button', { name: en.cases.sections.treatment }));
+    expect((screen.getByRole('button', { name: en.cases.closeCase }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.change(screen.getByLabelText(en.cases.outcomeLabel), { target: { value: 'treatment_completed' } });
     fireEvent.change(screen.getByLabelText(en.cases.outcomeDate), { target: { value: '2026-09-10' } });
     fireEvent.click(screen.getByRole('button', { name: en.cases.closeCase }));
