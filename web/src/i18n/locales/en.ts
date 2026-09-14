@@ -447,6 +447,11 @@ export const en = {
    * holds the password manage-bhw generated for it.
    */
   password: {
+    changeOption: 'Change password',
+    changeSub: 'Choose a new password for your account. An internet connection is required.',
+    cancelChange: 'Cancel',
+    changedSuccess: 'Password changed successfully. Use your new password the next time you sign in.',
+    connectionError: 'The request could not be confirmed. Check your connection. If it completed, use the new password next time.',
     gateTitle: 'Set your own password',
     gateSub:
       'This account is still using the password your administrator gave you. Choose a password only you know to continue.',

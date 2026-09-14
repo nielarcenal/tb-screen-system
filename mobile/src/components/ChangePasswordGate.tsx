@@ -39,7 +39,7 @@ const PROBLEM_MESSAGE: Record<PasswordProblem, string> = {
   mismatch: 'password.errMismatch',
 };
 
-export default function ChangePasswordGate() {
+export default function ChangePasswordGate({ onCancel, onDone }: { onCancel?: () => void; onDone?: () => void } = {}) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const email = useSessionStore((s) => s.email);
@@ -55,9 +55,9 @@ export default function ChangePasswordGate() {
   // "handled"; the subscription is torn down with the gate, so normal back
   // behaviour returns the moment the password is set.
   useEffect(() => {
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => { if (!busy) onCancel?.(); return true; });
     return () => sub.remove();
-  }, []);
+  }, [busy, onCancel]);
 
   const save = async () => {
     const problem = validateNewPassword(password, confirm);
@@ -68,10 +68,18 @@ export default function ChangePasswordGate() {
     setBusy(true);
     setError(null);
 
+    try {
     const { error: pwErr } = await supabase.auth.updateUser({ password });
     if (pwErr) {
       setError(t('password.errApi', { message: pwErr.message }));
       setBusy(false);
+      return;
+    }
+
+    if (onCancel) {
+      setPassword('');
+      setConfirm('');
+      onDone?.();
       return;
     }
 
@@ -87,6 +95,9 @@ export default function ChangePasswordGate() {
 
     setBusy(false);
     setMustChangePassword(false); // removes this overlay
+    } catch {
+      setError(t('password.connectionError'));
+    } finally { setBusy(false); }
   };
 
   return (
@@ -104,10 +115,10 @@ export default function ChangePasswordGate() {
       >
         <View style={{ gap: 8 }}>
           <Text variant="headlineSmall" style={{ color: palette.ink, fontWeight: '700' }}>
-            {t('password.gateTitle')}
+            {onCancel ? t('password.changeOption') : t('password.gateTitle')}
           </Text>
           <Text variant="bodyMedium" style={{ color: palette.inkSoft, lineHeight: 21 }}>
-            {t('password.gateSub')}
+            {onCancel ? t('password.changeSub') : t('password.gateSub')}
           </Text>
           {email ? (
             <Text variant="bodySmall" style={{ color: palette.muted, marginTop: 2 }}>
@@ -177,11 +188,11 @@ export default function ChangePasswordGate() {
             anything that could not be uploaded. */}
         <Button
           mode="text"
-          onPress={() => confirmSignOut(t, setBusy)}
+          onPress={() => onCancel ? onCancel() : confirmSignOut(t, setBusy)}
           disabled={busy}
           textColor={palette.muted}
         >
-          {t('password.signOut')}
+          {onCancel ? t('password.cancelChange') : t('password.signOut')}
         </Button>
       </ScrollView>
     </View>

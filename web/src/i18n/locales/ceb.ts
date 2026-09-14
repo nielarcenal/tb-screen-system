@@ -446,6 +446,11 @@ export const ceb: Translation = {
    * holds the password manage-bhw generated for it.
    */
   password: {
+    changeOption: 'Ilisi ang password',
+    changeSub: 'Pagpili og bag-ong password sa imong account. Kinahanglan og koneksyon sa internet.',
+    cancelChange: 'Kanselahon',
+    changedSuccess: 'Nailisan ang password. Gamita ang bag-ong password sa sunod nga pag-sign in.',
+    connectionError: 'Dili makumpirma ang hangyo. Susiha ang koneksyon. Kung nahuman kini, gamita ang bag-ong password sa sunod.',
     gateTitle: 'Paghimo og kaugalingong password',
     gateSub:
       'Kini nga account naggamit pa sa password nga gihatag sa imong administrator. Pagpili og password nga ikaw ra ang nakahibalo aron makapadayon.',

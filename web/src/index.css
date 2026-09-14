@@ -1643,6 +1643,45 @@ button.amber:hover { background: var(--amber-container); }
 .brep-pager .msym { font-size: 17px; }
 
 .brep-actions { padding: 0 18px 16px; }
+.account-password-screen { min-height: 100dvh; }
+.account-password-success { padding: 12px 16px; border: 1px solid var(--teal); background: var(--teal-container); color: var(--teal-dark); }
+.brep-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; }
+.brep-actions button .msym { flex: 0 0 auto; font-size: 18px; line-height: 1; }
+
+/* Facility activity log: scoped styles, independent of the global pill buttons. */
+.audit-log { min-width: 0; border: 1px solid var(--line); background: var(--paper); }
+.audit-log button { margin: 0; border-radius: 6px; }
+.audit-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px; border-bottom: 1px solid var(--line); }
+.audit-head > div { min-width: 0; }
+.audit-head h3 { margin: 0 0 6px; font-size: 18px; color: var(--navy); }
+.audit-head p { margin: 0; max-width: 80ch; font-size: 13px; line-height: 1.6; color: var(--muted); }
+.audit-head > button { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 40px; height: 40px; padding: 8px; }
+.audit-filters { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 20px; background: #f8faf9; border-bottom: 1px solid var(--line); }
+.audit-filters button { min-height: 36px; padding: 8px 12px; border: 1px solid var(--line); background: #fff; color: var(--ink); white-space: normal; text-align: left; }
+.audit-filters button[aria-pressed="true"] { border-color: var(--navy); background: var(--navy); color: #fff; }
+.audit-filters button:hover:not([aria-pressed="true"]) { background: var(--subtle); }
+.audit-log button:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
+.audit-list { list-style: none; display: grid; gap: 12px; padding: 20px; margin: 0; }
+.audit-row { min-width: 0; padding: 16px; border: 1px solid var(--line); border-left: 3px solid var(--teal); background: #fff; }
+.audit-row-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.audit-row-head strong { font-size: 14px; color: var(--navy); }
+.audit-entity { padding: 4px 8px; border-radius: 4px; background: var(--teal-container); color: var(--teal-dark); font-size: 12px; }
+.audit-row-head time { margin-left: auto; font-size: 12px; color: var(--muted); }
+.audit-changes { list-style: none; display: grid; gap: 0; margin: 10px 0; padding: 0; }
+.audit-changes li { display: grid; grid-template-columns: minmax(120px, .7fr) minmax(0, 1.3fr); gap: 12px; padding: 8px 0; border-bottom: 1px solid #f0f3f2; font-size: 13px; line-height: 1.5; }
+.audit-field { color: var(--muted); }
+.audit-transition { color: var(--ink); overflow-wrap: anywhere; }
+.audit-meta { margin-top: 12px; color: var(--muted); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.audit-nochange { display: block; margin: 12px 0; font-size: 13px; color: var(--muted); }
+.audit-log > .case-empty-line { margin: 0; padding: 40px 20px; text-align: center; }
+.audit-end { margin: 0; padding: 0 20px 20px; text-align: center; font-size: 12px; color: var(--muted); }
+.audit-log .audit-more { display: block; margin: 0 auto 20px; min-height: 40px; }
+@media (max-width: 560px) {
+  .audit-head, .audit-filters, .audit-list { padding: 14px; }
+  .audit-row { padding: 12px; }
+  .audit-row-head time { flex-basis: 100%; margin-left: 0; }
+  .audit-changes li { grid-template-columns: 1fr; gap: 3px; }
+}
 .brep-scope {
   display: flex; align-items: flex-start; gap: 8px;
   margin: 0; padding: 0 2px 4px;

@@ -446,6 +446,11 @@ export const tl: Translation = {
    * holds the password manage-bhw generated for it.
    */
   password: {
+    changeOption: 'Palitan ang password',
+    changeSub: 'Pumili ng bagong password para sa iyong account. Kailangan ng koneksyon sa internet.',
+    cancelChange: 'Kanselahin',
+    changedSuccess: 'Napalitan ang password. Gamitin ang bagong password sa susunod na pag-sign in.',
+    connectionError: 'Hindi makumpirma ang kahilingan. Suriin ang koneksyon. Kung natapos ito, gamitin ang bagong password sa susunod.',
     gateTitle: 'Gumawa ng sarili mong password',
     gateSub:
       'Ginagamit pa ng account na ito ang password na ibinigay ng iyong administrator. Pumili ng password na ikaw lang ang nakakaalam para makapagpatuloy.',

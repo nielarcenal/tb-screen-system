@@ -45,9 +45,10 @@ interface Props {
   email: string | null;
   /** Called once the password is changed AND the flag cleared; parent reloads. */
   onDone: () => void;
+  onCancel?: () => void;
 }
 
-export default function ChangePasswordGate({ email, onDone }: Props) {
+export default function ChangePasswordGate({ email, onDone, onCancel }: Props) {
   const { t } = useTranslation();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -64,10 +65,18 @@ export default function ChangePasswordGate({ email, onDone }: Props) {
     setBusy(true);
     setError(null);
 
+    try {
     const { error: pwErr } = await supabase.auth.updateUser({ password });
     if (pwErr) {
       setError(t('password.errApi', { message: pwErr.message }));
       setBusy(false);
+      return;
+    }
+
+    if (onCancel) {
+      setPassword('');
+      setConfirm('');
+      onDone();
       return;
     }
 
@@ -84,13 +93,16 @@ export default function ChangePasswordGate({ email, onDone }: Props) {
 
     setBusy(false);
     onDone();
+    } catch {
+      setError(t('password.connectionError'));
+    } finally { setBusy(false); }
   };
 
   return (
     <LoginLayout>
       <div className="login-head">
-        <h2>{t('password.gateTitle')}</h2>
-        <p>{t('password.gateSub')}</p>
+        <h2>{onCancel ? t('password.changeOption') : t('password.gateTitle')}</h2>
+        <p>{onCancel ? t('password.changeSub') : t('password.gateSub')}</p>
       </div>
 
       {email ? <div className="pwgate-note">{t('password.signedInAs', { email })}</div> : null}
@@ -136,14 +148,14 @@ export default function ChangePasswordGate({ email, onDone }: Props) {
 
       {/* The only way out other than setting a password. scope: 'local' ends
           this browser's session only, matching AppShell's sign-out. */}
-      <button
+      {onCancel ? <button type="button" className="pwgate-signout" disabled={busy} onClick={onCancel}>{t('password.cancelChange')}</button> : <button
         type="button"
         className="pwgate-signout"
         disabled={busy}
         onClick={() => void supabase.auth.signOut({ scope: 'local' })}
       >
         {t('password.signOut')}
-      </button>
+      </button>}
     </LoginLayout>
   );
 }

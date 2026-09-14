@@ -8,11 +8,12 @@
  * Presentation only — the nav items, context, and children are supplied by the
  * caller, whose role (from its users row) decides what it passes.
  */
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../lib/supabase';
 import LangToggle from './LangToggle';
+import ChangePasswordGate from './ChangePasswordGate';
 
 export interface ShellNavItem {
   key: string;
@@ -58,8 +59,16 @@ export default function AppShell({
   children,
 }: Props) {
   const { t } = useTranslation();
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordChanged, setPasswordChanged] = useState(false);
 
   return (
+    <>
+    {changingPassword ? <div className="account-password-screen">
+      <ChangePasswordGate email={null} onCancel={() => setChangingPassword(false)}
+        onDone={() => { setChangingPassword(false); setPasswordChanged(true); }} />
+    </div> : null}
+    <div hidden={changingPassword}>
     <div className="shell">
       <aside className="sidebar">
         <div className="brand">
@@ -114,6 +123,10 @@ export default function AppShell({
               scope: 'local' ends this browser's session only — the default
               revokes the account everywhere, signing the same user out of the
               BHW app on their phone. */}
+          <button className="signout" type="button" aria-label={t('password.changeOption')} title={t('password.changeOption')}
+            onClick={() => { setPasswordChanged(false); setChangingPassword(true); }}>
+            <span className="msym" aria-hidden="true">lock_reset</span><span>{t('password.changeOption')}</span>
+          </button>
           <button
             className="signout"
             type="button"
@@ -138,11 +151,13 @@ export default function AppShell({
           <LangToggle />
         </header>
 
-        <main className="content-main">{children}</main>
+        <main className="content-main">{passwordChanged ? <p role="status" className="account-password-success">{t('password.changedSuccess')}</p> : null}{children}</main>
 
         {/* Standing positioning note (§1) — visible under every space. */}
         <div className="footnote">{footnote ?? t('common.nonDiagnostic')}</div>
       </div>
     </div>
+    </div>
+    </>
   );
 }

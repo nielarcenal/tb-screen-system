@@ -82,6 +82,36 @@ beforeEach(() => {
   mock.fail.rpc = null;
 });
 
+describe('voluntary password changes', () => {
+  it('can cancel without changing credentials or signing out', () => {
+    const cancel = vi.fn();
+    render(<ChangePasswordGate email={null} onDone={vi.fn()} onCancel={cancel} />);
+    fireEvent.click(screen.getByRole('button', { name: en.password.cancelChange }));
+    expect(cancel).toHaveBeenCalledOnce();
+    expect(mock.calls.updates).toEqual([]);
+    expect(mock.calls.signOuts).toEqual([]);
+  });
+  it('changes the password without altering the forced-reset flag', async () => {
+    const onDone = vi.fn();
+    render(<ChangePasswordGate email={null} onDone={onDone} onCancel={vi.fn()} />);
+    typeBoth('MyNewPassword123!');
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(onDone).toHaveBeenCalledOnce());
+    expect(mock.calls.updates).toEqual(['MyNewPassword123!']);
+    expect(mock.calls.rpcs).toEqual([]);
+  });
+  it('keeps the form open after a rejected password update', async () => {
+    mock.fail.update = { message: 'Password rejected' };
+    const onDone = vi.fn();
+    render(<ChangePasswordGate email={null} onDone={onDone} onCancel={vi.fn()} />);
+    typeBoth('MyNewPassword123!');
+    fireEvent.click(saveButton());
+    expect(await screen.findByText('Could not save the password: Password rejected')).toBeTruthy();
+    expect(onDone).not.toHaveBeenCalled();
+    expect(mock.calls.rpcs).toEqual([]);
+  });
+});
+
 describe('ChangePasswordGate — refusing a password before any request', () => {
   it('refuses one under the minimum length', async () => {
     renderGate();

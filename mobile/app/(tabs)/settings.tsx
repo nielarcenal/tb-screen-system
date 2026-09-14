@@ -26,6 +26,7 @@ import { cascadeForBarangay } from '../../src/db/psgcRepo';
 import { confirmSignOut } from '../../src/lib/signOutFlow';
 import { triggerSync } from '../../src/sync/syncManager';
 import { palette } from '../../src/ui/tokens';
+import ChangePasswordGate from '../../src/components/ChangePasswordGate';
 
 const LANGUAGE_OPTIONS: { key: AppLanguage; native: string; flag: string }[] = [
   { key: 'en', native: 'English', flag: '🇺🇸' },
@@ -60,6 +61,8 @@ export default function SettingsScreen() {
   const [address, setAddress] = useState<AddressSelection>(emptyAddress);
   // True while the pre-sign-out sync runs, so the button can't be tapped twice.
   const [signingOut, setSigningOut] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordChanged, setPasswordChanged] = useState(false);
 
   // Pre-fill the cascade from the stored assigned barangay (if set).
   useEffect(() => {
@@ -91,6 +94,8 @@ export default function SettingsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.background }}>
+      {changingPassword ? <ChangePasswordGate onCancel={() => setChangingPassword(false)}
+        onDone={() => { setChangingPassword(false); setPasswordChanged(true); }} /> : null}
       <View style={{ paddingHorizontal: 20, paddingTop: insets.top + 12, paddingBottom: 6 }}>
         <Text variant="titleLarge" style={{ color: palette.ink, fontWeight: '600' }}>
           {t('settings.title')}
@@ -199,6 +204,12 @@ export default function SettingsScreen() {
                   {email ?? userId}
                 </Text>
               </View>
+              {passwordChanged ? <Text accessibilityLiveRegion="polite">{t('password.changedSuccess')}</Text> : null}
+              <Button mode="outlined" icon="lock-reset" disabled={signingOut}
+                onPress={() => { setPasswordChanged(false); setChangingPassword(true); }}
+                contentStyle={{ height: 52 }} style={{ marginTop: 12 }}>
+                {t('password.changeOption')}
+              </Button>
               <Button
                 mode="outlined"
                 icon="logout"
