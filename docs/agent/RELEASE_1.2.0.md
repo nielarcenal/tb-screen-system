@@ -21,4 +21,9 @@
 
 ## Distribution notes
 
+- Release APK build passed for arm64-v8a, armeabi-v7a, x86 and x86_64; version 1.2.0 / code 3 / package `com.tbscreen.bhw`.
+- Verified the packaged logo matches the generated TB-Screen launcher artwork, and the password screen and configured backend endpoint are bundled.
+- Signing certificate matches v1.1.0, allowing an in-place update.
+- APK size: 102,454,498 bytes. SHA-256: `f71cd3e14ac4b27ae04d61c38a5824a55e34b4ef4fd3b02ba9486378de291746`.
+
 This is a capstone demonstration APK, using the existing debug signing configuration, not a Play Store production release. Install as an update; do not uninstall first, as uninstalling can delete unsynced local records. No real account password was changed during verification. Physical-device password-change testing is still required.
