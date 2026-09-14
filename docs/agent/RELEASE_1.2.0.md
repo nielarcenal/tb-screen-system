@@ -17,6 +17,7 @@
 - Browser: opened and cancelled the voluntary password screen without changing a real user's credentials.
 - Full web suite passed with one worker after concurrent Android compilation caused registration-test timeouts.
 - Native build environment: Windows Java socket startup required `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=C:/Windows/Temp -Djdk.net.unixdomain.tmpdir=C:/Windows/Temp` for this local build.
+- Windows CMake shortens `clang++.exe` to `CLANG_~1.EXE`, losing C++ link-driver detection. The opt-in `mobile/scripts/windows-cxx-driver.gradle` adds `--driver-mode=g++` to C++ flags; it does not modify dependencies or disable linker checks. Build from `mobile/android` with `./gradlew.bat assembleRelease --no-daemon --init-script ../scripts/windows-cxx-driver.gradle` and the Java options above.
 
 ## Distribution notes
 

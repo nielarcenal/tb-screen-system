@@ -1,0 +1,14 @@
+// Opt-in workaround for CMake shortening clang++.exe to CLANG_~1.EXE on Windows.
+// The shortened executable name loses C++ link-driver detection. Explicitly
+// select that mode for C++ compilation/linking without changing C compilation.
+// Usage (from android): gradlew assembleRelease --init-script ../scripts/windows-cxx-driver.gradle
+if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+    gradle.afterProject { project, state ->
+        def android = project.extensions.findByName('android')
+        if (android != null) {
+            android.defaultConfig.externalNativeBuild.cmake.arguments.add(
+                '-DCMAKE_CXX_FLAGS=--driver-mode=g++'
+            )
+        }
+    }
+}
