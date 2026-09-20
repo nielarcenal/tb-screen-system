@@ -23,7 +23,7 @@ Do not uninstall or clear app data to reset a PIN: that can erase unsynced recor
 - Mobile TypeScript check passed.
 - 236 automated tests passed, including 17 new PIN vault/lifecycle tests: format, setup overwrite prevention, salted storage, cooldown persistence, concurrent attempts, safe storage-write failures, current-PIN changes, owner-only recovery, and background races.
 - Native release build passed for all four architectures. The final bundle was checked for the PIN modules and confirmation-dialog guard.
-- APK signature verified and matches earlier releases: `com.tbscreen.bhw`, version 1.3.0 / code 4. Local-only, not published; still debug-signed for capstone use.
+- APK signature verified and matches earlier releases: `com.tbscreen.bhw`, version 1.3.0 / code 4. Published to GitHub Releases on 2026-09-20; still debug-signed for capstone use.
 - APK size: 102,663,582 bytes; SHA-256: `2cdf8c936e0bad745f934cfc464a3c9b3df9f1858d43c78b70daf5c6891565ac`.
 
 ## Physical-device acceptance checklist (not yet performed)

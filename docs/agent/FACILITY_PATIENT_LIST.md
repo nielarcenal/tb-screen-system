@@ -21,6 +21,14 @@ Before enabling saves, apply 0042 through the existing reviewed migration workfl
 
 ## Constraints and follow-up checks
 
+### Release update — 2026-09-20
+
+- Migration 0042 rollback preflight passed again, then the transaction was applied to the linked production database.
+- Live RPC verified: SECURITY DEFINER, authenticated execute allowed, anonymous execute denied.
+- All 218 portal tests and production build passed again; 236 mobile tests and mobile TypeScript check passed.
+- Release source commit: `75fcfa0`. BHW 1.3.0 APK published with the documented matching SHA-256. Both production Vercel deployments succeeded; the live portal serves the new patient-edit RPC client and the website links to 1.3.0. Deployment IDs: portal `6548218672`, website `6548216192`.
+- Physical-device PIN acceptance remains pending. No real patient edits were submitted during release verification.
+
 - Barangay is immutable under 0020 because it determines BHW visibility. A reassignment/handoff workflow needs separate design; editing sitio is supported.
 - Existing offline mobile synchronization uses last-write-wins. Portal optimistic concurrency prevents a stale portal save but does not redesign mobile conflict handling; test pending mobile edits versus later facility edits before real-data rollout.
 - The identity collision check serializes patient writes with a short table lock. It prevents a conflicting correction at the time of this transaction; it is not a universal uniqueness constraint on all future registrations. Review performance before large deployments.
