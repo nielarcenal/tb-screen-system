@@ -3,8 +3,10 @@
  * (brief §9). Keep the non-diagnostic positioning (§1).
  */
 import type { Translation } from './en';
+import { patientCeb } from '../patients';
 
 export const ceb: Translation = {
+  patients: patientCeb,
   common: {
     loading: 'Nagkarga…',
     refresh: 'I-refresh',

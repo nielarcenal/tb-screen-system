@@ -27,6 +27,7 @@ import { confirmSignOut } from '../../src/lib/signOutFlow';
 import { triggerSync } from '../../src/sync/syncManager';
 import { palette } from '../../src/ui/tokens';
 import ChangePasswordGate from '../../src/components/ChangePasswordGate';
+import { usePinStore } from '../../src/store/pinStore';
 
 const LANGUAGE_OPTIONS: { key: AppLanguage; native: string; flag: string }[] = [
   { key: 'en', native: 'English', flag: '🇺🇸' },
@@ -236,6 +237,16 @@ export default function SettingsScreen() {
               {t('settings.signIn')}
             </Button>
           )}
+        </View>
+
+        {/* Legal. */}
+        <View>
+          <SectionLabel>{t('pin.settingsTitle')}</SectionLabel>
+          <Text style={{ marginBottom: 12 }}>{t('pin.settingsHint')}</Text>
+          <Button mode="outlined" icon="lock-reset" disabled={!usePinStore.getState().configured}
+            onPress={() => usePinStore.getState().change()}>{t('pin.changeTitle')}</Button>
+          <Button mode="text" icon="lock" disabled={!usePinStore.getState().configured}
+            onPress={() => usePinStore.getState().lock()}>{t('pin.lockNow')}</Button>
         </View>
 
         {/* Legal. */}

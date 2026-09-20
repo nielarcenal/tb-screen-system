@@ -7,6 +7,34 @@
 import type { Translation } from './en';
 
 export const ceb: Translation = {
+  pin: {
+    "setupTitle": "I-set up ang PIN sa app",
+    "unlockTitle": "I-unlock ang TB-Screen",
+    "changeTitle": "Usba ang PIN sa app",
+    "recoverTitle": "I-reset ang PIN sa app",
+    "hint": "Gamit og unom ka digit nga PIN aron maprotektahan kining telepono. Maka-unlock bisan offline; lahi ang password sa account.",
+    "current": "Kasamtangang unom ka digit nga PIN",
+    "new": "Bag-ong unom ka digit nga PIN",
+    "confirm": "Kumpirmaha ang bag-ong PIN",
+    "invalid": "Isulod ang eksaktong unom ka digit.",
+    "mismatch": "Dili magkapareho ang bag-ong mga PIN.",
+    "wrong": "Sayop nga PIN. Sulayi pag-usab.",
+    "tooMany": "Daghan na kaayong pagsulay. Paghulat una sa pagsulay pag-usab.",
+    "wait": "Sulayi pag-usab human sa {{seconds}} ka segundo.",
+    "storageError": "Dili mabasa o ma-save nga luwas ang lock sa app. Naka-lock gihapon. Sulayi pag-usab; ayaw i-uninstall o papasa ang data sa app.",
+    "recoveryError": "Dili ma-verify ang orihinal nga tag-iya sa PIN. Susiha ang internet, email sa account, ug password.",
+    "recoverHint": "Konektar sa internet ug gamita ang account nga unang nag-set up sa PIN niining telepono. Dili mapapas ang lokal nga mga rekord.",
+    "email": "Email sa account sa tag-iya sa PIN",
+    "password": "Password sa account",
+    "save": "I-save ang PIN",
+    "unlock": "I-unlock",
+    "forgot": "Nakalimot sa PIN?",
+    "usePin": "Gamita ang PIN",
+    "retry": "Sulayi pag-usab",
+    "settingsTitle": "PIN lock sa app",
+    "settingsHint": "Mo-lock kon mobiya sa app. Magpabilin ang PIN niining telepono bisan mo-sign out. Protektado ang mga screenshot ug preview sa recent apps.",
+    "lockNow": "I-lock karon"
+  },
   common: {
     appName: 'TB-Screen BHW',
     back: 'Balik',

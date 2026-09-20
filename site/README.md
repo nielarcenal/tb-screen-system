@@ -71,7 +71,7 @@ stay that way.
 Current asset:
 
 ```
-https://github.com/nielarcenal/tb-screen-system/releases/download/v1.2.0/app-release.apk
+https://github.com/nielarcenal/tb-screen-system/releases/download/v1.3.0/app-release.apk
 ```
 
 Shipping a new APK means: cut a release with the new tag, then update the URL

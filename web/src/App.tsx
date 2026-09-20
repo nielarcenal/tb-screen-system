@@ -40,9 +40,10 @@ import ChangePasswordGate from './components/ChangePasswordGate';
 import AccountStateGate, { AccountState } from './components/AccountStateGate';
 import CaseRegistry from './components/CaseRegistry';
 import AuditLog from './components/AuditLog';
+import PatientList from './components/PatientList';
 import type { CaseFilter } from './lib/caseRegistry';
 
-type Page = 'dashboard' | 'inbox' | 'cases' | 'register' | 'hotspot' | 'report' | 'bhw' | 'audit';
+type Page = 'dashboard' | 'inbox' | 'cases' | 'register' | 'patients' | 'hotspot' | 'report' | 'bhw' | 'audit';
 
 /** The page a role signs in to. Null means "wherever they are is fine": 'bhw'
  *  is the mobile app's role and has no portal of its own, so a BHW who signs in
@@ -257,6 +258,7 @@ export default function App({ portal }: { portal: PortalKind }) {
         navItem('dashboard', 'space_dashboard', t('nav.dashboard')),
         navItem('inbox', 'move_to_inbox', t('nav.inbox')),
         navItem('cases', 'clinical_notes', t('nav.cases')),
+        ...(me.role === 'tb_dots' ? [navItem('patients', 'patient_list', t('patients.title'))] : []),
         // Walk-ins and self-referrals (0025) — the second way a patient reaches
         // this facility, and until now the one the registry could not describe.
         navItem('register', 'person_add', t('nav.register')),
@@ -278,6 +280,7 @@ export default function App({ portal }: { portal: PortalKind }) {
     inbox: { title: t('nav.inbox'), sub: t('shell.referralsSub') },
     cases: { title: t('nav.cases'), sub: t('shell.casesSub') },
     register: { title: t('nav.register'), sub: t('shell.registerSub') },
+    patients: { title: t('patients.title'), sub: t('patients.details') },
     hotspot: { title: t('nav.hotspot'), sub: t('shell.hotspotsSub') },
     report: { title: t('nav.report'), sub: t('shell.reportSub') },
     bhw: { title: t('nav.bhw'), sub: t('shell.bhwSub') },
@@ -316,6 +319,12 @@ export default function App({ portal }: { portal: PortalKind }) {
             setInboxFilter('all');
             setOpenReferralId(id);
           }}
+        />
+      ) : activePage === 'patients' && me.role === 'tb_dots' ? (
+        <PatientList
+          onRegister={() => openPage('register')}
+          onOpenReferral={(id) => { openPage('inbox'); setOpenReferralId(id); }}
+          onOpenCase={(id) => { openPage('cases'); setOpenCaseId(id); }}
         />
       ) : activePage === 'audit' ? (
         <AuditLog />

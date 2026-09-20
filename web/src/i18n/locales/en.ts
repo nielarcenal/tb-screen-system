@@ -4,7 +4,9 @@
  * screening data shown here is pre-screening information, never a diagnosis
  * made by the system. Copy must never imply the system detects TB.
  */
+import { patientEn } from '../patients';
 export const en = {
+  patients: patientEn,
   common: {
     loading: 'Loading…',
     refresh: 'Refresh',

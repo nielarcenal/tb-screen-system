@@ -25,6 +25,7 @@ import type { AuditEventRow } from '../lib/types';
 const PAGE_SIZE = 25;
 
 const ENTITY_KEY: Record<string, string> = {
+  patients: 'patients.auditEntity',
   appointments: 'audit.entity.appointments',
   tb_cases: 'audit.entity.tb_cases',
   treatment_followups: 'audit.entity.treatment_followups',
@@ -44,6 +45,9 @@ const ACTION_KEY: Record<string, string> = {
 };
 
 const FIELD_KEY: Record<string, string> = {
+  identity_changed: 'patients.identityChanged',
+  address_changed: 'patients.addressChanged',
+  sms_changed: 'patients.smsChanged',
   status: 'audit.field.status',
   scheduled_date: 'audit.field.scheduled_date',
   attended_date: 'audit.field.attended_date',
@@ -67,7 +71,7 @@ const FIELD_KEY: Record<string, string> = {
 
 const FILTERS = [
   'all', 'appointments', 'tb_cases', 'treatment_followups', 'referrals',
-  'case_lab_results', 'case_vitals',
+  'case_lab_results', 'case_vitals', 'patients',
 ] as const;
 type AuditFilter = (typeof FILTERS)[number];
 

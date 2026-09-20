@@ -3,8 +3,10 @@
  * (brief §9). Keep the non-diagnostic positioning (§1).
  */
 import type { Translation } from './en';
+import { patientTl } from '../patients';
 
 export const tl: Translation = {
+  patients: patientTl,
   common: {
     loading: 'Naglo-load…',
     refresh: 'I-refresh',

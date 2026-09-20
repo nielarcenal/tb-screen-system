@@ -7,6 +7,34 @@
 import type { Translation } from './en';
 
 export const tl: Translation = {
+  pin: {
+    "setupTitle": "I-set up ang PIN ng app",
+    "unlockTitle": "I-unlock ang TB-Screen",
+    "changeTitle": "Palitan ang PIN ng app",
+    "recoverTitle": "I-reset ang PIN ng app",
+    "hint": "Gumamit ng anim na digit na PIN para protektahan ang teleponong ito. Gumagana offline ang pag-unlock; hiwalay ang password ng account.",
+    "current": "Kasalukuyang anim na digit na PIN",
+    "new": "Bagong anim na digit na PIN",
+    "confirm": "Kumpirmahin ang bagong PIN",
+    "invalid": "Maglagay ng eksaktong anim na digit.",
+    "mismatch": "Hindi magkatugma ang mga bagong PIN.",
+    "wrong": "Maling PIN. Subukan muli.",
+    "tooMany": "Masyadong maraming pagsubok. Maghintay bago subukan muli.",
+    "wait": "Subukan muli pagkalipas ng {{seconds}} segundo.",
+    "storageError": "Hindi mabasa o mai-save nang ligtas ang lock ng app. Naka-lock pa rin ito. Subukan muli; huwag i-uninstall o burahin ang data ng app.",
+    "recoveryError": "Hindi ma-verify ang orihinal na may-ari ng PIN. Tingnan ang internet, email ng account, at password.",
+    "recoverHint": "Kumonekta sa internet at gamitin ang account na unang nag-set up ng PIN sa teleponong ito. Hindi mabubura ang mga lokal na rekord.",
+    "email": "Email ng account ng may-ari ng PIN",
+    "password": "Password ng account",
+    "save": "I-save ang PIN",
+    "unlock": "I-unlock",
+    "forgot": "Nakalimutan ang PIN?",
+    "usePin": "Gamitin ang PIN",
+    "retry": "Subukan muli",
+    "settingsTitle": "PIN lock ng app",
+    "settingsHint": "Nagla-lock kapag umalis sa app. Nananatili ang PIN sa teleponong ito kahit mag-sign out. Protektado ang mga screenshot at preview ng recent apps.",
+    "lockNow": "I-lock ngayon"
+  },
   common: {
     appName: 'TB-Screen BHW',
     back: 'Bumalik',

@@ -21,6 +21,7 @@ import { supabase } from '../src/lib/supabase';
 import AccountBlockedGate from '../src/components/AccountBlockedGate';
 import ChangePasswordGate from '../src/components/ChangePasswordGate';
 import ConfirmDialogHost from '../src/components/ConfirmDialogHost';
+import AppPinLock from '../src/components/AppPinLock';
 import { evaluateAccountAccess } from '../src/domain/accountAccess';
 import { recordAccountAccess } from '../src/lib/accountGate';
 import { useAppStore } from '../src/store/appStore';
@@ -124,6 +125,7 @@ function AccountGate() {
 }
 
 export default function RootLayout() {
+  const [authReady, setAuthReady] = useState(false);
   const [hydrated, setHydrated] = useState(useAppStore.persist.hasHydrated());
   const language = useAppStore((s) => s.language);
 
@@ -198,7 +200,7 @@ export default function RootLayout() {
           .setSession(data.session.user.id, data.session.user.email ?? null);
         fetchOwnProfile(data.session.user.id);
       }
-    });
+    }).catch(() => undefined).finally(() => setAuthReady(true));
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (__DEV__) {
         // eslint-disable-next-line no-console
@@ -237,6 +239,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <PaperProvider settings={paperSettings} theme={appTheme}>
+        <AppPinLock authReady={authReady}>
         {/* Screens render their own Paper Appbars; the native header is off. */}
         <Stack screenOptions={{ headerShown: false }} />
         {/* D-06: covers the whole app while the account still holds the
@@ -250,6 +253,7 @@ export default function RootLayout() {
             native modal window, so it sits above both gates — each offers the
             same guarded sign-out. */}
         <ConfirmDialogHost />
+        </AppPinLock>
       </PaperProvider>
     </SafeAreaProvider>
   );

@@ -18,13 +18,20 @@ import { Button, Text } from 'react-native-paper';
 
 import { answerConfirm, useConfirmDialogStore } from '../lib/confirmDialog';
 import { palette } from '../ui/tokens';
+import { usePinStore } from '../store/pinStore';
+import { useSessionStore } from '../store/sessionStore';
 
 export default function ConfirmDialogHost() {
   const pending = useConfirmDialogStore((s) => s.pending);
+  const pin = usePinStore();
+  const userId = useSessionStore((s) => s.userId);
+  // A queued asynchronous dialog must never open above the native PIN modal.
+  // Keep its pending answer intact, but defer showing it until after unlock.
+  const pinBlocking = !pin.ready || pin.failed || (pin.configured ? pin.locked || pin.changing : !!userId);
 
   return (
     <Modal
-      visible={pending !== null}
+      visible={pending !== null && !pinBlocking}
       transparent
       animationType="fade"
       statusBarTranslucent

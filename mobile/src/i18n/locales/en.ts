@@ -6,6 +6,34 @@
  * score. Use "pre-screening", "supports", "flags for referral", "presumptive".
  */
 export const en = {
+  pin: {
+    "setupTitle": "Set up your app PIN",
+    "unlockTitle": "Unlock TB-Screen",
+    "changeTitle": "Change app PIN",
+    "recoverTitle": "Reset your app PIN",
+    "hint": "Use a six-digit PIN to protect this phone. Unlocking works offline; your account password stays separate.",
+    "current": "Current six-digit PIN",
+    "new": "New six-digit PIN",
+    "confirm": "Confirm new PIN",
+    "invalid": "Enter exactly six digits.",
+    "mismatch": "The new PINs do not match.",
+    "wrong": "Incorrect PIN. Please try again.",
+    "tooMany": "Too many attempts. Please wait before trying again.",
+    "wait": "Try again in {{seconds}} seconds.",
+    "storageError": "The app lock could not be read or saved securely. Access remains locked. Please retry; do not uninstall or clear app data.",
+    "recoveryError": "Could not verify the original PIN owner. Check your internet connection, account email, and password.",
+    "recoverHint": "Connect to the internet and enter the account that originally set up this phone’s PIN. Local records will not be deleted.",
+    "email": "PIN owner’s account email",
+    "password": "Account password",
+    "save": "Save PIN",
+    "unlock": "Unlock",
+    "forgot": "Forgot PIN?",
+    "usePin": "Use PIN instead",
+    "retry": "Retry",
+    "settingsTitle": "App PIN lock",
+    "settingsHint": "Locks when you leave the app. The PIN stays on this phone, including after sign-out. Screenshots and recent-app previews are protected.",
+    "lockNow": "Lock now"
+  },
   common: {
     appName: 'TB-Screen BHW',
     back: 'Back',
